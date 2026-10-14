@@ -1,0 +1,27 @@
+# Configuration de la collecte des métriques.
+
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+
+  # Métriques de Prometheus lui-même.
+  - job_name: prometheus
+    static_configs:
+      - targets: ["prometheus:9090"]
+
+  # Métriques de l'API FastAPI.
+  - job_name: medical-triage-api
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["api:8000"]
+
+  # Métriques du serveur vLLM.
+  # __VLLM_METRICS_SCHEME__ et __VLLM_METRICS_TARGET__ sont remplacés au démarrage
+  # (docker-compose.yml) : vLLM local par défaut (http, vllm:8000), ou pod RunPod
+  # (https, <pod-id>-8000.proxy.runpod.net). /metrics n'expose aucune donnée patient.
+  - job_name: medical-triage-vllm
+    metrics_path: /metrics
+    scheme: __VLLM_METRICS_SCHEME__
+    static_configs:
+      - targets: ["__VLLM_METRICS_TARGET__"]

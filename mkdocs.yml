@@ -1,0 +1,84 @@
+# Documentation SortirIA (MkDocs + Material + mkdocstrings)
+#
+# Aperçu local :   uv run mkdocs serve
+# Construction :   uv run mkdocs build --strict
+#
+# Les pages « Référence du code » sont générées à partir des docstrings :
+# chaque module indique d'où vient son code (section « Provenance »).
+
+site_name: SortirIA
+site_description: Assistant IA de recommandation de sorties à Montpellier
+site_author: Stéphane Gonzalez
+repo_url: https://github.com/gonzalezcourrier34-glitch/SortirIA
+edit_uri: ""
+
+theme:
+  name: material
+  language: fr
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - search.highlight
+  palette:
+    - scheme: default
+      primary: teal
+      toggle:
+        icon: material/weather-night
+        name: Mode sombre
+    - scheme: slate
+      primary: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Mode clair
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.snippets:
+      base_path: ["."]
+      check_paths: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+plugins:
+  - search:
+      lang: fr
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [".", "dags"]
+          options:
+            docstring_style: numpy
+            show_source: false
+            show_root_heading: true
+            show_submodules: true
+            members_order: source
+            heading_level: 2
+            filters: ["!^_"]
+
+nav:
+  - Accueil: index.md
+  - Démarrage: demarrage.md
+  - Architecture: architecture.md
+  - Sources d'événements: sources.md
+  - Agent de collecte: agent.md
+  - Base de données: base_de_donnees.md
+  - MLOps et monitoring: monitoring.md
+  - Provenance du code: provenance.md
+  - Référence du code:
+      - Vue d'ensemble: reference/index.md
+      - RAG et API: reference/rag.md
+      - Interface Streamlit: reference/dashboard.md
+      - Configuration: reference/config.md
+      - Collecte - extracteurs: reference/extracteurs.md
+      - Collecte - traitement: reference/traitement.md
+      - Collecte - stockage et utilitaires: reference/stockage.md
+      - Agent de collecte: reference/agent.md
+      - Orchestration Airflow: reference/dags.md

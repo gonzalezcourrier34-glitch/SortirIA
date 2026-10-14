@@ -1,0 +1,23 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: sortiria_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Schéma SortirIA : exécuté automatiquement au premier démarrage d'une
+      # base vide (dans l'ordre des numéros). Pour une base existante :
+      #   uv run python -m scripts.init_db
+      - ./sql/sortiria:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  pgdata:

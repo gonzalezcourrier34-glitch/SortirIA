@@ -1,0 +1,68 @@
+[project]
+name = "sortiria"
+version = "0.1.0"
+description = "Assistant IA de recommandation de sorties à Montpellier (collecte CheckIt.AI + RAG)"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    # Collecte (CheckIt.AI)
+    "beautifulsoup4>=4.15.0",
+    "extruct>=0.18.0",
+    "feedparser>=6.0.12",
+    "httpx>=0.28.1",
+    "lxml>=6.1.1",
+    "pandas>=2.1.2",
+    "pillow>=12.3.0",
+    "pillow-avif-plugin>=1.5.5",
+    "psycopg2-binary>=2.9.10",
+    "python-dateutil>=2.9.0.post0",
+    "python-dotenv>=1.2.2",
+    "pyyaml>=6.0.3",
+    "tenacity>=9.1.4",
+    "trafilatura>=2.1.0",
+    "tzdata>=2024.1",  # fuseau Europe/Paris sous Windows (zoneinfo)
+    "w3lib>=2.4.1",
+    # RAG et API (RAG OpenAgenda)
+    "fastapi>=0.115.0",
+    "uvicorn>=0.30.0",
+    "pydantic>=2.9.0",
+    "requests>=2.32.0",
+    "mistralai>=2.0.1",
+    "langchain>=0.3.0",
+    "langchain-community>=0.3.0",
+    "langchain-mistralai>=0.2.0",
+    "langgraph>=0.6.0",  # agent de collecte nocturne (comme Chess Agent)
+    "faiss-cpu>=1.8.0",  # à retirer une fois pgvector en place
+    "pgvector>=0.3.6",
+    "numpy>=1.26.0",
+    # Interface
+    "streamlit>=1.39.0",
+]
+
+[project.optional-dependencies]
+airflow = [
+    "apache-airflow==3.3.0",
+    "apache-airflow-providers-postgres==6.8.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.15.22",
+]
+docs = [
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.7.6",
+    "mkdocstrings[python]>=1.0.3",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+
+[tool.ruff]
+line-length = 100
+# reference/ contient du code d'autres projets, à reprendre : il n'est pas vérifié.
+extend-exclude = ["reference"]

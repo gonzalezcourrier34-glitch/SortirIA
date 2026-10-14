@@ -1,0 +1,16 @@
+# Configuration de la source Prometheus pour Grafana.
+
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+
+    # Adresse interne du conteneur Prometheus.
+    url: http://prometheus:9090
+
+    # Source de données par défaut.
+    isDefault: true
+    editable: false

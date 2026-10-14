@@ -1,0 +1,11 @@
+# Chargement automatique du tableau de bord.
+apiVersion: 1
+providers:
+  - name: Medical Triage
+    orgId: 1
+    folder: Medical Triage
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards

@@ -1,0 +1,699 @@
+{
+  "id": null,
+  "uid": "medical-triage",
+  "title": "MEDICAL TRIAGE  |  Operations Overview",
+  "description": "Observabilité technique du POC. Aucun contenu patient ni résultat clinique dans les métriques.",
+  "tags": [
+    "medical-triage",
+    "observability",
+    "fastapi"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 2,
+  "refresh": "15s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "editable": true,
+  "graphTooltip": 1,
+  "fiscalYearStartMonth": 0,
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 101,
+      "type": "row",
+      "title": "01  /  VUE D’ENSEMBLE",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "REQUÊTES · PÉRIODE",
+      "description": "Nombre estimé de requêtes HTTP sur la plage temporelle sélectionnée.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 6,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(triage_http_requests_total{job=\"medical-triage-api\"}[$__range])) or vector(0)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#7C9CF5"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#7C9CF5",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "DÉBIT · REQ/S",
+      "description": "Moyenne glissante sur 5 minutes.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 1,
+        "w": 6,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(triage_http_requests_total{job=\"medical-triage-api\"}[5m])) or vector(0)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "decimals": 2,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#37D4BC"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#37D4BC",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "LATENCE · MOYENNE",
+      "description": "Moyenne glissante sur 5 minutes, métriques HTTP.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 1,
+        "w": 6,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "1000 * sum(rate(triage_http_request_duration_seconds_sum{job=\"medical-triage-api\"}[5m])) / sum(rate(triage_http_request_duration_seconds_count{job=\"medical-triage-api\"}[5m]))",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#7C9CF5"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#7C9CF5",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "LATENCE · P95",
+      "description": "95e percentile estimé depuis les buckets Prometheus.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 1,
+        "w": 6,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "1000 * histogram_quantile(0.95, sum by (le) (rate(triage_http_request_duration_seconds_bucket{job=\"medical-triage-api\"}[5m])))",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#F7C76B"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#F7C76B",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true
+      }
+    },
+    {
+      "id": 102,
+      "type": "row",
+      "title": "02  /  FIABILITÉ & SERVICES",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "ERREURS SERVEUR · 5XX",
+      "description": "Part des réponses HTTP 5xx sur 5 minutes. N’inclut pas les 4xx.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * sum(rate(triage_http_requests_total{job=\"medical-triage-api\",status=~\"5..\"}[5m])) / sum(rate(triage_http_requests_total{job=\"medical-triage-api\"}[5m]))",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 2,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#37D4BC"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#37D4BC",
+                "value": null
+              },
+              {
+                "color": "#F7C76B",
+                "value": 1
+              },
+              {
+                "color": "#F87171",
+                "value": 5
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true
+      }
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "FASTAPI · DISPONIBILITÉ",
+      "description": "État de la cible de collecte Prometheus, pas une validation fonctionnelle.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 7,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "up{job=\"medical-triage-api\"}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#37D4BC"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#F87171",
+                "value": null
+              },
+              {
+                "color": "#37D4BC",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "INDISPONIBLE",
+                  "color": "#F87171"
+                },
+                "1": {
+                  "text": "OPÉRATIONNEL",
+                  "color": "#37D4BC"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "wideLayout": true
+      }
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "VLLM · DISPONIBILITÉ",
+      "description": "Indisponible attendu tant que le profil GPU n’est pas démarré.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 7,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "up{job=\"medical-triage-vllm\"}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#37D4BC"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#F87171",
+                "value": null
+              },
+              {
+                "color": "#37D4BC",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "INDISPONIBLE",
+                  "color": "#F87171"
+                },
+                "1": {
+                  "text": "OPÉRATIONNEL",
+                  "color": "#37D4BC"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "wideLayout": true
+      }
+    },
+    {
+      "id": 103,
+      "type": "row",
+      "title": "03  /  TENDANCES",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "TRAFIC HTTP · ÉVOLUTION",
+      "description": "Évolution de la charge HTTP sur la période sélectionnée.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(triage_http_requests_total{job=\"medical-triage-api\"}[$__rate_interval]))",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "legendFormat": "Requêtes / seconde"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never",
+            "spanNulls": false,
+            "axisPlacement": "auto",
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "LATENCE · MOYENNE VS P95",
+      "description": "Comparaison de la latence moyenne et du 95e percentile.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 13,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "1000 * sum(rate(triage_http_request_duration_seconds_sum{job=\"medical-triage-api\"}[$__rate_interval])) / sum(rate(triage_http_request_duration_seconds_count{job=\"medical-triage-api\"}[$__rate_interval]))",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "legendFormat": "Moyenne"
+        },
+        {
+          "refId": "B",
+          "expr": "1000 * histogram_quantile(0.95, sum by (le) (rate(triage_http_request_duration_seconds_bucket{job=\"medical-triage-api\"}[$__rate_interval])))",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "legendFormat": "P95"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never",
+            "spanNulls": false,
+            "axisPlacement": "auto",
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    }
+  ],
+  "links": []
+}

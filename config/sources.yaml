@@ -1,0 +1,166 @@
+# Contrat des sources SortirIA.
+#
+# Provenance : format repris de CheckIt.AI (projet 12). Les sources de presse
+# et de fake news de CheckIt.AI ont été retirées : SortirIA ne collecte que
+# des événements (sorties à Montpellier).
+#
+# Les valeurs communes sont centralisées dans defaults. config/source_config.py
+# fusionne ces valeurs avec chaque source, puis valide le contrat avant le
+# lancement des extracteurs.
+
+defaults:
+  common:
+    enabled: true
+    language: "fr"
+    country: "France"
+    category: "evenement"
+    max_articles: 500
+
+  ical:
+    role: "acquisition"
+
+  api:
+    role: "acquisition"
+    pagination:
+      enabled: false
+      parameter: "page"
+      start: 1
+      max_pages: 1
+      page_size_parameter: null
+      page_size: null
+
+  rss:
+    role: "acquisition"
+
+  # Jeux de données ouverts (CSV, JSON), par exemple l'open data de la Métropole.
+  dataset:
+    role: "acquisition"
+    chunksize: 10000
+
+  # Pages d'agenda : uniquement les sites dont le robots.txt et les CGU
+  # autorisent la collecte.
+  scraper:
+    role: "acquisition"
+    respect_robots_txt: true
+    request_delay_seconds: 1.0
+
+  filters:
+    acquisition:
+      require_title: true
+      require_text: false
+      require_image: false
+      require_url: true
+      require_label: false
+      min_title_length: 3
+      min_text_length: 0
+      # Hérité de CheckIt.AI (articles de presse) : 10. Pour un événement, le
+      # titre suffit (« Hamlet », sans description dans un calendrier iCal).
+      min_total_text_length: 3
+      remove_deleted_content: true
+      remove_duplicates: true
+      validate_urls: true
+      allowed_labels: []
+
+
+# ---------------------------------------------------------------------------
+# Sources d'événements
+# ---------------------------------------------------------------------------
+
+api_sources:
+  # Extracteur : src/extractors/apis/source/openagenda_extractor.py
+  # Clé : OPENAGENDA_API_KEY dans .env (ou secret openagenda_api_key).
+  - name: "OpenAgenda - Montpellier et bassin de Thau"
+    source_id: "openagenda"
+    type: "api"
+    role: "acquisition"
+    endpoint: "https://openagenda.com/agendas"
+    agendas_search_url: "https://api.openagenda.com/v2/agendas"
+    api_key_secret_name: "openagenda_api_key"
+    zone: "Montpellier"
+    # Zones couvertes : on ne garde que les événements situés dans l'une d'elles
+    # (la recherche d'agendas renvoie aussi des agendas nationaux).
+    # L'ancre &zones permet à DATAtourisme de réutiliser exactement les mêmes zones.
+    areas: &zones
+      - name: "Montpellier et sa métropole"
+        latitude: 43.6108
+        longitude: 3.8767
+        radius_km: 20
+      - name: "Bassin de Thau (Sète, Frontignan, Balaruc, Mèze, Marseillan...)"
+        latitude: 43.42
+        longitude: 3.62
+        radius_km: 15
+    # Sans coordonnées GPS, on compare le nom de la ville à cette liste.
+    cities: ["Montpellier", "Lattes", "Castelnau-le-Lez", "Pérols", "Saint-Jean-de-Védas",
+             "Juvignac", "Grabels", "Clapiers", "Jacou", "Le Crès", "Vendargues", "Castries",
+             "Fabrègues", "Palavas-les-Flots", "Carnon", "Mauguio",
+             "Sète", "Frontignan", "Balaruc-les-Bains", "Balaruc-le-Vieux", "Bouzigues",
+             "Mèze", "Marseillan", "Loupian", "Poussan", "Gigean", "Vic-la-Gardiole"]
+    # Termes de recherche des agendas (les agendas trouvés sont fusionnés).
+    search_terms: ["Montpellier", "Hérault", "Montpellier Méditerranée Métropole", "Sète", "Thau"]
+    # Agendas lus chaque nuit. L'audit du 14/10/2026 a montré que la recherche
+    # par termes lit ~10 000 événements (111 agendas, souvent nationaux) pour
+    # en garder 83 dans la zone, en 6 minutes. Ces 11 agendas fournissent tous
+    # les événements retenus : la collecte de nuit ne lit qu'eux.
+    # Liste vide = recherche par termes (mode découverte, à relancer chaque
+    # semaine : uv run python -m scripts.audit_openagenda --decouverte).
+    agenda_uids:
+      - "9969608"    # 30 événements retenus le 14/10
+      - "4838751"    # 12
+      - "35944609"   # 10
+      - "38495884"   # 10
+      - "1854436"    # 9
+      - "35777956"   # 4
+      - "59738311"   # 3
+      - "82566953"   # 2
+      - "65401129"   # 1
+      - "70214399"   # 1
+      - "10455523"   # 1
+      - "67871262"   # 1 (repéré par la collecte du 14/10 à 11 h)
+    max_agendas: 50
+    days_forward: 30
+    page_size: 100
+    max_pages: 10
+    max_articles: 2000
+
+  # Offices de tourisme (DATAtourisme, Licence Ouverte 2.0). Ajouté le
+  # 14/10/2026 : 735 événements autour de Montpellier, 296 sur le bassin de
+  # Thau, contre ~80 pour OpenAgenda.
+  - name: "DATAtourisme - Montpellier et bassin de Thau"
+    source_id: "datatourisme"
+    type: "api"
+    role: "acquisition"
+    endpoint: "https://api.datatourisme.fr/v1/entertainmentAndEvent"
+    api_key_secret_name: "datatourisme_api_key"
+    zone: "Montpellier"
+    areas: *zones
+    days_forward: 30
+    page_size: 100
+    max_pages: 20
+    max_articles: 3000
+
+# À brancher ensuite : open data de la Métropole (datasets) et 1-2 sites
+# d'agenda autorisés (scraper_sources).
+rss_sources: []
+
+# Calendriers iCal (.ics) des lieux partenaires : une entrée par lieu, sans
+# code à écrire (moteur générique src/extractors/ical/). Exemple :
+#
+#   - name: "Nom du lieu"
+#     source_id: "nom_du_lieu"          # identifiant unique, en snake_case
+#     type: "ical"
+#     url: "https://exemple.fr/agenda.ics"
+#     venue_name: "Nom du lieu"          # lieu par défaut des événements
+#     address: "1 rue Exemple"
+#     city: "Montpellier"
+#     postal_code: "34000"
+#     latitude: 43.61
+#     longitude: 3.87
+#     website: "https://exemple.fr"      # lien si un événement n'en a pas
+#     credit: "Nom du lieu"              # cité sous chaque proposition
+#     days_forward: 30
+#     max_articles: 500
+ical_sources: []
+
+datasets: []
+
+scraper_sources: []

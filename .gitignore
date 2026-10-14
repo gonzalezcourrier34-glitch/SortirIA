@@ -1,0 +1,25 @@
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+logs/
+*.log
+data/*
+!data/.gitkeep
+artifacts/*
+!artifacts/.gitkeep
+secrets/
+.env
+.env.*
+!.env.example
+site/
+.cache/
+
+# Dossier personnel (notes, images), comme dans tes autres projets
+/perso/
+
+# Résultats des audits (scripts/audit_openagenda.py)
+audit*.json

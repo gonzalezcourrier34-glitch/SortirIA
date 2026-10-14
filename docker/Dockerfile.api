@@ -1,0 +1,43 @@
+# =============================================================================
+# Image Docker de l'API SortirIA (FastAPI)
+# =============================================================================
+#
+# Provenance : reprise du Dockerfile de l'API du triage médical (projet 14),
+# adaptée à SortirIA : Python 3.12, code dans app/, src/ et config/,
+# point d'entrée app.main:app.
+#
+# Construction depuis la racine du projet :
+#   docker build -f docker/Dockerfile.api -t sortiria-api .
+# =============================================================================
+
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# uv gère l'environnement virtuel et les dépendances.
+COPY --from=ghcr.io/astral-sh/uv:0.9.18 /uv /uvx /bin/
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/app/.venv/bin:$PATH"
+
+# Les dépendances sont installées avant de copier le code : tant que
+# pyproject.toml ne change pas, Docker réutilise cette couche en cache.
+# uv.lock* : le fichier est utilisé s'il existe (à commiter dès que possible).
+COPY pyproject.toml uv.lock* ./
+RUN uv sync --no-dev --no-install-project
+
+# Code de l'application.
+COPY app/ ./app/
+COPY src/ ./src/
+COPY config/ ./config/
+
+# L'API ne tourne jamais en root.
+RUN useradd --create-home --uid 10001 appuser \
+    && mkdir -p /app/logs /app/data \
+    && chown -R appuser:appuser /app
+USER appuser
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
