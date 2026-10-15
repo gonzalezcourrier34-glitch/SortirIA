@@ -137,3 +137,13 @@ def test_events_outside_window_are_dropped() -> None:
     concert = parse_calendar(CALENDAR)[0]
     assert get_occurrences(concert, date(2030, 10, 19), 30) == []   # déjà passé
     assert get_occurrences(concert, date(2030, 9, 1), 30) == []     # trop loin
+
+
+def test_multi_day_all_day_event_ends_on_its_last_day() -> None:
+    """DTEND est exclusif en iCal : un salon du 25 au 27 a DTEND = 28 ; il ne doit pas être visible le 28."""
+
+    calendar = CALENDAR.replace("DTEND;VALUE=DATE:20301026", "DTEND;VALUE=DATE:20301028")
+    salon = parse_calendar(calendar)[3]
+    (occurrence,) = get_occurrences(salon, TODAY, 30)
+    assert occurrence == {"start_at": "2030-10-25T00:00:00+02:00", "end_at": "2030-10-27T00:00:00+02:00",
+                          "time_known": False}

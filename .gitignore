@@ -9,8 +9,6 @@ logs/
 *.log
 data/*
 !data/.gitkeep
-artifacts/*
-!artifacts/.gitkeep
 secrets/
 .env
 .env.*

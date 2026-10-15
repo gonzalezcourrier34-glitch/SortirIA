@@ -31,6 +31,7 @@ from src.event.event_normalizer import (
     build_dedup_key,
     build_event_id,
     clean_text,
+    end_of_day,
     normalize_city,
     to_iso,
 )
@@ -256,7 +257,12 @@ def get_occurrences(item: Mapping[str, Any]) -> list[dict[str, Any]]:
         if found:
             start_time, end_time = found
             start = datetime.combine(start_day, start_time, tzinfo=PARIS)
-            end = datetime.combine(end_day, end_time, tzinfo=PARIS) if end_time else None
+            if end_time:
+                end = datetime.combine(end_day, end_time, tzinfo=PARIS)
+            elif end_day > start_day:
+                end = end_of_day(end_day)   # plusieurs jours, heure de fin inconnue
+            else:
+                end = None
             if end is not None and end < start:
                 end = None
             occurrences.append({"start_at": to_iso(start), "end_at": to_iso(end), "time_known": True})

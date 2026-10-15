@@ -12,7 +12,7 @@ flowchart LR
     end
     E --> DB[(PostgreSQL + pgvector<br/>événements à venir)]
     subgraph Jour["À chaque question"]
-        U[Utilisateur<br/>Streamlit] --> A[API FastAPI]
+        U[Utilisateur<br/>interface Angular] --> A[API FastAPI]
         A --> K{Cache}
         K -- absent --> X[Petit modèle :<br/>extraction des contraintes]
         X --> F[Filtre SQL + recherche sémantique]
@@ -38,6 +38,6 @@ flowchart LR
 | --- | --- |
 | Collecte, normalisation, stockage | `src/`, `config/`, `dags/` |
 | API, filtres, recherche, génération | `app/` |
-| Interface | `dashboard/` |
+| Interface | `frontend/` (Angular) |
 | Agent de collecte | `agent/` (conception), `reference/p13_agent/` (code à reprendre) |
 | Monitoring | `monitoring/`, `reference/p5_monitoring/`, `reference/p14_observabilite/` |

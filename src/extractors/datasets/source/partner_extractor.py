@@ -1,0 +1,350 @@
+"""Fichiers des partenaires (tableur Excel ou CSV), importés chaque nuit.
+
+**Provenance** : nouvel adaptateur écrit pour SortirIA (14/10/2026), branché
+sur le moteur datasets de CheckIt.AI (`src/extractors/datasets/`) : le moteur
+trouve et contrôle les fichiers, filtre, dédoublonne et rend un statut ; cet
+adaptateur ne fait que lire les lignes et les convertir (voir
+`src/event/partner_mapper.py`).
+
+Organisation sur le disque (dossier `path` de la source, `data/partenaires`) :
+**un fichier par partenaire, à la racine, nommé d'après lui**.
+
+    data/partenaires/
+        saintlouis.xlsx           <- partenaire « Saintlouis »
+        bar_truc_muche.csv        <- partenaire « Bar Truc Muche »
+        _modeles/                 <- sous-dossier : jamais importé
+
+Tout fichier .xlsx, .xls, .csv ou .json de la racine est importé (sauf ceux qui
+commencent par « _ », « . » ou « ~$ », fichier ouvert dans Excel). Le nom
+du partenaire vient du nom du fichier ; une entrée facultative dans
+`config/sources.yaml` (`partners`, clé `file`) précise son vrai nom, son
+secteur, son site et la fin d'une mise en avant, ou le désactive.
+
+Vérifier un fichier reçu avant de le déposer (aucune écriture en base) :
+
+    uv run python -m src.extractors.datasets.source.partner_extractor --verifier chemin/du/fichier.xlsx
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import re
+from collections import Counter
+from collections.abc import Iterator, Mapping
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+from src.event.event_normalizer import PARIS
+from src.event.event_pipeline import occurrence_article_url
+from src.event.partner_mapper import (
+    REASON_MISSING_COLUMNS,
+    REASON_UNREADABLE_FILE,
+    is_empty_row,
+    map_partner_row,
+    missing_columns,
+    normalize_header,
+)
+from src.extractors.datasets.dataset_adapter import DatasetAdapter
+from src.extractors.datasets.dataset_engine import DatasetExtractor
+from src.extractors.datasets.dataset_file_utils import resolve_dataset_directory
+from src.logger import get_logger
+from src.utils.extractor_utils import build_standard_article
+from src.utils.value_utils import normalize_value
+
+logger = get_logger(__name__)
+
+SOURCE_ID = "partenaire"
+# .xls (ancien format Excel) : lu par la bibliothèque xlrd.
+SUPPORTED_EXTENSIONS = frozenset({".xlsx", ".xls", ".csv", ".json"})
+IGNORED_PREFIXES = ("_", ".", "~$")
+# Secteurs acceptés par la table `partners` (contrainte partners_sector_check).
+SECTORS = ("animation", "soiree", "enfants", "culture", "sport", "autre")
+
+
+# ---------------------------------------------------------------------------
+# Partenaires et fichiers
+# ---------------------------------------------------------------------------
+
+def partner_key(value: Any) -> str:
+    """Clé de rapprochement fichier / configuration : « Saint-Louis » = « saint_louis »."""
+
+    return re.sub(r"[^a-z0-9]", "", normalize_value(value).casefold())
+
+
+def name_from_file(stem: str) -> str:
+    """Nom lisible tiré du nom de fichier : « bar_truc-muche » -> « Bar Truc Muche »."""
+
+    return " ".join(word.capitalize() for word in re.split(r"[_\-\s]+", stem) if word) or stem
+
+
+def declared_partners(source: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
+    """Réglages facultatifs de `partners` dans la configuration, par clé de fichier."""
+
+    declared = {}
+    for partner in source.get("partners") or []:
+        if isinstance(partner, Mapping) and partner_key(partner.get("file")):
+            declared[partner_key(partner.get("file"))] = dict(partner)
+    return declared
+
+
+def partner_for_file(path: Path, source: Mapping[str, Any]) -> dict[str, Any]:
+    """Partenaire d'un fichier : son nom de fichier, complété par la configuration."""
+
+    settings = declared_partners(source).get(partner_key(path.stem), {})
+    sector = normalize_value(settings.get("sector")).lower()
+    return {
+        **settings,
+        "file": path.stem,
+        "name": normalize_value(settings.get("name")) or name_from_file(path.stem),
+        "sector": sector if sector in SECTORS else "autre",
+        "enabled": settings.get("enabled", True) is not False,
+    }
+
+
+def find_partner_files(directory: Path, source: Mapping[str, Any]) -> list[Path]:
+    """Fichiers de partenaires à la racine du dossier (sous-dossiers ignorés)."""
+
+    files = []
+    for path in sorted(directory.iterdir()):
+        if not path.is_file() or path.suffix.lower() not in SUPPORTED_EXTENSIONS:
+            continue
+        if path.name.startswith(IGNORED_PREFIXES):
+            continue
+        if not partner_for_file(path, source)["enabled"]:
+            logger.info("Partenaire désactivé dans la configuration : %s.", path.name)
+            continue
+        files.append(path)
+    return files
+
+
+def has_partner_files(source: Mapping[str, Any]) -> bool:
+    """Vrai si le dossier existe et contient au moins un fichier à importer (pour l'agent)."""
+
+    try:
+        directory = resolve_dataset_directory(source, str(source.get("name", SOURCE_ID)))
+    except (OSError, ValueError):
+        return False
+    return bool(find_partner_files(directory, source))
+
+
+def read_json_rows(path: Path) -> list[dict[str, Any]]:
+    """Lignes d'un fichier JSON : une liste d'objets, ou un objet qui en contient une.
+
+    Exemples acceptés : `[{"titre": ...}, ...]` ou `{"evenements": [...]}`
+    (les clés sont celles du modèle, comme les colonnes d'un tableur).
+    """
+
+    data = json.loads(path.read_text(encoding="utf-8-sig"))
+    if isinstance(data, Mapping):
+        data = next((value for value in data.values() if isinstance(value, list)), [])
+    if not isinstance(data, list):
+        raise ValueError(f"{path.name} : une liste d'événements est attendue.")  # noqa: TRY004 (le moteur arrête proprement sur ValueError)
+    return [dict(item) for item in data if isinstance(item, Mapping)]
+
+
+def read_table(path: Path) -> tuple[list[str], list[dict[str, Any]]]:
+    """En-têtes normalisés et lignes d'un fichier (1er onglet d'un Excel).
+
+    CSV : séparateur deviné (« ; » d'un Excel français ou « , »), encodage
+    UTF-8 avec ou sans BOM, sinon Windows-1252. Les cellules sont gardées telles quelles (dates
+    Excel comprises) : `partner_mapper` se charge de les lire et de les
+    nettoyer.
+    """
+
+    import pandas as pd
+
+    if path.suffix.lower() == ".json":
+        rows = [{normalize_header(key): value for key, value in row.items()} for row in read_json_rows(path)]
+        headers = list(dict.fromkeys(key for row in rows for key in row))
+        return headers, rows
+    if path.suffix.lower() == ".csv":
+        try:
+            frame = pd.read_csv(path, sep=None, engine="python", dtype=str, encoding="utf-8-sig", keep_default_na=False)
+        except UnicodeDecodeError:
+            # Excel français enregistre souvent en Windows-1252 (« Soirée » illisible en UTF-8).
+            frame = pd.read_csv(path, sep=None, engine="python", dtype=str, encoding="cp1252", keep_default_na=False)
+    else:
+        frame = pd.read_excel(path, sheet_name=0, dtype=object)
+    headers = [normalize_header(column) for column in frame.columns]
+    frame.columns = headers
+    return headers, frame.to_dict(orient="records")
+
+
+def file_sha256(path: Path) -> str:
+    """Empreinte du fichier : un même fichier n'est compté qu'une fois en base."""
+
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+# ---------------------------------------------------------------------------
+# Lecture des lignes
+# ---------------------------------------------------------------------------
+
+def read_partner_file(path: Path, partner: Mapping[str, Any], today: Any = None) -> list[dict[str, Any]]:
+    """Lit un fichier : un élément par ligne utile, événement ou rejet motivé.
+
+    Le fichier est lu en entier avant de rendre ses lignes, pour joindre à
+    chaque événement le bilan du fichier (lignes lues, gardées, refusées),
+    enregistré ensuite dans `partner_imports`.
+    """
+
+    now = datetime.now(PARIS)
+    today = today or now.date()
+    updated_at = datetime.fromtimestamp(path.stat().st_mtime, PARIS).date().isoformat()
+    headers, rows = read_table(path)
+    absent = missing_columns(headers)
+    if absent:
+        logger.error("%s : colonnes obligatoires absentes : %s.", path.name, ", ".join(absent))
+        return [{"rejected": REASON_MISSING_COLUMNS, "line": 1, "detail": ", ".join(absent)}]
+
+    items, reasons, past = [], Counter(), 0
+    for number, row in enumerate(rows, start=2):   # ligne 1 = en-têtes
+        if is_empty_row(row):
+            continue
+        event, reason = map_partner_row(row, partner, today=today, updated_at=updated_at, extracted_at=now.isoformat())
+        if event is not None:
+            items.append({"event": event, "line": number})
+        elif reason:
+            reasons[reason] += 1
+            items.append({"rejected": reason, "line": number})
+        else:
+            past += 1
+
+    kept = sum(1 for item in items if "event" in item)
+    summary = {
+        "name": partner.get("name"), "file": partner.get("file"), "sector": partner.get("sector"),
+        "website": partner.get("website", ""), "sponsored_until": partner.get("sponsored_until"),
+        "file_name": path.name, "file_sha256": file_sha256(path),
+        "rows_total": kept + sum(reasons.values()) + past, "rows_loaded": kept,
+        "rows_rejected": sum(reasons.values()), "rejection_reasons": dict(reasons),
+    }
+    for item in items:
+        if "event" in item:
+            item["event"].partner_info = summary
+    logger.info(
+        "%s / %s : %s ligne(s) gardée(s), %s refusée(s), %s déjà passée(s).",
+        partner.get("name"), path.name, kept, sum(reasons.values()), past,
+    )
+    return items
+
+
+def iter_partner_items(files: list[Path], source: Mapping[str, Any]) -> Iterator[tuple[str, int, dict[str, Any]]]:
+    """Éléments de tous les fichiers, au format du moteur : (identifiant, index, élément)."""
+
+    for path in files:
+        try:
+            items = read_partner_file(path, partner_for_file(path, source))
+        except Exception as error:  # noqa: BLE001 (un fichier illisible ne doit pas priver la nuit des autres)
+            logger.error("%s : fichier illisible (%s).", path.name, error)
+            yield f"{path.name}:L0", 0, {"rejected": REASON_UNREADABLE_FILE, "line": 0, "detail": str(error)}
+            continue
+        for item in items:
+            yield f"{path.name}:L{item['line']}", item["line"], item
+
+
+def validate_partner_item(item: Any, filters: Mapping[str, Any], source: Mapping[str, Any]) -> tuple[bool, str]:
+    """Une ligne refusée remonte au moteur avec son motif (compté dans le bilan)."""
+
+    del filters, source
+    if isinstance(item, Mapping) and item.get("rejected"):
+        return False, str(item["rejected"])
+    return True, ""
+
+
+def build_partner_article(item: Mapping[str, Any], index: int, identifier: str, source: Mapping[str, Any]) -> dict[str, Any]:
+    """Transforme une ligne validée en « article » du moteur, événement inclus."""
+
+    del index
+    event = item["event"]
+    return build_standard_article(
+        identifier=identifier,
+        source=event.source_credit or source.get("name", "Partenaire"),
+        title=event.title,
+        text=event.description,
+        image_url="",
+        published_at=event.start_at,
+        url=occurrence_article_url(event),   # unique par séance (voir event_pipeline)
+        language="fr",
+        category=event.category or "evenement",
+        role=source.get("role", "acquisition"),
+        metadata={"event": event.to_dict(), "line": item.get("line")},
+    )
+
+
+PARTNER_ADAPTER = DatasetAdapter(
+    source_id=SOURCE_ID,
+    default_name="Fichiers des partenaires",
+    supported_extensions=SUPPORTED_EXTENSIONS,
+    find_files=find_partner_files,
+    iter_items=iter_partner_items,
+    build_article=build_partner_article,
+    validate_item=validate_partner_item,
+)
+
+PARTNER_EXTRACTOR = DatasetExtractor(
+    source_id=SOURCE_ID,
+    default_name="Fichiers des partenaires",
+    adapter=PARTNER_ADAPTER,
+)
+
+
+def extract_all_articles():
+    """Lit tous les fichiers des partenaires déclarés (point d'entrée du registre)."""
+
+    return PARTNER_EXTRACTOR.run()
+
+
+# ---------------------------------------------------------------------------
+# Vérification d'un fichier reçu
+# ---------------------------------------------------------------------------
+
+def configured_partner(path: Path) -> dict[str, Any]:
+    """Partenaire d'un fichier d'après la configuration (sinon : son nom de fichier)."""
+
+    try:
+        return partner_for_file(path, PARTNER_EXTRACTOR.get_source())
+    except (OSError, ValueError, KeyError) as error:
+        logger.warning("Configuration des partenaires illisible : %s", error)
+        return partner_for_file(path, {})
+
+
+def check_file(path: Path, partner: Mapping[str, Any] | None = None) -> str:
+    """Rapport lisible sur un fichier, à renvoyer au partenaire si besoin.
+
+    Sans site déclaré pour ce partenaire dans la configuration, chaque ligne
+    doit avoir son lien.
+    """
+
+    partner = partner or configured_partner(path)
+    items = read_partner_file(path, partner)
+    kept = [item for item in items if "event" in item]
+    rejected = [item for item in items if "rejected" in item]
+    lines = [f"{path.name} : {len(kept)} séance(s) à venir prête(s), {len(rejected)} ligne(s) à corriger."]
+    for item in rejected:
+        detail = f" ({item['detail']})" if item.get("detail") else ""
+        lines.append(f"  ligne {item['line']} : {item['rejected']}{detail}")
+    for item in kept[:5]:
+        event = item["event"]
+        lines.append(f"  ok ligne {item['line']} : {event.start_at[:16]} {event.title} - {event.venue_name}, {event.city}")
+    return "\n".join(lines)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Fichiers des partenaires SortirIA.")
+    parser.add_argument("--verifier", type=Path, help="Vérifie un fichier reçu (aucune écriture en base).")
+    args = parser.parse_args()
+    if args.verifier:
+        if not args.verifier.is_file():
+            print(f"Fichier introuvable : {args.verifier}. Donner le chemin d'un fichier .xlsx ou .csv reçu.")
+            return
+        print(check_file(args.verifier))
+        return
+    result = extract_all_articles()
+    print(f"{len(result.articles)} événement(s). Statut : {result.status}. Rejets : {result.rejection_reasons}")
+
+
+if __name__ == "__main__":
+    main()

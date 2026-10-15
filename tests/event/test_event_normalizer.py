@@ -78,10 +78,20 @@ def test_parse_price(text: str, expected: tuple) -> None:
 
 def test_dedup_key_is_identical_for_the_same_event_written_differently() -> None:
     first = build_dedup_key("Concert Jazz au Jam", "2026-10-24T20:30:00+02:00", "Le Jam")
-    second = build_dedup_key("concert jazz au JAM !", "2026-10-24", "le jam")
+    second = build_dedup_key("concert jazz au JAM !", "2026-10-24T20:30:00+02:00", "le jam")
     assert first == second
     assert build_event_id(first) == build_event_id(second)
     assert len(build_event_id(first)) == 16
+
+
+def test_dedup_key_separates_two_sessions_the_same_day() -> None:
+    """Deux séances d'un film à 14 h et 20 h 30 au même cinéma sont deux événements (15/10/2026)."""
+
+    afternoon = build_dedup_key("Le Film", "2026-10-20T14:00:00+02:00", "Le Ciné")
+    evening = build_dedup_key("Le Film", "2026-10-20T20:30:00+02:00", "Le Ciné")
+    assert afternoon == "le film|2026-10-20T14:00|le cine" and evening.endswith("T20:30|le cine")
+    # Sans heure connue (minuit), la clé reste celle du jour.
+    assert build_dedup_key("Le Film", "2026-10-20", "Le Ciné") == "le film|2026-10-20|le cine"
 
 
 def test_dedup_key_differs_on_another_day() -> None:

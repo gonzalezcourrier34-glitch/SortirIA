@@ -1,0 +1,6 @@
+﻿date;mode;jeu;questions;prompt_version;comprehension;precision;idees_voisines;sans_resultat;latence_mediane_s;latence_p95_s;note
+2026-10-15T11:52:00+02:00;recherche;3fd0f8dc;32;2026-10-15.2;1.0;0.82;;0;0.46;0.88;Première mesure, recherche hybride + compréhension (reconstitué depuis le terminal, valeurs arrondies)
+2026-10-15T12:30:00+02:00;recherche;3fd0f8dc;32;2026-10-15.2;1.0;0.99;2;0;0.54;1.17;Réponses exactes seulement + dates sur plusieurs jours + mesure corrigée (reconstitué depuis le terminal, valeurs arrondies)
+2026-10-15T12:51:51+02:00;recherche;3fd0f8dc;32;2026-10-15.2;1.0;0.994;2;0;0.33;0.77;ajout des questions réelles
+2026-10-15T15:27:11+02:00;recherche;4a85c607;38;2026-10-15.2;1.0;0.98;2;0;0.61;1.75;"budget, météo, distance, diversité ; catégories et résumés contrôlés"
+2026-10-15T15:33:23+02:00;recherche;4a85c607;38;2026-10-15.3;1.0;0.973;2;0;0.43;1.02;8 cartes, budget, météo, distance, diversité

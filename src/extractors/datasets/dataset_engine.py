@@ -1,6 +1,7 @@
 """Moteur commun utilisé par les extracteurs de datasets CheckIt.AI.
 
 **Provenance** : repris de CheckIt.AI (projet 12, moteur de collecte), fichier `src/extractors/datasets/dataset_engine.py` (commit 93632c5).
+Modifié pour SortirIA : la validation propre au dataset passe avant la construction de l'article (voir `process_dataset_item`).
 """
 
 from __future__ import annotations
@@ -250,6 +251,21 @@ def process_dataset_item(
         or f"{adapter.source_id}:{item_index}"
     )
 
+    # Modifié pour SortirIA (14/10/2026) : la validation propre au dataset
+    # passe AVANT la construction de l'article. Elle porte sur l'élément brut ;
+    # un élément refusé (ligne d'un fichier partenaire sans date, par exemple)
+    # garde ainsi son motif au lieu de devenir « invalid_construction ».
+    valid, reason = validate_adapter_item(
+        adapter,
+        item,
+        filters,
+        source
+    )
+
+    if not valid:
+        context.reject(reason, "rejected_item")
+        return
+
     article = build_article_from_item(
         adapter,
         item,
@@ -288,17 +304,6 @@ def process_dataset_item(
 
     if not valid:
         context.reject(reason, "invalid_article")
-        return
-
-    valid, reason = validate_adapter_item(
-        adapter,
-        item,
-        filters,
-        source
-    )
-
-    if not valid:
-        context.reject(reason, "rejected_item")
         return
 
     if (

@@ -5,12 +5,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Any
 
 import httpx
 import pytest
-from bs4 import BeautifulSoup
 
 from src.extractors.scrapers import scraper_url_utils as module
 

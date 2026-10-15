@@ -5,9 +5,3 @@
 ::: src.article
 
 ::: src.cleaner
-
-::: src.transformers
-
-::: src.images
-
-::: src.pipelines

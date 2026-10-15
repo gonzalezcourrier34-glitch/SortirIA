@@ -19,5 +19,73 @@ services:
       interval: 5s
       retries: 10
 
+  # Suivi des exécutions de l'agent (agent/tracking.py) : http://localhost:5000
+  # Dans le .env : MLFLOW_TRACKING_URI=http://localhost:5000
+  mlflow:
+    # MLflow 3 : la version 2 est incompatible avec Airflow 3.3 (bibliothèque packaging).
+    image: ghcr.io/mlflow/mlflow:v3.1.0
+    container_name: sortiria_mlflow
+    command: >
+      mlflow server --host 0.0.0.0 --port 5000
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --artifacts-destination /mlflow/artifacts --serve-artifacts
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflowdata:/mlflow
+
+  # Tableau de bord de la collecte : http://localhost:3001 (admin / GRAFANA_ADMIN_PASSWORD)
+  grafana:
+    image: grafana/grafana:11.3.0
+    container_name: sortiria_grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      # Lus par la source de données (monitoring/grafana/provisioning/datasources/postgres.yml).
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "3001:3000"   # 3001 : le port 3000 est souvent pris (autre Grafana)
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafanadata:/var/lib/grafana
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Interface (frontend/, sur le modèle de Chess Agent) : http://localhost:4210
+  # Ports 8010 et 4210 : 8000 et 4200 sont pris par le triage médical et Chess Agent.
+  # Lancement : docker compose --profile interface up -d --build
+  # (sans profil, docker compose ne démarre que la base, MLflow et Grafana).
+  api:
+    profiles: ["interface"]
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    container_name: sortiria_api
+    env_file: .env
+    environment:
+      # Dans docker, la base s'appelle « db » (et non localhost).
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    ports:
+      - "8010:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    profiles: ["interface"]
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sortiria_frontend
+    ports:
+      - "4210:4200"
+    depends_on:
+      - api
+
 volumes:
   pgdata:
+  mlflowdata:
+  grafanadata:

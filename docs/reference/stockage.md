@@ -1,9 +1,5 @@
-# Collecte : stockage et utilitaires
-
-::: src.storage
+# Collecte : utilitaires
 
 ::: src.utils
 
 ::: src.logger
-
-::: src.main

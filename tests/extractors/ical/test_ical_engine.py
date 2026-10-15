@@ -16,7 +16,7 @@ from config.constants import (
 )
 from config.source_config import build_source_config
 from src.event.event_pipeline import event_from_article
-from src.extractors.ical.ical_adapter import IcalAdapter
+from src.extractors.files.file_adapter import FileSourceAdapter
 
 FUTURE = "20991018T203000"
 
@@ -91,7 +91,7 @@ def test_article_carries_event_and_credit(fake_http) -> None:
 
 def test_adapter_contract() -> None:
     with pytest.raises(TypeError):
-        IcalAdapter(iter_items="pas une fonction", build_article=lambda item, src: {})
+        FileSourceAdapter(iter_items="pas une fonction", build_article=lambda item, src: {})
 
 
 def test_config_requires_a_valid_url() -> None:

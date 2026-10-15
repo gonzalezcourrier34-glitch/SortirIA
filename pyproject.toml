@@ -12,31 +12,23 @@ dependencies = [
     "httpx>=0.28.1",
     "lxml>=6.1.1",
     "pandas>=2.1.2",
-    "pillow>=12.3.0",
-    "pillow-avif-plugin>=1.5.5",
     "psycopg2-binary>=2.9.10",
     "python-dateutil>=2.9.0.post0",
     "python-dotenv>=1.2.2",
+    "pypdf>=5.0.0",  # texte des programmes PDF (src/extractors/documents/)
+    "openpyxl>=3.1.0",  # fichiers Excel des partenaires (src/extractors/datasets/source/)
+    "xlrd>=2.0.1",  # ancien format Excel (.xls) des partenaires
+    "mlflow>=3.1,<4",  # suivi des exécutions de l'agent (agent/tracking.py) ; MLflow 2.x est incompatible avec Airflow 3.3 (packaging) ; même version majeure que le serveur docker-compose
     "pyyaml>=6.0.3",
     "tenacity>=9.1.4",
-    "trafilatura>=2.1.0",
     "tzdata>=2024.1",  # fuseau Europe/Paris sous Windows (zoneinfo)
     "w3lib>=2.4.1",
-    # RAG et API (RAG OpenAgenda)
+    # Recherche et API (FastAPI, Mistral par LangChain, agent LangGraph)
     "fastapi>=0.115.0",
     "uvicorn>=0.30.0",
     "pydantic>=2.9.0",
-    "requests>=2.32.0",
-    "mistralai>=2.0.1",
-    "langchain>=0.3.0",
-    "langchain-community>=0.3.0",
     "langchain-mistralai>=0.2.0",
     "langgraph>=0.6.0",  # agent de collecte nocturne (comme Chess Agent)
-    "faiss-cpu>=1.8.0",  # à retirer une fois pgvector en place
-    "pgvector>=0.3.6",
-    "numpy>=1.26.0",
-    # Interface
-    "streamlit>=1.39.0",
 ]
 
 [project.optional-dependencies]

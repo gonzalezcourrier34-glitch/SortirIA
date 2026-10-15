@@ -34,5 +34,6 @@ def test_prepare_events_counts_everything(openagenda_item, now) -> None:
         "events_extracted": 4,
         "events_rejected": 2,
         "duplicates_merged": 1,
+        "cross_source_merged": 0,
         "rejection_reasons": {"evenement_passe": 1, "format_inconnu": 1},
     }

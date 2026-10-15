@@ -96,7 +96,22 @@ VALUES
     -- Calendriers iCal des lieux (moteur src/extractors/ical/) : le nom du
     -- lieu est cité dans events.source_credit.
     ('ical', 'Calendriers des lieux partenaires', 'partenaire', 'Accord du lieu',
-     'Source : agenda du lieu', '')
+     'Source : agenda du lieu', ''),
+    -- Programmes publiés en PDF par des collectivités, lus par Mistral
+    -- (src/extractors/documents/). Réutilisation des informations publiques :
+    -- citer la source et la date, ne pas dénaturer. Le document est cité
+    -- dans events.source_credit.
+    ('document', 'Programmes publiés par les collectivités', 'open_data',
+     'Réutilisation des informations publiques (CRPA, art. L321-1 et suivants)',
+     'Source : programme publié', ''),
+    -- Flux RSS d'agenda (moteur RSS de CheckIt.AI, adaptateur
+    -- src/extractors/rss/source/) : seulement des flux prévus pour la reprise.
+    ('rss', 'Flux RSS d''agenda', 'page_web', 'Flux publié pour la syndication',
+     'Source : flux de l''agenda', ''),
+    -- Pages d'agenda lues par le moteur scraper de CheckIt.AI : seulement avec
+    -- l'autorisation écrite de l'éditeur (robots.txt respecté).
+    ('scraper', 'Agendas en ligne (avec autorisation)', 'page_web', 'Autorisation de l''éditeur',
+     'Source : site de l''éditeur', '')
 ON CONFLICT (source_id) DO NOTHING;
 
 COMMIT;

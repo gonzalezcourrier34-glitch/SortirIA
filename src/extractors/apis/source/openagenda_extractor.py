@@ -30,7 +30,6 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Iterator, Mapping
 from datetime import date, datetime, timedelta
-from math import asin, cos, radians, sin, sqrt
 from typing import Any
 
 from config.paths import SOURCES_FILE
@@ -39,6 +38,7 @@ from src.event.openagenda_mapper import get_path, map_openagenda_event
 from src.extractors.apis.api_adapter import ApiAdapter
 from src.extractors.apis.api_extractor import (
     ApiAuthenticationError,
+    ApiExtractionStoppedError,
     ApiExtractor,
     extract_api_from_source,
     fetch_json_object,
@@ -47,6 +47,11 @@ from src.extractors.apis.api_extractor import (
 from src.extractors.core.extractor_results import ExtractorResult
 from src.logger import get_logger
 from src.utils.extractor_utils import build_standard_article
+from src.utils.geo_utils import (
+    get_areas,
+    is_point_in_areas,
+    to_float,
+)
 from src.utils.parsing_utils import parse_non_negative_integer
 from src.utils.value_utils import normalize_value
 
@@ -58,8 +63,6 @@ DEFAULT_PAGE_SIZE = 100
 DEFAULT_MAX_PAGES = 10
 DEFAULT_MAX_AGENDAS = 30
 DEFAULT_DAYS_FORWARD = 30
-DEFAULT_RADIUS_KM = 20.0
-EARTH_RADIUS_KM = 6371.0
 
 
 # ---------------------------------------------------------------------------
@@ -98,39 +101,8 @@ def get_date_window(source: Mapping[str, Any], today: date | None = None) -> tup
 # événements récupérés étaient à Montpellier (Paris arrivait en tête). On ne
 # garde donc que les événements situés dans un rayon autour de la ville.
 
-def distance_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    """Distance à vol d'oiseau entre deux points GPS (formule de haversine)."""
-
-    lat1, lon1, lat2, lon2 = map(radians, (lat1, lon1, lat2, lon2))
-    a = sin((lat2 - lat1) / 2) ** 2 + cos(lat1) * cos(lat2) * sin((lon2 - lon1) / 2) ** 2
-    return 2 * EARTH_RADIUS_KM * asin(sqrt(a))
-
-
-def _to_float(value: Any) -> float | None:
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return None
-
-
-def get_areas(source: Mapping[str, Any]) -> list[dict[str, float]]:
-    """Zones configurées : liste `areas`, ou ancien format à une seule zone.
-
-    Chaque zone a un centre (latitude, longitude) et un rayon en km. Plusieurs
-    zones évitent un cercle géant qui engloberait des communes sans intérêt :
-    par exemple Montpellier (20 km) + le bassin de Thau (15 km).
-    """
-
-    areas: list[dict[str, float]] = []
-    for area in source.get("areas") or []:
-        lat, lon = _to_float(area.get("latitude")), _to_float(area.get("longitude"))
-        if lat is not None and lon is not None:
-            areas.append({"latitude": lat, "longitude": lon, "radius_km": _to_float(area.get("radius_km")) or DEFAULT_RADIUS_KM})
-    center_lat = _to_float(source.get("center_latitude"))
-    center_lon = _to_float(source.get("center_longitude"))
-    if not areas and center_lat is not None and center_lon is not None:
-        areas.append({"latitude": center_lat, "longitude": center_lon, "radius_km": _to_float(source.get("radius_km")) or DEFAULT_RADIUS_KM})
-    return areas
+# Les fonctions de distance et de zones sont dans src/utils/geo_utils.py
+# (communes à OpenAgenda, DATAtourisme et aux scripts d'audit).
 
 
 def is_in_area(item: Mapping[str, Any], source: Mapping[str, Any]) -> bool:
@@ -143,13 +115,10 @@ def is_in_area(item: Mapping[str, Any], source: Mapping[str, Any]) -> bool:
     """
 
     areas = get_areas(source)
-    lat = _to_float(get_path(item, ("location", "latitude"), ("latitude",)))
-    lon = _to_float(get_path(item, ("location", "longitude"), ("longitude",)))
+    lat = to_float(get_path(item, ("location", "latitude"), ("latitude",)))
+    lon = to_float(get_path(item, ("location", "longitude"), ("longitude",)))
     if areas and lat is not None and lon is not None:
-        return any(
-            distance_km(area["latitude"], area["longitude"], lat, lon) <= area["radius_km"]
-            for area in areas
-        )
+        return is_point_in_areas(lat, lon, areas)
 
     allowed = [normalize_for_comparison(city) for city in (source.get("cities") or [source.get("zone")]) if city]
     if not allowed:
@@ -239,11 +208,21 @@ def iter_openagenda_items(
     yielded = 0
     outside_area = 0
     kept_by_agenda: Counter[str] = Counter()
+    # Un agenda supprimé, privé ou en quota (404, 403, 429) ne doit pas priver la
+    # nuit des agendas suivants (15/10/2026) : l'erreur est gardée et relevée à
+    # la fin, pour que l'extracteur soit noté « réussite partielle » et que
+    # l'agent garde les événements non relus.
+    agenda_errors: list[Exception] = []
     try:
         for agenda_uid in search_agenda_uids(source, api_key):
             read_before, kept_before = len(seen_uids), kept_by_agenda[agenda_uid]
             for page in range(max_pages):
-                events = fetch_agenda_page(source, agenda_uid, api_key, page * page_size, page_size)
+                try:
+                    events = fetch_agenda_page(source, agenda_uid, api_key, page * page_size, page_size)
+                except ApiExtractionStoppedError as error:
+                    logger.warning("Agenda %s : lecture interrompue (%s) ; on passe au suivant.", agenda_uid, error)
+                    agenda_errors.append(error)
+                    break
                 for index, item in enumerate(events):
                     # Un même événement peut être partagé par plusieurs agendas.
                     uid = normalize_value(item.get("uid"))
@@ -267,6 +246,8 @@ def iter_openagenda_items(
                 "Agenda %s : %s événement(s) lu(s), %s dans la zone.",
                 agenda_uid, len(seen_uids) - read_before, kept_by_agenda[agenda_uid] - kept_before,
             )
+        if agenda_errors:
+            raise agenda_errors[0]
     finally:
         logger.info(
             "OpenAgenda : %s événement(s) dans la zone, %s hors zone écarté(s). "

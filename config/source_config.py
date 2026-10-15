@@ -20,7 +20,7 @@ from src.utils.yaml_utils import load_yaml_file
 
 logger = get_logger(__name__)
 
-SourceType = Literal["api", "rss", "dataset", "scraper", "social", "ical"]
+SourceType = Literal["api", "rss", "dataset", "scraper", "social", "ical", "document"]
 ApiQuery = str | dict[str, Any]
 ConfigTextValue = str | tuple[str, ...]
 T = TypeVar("T")
@@ -28,8 +28,10 @@ T = TypeVar("T")
 SECTION_SOURCE_TYPES: dict[str, SourceType] = {
     "api_sources": "api", "rss_sources": "rss", "datasets": "dataset",
     "scraper_sources": "scraper", "social_sources": "social",
-    # Ajout SortirIA (14/10/2026) : calendriers iCal des lieux partenaires.
+    # Ajouts SortirIA (14/10/2026) : calendriers iCal des lieux partenaires,
+    # programmes PDF lus par Mistral.
     "ical_sources": "ical",
+    "document_sources": "document",
 }
 KNOWN_TOP_LEVEL_SECTIONS = {"defaults", *SECTION_SOURCE_TYPES}
 REFERENCE_ROLES = {"labeled_reference", "multimodal_reference", "fact_check_reference"}
@@ -392,8 +394,8 @@ class RssSourceConfig(SourceConfig):
 
 
 @dataclass(frozen=True, slots=True)
-class IcalSourceConfig(SourceConfig):
-    """Calendrier iCal (.ics) : une URL, plus le lieu par défaut dans `extra`."""
+class FileSourceConfig(SourceConfig):
+    """Source « un fichier » (calendrier iCal, programme PDF) : une URL, le reste dans `extra`."""
 
     url: str
     extra: dict[str, Any] = field(default_factory=dict)
@@ -613,8 +615,8 @@ def build_source_config(raw_source: Mapping[str, Any], expected_type: SourceType
             **common, url=clean_string(merged.get("url")),
             extra=extract_extra(merged, common_fields | {"url"})
         )
-    if expected_type == "ical":
-        return IcalSourceConfig(
+    if expected_type in ("ical", "document"):
+        return FileSourceConfig(
             **common, url=clean_string(merged.get("url")),
             extra=extract_extra(merged, common_fields | {"url"})
         )

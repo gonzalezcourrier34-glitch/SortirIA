@@ -121,8 +121,7 @@ def test_missing_api_key_raises(monkeypatch: pytest.MonkeyPatch) -> None:
 AREA = {**SOURCE, "center_latitude": 43.6108, "center_longitude": 3.8767, "radius_km": 20, "cities": ["Montpellier"]}
 
 
-def test_distance_montpellier_paris_is_about_600_km() -> None:
-    assert 590 < module.distance_km(43.6108, 3.8767, 48.8566, 2.3522) < 610
+# La distance est testée dans tests/utils/test_geo_utils.py (module commun).
 
 
 def test_is_in_area_uses_gps_when_available() -> None:
@@ -185,3 +184,23 @@ def test_old_single_center_format_still_works() -> None:
     assert module.get_areas({"center_latitude": 43.6, "center_longitude": 3.87, "radius_km": 5}) == [
         {"latitude": 43.6, "longitude": 3.87, "radius_km": 5.0}
     ]
+
+
+# --- Revue du 15/10/2026 : un agenda en panne n'arrête pas les autres -------
+def test_a_deleted_agenda_does_not_stop_the_following_ones(fake_api, monkeypatch: pytest.MonkeyPatch) -> None:
+    """L'agenda A répond 404 (supprimé) : B est quand même lu, et l'extracteur est « partiel »."""
+
+    from src.extractors.apis.api_extractor import ApiInvalidParametersError
+
+    real_fetch = module.fetch_agenda_page
+
+    def fetch(source, uid, key, offset, size):
+        if uid == "A":
+            raise ApiInvalidParametersError("OpenAgenda", "agenda introuvable", status_code=404)
+        return real_fetch(source, uid, key, offset, size)
+
+    monkeypatch.setattr(module, "fetch_agenda_page", fetch)
+    result = module.extract_articles_from_source(SOURCE)
+    events = [event_from_article(article) for article in result.articles]
+    assert sorted(event.source_event_id for event in events) == ["3", "4"]       # l'agenda B en entier
+    assert result.status == "partial_success"                                   # l'agent gardera les événements de A

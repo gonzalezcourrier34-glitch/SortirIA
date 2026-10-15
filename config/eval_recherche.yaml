@@ -1,0 +1,146 @@
+# Jeu d'évaluation de la recherche SortirIA (15/10/2026).
+#
+# Chaque question dit ce que la recherche doit comprendre (`compris`) et ce
+# que les événements proposés doivent respecter. Lancement :
+#     uv run python -m scripts.eval_recherche
+#
+# Clés de `compris` (toutes facultatives) :
+#   quand      libellé de la période comprise (« ce week-end », « sam. 17 oct. »…) ;
+#              les jours de semaine dépendent du jour du test : on écrit alors
+#              « jour » pour « une date précise ».
+#   communes   communes, forme sans accents (« sete », « meze »)
+#   zone       montpellier | thau
+#   public     famille | soiree | ados | seniors
+#   gratuit    true
+#   soir       true
+#   types      catégories attendues (au moins une doit être comprise)
+#   budget     prix maximum compris (« moins de 15 € », « pas cher » = 15)
+#   cadre      interieur (s'il pleut) | exterieur (plein air)
+#   pres_de    commune de repère (« près de Sète » : sete)
+# `mots` : au moins un de ces mots doit figurer dans le titre ou le résumé
+# des événements proposés (pertinence par le contenu).
+# `filtres` : cases cochées dans l'interface (public, zone, period, free_only).
+
+questions:
+  # --- Le type de sortie ---
+  - question: "j'aimerais aller au théâtre"
+    compris: {types: [theatre, spectacle]}
+  - question: "un concert ce week-end"
+    compris: {quand: "ce week-end", types: [concert]}
+  - question: "une exposition à voir en novembre"
+    compris: {quand: "en novembre", types: [exposition]}
+  - question: "du cinéma en plein air ou une projection"
+    compris: {types: [cinema]}
+  - question: "un spectacle de danse"
+    compris: {types: [danse, spectacle]}
+  - question: "un marché ou une brocante dimanche"
+    compris: {quand: jour, types: [marche]}
+  - question: "un atelier créatif pour les enfants"
+    compris: {public: famille, types: [atelier]}
+  - question: "une visite guidée de Sète"
+    compris: {communes: [sete], types: [visite]}
+  - question: "une conférence sur l'histoire"
+    compris: {types: [conference]}
+  - question: "un festival en octobre"
+    compris: {quand: "en octobre", types: [festival]}
+
+  # --- Quand ---
+  - question: "que faire ce soir ?"
+    compris: {quand: "aujourd'hui", soir: true}
+  - question: "une sortie demain"
+    compris: {quand: "demain"}
+  - question: "quoi faire samedi soir à Montpellier"
+    compris: {quand: jour, zone: montpellier, soir: true}
+  - question: "des idées pour la semaine prochaine"
+    compris: {quand: "la semaine prochaine"}
+  - question: "le 31 octobre pour Halloween"
+    compris: {quand: jour}
+    mots: [halloween]
+
+  # --- Où ---
+  - question: "que faire à Sète ce week-end ?"
+    compris: {quand: "ce week-end", communes: [sete]}
+  - question: "une balade nature autour de l'étang de Thau"
+    compris: {zone: thau, types: [nature]}
+  - question: "sortir à Frontignan"
+    compris: {communes: [frontignan]}
+  - question: "des activités à Lattes ou à Pérols"
+    compris: {communes: [lattes, perols]}
+  - question: "un concert à Mèze"
+    compris: {communes: [meze], types: [concert]}
+
+  # --- Pour qui, combien ---
+  - question: "une sortie gratuite avec les enfants"
+    compris: {public: famille, gratuit: true}
+  - question: "un truc à faire avec des ados"
+    compris: {public: ados}
+  - question: "une activité pour seniors"
+    compris: {public: seniors}
+  - question: "un bar à concerts pour une soirée entre amis"
+    compris: {public: soiree, types: [concert]}
+  - question: "des spectacles gratuits à Montpellier"
+    compris: {gratuit: true, zone: montpellier, types: [spectacle]}
+
+  # --- Noms et sujets précis (la recherche par mots-clés) ---
+  - question: "des jeux d'échecs"
+    compris: {types: [jeux]}
+    mots: [echec, echecs]
+  - question: "du jazz"
+    compris: {types: [concert]}
+    mots: [jazz]
+  - question: "une expo au musée Fabre"
+    compris: {types: [exposition]}
+    mots: [fabre]
+  - question: "une lecture de contes"
+    compris: {types: [lecture]}
+    mots: [conte, contes]
+  - question: "une dégustation de vins ou d'huîtres"
+    mots: [degustation, vin, vins, huitre, huitres]
+
+  # --- Cases cochées + question ---
+  - question: "du théâtre"
+    filtres: {public: famille, zone: montpellier, period: 3mois, free_only: true}
+    compris: {public: famille, zone: montpellier, gratuit: true, types: [theatre, spectacle]}
+  - question: "un concert"
+    filtres: {zone: thau, period: weekend}
+    compris: {quand: "ce week-end", zone: thau, types: [concert]}
+
+  # --- Budget, météo, distance (15/10/2026) ---
+  - question: "un concert à moins de 15 €"
+    compris: {types: [concert], budget: 15}
+  - question: "une sortie pas chère avec les enfants"
+    compris: {public: famille, budget: 15}
+  - question: "que faire s'il pleut ce week-end ?"
+    compris: {quand: "ce week-end", cadre: interieur}
+  - question: "une balade en plein air"
+    compris: {cadre: exterieur, types: [nature]}
+  - question: "un atelier près de Sète"
+    compris: {pres_de: sete, types: [atelier]}
+  - question: "que faire à moins de 15 km de Frontignan ?"
+    compris: {pres_de: frontignan}
+
+  # --- Questions du quotidien (complément à 50, 15/10/2026) ---
+  - question: "un spectacle pour les enfants dimanche"
+    compris: {quand: jour, public: famille, types: [spectacle]}
+  - question: "une sortie en amoureux samedi soir"
+    compris: {quand: jour, soir: true, public: soiree}
+  - question: "un concert gratuit à Sète"
+    compris: {communes: [sete], gratuit: true, types: [concert]}
+  - question: "que faire avec des ados ce week-end à Montpellier ?"
+    compris: {quand: "ce week-end", public: ados, zone: montpellier}
+  - question: "une conférence la semaine prochaine"
+    compris: {quand: "la semaine prochaine", types: [conference]}
+  - question: "un atelier pour les seniors"
+    compris: {public: seniors, types: [atelier]}
+  - question: "des jeux de société à Frontignan"
+    compris: {communes: [frontignan], types: [jeux]}
+  - question: "une exposition gratuite à Montpellier"
+    compris: {gratuit: true, zone: montpellier, types: [exposition]}
+  - question: "un festival près de Montpellier"
+    compris: {zone: montpellier, types: [festival]}
+  - question: "une visite guidée demain"
+    compris: {quand: "demain", types: [visite]}
+  - question: "un marché de Noël en décembre"
+    compris: {quand: "en décembre", types: [marche]}
+  - question: "une projection de film pour les enfants"
+    compris: {public: famille, types: [cinema]}

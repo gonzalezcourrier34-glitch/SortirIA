@@ -17,9 +17,9 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
-from src.event.event_deduplicator import deduplicate_events
+from src.event.event_deduplicator import deduplicate_events, merge_cross_source
 from src.event.event_schema import Event
-from src.event.event_validator import validate_event
+from src.event.event_validator import conform_to_schema, validate_event
 
 
 @dataclass(slots=True)
@@ -29,6 +29,7 @@ class PreparationReport:
     events_extracted: int = 0
     events_rejected: int = 0
     duplicates_merged: int = 0
+    cross_source_merged: int = 0        # dont : même événement venu de deux sources
     rejection_reasons: dict[str, int] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -36,6 +37,7 @@ class PreparationReport:
             "events_extracted": self.events_extracted,
             "events_rejected": self.events_rejected,
             "duplicates_merged": self.duplicates_merged,
+            "cross_source_merged": self.cross_source_merged,
             "rejection_reasons": dict(self.rejection_reasons),
         }
 
@@ -52,8 +54,12 @@ def occurrence_article_url(event: Event) -> str:
     moteur iCal.)
     """
 
-    separator = "&" if "?" in event.url else "?"
-    return f"{event.url}{separator}occurrence={event.event_id}"
+    # Le paramètre doit passer AVANT un éventuel fragment (`#page=3` des PDF) :
+    # tout ce qui suit `#` est ignoré par la normalisation des URL, et deux
+    # événements d'un même PDF devenaient des doublons (bug du 14/10/2026).
+    address, hash_sign, fragment = event.url.partition("#")
+    separator = "&" if "?" in address else "?"
+    return f"{address}{separator}occurrence={event.event_id}{hash_sign}{fragment}"
 
 
 def event_from_article(article: Mapping[str, Any]) -> Event | None:
@@ -82,6 +88,7 @@ def prepare_events(
         if event is None:
             reasons["format_inconnu"] += 1
             continue
+        conform_to_schema(event)
         is_valid, reason = validate_event(event, now)
         if not is_valid:
             reasons[reason] += 1
@@ -89,7 +96,10 @@ def prepare_events(
         valid.append(event)
 
     unique, duplicates = deduplicate_events(valid)
+    # Puis le même événement venu de deux sources, titres écrits autrement.
+    unique, cross_source = merge_cross_source(unique)
     report.events_rejected = sum(reasons.values())
-    report.duplicates_merged = duplicates
+    report.duplicates_merged = duplicates + cross_source
+    report.cross_source_merged = cross_source
     report.rejection_reasons = dict(reasons)
     return unique, report

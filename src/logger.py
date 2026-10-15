@@ -259,22 +259,3 @@ def get_logger(name: str | None = None) -> logging.Logger:
 
 # Réinitialisation contrôlée
 
-def reset_project_logger() -> None:
-    """Réinitialise le logger du projet, notamment pour les tests."""
-
-    with _CONFIG_LOCK:
-        project_logger = logging.getLogger(PROJECT_LOGGER_NAME)
-
-        close_logger_handlers(project_logger)
-
-        project_logger.setLevel(logging.NOTSET)
-        project_logger.propagate = True
-
-        if hasattr(
-            project_logger,
-            LOGGER_CONFIGURED_ATTRIBUTE
-        ):
-            delattr(
-                project_logger,
-                LOGGER_CONFIGURED_ATTRIBUTE
-            )

@@ -4,6 +4,7 @@
 
     uv run python -m agent            # collecte complète (PostgreSQL requis)
     uv run python -m agent --essai    # sans écriture en base, pour tester
+    uv run python -m agent --decouverte   # avec la découverte des agendas OpenAgenda (~6 min de plus)
 """
 
 from __future__ import annotations
@@ -23,15 +24,19 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Collecte nocturne SortirIA.")
     parser.add_argument("--essai", action="store_true", help="N'écrit rien en base.")
     parser.add_argument("--source", action="append", help="Source à collecter (répétable).")
+    parser.add_argument("--decouverte", action="store_true",
+                        help="Cherche aussi les nouveaux agendas OpenAgenda (fait d'office le dimanche).")
     args = parser.parse_args()
 
     load_environment()
 
-    state = run_nightly_collection(sources=args.source, dry_run=args.essai)
+    state = run_nightly_collection(sources=args.source, dry_run=args.essai,
+                                   discover_agendas=args.decouverte)
     summary = {
         key: state.get(key)
-        for key in ("status", "sources", "attempts", "preparation", "events_upserted",
-                    "events_expired", "events_embedded", "failed_sources", "alerts", "errors", "run_id")
+        for key in ("status", "sources", "attempts", "source_attempts", "preparation", "events_upserted",
+                    "events_removed", "events_expired", "events_embedded", "source_drops", "purged",
+                    "coverage", "cost_usd", "llm_usage", "failed_sources", "alerts", "errors", "run_id")
     }
     print(json.dumps(summary, ensure_ascii=False, indent=2))
 

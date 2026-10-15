@@ -38,10 +38,6 @@ class SecretNotFoundError(SecretError):
     """Signale qu'un secret requis est absent."""
 
 
-class SecretEmptyError(SecretError):
-    """Signale qu'un secret existe mais ne contient aucune valeur valide."""
-
-
 class SecretNameError(SecretError):
     """Signale qu'un nom de Docker Secret est invalide."""
 
@@ -111,20 +107,6 @@ def get_boolean_environment_variable(name: str, default: bool) -> bool:
     if value in {"0", "false", "no", "off"}:
         return False
     raise ValueError(f"La variable '{name}' doit contenir un booléen.")
-
-
-def require_environment_variables(variable_names: Iterable[str]) -> None:
-    """Vérifie que toutes les variables d'environnement demandées sont valides."""
-
-    missing = sorted({
-        name for name in variable_names
-        if not is_valid_secret(get_environment_variable(name))
-    })
-    if missing:
-        raise RuntimeError(
-            "Variables d'environnement manquantes ou invalides : "
-            + ", ".join(missing)
-        )
 
 
 # Secrets

@@ -68,17 +68,18 @@ nav:
   - Démarrage: demarrage.md
   - Architecture: architecture.md
   - Sources d'événements: sources.md
+  - Fichiers des partenaires: partenaires.md
   - Agent de collecte: agent.md
+  - Interface: interface.md
   - Base de données: base_de_donnees.md
   - MLOps et monitoring: monitoring.md
   - Provenance du code: provenance.md
   - Référence du code:
       - Vue d'ensemble: reference/index.md
       - RAG et API: reference/rag.md
-      - Interface Streamlit: reference/dashboard.md
       - Configuration: reference/config.md
       - Collecte - extracteurs: reference/extracteurs.md
       - Collecte - traitement: reference/traitement.md
-      - Collecte - stockage et utilitaires: reference/stockage.md
+      - Collecte - utilitaires: reference/stockage.md
       - Agent de collecte: reference/agent.md
       - Orchestration Airflow: reference/dags.md

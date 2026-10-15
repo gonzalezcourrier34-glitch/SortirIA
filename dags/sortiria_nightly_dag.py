@@ -29,12 +29,12 @@ def run_collection(**_: Any) -> dict[str, Any]:
 
     state = run_nightly_collection()
     summary = {
-        "status": state.get("status"),
-        "preparation": state.get("preparation"),
-        "events_upserted": state.get("events_upserted"),
-        "events_expired": state.get("events_expired"),
-        "events_embedded": state.get("events_embedded"),
-        "alerts": state.get("alerts"),
+        key: state.get(key)
+        for key in (
+            "status", "sources", "preparation", "events_upserted", "events_removed",
+            "events_expired", "events_embedded", "source_drops", "purged", "coverage", "cost_usd",
+            "alerts", "run_id",
+        )
     }
     if state.get("status") == "failed":
         raise RuntimeError(f"Collecte nocturne en échec : {summary}")
@@ -43,7 +43,7 @@ def run_collection(**_: Any) -> dict[str, Any]:
 
 with DAG(
     dag_id="sortiria_nightly_collection",
-    description="Collecte nocturne des événements de Montpellier (agent LangGraph).",
+    description="Collecte nocturne des événements de Montpellier et du bassin de Thau (agent LangGraph).",
     schedule="0 2 * * *",
     start_date=pendulum_datetime(2026, 10, 13, tz="Europe/Paris"),
     catchup=False,

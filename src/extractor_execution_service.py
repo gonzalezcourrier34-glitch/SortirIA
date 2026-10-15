@@ -1,7 +1,7 @@
 """Service d'orchestration de l'exécution des extracteurs CheckIt.AI.
 
 **Provenance** : repris de CheckIt.AI (projet 12, moteur de collecte), fichier `src/extractor_execution_service.py` (commit 93632c5).
-Modifié pour SortirIA : registre réduit à RSS, OpenAgenda, DATAtourisme et iCal (extracteurs de presse et de fake news retirés).
+Modifié pour SortirIA : registre réduit à RSS, OpenAgenda, DATAtourisme, iCal, programmes PDF et fichiers des partenaires (extracteurs de presse et de fake news retirés).
 """
 
 from __future__ import annotations
@@ -19,14 +19,14 @@ from config.constants import (
     EXTRACTOR_STATUS_PARTIAL_SUCCESS,
     EXTRACTOR_STATUS_SUCCESS,
     SOURCE_TYPE_API,
+    SOURCE_TYPE_DATASET,
+    SOURCE_TYPE_DOCUMENT,
     SOURCE_TYPE_ICAL,
     SOURCE_TYPE_RSS,
+    SOURCE_TYPE_SCRAPER,
 )
 from src.extractors.apis.source.datatourisme_extractor import (
     extract_all_articles as extract_datatourisme_articles,
-)
-from src.extractors.ical.ical_extractor import (
-    extract_all_articles as extract_ical_articles,
 )
 from src.extractors.apis.source.openagenda_extractor import (
     extract_all_articles as extract_openagenda_articles,
@@ -36,7 +36,21 @@ from src.extractors.core.extractor_service import (
     ExtractorExecution,
     run_extractor,
 )
-from src.extractors.rss.rss_extractor import extract_all_articles as extract_rss_articles
+from src.extractors.datasets.source.partner_extractor import (
+    extract_all_articles as extract_partner_articles,
+)
+from src.extractors.documents.document_extractor import (
+    extract_all_articles as extract_document_articles,
+)
+from src.extractors.ical.ical_extractor import (
+    extract_all_articles as extract_ical_articles,
+)
+from src.extractors.rss.source.event_rss_extractor import (
+    extract_all_articles as extract_rss_articles,
+)
+from src.extractors.scrapers.source.agenda_scraper import (
+    extract_all_articles as extract_scraper_articles,
+)
 from src.logger import get_logger
 from src.utils.value_utils import normalize_casefold
 
@@ -54,8 +68,9 @@ class ExtractorDefinition:
 
 
 EXTRACTORS: dict[str, ExtractorDefinition] = {
-    # Moteur RSS générique : il lit tous les flux déclarés dans
-    # config/sources.yaml (rss_sources).
+    # Moteur RSS de CheckIt.AI avec l'adaptateur « agenda » de SortirIA
+    # (src/extractors/rss/source/event_rss_extractor.py) : il lit tous les
+    # flux déclarés dans config/sources.yaml (rss_sources).
     "rss": ExtractorDefinition(
         source_type=SOURCE_TYPE_RSS,
         extraction_function=extract_rss_articles
@@ -76,6 +91,24 @@ EXTRACTORS: dict[str, ExtractorDefinition] = {
     "ical": ExtractorDefinition(
         source_type=SOURCE_TYPE_ICAL,
         extraction_function=extract_ical_articles
+    ),
+    # Programmes publiés en PDF, lus par Mistral (config/sources.yaml,
+    # document_sources).
+    "document": ExtractorDefinition(
+        source_type=SOURCE_TYPE_DOCUMENT,
+        extraction_function=extract_document_articles
+    ),
+    # Fichiers envoyés par les partenaires (moteur datasets de CheckIt.AI,
+    # config/sources.yaml, datasets > partenaire).
+    "partenaire": ExtractorDefinition(
+        source_type=SOURCE_TYPE_DATASET,
+        extraction_function=extract_partner_articles
+    ),
+    # Pages d'agenda lues avec l'autorisation de l'éditeur (moteur scraper de
+    # CheckIt.AI, config/sources.yaml, scraper_sources).
+    "scraper": ExtractorDefinition(
+        source_type=SOURCE_TYPE_SCRAPER,
+        extraction_function=extract_scraper_articles
     ),
 }
 

@@ -1,0 +1,1377 @@
+{
+  "uid": "sortiria-collecte",
+  "title": "SortirIA - Collecte nocturne",
+  "tags": [
+    "sortiria",
+    "agent"
+  ],
+  "timezone": "Europe/Paris",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "refresh": "5m",
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "description": "Suivi de l'agent de collecte : santé, sources, qualité, coût, couverture (PostgreSQL : collect_runs, collect_run_sources, vues).",
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "01 / État de la collecte",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Dernière collecte : statut",
+      "description": "Statut de la dernière nuit (agent/nodes.py, decide_status).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT status FROM sortiria.collect_runs ORDER BY started_at DESC LIMIT 1"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "success": {
+                  "text": "Succès",
+                  "color": "green"
+                },
+                "partial_success": {
+                  "text": "Partiel",
+                  "color": "orange"
+                },
+                "failed": {
+                  "text": "Échec",
+                  "color": "red"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Heures depuis la dernière collecte réussie",
+      "description": "Fraîcheur : au-delà de 26 h, une nuit a été manquée.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT EXTRACT(EPOCH FROM now() - max(started_at)) / 3600 AS heures FROM sortiria.collect_runs WHERE status <> 'failed'"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 26
+              },
+              {
+                "color": "red",
+                "value": 48
+              }
+            ]
+          },
+          "mappings": [],
+          "decimals": 1
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Événements proposables",
+      "description": "Ce que le RAG peut proposer (vue v_upcoming_events).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT count(*) FROM sortiria.v_upcoming_events"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Coût Mistral sur 30 jours",
+      "description": "Estimation (agent/watch.py) : lecture des PDF + embeddings.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(sum(cost_usd), 0) FROM sortiria.collect_runs WHERE started_at > now() - interval '30 days'"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 15
+              }
+            ]
+          },
+          "mappings": [],
+          "decimals": 2
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "type": "row",
+      "title": "02 / Sources",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Événements gardés par source",
+      "description": "Une baisse brutale d'une source déclenche l'alerte « baisse anormale » de l'agent.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT r.started_at AS time, s.source_id AS metric, s.events_kept AS value\nFROM sortiria.collect_run_sources s JOIN sortiria.collect_runs r USING (run_id)\nWHERE $__timeFilter(r.started_at)\nORDER BY 1"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "pointSize": 5,
+            "showPoints": "always",
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Sources en échec et nouveaux essais",
+      "description": "0 = lue du premier coup ; 0,5 = rattrapée au second essai (réessai ciblé) ; 1 = en échec.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 6,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT r.started_at AS time, s.source_id AS metric,\n       CASE WHEN s.status = 'echec' THEN 1 WHEN s.attempts > 1 THEN 0.5 ELSE 0 END AS value\nFROM sortiria.collect_run_sources s JOIN sortiria.collect_runs r USING (run_id)\nWHERE $__timeFilter(r.started_at)\nORDER BY 1"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "pointSize": 5,
+            "showPoints": "always",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 9,
+      "type": "row",
+      "title": "03 / Qualité et coût",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Taux de rejet à la préparation",
+      "description": "Au-delà de 20 %, l'agent alerte.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 15,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT started_at AS time, events_rejected::float / NULLIF(events_extracted, 0) AS \"taux de rejet\"\nFROM sortiria.collect_runs WHERE $__timeFilter(started_at) ORDER BY 1"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "pointSize": 5,
+            "showPoints": "always",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Coût Mistral par nuit",
+      "description": "",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 15,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT started_at AS time, cost_usd::float AS \"coût estimé\"\nFROM sortiria.collect_runs WHERE $__timeFilter(started_at) ORDER BY 1"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "pointSize": 5,
+            "showPoints": "always",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "Durée des étapes de l'agent",
+      "description": "Mesurée par le graphe (agent/graph.py, timed).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 15,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT r.started_at AS time, d.key AS metric, d.value::float AS value\nFROM sortiria.collect_runs r, jsonb_each_text(r.node_durations) d\nWHERE $__timeFilter(r.started_at) ORDER BY 1"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "pointSize": 5,
+            "showPoints": "always",
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 19,
+      "type": "row",
+      "title": "03 bis / Qualité jugée par Mistral",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 23,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "Score de qualité (juge Mistral, 20 événements par nuit)",
+      "description": "Grille : cohérence, est-ce une sortie, publics, catégorie (src/event/quality_judge.py). Alerte sous QUALITE_MIN (80 %).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT started_at AS time, quality_score::float AS \"score\",\n       (quality ->> 'coherent')::float AS \"cohérent\", (quality ->> 'est_une_sortie')::float AS \"est une sortie\",\n       (quality ->> 'publics_corrects')::float AS \"publics\", (quality ->> 'categorie_correcte')::float AS \"catégorie\"\nFROM sortiria.collect_runs WHERE quality_score IS NOT NULL AND $__timeFilter(started_at) ORDER BY 1"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "always",
+            "pointSize": 5
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 21,
+      "type": "table",
+      "title": "Derniers problèmes relevés par le juge",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 24,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT r.started_at AS \"nuit\", p.probleme AS \"problème\"\nFROM sortiria.collect_runs r, jsonb_array_elements_text(COALESCE(r.quality -> 'problems', '[]'::jsonb)) AS p(probleme)\nORDER BY 1 DESC LIMIT 20"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 13,
+      "type": "row",
+      "title": "04 / Promesse du service : sorties des 7 prochains jours",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Sorties famille / soirée par zone",
+      "description": "Couverture calculée par l'agent (agent/watch.py) ; seuil d'alerte : COUVERTURE_MIN_SEMAINE.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 33,
+        "w": 16,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT started_at AS time, montpellier_famille AS \"Montpellier famille\", montpellier_soiree AS \"Montpellier soirée\",\n       thau_famille AS \"Thau famille\", thau_soiree AS \"Thau soirée\"\nFROM sortiria.v_collect_health WHERE $__timeFilter(started_at) ORDER BY 1"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "pointSize": 5,
+            "showPoints": "always",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 15,
+      "type": "table",
+      "title": "Événements proposables par zone",
+      "description": "",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 33,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT zone, events AS \"événements\", family_events AS famille, night_events AS \"soirée\", free_events AS gratuits, missing_embedding AS \"sans embedding\"\nFROM sortiria.v_coverage ORDER BY events DESC"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 16,
+      "type": "row",
+      "title": "05 / Journal",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 41,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 17,
+      "type": "table",
+      "title": "Dernières collectes",
+      "description": "Le détail de chaque nuit (paramètres, métriques, trace des appels Mistral) est dans MLflow, expérience « sortiria-collecte ».",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 42,
+        "w": 24,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT started_at AS \"début\", status AS statut, duration_s AS \"durée (s)\", events_upserted AS \"enregistrés\",\n       events_rejected AS \"rejetés\", events_embedded AS embeddings, cost_usd AS \"coût $\", alerts_count AS alertes,\n       prompt_version AS \"consigne PDF\", mlflow_run_id AS \"exécution MLflow\"\nFROM sortiria.v_collect_health LIMIT 30"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 18,
+      "type": "table",
+      "title": "Alertes des 7 derniers jours",
+      "description": "",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 51,
+        "w": 24,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT r.started_at AS \"nuit\", a.alerte\nFROM sortiria.collect_runs r, unnest(r.alerts) AS a(alerte)\nWHERE r.started_at > now() - interval '7 days' ORDER BY 1 DESC"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 22,
+      "type": "row",
+      "title": "06 / Décisions de l'agent",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 59,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 23,
+      "type": "table",
+      "title": "Réparations proposées (en attente de validation)",
+      "description": "agent/diagnosis.py propose, un humain décide : uv run python -m agent.proposals --accepter N",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 60,
+        "w": 14,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT proposal_id AS \"n°\", created_at AS \"proposée le\", source_id AS source, kind AS panne,\n       action ->> 'new' AS \"nouvelle adresse\", status AS \"état\"\nFROM sortiria.agent_proposals ORDER BY proposal_id DESC LIMIT 20"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 24,
+      "type": "timeseries",
+      "title": "Enrichissement Mistral par nuit",
+      "description": "Événements enrichis (catégorie, publics, résumé) ; tokens et coût dans MLflow.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 14,
+        "y": 60,
+        "w": 10,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT started_at AS time, (llm_usage -> 'mistral-small-latest' ->> 'input')::float AS \"tokens enrichissement (entrée)\"\nFROM sortiria.collect_runs WHERE $__timeFilter(started_at) ORDER BY 1"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 40
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 25,
+      "type": "row",
+      "title": "07 / Taille de la base et événements supprimés",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 67,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 26,
+      "type": "timeseries",
+      "title": "Événements en base (plafond : 10 000)",
+      "description": "Au-delà du plafond (SORTIRIA_MAX_EVENEMENTS), les plus lointains sont retirés ; alerte à 90 %.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 68,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT started_at AS time, events_total AS \"en base\", events_capped AS \"retirés par le plafond\"\nFROM sortiria.collect_runs WHERE events_total IS NOT NULL AND $__timeFilter(started_at) ORDER BY 1"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "always",
+            "pointSize": 5
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 9000
+              },
+              {
+                "color": "red",
+                "value": 10000
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 27,
+      "type": "timeseries",
+      "title": "Événements supprimés par motif (statistiques gardées)",
+      "description": "La fiche est supprimée, seul le compte reste (sortiria.deleted_event_stats) : passés, disparus de leur source, plafond.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 68,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT day::timestamptz AS time, reason AS metric, sum(events) AS value\nFROM sortiria.deleted_event_stats WHERE $__timeFilter(day::timestamptz)\nGROUP BY 1, 2 ORDER BY 1"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 60,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 28,
+      "type": "table",
+      "title": "Ce qui a été proposé puis supprimé, sur 30 jours",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 76,
+        "w": 24,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT zone, category AS \"catégorie\", sum(events) AS \"événements\", sum(family) AS famille, sum(night) AS \"soirée\"\nFROM sortiria.deleted_event_stats\nWHERE reason = 'passe' AND day > current_date - 30\nGROUP BY 1, 2 ORDER BY 3 DESC LIMIT 30"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 29,
+      "type": "row",
+      "title": "08 / Notes des clients",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 84,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 30,
+      "type": "timeseries",
+      "title": "Notes par jour et moyenne",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 85,
+        "w": 12,
+        "h": 8
+      },
+      "description": "1 à 5 étoiles, du début de l'événement à 7 jours après sa fin (event_ratings).",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT date_trunc('day', updated_at) AS time, count(*)::float AS \"notes\", avg(stars)::float AS \"moyenne\"\nFROM sortiria.event_ratings WHERE $__timeFilter(updated_at)\nGROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 40
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 31,
+      "type": "table",
+      "title": "Partenaires : notes des clients",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 85,
+        "w": 12,
+        "h": 8
+      },
+      "description": "Alerte de l'agent si la moyenne est de 2,5 ou moins sur 5 notes au moins.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT partner_name AS partenaire, average_stars AS moyenne, ratings AS notes, low_ratings AS \"notes de 1-2\"\nFROM sortiria.v_partner_ratings ORDER BY average_stars"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 32,
+      "type": "table",
+      "title": "Lieux les mieux notés (3 notes au moins)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 93,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT venue_name AS lieu, city AS commune, average_stars AS moyenne, ratings AS notes\nFROM sortiria.v_venue_ratings ORDER BY average_stars DESC, ratings DESC LIMIT 20"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 33,
+      "type": "stat",
+      "title": "Commentaires en attente de modération",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 93,
+        "w": 12,
+        "h": 8
+      },
+      "description": "Mistral Moderation n'avait pas répondu : l'agent les reprend chaque nuit.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT count(*) FROM sortiria.event_ratings WHERE comment_status = 'en_attente'"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 10
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  }
+}

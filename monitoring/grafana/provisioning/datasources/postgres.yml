@@ -1,0 +1,23 @@
+# Source PostgreSQL de Grafana : la base SortirIA (tables collect_runs,
+# collect_run_sources et vues de sql/sortiria/05_views.sql).
+# Les identifiants viennent du .env (variables passées par docker-compose).
+
+apiVersion: 1
+
+datasources:
+  - name: SortirIA PostgreSQL
+    uid: sortiria-pg
+    type: grafana-postgresql-datasource
+    access: proxy
+    # Adresse interne du conteneur de la base (service « db »).
+    url: db:5432
+    user: ${POSTGRES_USER}
+    jsonData:
+      database: ${POSTGRES_DB}
+      sslmode: disable
+      postgresVersion: 1600
+      timescaledb: false
+    secureJsonData:
+      password: ${POSTGRES_PASSWORD}
+    isDefault: true
+    editable: false

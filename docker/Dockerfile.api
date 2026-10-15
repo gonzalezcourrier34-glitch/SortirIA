@@ -31,6 +31,8 @@ RUN uv sync --no-dev --no-install-project
 COPY app/ ./app/
 COPY src/ ./src/
 COPY config/ ./config/
+# agent/ : connexion PostgreSQL et embeddings partagés avec l'agent de collecte.
+COPY agent/ ./agent/
 
 # L'API ne tourne jamais en root.
 RUN useradd --create-home --uid 10001 appuser \

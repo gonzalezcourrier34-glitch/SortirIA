@@ -8,7 +8,7 @@ Il industrialise deux projets précédents :
 
 - **CheckIt.AI** (projet 12) : moteur de collecte multi-sources réutilisable → `src/`, `config/`, `dags/`, `sql/`
   (seuls les moteurs génériques sont gardés : tout ce qui concernait les fake news a été retiré)
-- **Assistant RAG OpenAgenda** (projet 6) : POC de recommandation d'événements → `app/`, `dashboard/`
+- **Assistant RAG OpenAgenda** (projet 6) : point de départ de l'API (`app/`) ; son RAG FAISS et son interface Streamlit ont été remplacés (recherche PostgreSQL + pgvector, interface Angular `frontend/`)
 
 Le détail de ce qui a été repris, et de ce qui reste à adapter, est dans [PROVENANCE.md](PROVENANCE.md).
 
@@ -20,7 +20,7 @@ Le détail de ce qui a été repris, et de ce qui reste à adapter, est dans [PR
 4. Réponse générée par Mistral, avec le lien source de chaque événement.
 5. Journalisation : requête, résultats, latence, coût en tokens.
 
-Déploiement : API FastAPI et interface Streamlit sur Azure Container Apps, base Azure Database for PostgreSQL,
+Déploiement : API FastAPI et interface Angular sur Azure Container Apps, base Azure Database for PostgreSQL,
 CI/CD GitHub Actions.
 
 ## Démarrage local
@@ -38,10 +38,10 @@ uv run mkdocs serve           # documentation sur http://127.0.0.1:8000
 
 | Dossier | Origine | Rôle |
 | --- | --- | --- |
-| `src/` | CheckIt.AI | Extracteurs, normalisation, validation, déduplication, stockage |
+| `src/` | CheckIt.AI | Extracteurs, normalisation, validation, déduplication, écriture des événements |
 | `config/` | CheckIt.AI | Paramètres et contrat des sources (`sources.yaml`) |
-| `dags/` | CheckIt.AI | Orchestration Airflow (exécution locale) |
+| `dags/` | SortirIA | DAG Airflow nocturne qui lance l'agent de collecte |
 | `sql/sortiria/` | SortirIA | Schéma PostgreSQL + pgvector (voir `docs/base_de_donnees.md`) |
 | `app/` | RAG OpenAgenda | API FastAPI, filtres, recherche, génération |
-| `dashboard/` | RAG OpenAgenda | Interface Streamlit |
-| `tests/` | les deux | Tests CheckIt.AI ; tests du RAG dans `tests/rag/` |
+| `frontend/` | Chess Agent (projet 13) | Interface Angular |
+| `tests/` | les deux | Tests de la collecte, de l'agent (`tests/test_agent_collecte/`) et de l'API (`tests/test_api/`) |

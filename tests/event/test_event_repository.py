@@ -70,12 +70,12 @@ def test_empty_dates_become_null(openagenda_item) -> None:
     assert repo.event_to_row(event)["end_at"] is None
 
 
-def test_delete_past_events_returns_rowcount(now) -> None:
+def test_delete_past_events_counts_and_keeps_statistics(now) -> None:
     connection = FakeConnection(rowcount=3)
-    assert repo.delete_past_events(connection, now) == 3
+    assert repo.delete_past_events(connection, now) == 42          # compte rendu par la requête (fetchone)
     _, sql, params = connection.calls[0]
-    assert "DELETE FROM sortiria.events" in sql
-    assert params["today_start"].hour == 0
+    assert "DELETE FROM sortiria.events" in sql and "deleted_event_stats" in sql
+    assert params["today_start"].hour == 0 and params["reason"] == "passe"
 
 
 def test_fetch_events_missing_embedding() -> None:

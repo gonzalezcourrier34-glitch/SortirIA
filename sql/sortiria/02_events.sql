@@ -72,7 +72,18 @@ CREATE TABLE IF NOT EXISTS sortiria.events (
     source_credit    TEXT        NOT NULL DEFAULT '',
     source_updated_at DATE,
     first_seen_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-    last_seen_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+    last_seen_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    -- Enrichissement par Mistral (14/10/2026, src/event/event_enrichment.py) :
+    -- vocabulaire commun pour le RAG. NULL / vide tant que l'événement n'est
+    -- pas enrichi, ou après une modification du titre / de la description.
+    category_norm      TEXT     NOT NULL DEFAULT '',        -- concert, atelier, exposition...
+    summary            TEXT     NOT NULL DEFAULT '',        -- une phrase, tirée du texte
+    price_band         TEXT     NOT NULL DEFAULT 'inconnu', -- calculée, sans LLM
+    audiences_llm      TEXT[]   NOT NULL DEFAULT '{}',      -- publics vus par Mistral
+    is_outing          BOOLEAN  NOT NULL DEFAULT TRUE,      -- faux : signalé (offre d'emploi...)
+    enriched_at        TIMESTAMPTZ,
+    enrichment_version TEXT     NOT NULL DEFAULT ''
 );
 
 
@@ -91,7 +102,14 @@ ALTER TABLE sortiria.events
     ADD COLUMN IF NOT EXISTS partner_id    BIGINT   REFERENCES sortiria.partners (partner_id),
     ADD COLUMN IF NOT EXISTS is_sponsored  BOOLEAN  NOT NULL DEFAULT FALSE,
     ADD COLUMN IF NOT EXISTS source_credit TEXT     NOT NULL DEFAULT '',
-    ADD COLUMN IF NOT EXISTS source_updated_at DATE;
+    ADD COLUMN IF NOT EXISTS source_updated_at DATE,
+    ADD COLUMN IF NOT EXISTS category_norm      TEXT    NOT NULL DEFAULT '',
+    ADD COLUMN IF NOT EXISTS summary            TEXT    NOT NULL DEFAULT '',
+    ADD COLUMN IF NOT EXISTS price_band         TEXT    NOT NULL DEFAULT 'inconnu',
+    ADD COLUMN IF NOT EXISTS audiences_llm      TEXT[]  NOT NULL DEFAULT '{}',
+    ADD COLUMN IF NOT EXISTS is_outing          BOOLEAN NOT NULL DEFAULT TRUE,
+    ADD COLUMN IF NOT EXISTS enriched_at        TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS enrichment_version TEXT    NOT NULL DEFAULT '';
 
 
 -- ----------------------------------------------------------------------------
@@ -127,7 +145,8 @@ ALTER TABLE sortiria.events
            AND (age_max IS NULL OR age_max BETWEEN 0 AND 120)
            AND (age_min IS NULL OR age_max IS NULL OR age_min <= age_max)),
     ADD CONSTRAINT events_audiences_check
-        CHECK (audiences <@ ARRAY['famille', 'soiree']::TEXT[]),
+        -- ados et seniors : publics ajoutés par l'enrichissement Mistral (14/10/2026).
+        CHECK (audiences <@ ARRAY['famille', 'soiree', 'ados', 'seniors']::TEXT[]),
     ADD CONSTRAINT events_sponsored_needs_partner
         CHECK (NOT is_sponsored OR partner_id IS NOT NULL);
 

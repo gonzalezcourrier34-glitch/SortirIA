@@ -40,10 +40,10 @@ from src.extractors.apis.api_extractor import (
     extract_api_from_source,
     fetch_json_object,
 )
-from src.extractors.apis.source.openagenda_extractor import get_areas
 from src.extractors.core.extractor_results import ExtractorResult
 from src.logger import get_logger
 from src.utils.extractor_utils import build_standard_article
+from src.utils.geo_utils import get_areas
 from src.utils.parsing_utils import parse_non_negative_integer
 from src.utils.value_utils import normalize_value
 

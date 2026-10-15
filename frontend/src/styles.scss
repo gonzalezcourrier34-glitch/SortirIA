@@ -1,0 +1,72 @@
+/* Styles globaux de SortirIA (les styles de l'écran sont dans app.component.scss). */
+
+:root {
+    --fond: #f0ebe4;
+    --panneau: #fbf8f4;
+    --blanc: #ffffff;
+    --texte: #2b2420;
+    --texte-doux: #5c5048;
+    --texte-leger: #6b5f57;
+    --bordure: #e0d6ca;
+    --bordure-legere: #ece4da;
+    --brun: #8a5a3b;
+    --vert: #2f6b4f;
+    --bleu: #2f5d8a;
+    --bleu-fonce: #1d3f61;
+    --bleu-doux: #e4edf6;
+    --or: #b7791f;
+    --orange-fonce: #8a4b12;
+    --orange-doux: #fbe6cf;
+    /* Offres partenaires : terracotta doux, de la famille du brun du logo (15/10/2026). */
+    --partenaire-fond: #fcf1ea;
+    --partenaire-bord: #ebc7ad;
+    --partenaire-bord-fort: #c47a4e;
+    --partenaire-etiquette: #f6dccb;
+    --partenaire-texte: #8f4a24;
+    --serif: 'Source Serif 4', Georgia, serif;
+    --sans: 'Public Sans', system-ui, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    background: var(--fond);
+    color: var(--texte);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+button,
+input,
+textarea {
+    font: inherit;
+}
+
+a {
+    color: var(--bleu);
+}
+
+a:hover {
+    color: var(--bleu-fonce);
+}
+
+:focus-visible {
+    outline: 3px solid var(--bleu);
+    outline-offset: 2px;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}

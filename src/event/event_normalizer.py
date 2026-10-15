@@ -148,6 +148,17 @@ def has_time(value: Any) -> bool:
     return "T" in clean_text(value)
 
 
+def end_of_day(day: date) -> datetime:
+    """Fin d'une journée (23 h 59 min 59 s, heure de Paris).
+
+    Pour un événement de plusieurs jours dont on connaît l'heure de début mais
+    pas l'heure de fin : la fin est la fin du dernier jour, pas minuit au début
+    de ce jour (sinon il disparaissait un jour trop tôt, corrigé le 15/10/2026).
+    """
+
+    return datetime.combine(day, time(23, 59, 59), tzinfo=PARIS)
+
+
 def to_iso(value: datetime | None) -> str:
     """Formate une date en ISO 8601 (chaîne vide si None)."""
 
@@ -201,12 +212,17 @@ def parse_price(text: Any) -> tuple[float | None, float | None, bool | None]:
 def build_dedup_key(title: Any, start_at: Any, place: Any) -> str:
     """Clé qui identifie un même événement, quelle que soit la source.
 
-    Titre + jour de début + lieu, normalisés : deux agendas qui annoncent
-    « Concert Jazz au Jam » le 24/10 au « Jam » produisent la même clé.
+    Titre + jour de début + heure de début (si elle est connue) + lieu,
+    normalisés : deux agendas qui annoncent « Concert Jazz au Jam » le 24/10 à
+    20 h 30 au « Jam » produisent la même clé. L'heure a été ajoutée le
+    15/10/2026 : sans elle, deux séances d'un film le même jour au même cinéma
+    n'en faisaient qu'une. Un événement sans heure (minuit) garde une clé par jour.
     """
 
     start = parse_event_datetime(start_at)
     day = start.date().isoformat() if start else ""
+    if start is not None and start.time() != time.min:
+        day += f"T{start:%H:%M}"
     return "|".join(
         (normalize_for_comparison(title), day, normalize_for_comparison(place))
     )

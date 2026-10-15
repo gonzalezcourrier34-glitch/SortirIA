@@ -73,6 +73,10 @@ class Event:
     # Partenaires : un événement mis en avant est toujours signalé comme tel.
     partner_id: int | None = None
     is_sponsored: bool = False
+    # Fichier d'un partenaire : qui il est et d'où vient la ligne (nom, secteur,
+    # fichier, empreinte, bilan du fichier). Sert au chargement en base (tables
+    # partners et partner_imports) ; n'est pas une colonne de `events`.
+    partner_info: dict[str, Any] = field(default_factory=dict)
 
     # Liens
     url: str = ""

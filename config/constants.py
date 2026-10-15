@@ -14,6 +14,8 @@ SOURCE_TYPE_SCRAPER = "scraper"
 SOURCE_TYPE_DATASET = "dataset"
 # Calendriers iCal des lieux partenaires (ajout SortirIA, 14/10/2026).
 SOURCE_TYPE_ICAL = "ical"
+# Programmes publiés en PDF, lus par Mistral (ajout SortirIA, 14/10/2026).
+SOURCE_TYPE_DOCUMENT = "document"
 
 SOURCE_TYPES: frozenset[str] = frozenset({
     SOURCE_TYPE_RSS,
@@ -22,88 +24,9 @@ SOURCE_TYPES: frozenset[str] = frozenset({
     SOURCE_TYPE_SCRAPER,
     SOURCE_TYPE_DATASET,
     SOURCE_TYPE_ICAL,
+    SOURCE_TYPE_DOCUMENT,
 })
 
-# Rôles des articles
-ARTICLE_ROLE_ACQUISITION = "acquisition"
-ARTICLE_ROLE_DATASET = "dataset"
-
-ARTICLE_ROLES: frozenset[str] = frozenset({
-    ARTICLE_ROLE_ACQUISITION,
-    ARTICLE_ROLE_DATASET,
-})
-
-# Formats d'images
-SUPPORTED_LOCAL_IMAGE_FORMATS: dict[str, frozenset[str]] = {
-    ".jpg": frozenset({"JPEG"}),
-    ".jpeg": frozenset({"JPEG"}),
-    ".png": frozenset({"PNG"}),
-    ".webp": frozenset({"WEBP"}),
-    ".gif": frozenset({"GIF"}),
-    ".avif": frozenset({"AVIF"}),
-}
-
-SUPPORTED_DOWNLOAD_IMAGE_FORMATS: dict[str, str] = {
-    "JPEG": ".jpg",
-    "PNG": ".png",
-    "WEBP": ".webp",
-    "GIF": ".gif",
-    "AVIF": ".avif",
-}
-
-SUPPORTED_IMAGE_EXTENSIONS: frozenset[str] = frozenset(
-    SUPPORTED_LOCAL_IMAGE_FORMATS
-)
-
-SUPPORTED_IMAGE_MIME_TYPES: frozenset[str] = frozenset({
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-    "image/gif",
-    "image/avif",
-})
-
-# Statuts du traitement des images
-IMAGE_STATUS_LOCAL_VALID = "local_valid"
-IMAGE_STATUS_NOT_REQUESTED = "not_requested"
-IMAGE_STATUS_ALREADY_AVAILABLE = "already_available"
-IMAGE_STATUS_DOWNLOADED = "downloaded"
-IMAGE_STATUS_MISSING_URL = "missing_url"
-IMAGE_STATUS_DUPLICATE_URL = "duplicate_url"
-IMAGE_STATUS_INVALID_ARTICLE = "invalid_article"
-IMAGE_STATUS_BLOCKED_URL = "blocked_url"
-IMAGE_STATUS_BLOCKED_REDIRECT = "blocked_redirect"
-IMAGE_STATUS_REDIRECT_ERROR = "redirect_error"
-IMAGE_STATUS_TIMEOUT = "timeout"
-IMAGE_STATUS_HTTP_ERROR = "http_error"
-IMAGE_STATUS_TOO_LARGE = "too_large"
-IMAGE_STATUS_INVALID_CONTENT = "invalid_content"
-IMAGE_STATUS_PROCESSING_ERROR = "processing_error"
-IMAGE_STATUS_WRITE_ERROR = "write_error"
-IMAGE_STATUS_UNEXPECTED_ERROR = "unexpected_error"
-IMAGE_STATUS_INVALID_RESULT = "invalid_result"
-
-IMAGE_REJECTION_STATUSES: frozenset[str] = frozenset({
-    IMAGE_STATUS_MISSING_URL,
-    IMAGE_STATUS_INVALID_ARTICLE,
-    IMAGE_STATUS_BLOCKED_URL,
-    IMAGE_STATUS_BLOCKED_REDIRECT,
-    IMAGE_STATUS_REDIRECT_ERROR,
-    IMAGE_STATUS_TIMEOUT,
-    IMAGE_STATUS_HTTP_ERROR,
-    IMAGE_STATUS_TOO_LARGE,
-    IMAGE_STATUS_INVALID_CONTENT,
-    IMAGE_STATUS_PROCESSING_ERROR,
-    IMAGE_STATUS_WRITE_ERROR,
-    IMAGE_STATUS_UNEXPECTED_ERROR,
-    IMAGE_STATUS_INVALID_RESULT,
-})
-
-# Statuts de validation des images
-IMAGE_VALIDATION_STATUS_VALID = "valid"
-IMAGE_VALIDATION_STATUS_INVALID = "invalid"
-IMAGE_VALIDATION_STATUS_ERROR = "validation_error"
-IMAGE_VALIDATION_STATUS_PENDING = "pending"
 
 # Statuts des extracteurs
 EXTRACTOR_STATUS_SUCCESS = "success"
@@ -161,26 +84,6 @@ ROBOTS_REASON_UNAVAILABLE = "robots_unavailable"
 ROBOTS_REASON_INVALID_URL = "invalid_url"
 ROBOTS_REASON_CHECK_ERROR = "robots_check_error"
 
-ROBOTS_REASONS: frozenset[str] = frozenset({
-    ROBOTS_REASON_ALLOWED,
-    ROBOTS_REASON_DENIED,
-    ROBOTS_REASON_UNAVAILABLE,
-    ROBOTS_REASON_INVALID_URL,
-    ROBOTS_REASON_CHECK_ERROR,
-})
-
-# HTTP
-DOWNLOAD_CHUNK_SIZE = 8192
-
-RETRYABLE_HTTP_STATUS_CODES: frozenset[int] = frozenset({
-    429,
-    500,
-    502,
-    503,
-    504,
-})
-
-RETRYABLE_HTTP_METHODS: frozenset[str] = frozenset({"GET"})
 
 # Paramètres de suivi retirés des URL
 TRACKING_QUERY_PARAMETERS: frozenset[str] = frozenset({
@@ -197,16 +100,8 @@ TRACKING_QUERY_PARAMETERS: frozenset[str] = frozenset({
     "utm_term",
 })
 
-# Valeurs supprimées ou absentes
-DELETED_CONTENT_VALUES: frozenset[str] = frozenset({
-    "[deleted]",
-    "[removed]",
-    "deleted",
-    "removed",
-    "contenu supprimé",
-    "contenu indisponible",
-})
 
+# Valeurs absentes
 MISSING_TEXT_VALUES: frozenset[str] = frozenset({
     "",
     "none",
@@ -218,23 +113,6 @@ MISSING_TEXT_VALUES: frozenset[str] = frozenset({
     "<na>",
 })
 
-# Compatibilité Windows
-WINDOWS_RESERVED_NAMES: frozenset[str] = frozenset({
-    "con",
-    "prn",
-    "aux",
-    "nul",
-    *(f"com{index}" for index in range(1, 10)),
-    *(f"lpt{index}" for index in range(1, 10)),
-})
-
-# Erreurs API génériques
-GENERIC_API_ERROR_MESSAGES: frozenset[str] = frozenset({
-    "error",
-    "failed",
-    "failure",
-    "invalid",
-})
 
 # Logs
 LOG_FORMAT = "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
@@ -242,12 +120,6 @@ LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 PROJECT_LOGGER_NAME = "sortiria"
 LOGGER_CONFIGURED_ATTRIBUTE = "_sortiria_logger_configured"
 
-# Stockage
-FILE_LOCK_SUFFIX = ".lock"
-TEMPORARY_FILE_SUFFIX = ".tmp"
-FILE_LOCK_METADATA_ENCODING = "utf-8"
-FILE_LOCK_PID_FIELD = "pid"
-FILE_LOCK_CREATED_AT_FIELD = "created_at"
 
 # ERREUR API
 # Codes machine d'authentification connus

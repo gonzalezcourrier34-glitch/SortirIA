@@ -1,0 +1,485 @@
+<main class="page">
+
+    <!-- # En-tête -->
+
+    <header class="header">
+        <div class="header-title">
+            <div class="brand">SortirIA</div>
+            <h1>Que faire autour de Montpellier et de l’étang de Thau ?</h1>
+        </div>
+
+        <div class="header-sources">
+            <span class="header-sources-label">Agendas réunis, mis à jour chaque nuit :</span>
+            @for (source of sources(); track source) {
+                <span class="source-pill">{{ source }}</span>
+            }
+        </div>
+    </header>
+
+
+    <!-- # Espace de travail -->
+
+    <section class="workspace">
+
+        <!-- ## Échange avec SortirIA -->
+
+        <section class="chat" aria-label="Échange avec SortirIA">
+
+            <div class="chat-header">
+                <div>
+                    <div class="eyebrow">Échange avec SortirIA</div>
+                    <div class="chat-subtitle">Événements des 3 prochains mois, sources citées</div>
+                </div>
+
+                <button type="button" class="button-secondary" (click)="newConversation()">
+                    Nouvelle conversation
+                </button>
+            </div>
+
+
+            <!-- ## Filtres, question et bouton -->
+
+            <form class="search" (submit)="$event.preventDefault(); search()">
+                <div class="filters">
+                    <div class="filter-group" role="group" aria-label="Public">
+                        <span class="filter-label">Public</span>
+                        @for (choice of publics; track choice.value) {
+                            <button type="button" class="chip"
+                                [class.chip-on]="selectedPublic() === choice.value"
+                                [attr.aria-pressed]="selectedPublic() === choice.value"
+                                (click)="togglePublic(choice.value)">{{ choice.label }}</button>
+                        }
+                    </div>
+
+                    <div class="filter-group" role="group" aria-label="Zone">
+                        <span class="filter-label">Zone</span>
+                        @for (choice of zones; track choice.label) {
+                            <button type="button" class="chip"
+                                [class.chip-on]="selectedZone() === choice.value"
+                                [attr.aria-pressed]="selectedZone() === choice.value"
+                                (click)="selectZone(choice.value)">{{ choice.label }}</button>
+                        }
+                    </div>
+
+                    <div class="filter-group" role="group" aria-label="Quand">
+                        <span class="filter-label">Quand</span>
+                        @for (choice of periods; track choice.value) {
+                            <button type="button" class="chip"
+                                [class.chip-on]="selectedPeriod() === choice.value"
+                                [attr.aria-pressed]="selectedPeriod() === choice.value"
+                                (click)="selectPeriod(choice.value)">{{ choice.label }}</button>
+                        }
+                    </div>
+
+                    <button type="button" class="chip"
+                        [class.chip-on]="freeOnly()"
+                        [attr.aria-pressed]="freeOnly()"
+                        (click)="toggleFree()">Gratuit seulement</button>
+                </div>
+
+                <div class="ask">
+                    <label for="question" class="visually-hidden">Votre envie de sortie</label>
+                    <textarea id="question" rows="1" maxlength="500"
+                        placeholder="Décrivez votre envie de sortie…"
+                        [value]="question()"
+                        (input)="onQuestionInput($event)"
+                        (keydown)="onQuestionKeydown($event)"></textarea>
+
+                    <button type="submit" class="button-primary" [disabled]="loading()">
+                        {{ loading() ? 'Recherche…' : 'Chercher' }}
+                    </button>
+                </div>
+            </form>
+
+
+            <!-- ## Réponse de l'IA et propositions -->
+
+            <div class="thread" aria-live="polite">
+
+                @if (error(); as message) {
+                    <p class="error" role="alert">{{ message }}</p>
+                }
+
+                @if (result(); as answer) {
+                    <div class="answer">
+                        <!-- La réponse de SortirIA dans son propre cadre, qui s'allonge avec le texte. -->
+                        <div class="answer-bubble">
+                            <div class="answer-header">
+                                <span class="avatar" aria-hidden="true">S</span>
+                                <span class="answer-name">SortirIA</span>
+                                @if (askedQuestion()) {
+                                    <span class="answer-question">« {{ askedQuestion() }} »</span>
+                                }
+                                <button type="button" class="link-button" (click)="openSteps()">
+                                    Voir comment j’ai cherché
+                                </button>
+                            </div>
+
+                            <p class="answer-text">
+                                @for (part of answerParts(); track $index) {
+                                    @if (part.ref !== null) {
+                                        <button type="button" class="citation"
+                                            [attr.aria-label]="'Voir l’événement ' + part.ref"
+                                            (click)="selectRef(part.ref)">{{ part.text }}</button>
+                                    } @else {
+                                        {{ part.text }}
+                                    }
+                                }
+                            </p>
+
+                            @if (answer.degraded) {
+                                <p class="notice">Réponse simplifiée : l’assistant Mistral n’a pas répondu, les événements restent exacts.</p>
+                            }
+                        </div>
+
+                        @if (answer.events.length > 0) {
+                            <div class="cards">
+                                @for (card of answer.events; track card.event_id) {
+                                    <!-- Toute la carte est cliquable (souris, Entrée ou Espace). -->
+                                    <article class="card" [class.card-on]="selectedId() === card.event_id"
+                                        [class.card-partner]="card.partner"
+                                        role="button" tabindex="0"
+                                        [attr.aria-pressed]="selectedId() === card.event_id"
+                                        [attr.aria-label]="'Voir le détail : ' + card.title"
+                                        (click)="selectEvent(card.event_id)"
+                                        (keydown.enter)="selectEvent(card.event_id)"
+                                        (keydown.space)="$event.preventDefault(); selectEvent(card.event_id)">
+                                        <div class="card-top">
+                                            <span class="card-date">[{{ card.ref }}] {{ card.date }}</span>
+                                            @if (card.other_dates.length) {
+                                                <span class="card-more" [title]="otherDatesTitle(card)">
+                                                    + {{ card.other_dates.length }} {{ card.other_dates.length > 1 ? 'dates' : 'date' }}
+                                                </span>
+                                            }
+                                            @if (card.partner) {
+                                                <span class="badge-partner">Offre partenaire</span>
+                                            }
+                                        </div>
+
+                                        <h3>{{ card.title }}</h3>
+                                        <div class="card-place">{{ card.place }}</div>
+
+                                        <div class="tags">
+                                            @if (card.category) {
+                                                <span class="tag">{{ card.category }}</span>
+                                            }
+                                            <span class="tag tag-price">{{ card.price }}</span>
+                                        </div>
+
+                                        <div class="card-rating">
+                                            <span class="stars" aria-hidden="true">{{ stars(card.venue_rating) }}</span>
+                                            <span>{{ ratingLabel(card) }}</span>
+                                        </div>
+
+                                        <div class="card-bottom">
+                                            <span>{{ card.source }}</span>
+                                        </div>
+                                    </article>
+                                }
+                            </div>
+                        }
+
+                        @if (answer.partner_offers?.length) {
+                            <!-- Rien d'exact : les offres partenaires les plus proches de la demande. -->
+                            <div class="partner-offers">
+                                <div class="partner-offers-title">
+                                    <span class="badge-partner">Offres partenaires</span>
+                                    Pas exactement ce que vous cherchiez ? Nos partenaires proposent aussi :
+                                </div>
+                                <div class="partner-offers-list">
+                                    @for (offer of answer.partner_offers; track offer.event_id) {
+                                        <button type="button" class="partner-offer"
+                                            [class.card-on]="selectedId() === offer.event_id"
+                                            (click)="selectEvent(offer.event_id)">
+                                            <span class="highlight-date">{{ offer.date }}</span>
+                                            <strong>{{ offer.title }}</strong>
+                                            <span class="small">{{ offer.place }}</span>
+                                            <span class="highlight-partner">{{ offer.partner_name }}</span>
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        @if (answer.suggestions.length > 0) {
+                            <div class="suggestions">
+                                <span class="suggestions-label">Pour continuer :</span>
+                                @for (suggestion of answer.suggestions; track suggestion) {
+                                    <button type="button" class="suggestion" (click)="askSuggestion(suggestion)">
+                                        {{ suggestion }}
+                                    </button>
+                                }
+                            </div>
+                        }
+                    </div>
+                } @else if (!error()) {
+                    <div class="welcome">
+                        <p class="welcome-title">Dites-moi ce qui vous ferait envie.</p>
+                        <p>Je cherche parmi les événements des 3 prochains mois et je cite toujours mes sources.</p>
+                        <div class="suggestions">
+                            @for (idea of welcomeIdeas; track idea) {
+                                <button type="button" class="suggestion" (click)="askSuggestion(idea)">{{ idea }}</button>
+                            }
+                        </div>
+
+                        <!-- Avant la première question : les offres de nos partenaires (disparaissent ensuite,
+                             elles restent dans « À ne pas manquer », à droite). -->
+                        @if (highlights().length) {
+                            <div class="welcome-offers">
+                                <div class="eyebrow">À ne pas manquer · nos partenaires</div>
+                                <div class="welcome-offers-grid">
+                                    @for (item of highlights(); track item.event_id) {
+                                        <button type="button" class="offer-tile"
+                                            [class.card-on]="selectedId() === item.event_id"
+                                            (click)="selectEvent(item.event_id)">
+                                            <span class="highlight-date">{{ item.date }}</span>
+                                            <span class="offer-title">{{ item.title }}</span>
+                                            <span class="small">{{ item.place }}</span>
+                                            <span class="highlight-partner">{{ item.partner_name }}</span>
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </section>
+
+
+        <!-- ## Colonne : détail de l'événement, puis partenaires -->
+
+        <aside class="side">
+
+            <section class="panel panel-detail" [class.panel-partner]="detail()?.partner"
+                aria-live="polite" aria-label="Détail de l’événement">
+                <div class="panel-top">
+                    <div class="eyebrow">L’événement</div>
+                    @if (detail()?.partner) {
+                        <span class="badge-partner">Offre partenaire</span>
+                    }
+                </div>
+
+                @if (detailLoading()) {
+                    <p class="muted">Chargement…</p>
+                } @else if (detailError(); as message) {
+                    <p class="muted">{{ message }}</p>
+                } @else if (detail(); as event) {
+                    <h2>{{ event.title }}</h2>
+
+                    <div class="detail-when">
+                        <span class="detail-date">{{ event.date }}</span>
+                        <span>{{ event.place }}</span>
+                    </div>
+
+                    @if (event.other_dates.length) {
+                        <div class="detail-block">
+                            <div class="detail-label">Autres dates</div>
+                            <div class="other-dates">
+                                @for (other of event.other_dates; track other.event_id) {
+                                    <span class="other-date">{{ other.date }}</span>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <div class="tags">
+                        @if (event.category) {
+                            <span class="tag">{{ event.category }}</span>
+                        }
+                        <span class="tag tag-price">{{ event.price }}</span>
+                        @for (audience of event.audiences; track audience) {
+                            <span class="tag tag-public">{{ audience }}</span>
+                        }
+                    </div>
+
+                    @if (event.summary) {
+                        <div class="detail-block">
+                            <div class="detail-label">En bref</div>
+                            <p>{{ event.summary }}</p>
+                        </div>
+                    }
+
+                    <div class="detail-source">
+                        <div class="detail-source-line">
+                            <span class="muted">Source</span>
+                            <strong>{{ event.source }}</strong>
+                        </div>
+                        @if (event.source_attribution) {
+                            <span class="small">{{ event.source_attribution }}</span>
+                        }
+                        <a [href]="event.url" target="_blank" rel="noopener noreferrer" class="detail-link">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path>
+                            </svg>
+                            Voir la page de l’organisateur
+                        </a>
+                    </div>
+
+                    <div class="detail-block">
+                        <div class="detail-rating">
+                            <div class="detail-label">Avis sur le lieu</div>
+                            <span>
+                                <span class="stars" aria-hidden="true">{{ stars(event.venue_rating) }}</span>
+                                {{ ratingLabel(event) }}
+                            </span>
+                        </div>
+
+                        @for (comment of event.comments; track $index) {
+                            <blockquote>
+                                « {{ comment.text }} »
+                                <span class="muted">· {{ comment.stars }} ★
+                                    @if (comment.event_title) {
+                                        · {{ comment.event_title }}@if (comment.event_date) {, {{ comment.event_date }}}
+                                    } @else {
+                                        · {{ comment.date }}
+                                    }
+                                </span>
+                            </blockquote>
+                        } @empty {
+                            <p class="muted">Pas encore de commentaire sur ce lieu.</p>
+                        }
+
+                    </div>
+
+                    <!-- Donner mon avis : du début de l'événement à 7 jours après sa fin. -->
+                    <div class="detail-block rating-box">
+                        <div class="detail-label">Votre avis</div>
+                        @if (ratingMessage(); as message) {
+                            <p class="rating-done" role="status">{{ message }}</p>
+                        } @else if (event.can_rate) {
+                            <div class="rating-stars" role="radiogroup" aria-label="Votre note sur 5"
+                                (mouseleave)="ratingHover.set(0)">
+                                @for (star of starChoices; track star) {
+                                    <button type="button" class="star" role="radio"
+                                        [class.star-on]="star <= (ratingHover() || ratingStars())"
+                                        [attr.aria-checked]="ratingStars() === star"
+                                        [attr.aria-label]="star + (star > 1 ? ' étoiles' : ' étoile')"
+                                        (mouseenter)="ratingHover.set(star)"
+                                        (click)="setStars(star)">★</button>
+                                }
+                            </div>
+                            <textarea class="rating-comment" rows="2" maxlength="300"
+                                placeholder="Un mot sur le lieu ou la sortie (facultatif)"
+                                [value]="ratingComment()" (input)="onCommentInput($event)"></textarea>
+                            <div class="rating-actions">
+                                <span class="small">{{ ratingComment().length }}/300 · relu par modération</span>
+                                <button type="button" class="button-primary-small" [disabled]="ratingSending()"
+                                    (click)="sendRating()">
+                                    {{ ratingSending() ? 'Envoi…' : 'Donner mon avis' }}
+                                </button>
+                            </div>
+                            @if (ratingError(); as message) {
+                                <p class="rating-error" role="alert">{{ message }}</p>
+                            }
+                        } @else {
+                            <p class="small">
+                                Vous y allez ? Vous pourrez donner votre avis
+                                @if (event.rate_from) { à partir du {{ event.rate_from }}, }
+                                jusqu’à 7 jours après. L’événement restera dans « Vos sorties à noter ».
+                            </p>
+                        }
+                    </div>
+                } @else {
+                    <p class="muted">Cliquez sur une proposition pour l’afficher ici.</p>
+                }
+            </section>
+
+            @if (toRate().length) {
+                <section class="panel">
+                    <div>
+                        <div class="eyebrow">Vos sorties à noter</div>
+                        <span class="small">Vous les avez consultées : comment c’était ?</span>
+                    </div>
+
+                    <ul class="highlights">
+                        @for (item of toRate(); track item.event_id) {
+                            <li>
+                                <span class="highlight-date">{{ item.date }}</span>
+                                <button type="button" class="highlight-title" (click)="selectEvent(item.event_id)">
+                                    {{ item.title }}
+                                </button>
+                                <span class="small">{{ item.place }}</span>
+                            </li>
+                        }
+                    </ul>
+                </section>
+            }
+
+            <section class="panel">
+                <div>
+                    <div class="eyebrow">À ne pas manquer</div>
+                    <span class="small">Proposé par nos partenaires</span>
+                </div>
+
+                <ul class="offer-list">
+                    @for (item of highlights().slice(0, 4); track item.event_id) {
+                        <li>
+                            <button type="button" class="offer-tile"
+                                [class.card-on]="selectedId() === item.event_id"
+                                (click)="selectEvent(item.event_id)">
+                                <span class="highlight-date">{{ item.date }}</span>
+                                <span class="offer-title">{{ item.title }}</span>
+                                <span class="small">{{ item.place }}</span>
+                                <span class="highlight-partner">{{ item.partner_name }}</span>
+                            </button>
+                        </li>
+                    } @empty {
+                        <li class="muted">Pas de proposition de partenaire pour le moment.</li>
+                    }
+                </ul>
+            </section>
+        </aside>
+    </section>
+
+
+    <!-- # Fenêtre « SortirIA cherche pour vous » -->
+
+    @if (showSteps()) {
+        <div class="overlay" (click)="closeSteps()">
+            <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="titre-recherche"
+                (click)="$event.stopPropagation()">
+                <div class="dialog-top">
+                    <div>
+                        <div class="eyebrow">L’agent travaille</div>
+                        <h2 id="titre-recherche">SortirIA cherche pour vous</h2>
+                    </div>
+                    <button type="button" class="icon-button" aria-label="Fermer" (click)="closeSteps()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                            <path d="M6 6l12 12M18 6L6 18"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="progress" role="progressbar" aria-label="Avancement de la recherche"
+                    [attr.aria-valuenow]="progressPercent()" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar" [style.width.%]="progressPercent()"></div>
+                </div>
+
+                <ol class="steps">
+                    @for (step of steps(); track step.step; let index = $index) {
+                        <li class="step" [class.step-running]="step.status === 'running'"
+                            [class.step-done]="step.status === 'completed'">
+                            <span class="step-number">{{ index + 1 }}</span>
+                            <span class="step-text">
+                                <span class="step-title">{{ step.title }}</span>
+                                @if (step.message) {
+                                    <span class="step-message">{{ step.message }}</span>
+                                }
+                            </span>
+                            <span class="step-status">{{ stepStatusLabel(step.status) }}</span>
+                        </li>
+                    }
+                </ol>
+
+                <div class="dialog-bottom">
+                    <button type="button" class="button-primary" [disabled]="loading()" (click)="closeSteps()">
+                        {{ loading() ? 'Recherche en cours…' : 'Voir la réponse' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</main>

@@ -1,9 +1,9 @@
-# Chargement automatique du tableau de bord.
+# Chargement automatique des tableaux de bord SortirIA.
 apiVersion: 1
 providers:
-  - name: Medical Triage
+  - name: SortirIA
     orgId: 1
-    folder: Medical Triage
+    folder: SortirIA
     type: file
     disableDeletion: false
     editable: true

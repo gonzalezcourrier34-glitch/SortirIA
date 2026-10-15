@@ -1,4 +1,5 @@
-# Configuration de la source Prometheus pour Grafana.
+# Configuration de la source Prometheus pour Grafana (métriques de l'API,
+# bloc « production » ; le service prometheus n'est pas encore lancé).
 
 apiVersion: 1
 
@@ -12,5 +13,5 @@ datasources:
     url: http://prometheus:9090
 
     # Source de données par défaut.
-    isDefault: true
+    isDefault: false
     editable: false

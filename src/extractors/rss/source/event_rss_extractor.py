@@ -1,0 +1,117 @@
+"""Flux RSS d'agenda : adaptateur « événements » pour le moteur RSS de CheckIt.AI.
+
+**Provenance** : nouvel adaptateur écrit pour SortirIA (14/10/2026). Le moteur
+(`src/extractors/rss/rss_engine.py`) et le téléchargement / la lecture des
+flux (`iter_rss_items` de `rss_extractor.py`) sont ceux de CheckIt.AI ; seul
+change ce que l'on fait d'une entrée : un `Event` (date, lieu, commune) au
+lieu d'un article de presse (voir `src/event/rss_event_mapper.py`).
+
+Une entrée par flux dans `config/sources.yaml` (`rss_sources`) :
+
+    - name: "Nom du lieu"
+      source_id: "nom_du_lieu"
+      type: "rss"
+      url: "https://exemple.fr/agenda/feed/"
+      event_date: "published"   # la date de publication EST la date de l'événement
+      venue_name: "Nom du lieu"
+      city: "Sète"
+      credit: "Nom du lieu"
+
+Seuls les flux dont l'éditeur autorise la reprise sont branchés (flux prévus
+pour la syndication, partenaires) ; le robots.txt est respecté.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping, Sequence
+from datetime import datetime, timedelta
+from typing import Any
+
+from config.paths import SOURCES_FILE
+from src.event.event_normalizer import PARIS
+from src.event.event_pipeline import occurrence_article_url
+from src.event.rss_event_mapper import map_rss_event
+from src.extractors.core.extractor_results import ExtractorResult
+from src.extractors.rss.rss_adapter import RssAdapter
+from src.extractors.rss.rss_engine import RssExtractor
+from src.utils.extractor_utils import build_standard_article
+from src.utils.parsing_utils import parse_non_negative_integer
+
+DEFAULT_DAYS_FORWARD = 60
+
+
+def iter_event_entries(source: Mapping[str, Any]) -> Sequence[Mapping[str, Any]]:
+    """Entrées du flux, téléchargées et lues par le code RSS de CheckIt.AI.
+
+    Import différé : `rss_extractor` charge feedparser, inutile tant qu'aucun
+    flux n'est configuré (et remplaçable dans les tests).
+    """
+
+    from src.extractors.rss.rss_extractor import iter_rss_items
+
+    return iter_rss_items(source)
+
+
+def map_entry(entry: Mapping[str, Any], source: Mapping[str, Any]):
+    """Entrée -> (Event | None, motif), dans la fenêtre de collecte de la source."""
+
+    now = datetime.now(PARIS)
+    horizon = now.date() + timedelta(days=parse_non_negative_integer(source.get("days_forward"), DEFAULT_DAYS_FORWARD))
+    return map_rss_event(entry, source, today=now.date(), horizon=horizon, extracted_at=now.isoformat())
+
+
+def validate_event_entry(entry: Any, source: Mapping[str, Any]) -> tuple[bool, str]:
+    """Rejette les entrées sans date d'événement, sans titre... (motif compté).
+
+    Une entrée hors fenêtre (passée, trop lointaine) est écartée sous le motif
+    « hors_fenetre » : ce n'est pas une erreur du flux.
+    """
+
+    if not isinstance(entry, Mapping):
+        return False, "entree_invalide"
+    event, reason = map_entry(entry, source)
+    if event is None:
+        return False, reason or "hors_fenetre"
+    return True, ""
+
+
+def build_event_rss_article(entry: Mapping[str, Any], source: Mapping[str, Any]) -> dict[str, Any]:
+    """Transforme une entrée validée en « article » du moteur, événement inclus."""
+
+    event, _ = map_entry(entry, source)
+    if event is None:
+        return {}
+    return build_standard_article(
+        identifier=event.source_event_id,
+        source=source.get("name", "RSS"),
+        title=event.title,
+        text=event.description,
+        image_url="",
+        published_at=event.start_at,
+        url=occurrence_article_url(event),
+        language="fr",
+        category=event.category or "evenement",
+        role=source.get("role", "acquisition"),
+        metadata={"event": event.to_dict(), "feed": source.get("source_id", "")},
+    )
+
+
+EVENT_RSS_ADAPTER = RssAdapter(
+    iter_items=iter_event_entries,
+    build_article=build_event_rss_article,
+    validate_item=validate_event_entry,
+    default_name="Flux RSS d'agenda",
+)
+
+EVENT_RSS_EXTRACTOR = RssExtractor(adapter=EVENT_RSS_ADAPTER, sources_file=SOURCES_FILE)
+
+
+def extract_all_articles() -> ExtractorResult:
+    """Lit tous les flux de `rss_sources` (point d'entrée du registre)."""
+
+    return EVENT_RSS_EXTRACTOR.run()
+
+
+if __name__ == "__main__":
+    result = extract_all_articles()
+    print(f"{len(result.articles)} événement(s). Statut : {result.status}. Rejets : {result.rejection_reasons}")

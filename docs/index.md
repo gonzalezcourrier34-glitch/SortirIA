@@ -9,7 +9,7 @@ le 6 novembre 2026. Plutôt que de repartir de zéro, il **industrialise deux pr
 | Brique | Projet d'origine | Ce qu'elle apporte |
 | --- | --- | --- |
 | Collecte des données | CheckIt.AI (projet 12) | Moteur multi-sources réutilisable : un moteur par type de source, un adaptateur et une configuration YAML par fournisseur, validation, déduplication, PostgreSQL, Airflow |
-| Recherche et réponse | Assistant RAG OpenAgenda (projet 6) | Préfiltrage structuré, recherche sémantique, classement explicable, génération par Mistral, API FastAPI, interface Streamlit |
+| Recherche et réponse | Assistant RAG OpenAgenda (projet 6) | Préfiltrage structuré, recherche sémantique, classement explicable, génération par Mistral, API FastAPI (interface Streamlit remplacée par Angular) |
 | Suivi en production | Scoring crédit (projet 5), triage médical (projet 14) | Journalisation des requêtes, Evidently, Prometheus, Grafana, CI/CD |
 | Agent de collecte | Chess Agent (projet 13) | Graphe LangGraph pour la collecte nocturne |
 

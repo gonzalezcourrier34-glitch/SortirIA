@@ -16,6 +16,7 @@ from agent.graph import run_nightly_collection
 from agent.nodes import decide_status
 from agent.routing import ROUTE_PREPARE, ROUTE_REPORT, ROUTE_RETRY, route_after_extraction
 from agent.services import CollectionServices, ExtractionOutput
+from agent.state import STATUS_PARTIAL
 from src.event.event_normalizer import PARIS
 from src.event.openagenda_mapper import map_openagenda_event
 
@@ -48,21 +49,29 @@ class FakeCursor:
 
     def execute(self, sql: str, params: Any = None) -> None:
         self.db.calls.append(("execute", sql.split()[0], params))
+        self.last_sql = sql
 
     def executemany(self, sql: str, rows: list) -> None:
         self.db.calls.append(("executemany", sql.split()[0], list(rows)))
 
     def fetchall(self) -> list[tuple]:
+        if "collect_run_sources" in getattr(self, "last_sql", ""):
+            return list(self.db.previous_counts.items())
+        if "unnest(audiences)" in getattr(self, "last_sql", ""):   # couverture de la semaine en base
+            return [("montpellier", "soiree", 12), ("bassin_de_thau", "famille", 3)]
         return [("e1", "Concert", "", "", "Le Jam", "Montpellier"), ("e2", "Théâtre", "", "", "", "Montpellier")]
 
     def fetchone(self) -> tuple:
+        if "purge_old_data" in getattr(self, "last_sql", ""):
+            return (3, 1, 0)
         return (7,)
 
 
 class FakeDatabase:
-    def __init__(self) -> None:
+    def __init__(self, previous_counts: dict[str, int] | None = None) -> None:
         self.calls: list[tuple] = []
         self.connections = 0
+        self.previous_counts = previous_counts or {}
 
     def cursor(self) -> FakeCursor:
         return FakeCursor(self)
@@ -107,9 +116,14 @@ def test_full_night_success() -> None:
     assert detail == [[{"run_id": 7, "source_id": "openagenda", "status": "ok",
                         "attempts": 1, "events_kept": 2, "error": ""}]]
     kinds = [call[1] for call in db.calls]
-    # upsert, ménage des disparus, purge des passés, embeddings (lecture +
-    # écriture), bilan, détail par source
-    assert kinds == ["INSERT", "DELETE", "DELETE", "SELECT", "UPDATE", "INSERT", "INSERT"]
+    # comptes de la veille, upsert, ménage des disparus, purge des passés,
+    # embeddings (lecture + écriture), purge RGPD, bilan, détail par source
+    # Suppressions (disparus, passés, plafond) : requêtes « WITH … DELETE » qui
+    # gardent leurs statistiques ; puis taille de la base, embeddings, purge, bilan.
+    # ... puis le SELECT de la couverture de la semaine (surveillance) avant le bilan.
+    assert kinds == ["SELECT", "INSERT", "WITH", "WITH", "WITH", "SELECT", "SELECT", "UPDATE", "SELECT", "SELECT",
+                     "INSERT", "INSERT"]
+    assert state["purged"] == {"requests": 3, "cache": 1, "runs": 0}
 
 
 def test_retry_after_a_failed_extraction() -> None:
@@ -216,7 +230,9 @@ def test_sweep_only_sources_read_without_failure_and_with_events() -> None:
 
 
 def test_default_sources() -> None:
-    assert CollectionServices(extract=None, connect=None, embed=None).default_sources == ("openagenda", "datatourisme", "ical")
+    assert CollectionServices(extract=None, connect=None, embed=None).default_sources == (
+        "openagenda", "datatourisme", "rss", "ical", "document", "partenaire", "scraper",
+    )
 
 
 def test_sources_without_configuration_are_skipped() -> None:
@@ -235,3 +251,51 @@ def test_sources_without_configuration_are_skipped() -> None:
     state = run_nightly_collection(services)
     assert asked == [["openagenda", "datatourisme"]]
     assert state["sources"] == ["openagenda", "datatourisme"]
+
+
+def test_sharp_drop_keeps_yesterday_events_and_alerts() -> None:
+    # La veille, openagenda avait apporté 80 événements ; ce soir, 2.
+    db = FakeDatabase(previous_counts={"openagenda": 80})
+    articles = [make_article(1, "Concert Jazz"), make_article(2, "Théâtre d'impro")]
+    state = run_nightly_collection(make_services(lambda sources: ExtractionOutput(articles=articles), db))
+
+    assert state["source_drops"] == {"openagenda": (80, 2)}
+    assert state["status"] == STATUS_PARTIAL
+    assert any("Baisse anormale pour openagenda" in alert for alert in state["alerts"])
+    # Aucun ménage : la requête DELETE des disparus n'a pas été envoyée pour openagenda.
+    sweeps = [call for call in db.calls if call[1] == "DELETE" and call[2] and "sources" in call[2]]
+    assert sweeps == []
+
+
+def test_small_source_variation_is_not_a_drop() -> None:
+    from agent.nodes import detect_source_drops
+
+    state = {"sources": ["openagenda", "ical"], "events": [{"source": "openagenda"}] * 50 + [{"source": "ical"}]}
+    # 50 contre 60 : normal ; ical apportait trop peu pour juger.
+    assert detect_source_drops(state, {"openagenda": 60, "ical": 10}) == {}
+
+
+def test_report_is_sent_after_the_collection() -> None:
+    db = FakeDatabase()
+    sent: list[dict] = []
+    services = make_services(lambda sources: ExtractionOutput(articles=[make_article(1, "Concert Jazz")]), db)
+    services.notify = sent.append
+    run_nightly_collection(services)
+    (report,) = sent
+    assert report["status"] == "success" and report["run_id"] == 7
+    assert report["source_rows"][0]["source_id"] == "openagenda"
+
+
+def test_no_mail_in_dry_run_and_mail_failure_is_harmless() -> None:
+    sent: list[dict] = []
+    services = make_services(lambda sources: ExtractionOutput(articles=[make_article(1, "Concert Jazz")]))
+    services.notify = sent.append
+    run_nightly_collection(services, dry_run=True)
+    assert sent == []
+
+    def broken(report):
+        raise OSError("SMTP en panne")
+
+    services = make_services(lambda sources: ExtractionOutput(articles=[make_article(1, "Concert Jazz")]), FakeDatabase())
+    services.notify = broken
+    assert run_nightly_collection(services)["status"] == "success"

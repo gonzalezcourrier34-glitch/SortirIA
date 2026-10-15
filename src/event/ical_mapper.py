@@ -243,10 +243,15 @@ def get_occurrences(
     end = None
     if vevent.get("DTEND"):
         end, _ = parse_ical_datetime(*vevent["DTEND"])
-    # Un événement « journée entière » finit le lendemain à 0 h en iCal :
-    # on le ramène au jour même (même convention que les autres sources).
-    if end is not None and not time_known and end - start <= timedelta(days=1):
-        end = None
+    # En iCal, la fin d'un événement « journée entière » est EXCLUSIVE : DTEND
+    # = le lendemain du dernier jour. On la ramène au dernier jour, et à rien
+    # du tout pour un événement d'une seule journée (même convention que les
+    # autres sources). Avant le 15/10/2026, seul le cas d'une journée était
+    # corrigé : un événement de 3 jours restait visible un jour de trop.
+    if end is not None and not time_known:
+        end = end - timedelta(days=1)
+        if end <= start:
+            end = None
     duration = (end - start) if end is not None and end >= start else None
 
     window_start = datetime.combine(today, time.min, tzinfo=PARIS)

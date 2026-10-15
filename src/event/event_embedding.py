@@ -22,8 +22,12 @@ def build_embedding_text(event: Mapping[str, Any]) -> str:
     """
 
     parts = [str(event.get("title") or "").strip()]
-    if event.get("category"):
-        parts.append(f"Catégorie : {event['category']}")
+    # Catégorie unifiée et résumé de l'enrichissement Mistral, quand ils existent.
+    category = event.get("category_norm") or event.get("category")
+    if category:
+        parts.append(f"Catégorie : {category}")
+    if event.get("summary"):
+        parts.append(str(event["summary"]).strip())
     place = ", ".join(str(value) for value in (event.get("venue_name"), event.get("city")) if value)
     if place:
         parts.append(f"Lieu : {place}")

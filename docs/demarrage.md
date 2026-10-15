@@ -26,16 +26,16 @@ uv run pytest
 Les tests n'ont besoin d'aucune clé d'API : `tests/conftest.py` crée des secrets factices
 et tous les appels réseau sont simulés.
 
-!!! note "Tests vérifiés au 13/10/2026"
-    4 571 tests passent. Les tests qui dépendent de `extruct`, `feedparser`, `psycopg2`
-    et `langchain-community` n'ont pas pu être lancés dans l'environnement de
-    vérification ; ils doivent être relancés avec `uv run pytest` après `uv sync`.
+!!! note "Tests vérifiés au 15/10/2026"
+    3 421 tests passent, dont ceux du schéma sur un vrai PostgreSQL. Les tests RSS
+    (`feedparser`) n'ont pas pu être lancés dans l'environnement de vérification ;
+    ils doivent être relancés avec `uv run pytest` après `uv sync`.
 
 ## API et interface
 
 ```bash
 uv run uvicorn app.main:app --reload            # API sur http://127.0.0.1:8000/docs
-uv run streamlit run dashboard/streamlit_app.py # interface
+cd frontend && npm start                       # interface (http://localhost:4210)
 ```
 
 ## Image Docker de l'API

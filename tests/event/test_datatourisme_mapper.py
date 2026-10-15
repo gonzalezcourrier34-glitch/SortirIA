@@ -127,3 +127,13 @@ def test_family_word_in_description_does_not_make_a_family_event() -> None:
 def test_url_falls_back_to_datatourisme_record() -> None:
     event = map_datatourisme_occurrences(make_item(hasContact=[]))[0]
     assert event.url == "https://data.datatourisme.fr/32/d2bc3ab2"
+
+
+def test_several_days_with_a_start_time_end_at_the_end_of_the_last_day() -> None:
+    """Stage du 14 au 16 « à 10h » : la fin est la fin du 16, pas le 14 à 10h (sinon invisible dès le 1er jour)."""
+
+    item = make_item(takesPlaceAt=[{"openingDetails": {"@fr": "Lundi 14 octobre 2030 à 10h."},
+                                    "startDate": "2030-10-14", "endDate": "2030-10-16"}])
+    (occurrence,) = get_occurrences(item)
+    assert occurrence["start_at"] == "2030-10-14T10:00:00+02:00"
+    assert occurrence["end_at"] == "2030-10-16T23:59:59+02:00" and occurrence["time_known"] is True

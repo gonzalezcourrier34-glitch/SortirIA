@@ -28,9 +28,43 @@ REASON_NOT_AN_OUTING = "pas_une_sortie"
 # Statuts OpenAgenda qui rendent la sortie impossible à la date annoncée.
 CANCELLED_STATUSES = frozenset({"annule", "reporte"})
 
+# Valeurs admises par les contraintes CHECK de sortiria.events (02_events.sql).
+# Un événement hors contrainte ferait échouer l'écriture de TOUTE la nuit
+# (une seule transaction) : on ramène les champs libres dans les clous.
+KNOWN_AUDIENCES = frozenset({"famille", "soiree", "ados", "seniors"})
+KNOWN_STATUSES = frozenset({"programme", "reprogramme", "deplace_en_ligne", "reporte", "complet", "annule"})
+KNOWN_ATTENDANCES = frozenset({"sur_place", "en_ligne", "mixte"})
+MAX_AGE = 120
+
+
+def conform_to_schema(event: Event) -> Event:
+    """Ramène les champs d'un événement aux valeurs admises en base (modifie l'événement).
+
+    - âges hors de 0-120 ou incohérents (min > max) : oubliés, un âge faux
+      venu d'un PDF ou d'un fichier partenaire ne doit pas bloquer la nuit ;
+    - publics inconnus : retirés ; statut ou présence inconnus : valeur par défaut.
+    """
+
+    ages = [age if isinstance(age, int) and 0 <= age <= MAX_AGE else None for age in (event.age_min, event.age_max)]
+    if ages[0] is not None and ages[1] is not None and ages[0] > ages[1]:
+        ages = [None, None]
+    event.age_min, event.age_max = ages
+    event.audiences = sorted({str(a) for a in (event.audiences or []) if str(a) in KNOWN_AUDIENCES})
+    if event.status not in KNOWN_STATUSES:
+        event.status = "programme"
+    if event.attendance not in KNOWN_ATTENDANCES:
+        event.attendance = "sur_place"
+    return event
+
 # Mots qui, dans la catégorie ou les mots-clés, signalent autre chose qu'une
 # sortie. Audit du 14/10/2026 : 6 « Opportunité d'emploi » sur 82 événements.
 NOT_AN_OUTING_WORDS = ("emploi", "recrutement", "job dating", "offre d emploi")
+
+# Titres qui annoncent l'annulation alors que le statut est resté « programmé »
+# (« ANNULÉ - MONTE-CRISTO », collecte du 15/10/2026), et services qui ne sont
+# pas des sorties (« AIDE AUX DEVOIRS », relevé deux fois par le juge).
+CANCELLED_TITLE_PREFIXES = ("annule", "annulee", "annulation", "reporte", "reportee")
+NOT_AN_OUTING_TITLES = ("aide aux devoirs",)
 
 
 def is_past(event: Event, now: datetime | None = None) -> bool:
@@ -57,6 +91,11 @@ def validate_event(event: Event, now: datetime | None = None) -> tuple[bool, str
         return False, REASON_MISSING_TITLE
     if event.status in CANCELLED_STATUSES:
         return False, REASON_CANCELLED
+    title = normalize_for_comparison(event.title)
+    if title.split(" ", 1)[0] in CANCELLED_TITLE_PREFIXES:
+        return False, REASON_CANCELLED
+    if any(phrase in title for phrase in NOT_AN_OUTING_TITLES):
+        return False, REASON_NOT_AN_OUTING
     labels = normalize_for_comparison(" ".join([event.category, *event.keywords]))
     if any(f" {word} " in f" {labels} " for word in NOT_AN_OUTING_WORDS):
         return False, REASON_NOT_AN_OUTING

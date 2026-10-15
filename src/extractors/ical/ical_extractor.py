@@ -3,6 +3,7 @@
 **Provenance** : nouveau module écrit pour SortirIA (14/10/2026), calqué sur
 `src/extractors/rss/rss_extractor.py` de CheckIt.AI : un seul lecteur pour
 tous les calendriers déclarés dans `ical_sources` (config/sources.yaml).
+L'orchestration est assurée par le moteur commun `src/extractors/files/`.
 
 Brancher le calendrier d'un lieu partenaire ne demande donc **aucun code** :
 
@@ -30,13 +31,14 @@ from typing import Any
 import httpx
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
+from config.constants import SOURCE_TYPE_ICAL
 from config.settings import HTTP_HEADERS
 from src.event.event_normalizer import PARIS
 from src.event.event_pipeline import occurrence_article_url
 from src.event.ical_mapper import get_occurrences, map_ical_event, parse_calendar
 from src.extractors.core.extractor_results import ExtractorResult
-from src.extractors.ical.ical_adapter import IcalAdapter
-from src.extractors.ical.ical_engine import IcalExtractor, extract_ical_sources
+from src.extractors.files.file_adapter import FileSourceAdapter
+from src.extractors.files.file_engine import FileSourceExtractor, extract_file_sources
 from src.utils.extractor_utils import build_standard_article
 from src.utils.parsing_utils import parse_non_negative_integer
 from src.utils.value_utils import normalize_value
@@ -109,20 +111,20 @@ def build_ical_article(item: Mapping[str, Any], source: Mapping[str, Any]) -> di
     )
 
 
-ICAL_ADAPTER = IcalAdapter(
+ICAL_ADAPTER = FileSourceAdapter(
     iter_items=iter_ical_items,
     build_article=build_ical_article,
     validate_item=validate_ical_entry,
     default_name="Calendriers iCal",
 )
 
-ICAL_EXTRACTOR = IcalExtractor(adapter=ICAL_ADAPTER)
+ICAL_EXTRACTOR = FileSourceExtractor(adapter=ICAL_ADAPTER, source_type=SOURCE_TYPE_ICAL)
 
 
 def extract_articles_from_sources(sources: list[Mapping[str, Any]]) -> ExtractorResult:
     """Lit une liste de calendriers déjà chargée."""
 
-    return extract_ical_sources(sources, ICAL_ADAPTER)
+    return extract_file_sources(sources, ICAL_ADAPTER, SOURCE_TYPE_ICAL)
 
 
 def extract_all_articles() -> ExtractorResult:

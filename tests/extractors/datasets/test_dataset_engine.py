@@ -1127,6 +1127,8 @@ def test_process_dataset_item_rejects_failed_construction(
 ) -> None:
     adapter = make_adapter()
     context = module.DatasetExtractionContext()
+    # SortirIA : la validation propre au dataset passe désormais en premier.
+    monkeypatch.setattr(module, "validate_adapter_item", lambda *args: (True, ""))
 
     monkeypatch.setattr(
         module,
@@ -1430,7 +1432,9 @@ def test_process_dataset_item_rejects_invalid_article(
     assert context.rejection_stats == Counter({
         "missing_title": 1
     })
-    assert adapter_validation_called is False
+    # SortirIA : la validation propre au dataset est appelée avant la
+    # construction de l'article (elle porte sur l'élément brut).
+    assert adapter_validation_called is True
 
 
 def test_process_dataset_item_uses_default_invalid_article_reason(
@@ -1438,6 +1442,8 @@ def test_process_dataset_item_uses_default_invalid_article_reason(
 ) -> None:
     adapter = make_adapter()
     context = module.DatasetExtractionContext()
+    # SortirIA : la validation propre au dataset passe désormais en premier.
+    monkeypatch.setattr(module, "validate_adapter_item", lambda *args: (True, ""))
 
     monkeypatch.setattr(
         module,

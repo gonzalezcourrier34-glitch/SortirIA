@@ -30,11 +30,16 @@ CREATE TABLE IF NOT EXISTS sortiria.rag_requests (
     latency_ms        INTEGER,
     prompt_tokens     INTEGER,
     completion_tokens INTEGER,
-    cost_eur          NUMERIC(10, 6),
+    cost_usd          NUMERIC(10, 6),     -- tarifs Mistral (agent/watch.py), comme collect_runs
     extraction_model  TEXT,
     llm_model         TEXT,
     prompt_version    TEXT,
-    index_version     TEXT
+    index_version     TEXT,
+    -- 15/10/2026 : la réponse rédigée est gardée pour rejouer le jeu de test,
+    -- la faire juger par Mistral et comparer deux versions de la consigne ;
+    -- degraded = réponse simplifiée sans Mistral (service indisponible).
+    answer            TEXT        NOT NULL DEFAULT '',
+    degraded          BOOLEAN     NOT NULL DEFAULT FALSE
 );
 
 -- Mise à niveau d'une base créée le 13/10/2026.
@@ -43,7 +48,18 @@ ALTER TABLE sortiria.rag_requests
     ADD COLUMN IF NOT EXISTS status           TEXT NOT NULL DEFAULT 'ok',
     ADD COLUMN IF NOT EXISTS error            TEXT NOT NULL DEFAULT '',
     ADD COLUMN IF NOT EXISTS extraction_model TEXT,
+    ADD COLUMN IF NOT EXISTS answer           TEXT NOT NULL DEFAULT '',
+    ADD COLUMN IF NOT EXISTS degraded         BOOLEAN NOT NULL DEFAULT FALSE,
     DROP COLUMN IF EXISTS user_feedback;
+
+-- cost_eur -> cost_usd (15/10/2026) : même unité que collect_runs.cost_usd.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns
+               WHERE table_schema = 'sortiria' AND table_name = 'rag_requests' AND column_name = 'cost_eur') THEN
+        ALTER TABLE sortiria.rag_requests RENAME COLUMN cost_eur TO cost_usd;
+    END IF;
+END $$;
 
 ALTER TABLE sortiria.rag_requests DROP CONSTRAINT IF EXISTS rag_requests_status_check;
 ALTER TABLE sortiria.rag_requests ADD CONSTRAINT rag_requests_status_check
@@ -95,5 +111,57 @@ CREATE TABLE IF NOT EXISTS sortiria.query_cache (
 );
 
 CREATE INDEX IF NOT EXISTS query_cache_expires_at_idx ON sortiria.query_cache (expires_at);
+
+
+-- ----------------------------------------------------------------------------
+-- 4. Notes des clients sur les événements (14/10/2026)
+-- ----------------------------------------------------------------------------
+-- Différent de `feedback` (pouce sur une RÉPONSE de l'assistant) : ici, un
+-- client note un ÉVÉNEMENT qu'il a vécu, de 1 à 5 étoiles, avec un court
+-- commentaire facultatif.
+--
+-- Règles :
+--   - notation ouverte du début de l'événement à 7 jours après sa fin
+--     (les événements passés restent 7 jours en base, sans être proposés) ;
+--   - une note par client et par événement (il peut la modifier) ;
+--   - client anonyme : `user_key` est une empreinte (SHA-256 salé) de
+--     l'identifiant de session, jamais un nom ni un courriel ;
+--   - commentaire modéré par Mistral Moderation avant publication ;
+--   - la note survit à l'événement : elle garde le lieu, la commune, la zone,
+--     la catégorie et le partenaire, pour noter les lieux et les organisateurs.
+
+CREATE TABLE IF NOT EXISTS sortiria.event_ratings (
+    rating_id       BIGSERIAL   PRIMARY KEY,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    event_id        TEXT        NOT NULL,           -- pas de clé étrangère : l'événement passe
+    user_key        TEXT        NOT NULL,           -- empreinte anonyme du client
+    stars           SMALLINT    NOT NULL,
+    comment         TEXT        NOT NULL DEFAULT '',
+    comment_status  TEXT        NOT NULL DEFAULT 'aucun',
+    moderation      JSONB       NOT NULL DEFAULT '{}'::jsonb,
+
+    -- Ce qu'on garde de l'événement noté (il sera supprimé).
+    source          TEXT        NOT NULL DEFAULT '',
+    title           TEXT        NOT NULL DEFAULT '',
+    venue_name      TEXT        NOT NULL DEFAULT '',
+    city            TEXT        NOT NULL DEFAULT '',
+    zone            TEXT        NOT NULL DEFAULT '',
+    category        TEXT        NOT NULL DEFAULT '',
+    partner_id      BIGINT      REFERENCES sortiria.partners (partner_id) ON DELETE SET NULL,
+    event_start     TIMESTAMPTZ,
+
+    CONSTRAINT event_ratings_stars_check   CHECK (stars BETWEEN 1 AND 5),
+    CONSTRAINT event_ratings_comment_check CHECK (length(comment) <= 300),
+    CONSTRAINT event_ratings_status_check
+        CHECK (comment_status IN ('aucun', 'en_attente', 'publie', 'refuse')),
+    CONSTRAINT event_ratings_once UNIQUE (event_id, user_key)
+);
+
+CREATE INDEX IF NOT EXISTS event_ratings_venue_idx   ON sortiria.event_ratings (city, venue_name);
+CREATE INDEX IF NOT EXISTS event_ratings_partner_idx ON sortiria.event_ratings (partner_id)
+    WHERE partner_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS event_ratings_pending_idx ON sortiria.event_ratings (comment_status)
+    WHERE comment_status = 'en_attente';
 
 COMMIT;

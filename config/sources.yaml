@@ -15,8 +15,15 @@ defaults:
     country: "France"
     category: "evenement"
     max_articles: 500
+    # Fenêtre de collecte commune à toutes les sources (14/10/2026) : les
+    # 3 prochains mois, ce que le RAG peut proposer (vue v_upcoming_events).
+    # La base est plafonnée à 10 000 événements (SORTIRIA_MAX_EVENEMENTS).
+    days_forward: 90
 
   ical:
+    role: "acquisition"
+
+  document:
     role: "acquisition"
 
   api:
@@ -57,7 +64,11 @@ defaults:
       # titre suffit (« Hamlet », sans description dans un calendrier iCal).
       min_total_text_length: 3
       remove_deleted_content: true
-      remove_duplicates: true
+      # false (15/10/2026) : le moteur CheckIt.AI tenait pour doublon « même titre,
+      # même jour » (articles de presse), ce qui fusionnait « Marché » à Mèze et à
+      # Marseillan. Les extracteurs dédoublonnent par identifiant (uid, uuid) et la
+      # chaîne d'événements par titre + jour + lieu.
+      remove_duplicates: false
       validate_urls: true
       allowed_labels: []
 
@@ -101,8 +112,13 @@ api_sources:
     # par termes lit ~10 000 événements (111 agendas, souvent nationaux) pour
     # en garder 83 dans la zone, en 6 minutes. Ces 11 agendas fournissent tous
     # les événements retenus : la collecte de nuit ne lit qu'eux.
-    # Liste vide = recherche par termes (mode découverte, à relancer chaque
-    # semaine : uv run python -m scripts.audit_openagenda --decouverte).
+    # Liste vide = recherche par termes (mode découverte).
+    # Chaque semaine (discovery_weekday : 0 = lundi … 6 = dimanche), l'agent
+    # refait la recherche complète et propose les agendas utiles absents de
+    # cette liste (table agent_proposals, mail de bilan). Pour décider :
+    # uv run python -m agent.proposals (--accepter N ajoute l'agenda ici).
+    # Découverte à la demande : uv run python -m agent --decouverte.
+    discovery_weekday: 6
     agenda_uids:
       - "9969608"    # 30 événements retenus le 14/10
       - "4838751"    # 12
@@ -117,7 +133,6 @@ api_sources:
       - "10455523"   # 1
       - "67871262"   # 1 (repéré par la collecte du 14/10 à 11 h)
     max_agendas: 50
-    days_forward: 30
     page_size: 100
     max_pages: 10
     max_articles: 2000
@@ -133,13 +148,23 @@ api_sources:
     api_key_secret_name: "datatourisme_api_key"
     zone: "Montpellier"
     areas: *zones
-    days_forward: 30
     page_size: 100
     max_pages: 20
-    max_articles: 3000
+    max_articles: 8000           # une séance = un événement : 3 mois de séances
 
-# À brancher ensuite : open data de la Métropole (datasets) et 1-2 sites
-# d'agenda autorisés (scraper_sources).
+# Flux RSS d'agenda (moteur RSS de CheckIt.AI, adaptateur
+# src/extractors/rss/source/event_rss_extractor.py). Seulement des flux dont
+# l'éditeur autorise la reprise (flux prévu pour la syndication, partenaire),
+# robots.txt respecté. Vérifiés le 14/10/2026 et écartés : Démosphère Hérault
+# (flux vide), Agenda du Libre (robots.txt l'interdit). Exemple :
+#   - name: "Nom du lieu"
+#     source_id: "nom_du_lieu"
+#     type: "rss"
+#     url: "https://exemple.fr/agenda/feed/"
+#     event_date: "published"   # pubDate = date de l'événement (WordPress « The Events Calendar »)
+#     venue_name: "Nom du lieu"
+#     city: "Sète"
+#     credit: "Nom du lieu"
 rss_sources: []
 
 # Calendriers iCal (.ics) des lieux partenaires : une entrée par lieu, sans
@@ -157,10 +182,129 @@ rss_sources: []
 #     longitude: 3.87
 #     website: "https://exemple.fr"      # lien si un événement n'en a pas
 #     credit: "Nom du lieu"              # cité sous chaque proposition
-#     days_forward: 30
 #     max_articles: 500
 ical_sources: []
 
-datasets: []
+# Programmes publiés en PDF, lus par Mistral (src/extractors/documents/).
+# Le PDF n'est relu par Mistral que s'il a changé (cache par empreinte).
+# Seul le texte est repris (titres, dates, lieux, prix), jamais les photos.
+document_sources:
+  - name: "Sète agglopôle - Agenda Culture sept.-déc. 2026"
+    source_id: "agglopole_agenda_culture"
+    type: "document"
+    url: "https://www.agglopole.fr/wp-content/uploads/2026/09/Agenda-Culture-de-Sete-agglopole-mediterranee-de-Septembre-a-Decembre-2026.pdf"
+    credit: "Sète agglopôle méditerranée, Agenda Culture sept.-déc. 2026"
+    published_on: "2026-09-01"
+    period: {debut: "2026-09-01", fin: "2026-12-31"}
+    city: "Sète"                 # commune par défaut si ni le texte ni le lieu ne la donnent
+    # Pages lues (vérifiées sur le texte le 14/10) : 1-3 = couverture, sommaire,
+    # édito ; 60-62 et 64 = horaires des lieux ; 63 = résidences d'artistes (gardée).
+    pages: "4-59,63"
+    pages_per_chunk: 4
+    pages_overlap: 1             # une séance qui continue page suivante garde son titre
+    max_articles: 500
+    # Commune de chaque lieu, d'après les pages pratiques du programme.
+    venues:
+      "Médiathèque François Mitterrand": "Sète"
+      "Médiathèque André Malraux": "Sète"
+      "Conservatoire Manitas de Plata": "Sète"
+      "CRAC": "Sète"
+      "Médiathèque Olympe de Gouges": "Balaruc-les-Bains"
+      "Jardin antique méditerranéen": "Balaruc-les-Bains"
+      "Médiathèque Montaigne": "Frontignan"
+      "Médiathèque La Fabrique": "Marseillan"
+      "Médiathèque Andrée Chedid": "Mèze"
+      "Villa Loupian": "Loupian"
+      "Musée de l'étang de Thau": "Bouzigues"
+      "Musée étang de Thau": "Bouzigues"
+    # Vacances scolaires (activités « hors vacances scolaires ») : dates
+    # officielles service-public.fr, toutes zones. Provisoire : viendront du jeu
+    # de données « calendrier scolaire » (prochaine méthode de collecte).
+    school_holidays:
+      - {debut: "2026-10-17", fin: "2026-11-01"}
+      - {debut: "2026-12-19", fin: "2027-01-03"}
 
-scraper_sources: []
+# Jeux de données lus par le moteur datasets de CheckIt.AI.
+datasets:
+  # Fichiers envoyés par les partenaires (src/extractors/datasets/source/partner_extractor.py).
+  # UN FICHIER PAR PARTENAIRE, À LA RACINE de data/partenaires/, nommé d'après
+  # lui (saintlouis.xlsx, bar_truc_muche.csv, festival.json) : tout ce qui est à
+  # la racine est importé chaque nuit. Sous-dossiers et fichiers « _... » ignorés.
+  # Modèle à envoyer : docs/modeles/modele_partenaire.xlsx (ou .csv).
+  # Vérifier un fichier reçu :
+  #   uv run python -m src.extractors.datasets.source.partner_extractor --verifier <fichier>
+  - name: "Fichiers des partenaires"
+    source_id: "partenaire"
+    type: "dataset"
+    path: "data/partenaires"
+    format: "tableur"            # .xlsx, .xls, .csv ou .json
+    chunksize: 1000
+    max_articles: 3000
+    filters:                     # mêmes règles que les autres sources d'événements
+      require_label: false       # (le moteur datasets de CheckIt.AI exigeait un label vrai/faux)
+      require_url: true
+      min_title_length: 3
+      min_text_length: 0
+      min_total_text_length: 3
+    # Réglages FACULTATIFS par partenaire (clé file = nom du fichier sans
+    # extension). Sans entrée : nom tiré du fichier, secteur « autre », pas de
+    # mise en avant, et chaque ligne doit avoir son lien.
+    partners:
+      # Partenaires FICTIFS de démonstration (14/10/2026) : séances marquées
+      # « (exemple) », liens example.org. Passer enabled à false (ou retirer
+      # leurs fichiers) avant d'ouvrir le service au public.
+      - file: "ludotheque_exemple"
+        name: "Ludothèque Exemple (fictif)"
+        sector: "enfants"
+        website: "https://example.org/ludotheque"
+        sponsored_until: "2026-11-30"   # mis en avant jusqu'à cette date
+        enabled: true
+      - file: "bar_exemple"
+        name: "Bar Exemple (fictif)"
+        sector: "soiree"
+        website: "https://example.org/bar"
+        enabled: true
+      - file: "festival_exemple"
+        name: "Festival Exemple (fictif)"
+        sector: "culture"
+        website: "https://example.org/festival"
+        enabled: true
+
+# Pages d'agenda lues par le moteur scraper de CheckIt.AI (adaptateur
+# src/extractors/scrapers/source/agenda_scraper.py, sélecteurs CSS ci-dessous).
+# RÈGLE : seulement avec l'autorisation écrite de l'éditeur. En attendant,
+# enabled: false (l'agent ne lance pas la source). Essai sans requête au site :
+#   uv run python -m src.extractors.scrapers.source.agenda_scraper --fichier perso/frontignan_agenda.html
+scraper_sources:
+  - name: "Ville de Frontignan - Agenda"
+    source_id: "frontignan_agenda"
+    type: "scraper"
+    # Demande d'autorisation envoyée le 14/10/2026 (formulaire de contact) :
+    # « reproduction interdite sauf autorisation expresse » (mentions légales).
+    enabled: false
+    base_url: "https://www.frontignan.fr"
+    start_urls: ["https://www.frontignan.fr/agenda/"]
+    page_url_template: "https://www.frontignan.fr/agenda/page/{n}/"
+    max_pages: 10                # « Résultats 1 à 12 sur 114 » le 14/10/2026
+    respect_robots_txt: true
+    request_delay_seconds: 2.0   # une page toutes les 2 s : 10 requêtes par nuit
+    max_articles: 200
+    city: "Frontignan"
+    latitude: 43.4483
+    longitude: 3.7546
+    credit: "Ville de Frontignan"
+    # La liste n'affiche que les jours (heure « 06:00 » par défaut pour les
+    # événements sur plusieurs jours) : l'heure est ignorée.
+    day_only: true
+    # Fiches de la page de liste (dates au format schema.org) : la page de
+    # chaque événement n'est pas ouverte.
+    selectors:
+      article: "article"
+      title: "h2.entry-title"
+      link: "h2.entry-title a"
+      text: ".entry-summary p"
+      start_date: "[itemprop=startDate]"
+      end_date: "[itemprop=endDate]"
+      category: ".entry-meta a"
+    pagination:
+      enabled: false             # pages « /page/N/ » : voir page_url_template

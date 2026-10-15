@@ -46,7 +46,8 @@ from typing import Any
 from config.environment import load_environment
 from scripts.audit_openagenda import field_paths
 from src.event.event_normalizer import PARIS
-from src.extractors.apis.source.openagenda_extractor import OPENAGENDA_EXTRACTOR, get_areas
+from src.extractors.apis.source.openagenda_extractor import OPENAGENDA_EXTRACTOR
+from src.utils.geo_utils import get_areas
 
 API_URL = "https://api.datatourisme.fr/v1/entertainmentAndEvent"
 PAGE_SIZE = 100
