@@ -186,6 +186,19 @@ def test_moved_pdf_gives_clear_message(monkeypatch: pytest.MonkeyPatch) -> None:
         module.fetch_document("https://x.fr/a.pdf")
 
 
+def test_web_page_instead_of_pdf_says_access_is_blocked(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Une page web à la place du PDF (Azure, 15/10/2026) : le message le dit."""
+
+    import httpx
+
+    request = httpx.Request("GET", "https://x.fr/a.pdf")
+    page = httpx.Response(200, request=request, headers={"content-type": "text/html; charset=UTF-8"},
+                          content=b"<html>Just a moment...</html>")
+    monkeypatch.setattr(module.httpx, "get", lambda *args, **kwargs: page)
+    with pytest.raises(ValueError, match="page web reçue .*Accès bloqué"):
+        module.fetch_document("https://x.fr/a.pdf")
+
+
 def test_rate_limit_is_retried_with_growing_waits() -> None:
     answers = iter([RuntimeError("Error response 429: Rate limit exceeded"), RuntimeError("429"), ("{}", {})])
     waits: list[float] = []

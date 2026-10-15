@@ -66,6 +66,7 @@ C'est ce qui le distingue d'un ETL, qui exécuterait toujours la même suite :
 | Situation | Décision |
 | --- | --- |
 | Une source n'a aucune configuration active (aucun calendrier iCal déclaré) | Elle n'est pas lancée (sinon : fausse panne chaque nuit) |
+| Une source est coupée sur ce serveur (`SOURCES_DESACTIVEES=document`, 15/10/2026 : Sète agglopôle renvoie une page web au lieu du PDF aux serveurs d'Azure) | Elle n'est pas lancée, ses événements ne sont pas balayés, le mail le signale ; elle reste lisible depuis une autre machine (`python -m agent --source document`) |
 | Une ou plusieurs sources sont en échec | Nouvel essai de **ces sources seulement** ; leurs événements s'ajoutent à ceux des autres |
 | Rien n'a été extrait | Nouvel essai de tout, puis bilan d'échec : l'agent ne s'arrête jamais sans trace |
 | Une source est en échec, ou en échec partiel (un PDF sur deux en 404, un agenda OpenAgenda en quota) | Les autres continuent ; statut « partiel » ; ses événements de la veille sont gardés |
@@ -83,7 +84,7 @@ C'est ce qui le distingue d'un ETL, qui exécuterait toujours la même suite :
 | Un partenaire a 2,5/5 ou moins sur 5 notes clients au moins | Alerte « à contacter » |
 | La base dépasse 10 000 événements | Les plus lointains sont retirés (statistiques gardées) et une alerte est envoyée ; alerte dès 90 % |
 | C'est le jour de la découverte (`discovery_weekday`, dimanche par défaut), ou `--decouverte` | Recherche complète des agendas OpenAgenda (~6 min) ; chaque agenda utile absent de `agenda_uids` devient une **proposition** « ajouter l'agenda » (nombre d'événements dans la zone, lien), jamais ajoutée seule ; un agenda refusé n'est plus reproposé |
-| Une source tombe en panne | Diagnostic (document déplacé, accès refusé, quota, réseau, format) et conseil ; pour un document déplacé, l'agent cherche et vérifie la nouvelle adresse, puis **propose** la réparation, appliquée seulement après accord humain |
+| Une source tombe en panne | Diagnostic (document déplacé, accès refusé, accès bloqué par le site, quota, réseau, format) et conseil ; pour un document déplacé, l'agent cherche et vérifie la nouvelle adresse, puis **propose** la réparation, appliquée seulement après accord humain |
 | Chaque nuit, après l'écriture | Vocabulaire des titres recalculé : les sujets que la recherche reconnaît (« photo » est un sujet, « romantique » une ambiance) |
 | C'est lundi | Bilan de la recherche des 7 derniers jours dans le mail, puis, pour chaque mot cherché au moins 2 fois et absent de la base : **proposition** de synonyme ou de correction, **proposition** d'agenda OpenAgenda qui traite le sujet, ou piste pour les partenaires (détail plus bas) |
 

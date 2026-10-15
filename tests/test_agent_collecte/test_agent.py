@@ -255,6 +255,48 @@ def test_sources_without_configuration_are_skipped() -> None:
     assert state["sources"] == ["openagenda", "datatourisme"]
 
 
+def test_disabled_sources_are_not_launched_nor_swept(monkeypatch) -> None:
+    """SOURCES_DESACTIVEES (Azure, 15/10/2026) : la source n'est ni lancée ni
+    balayée, et le rapport la signale."""
+
+    monkeypatch.setenv("SOURCES_DESACTIVEES", " document , rss")
+    db = FakeDatabase()
+    asked: list[list[str]] = []
+
+    def extract(sources):
+        asked.append(list(sources))
+        return ExtractionOutput(articles=[make_article(1, "Concert Jazz")])
+
+    services = CollectionServices(
+        extract=extract, connect=db.connect, embed=lambda texts: [[0.1] for _ in texts], now=lambda: NOW,
+        default_sources=("openagenda", "document"), is_configured=lambda name: True,
+    )
+    state = run_nightly_collection(services)
+    assert asked == [["openagenda"]]
+    assert state["sources"] == ["openagenda"]
+    assert state["disabled_sources"] == ["document"]
+    sweeps = [call for call in db.calls if call[1] == "DELETE" and call[2] and "document" in str(call[2])]
+    assert sweeps == []
+
+
+def test_disabled_sources_do_not_block_an_explicit_request(monkeypatch) -> None:
+    """Sur le PC, `--source document` lit la source même si elle est coupée ailleurs."""
+
+    monkeypatch.setenv("SOURCES_DESACTIVEES", "document")
+    asked: list[list[str]] = []
+
+    def extract(sources):
+        asked.append(list(sources))
+        return ExtractionOutput(articles=[make_article(1, "Concert Jazz")])
+
+    services = CollectionServices(
+        extract=extract, connect=FakeDatabase().connect, embed=lambda texts: [[0.1] for _ in texts],
+        now=lambda: NOW, default_sources=("openagenda", "document"),
+    )
+    run_nightly_collection(services, sources=["document"])
+    assert asked == [["document"]]
+
+
 def test_sharp_drop_keeps_yesterday_events_and_alerts() -> None:
     # La veille, openagenda avait apporté 80 événements ; ce soir, 2.
     db = FakeDatabase(previous_counts={"openagenda": 80})

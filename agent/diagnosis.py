@@ -29,6 +29,7 @@ from typing import Any
 # Familles de pannes, du message d'erreur à une action conseillée.
 KIND_MOVED = "document_deplace"
 KIND_ACCESS = "acces_refuse"
+KIND_BLOCKED = "acces_bloque"   # page web reçue à la place du document (15/10/2026, Azure)
 KIND_QUOTA = "quota"
 KIND_NETWORK = "reseau"
 KIND_FORMAT = "format_inattendu"
@@ -37,6 +38,8 @@ KIND_UNKNOWN = "inconnue"
 ADVICE = {
     KIND_MOVED: "le document a changé d'adresse : chercher la nouvelle et mettre à jour `url`.",
     KIND_ACCESS: "accès refusé : vérifier la clé API dans le .env (elle a pu expirer ou être révoquée).",
+    KIND_BLOCKED: ("le site a renvoyé une page web au lieu du document (protection anti-robots ?) : "
+                   "le lire depuis une autre adresse (le PC) et le couper sur ce serveur (SOURCES_DESACTIVEES)."),
     KIND_QUOTA: "quota atteint : la source sera relue la nuit prochaine ; si cela dure, espacer les appels.",
     KIND_NETWORK: "site injoignable ou trop lent : en général passager, à surveiller s'il se répète.",
     KIND_FORMAT: "réponse inattendue : la source a peut-être changé de format, vérifier l'adaptateur.",
@@ -44,6 +47,7 @@ ADVICE = {
 }
 
 PATTERNS = (
+    (KIND_BLOCKED, re.compile(r"page web re[çc]ue|acc[èe]s bloqu", re.IGNORECASE)),
     (KIND_MOVED, re.compile(r"404|introuvable|not found", re.IGNORECASE)),
     (KIND_ACCESS, re.compile(r"\b40[13]\b|unauthori[sz]ed|forbidden|cl[ée] api|authentication", re.IGNORECASE)),
     (KIND_QUOTA, re.compile(r"429|rate limit|quota", re.IGNORECASE)),

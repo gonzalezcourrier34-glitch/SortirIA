@@ -24,6 +24,7 @@ REPORT: dict[str, Any] = {
         {"source_id": "datatourisme", "status": "ok", "events_kept": 986, "attempts": 1},
     ],
     "skipped_sources": ["ical"],
+    "disabled_sources": ["document"],
     "alerts": ["Baisse anormale pour openagenda : 2 événement(s) contre 80 la dernière fois."],
     "purged": {"requests": 0, "cache": 0, "runs": 0},
     "run_id": 8,
@@ -44,6 +45,7 @@ def test_subject_and_body() -> None:
     assert "Collecte du 2026-10-15 à 02:00" in body
     assert "- datatourisme : ok, 986 événement(s), 1 essai(s)" in body
     assert "- non lancées (pas de configuration) : ical" in body
+    assert "- coupées sur ce serveur (SOURCES_DESACTIVEES) : document" in body
     assert "Baisse anormale pour openagenda" in body
     assert "Bilan n° 8" in body
 

@@ -81,6 +81,9 @@ def build_report_email(report: Mapping[str, Any]) -> tuple[str, str]:
     skipped = report.get("skipped_sources") or []
     if skipped:
         lines.append(f"- non lancées (pas de configuration) : {', '.join(skipped)}")
+    disabled = report.get("disabled_sources") or []
+    if disabled:
+        lines.append(f"- coupées sur ce serveur (SOURCES_DESACTIVEES) : {', '.join(disabled)}")
 
     lines += ["", "Alertes"]
     lines += [f"- {alert}" for alert in alerts] or ["- aucune"]

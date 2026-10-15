@@ -32,6 +32,7 @@ class CollectionState(TypedDict, total=False):
     sources: list[str]                # extracteurs à lancer (ex. ["openagenda"])
     started_at: str                   # début de la collecte (ISO 8601)
     skipped_sources: list[str]        # sources sans configuration active, non lancées
+    disabled_sources: list[str]       # sources coupées sur ce serveur (SOURCES_DESACTIVEES)
 
     # Extraction
     attempts: int

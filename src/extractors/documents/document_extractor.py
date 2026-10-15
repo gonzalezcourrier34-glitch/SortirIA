@@ -141,7 +141,18 @@ def fetch_document(url: str) -> bytes:
         )
     response.raise_for_status()
     if not response.content.startswith(b"%PDF"):
-        raise ValueError("Le document téléchargé n'est pas un PDF.")
+        # Constat du 15/10/2026 sur Azure : le site de Sète agglopôle sert le
+        # PDF à une box, mais une page web aux centres de données. Le message
+        # dit ce qui est arrivé, pour que le diagnostic de l'agent le range
+        # en « accès refusé » plutôt qu'en « format inattendu ».
+        content_type = response.headers.get("content-type", "inconnu")
+        if "html" in content_type.lower():
+            raise ValueError(
+                f"Le document téléchargé n'est pas un PDF : page web reçue ({content_type}, "
+                f"HTTP {response.status_code}). Accès bloqué par le site (protection "
+                "anti-robots ?) : il sert peut-être le PDF depuis une autre adresse IP."
+            )
+        raise ValueError(f"Le document téléchargé n'est pas un PDF ({content_type}).")
     return response.content
 
 

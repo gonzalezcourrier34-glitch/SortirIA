@@ -32,6 +32,10 @@ def test_failures_are_classified() -> None:
     assert diagnosis.classify("Error response 429 : Rate limit exceeded") == diagnosis.KIND_QUOTA
     assert diagnosis.classify("Délai dépassé pendant le téléchargement.") == diagnosis.KIND_NETWORK
     assert diagnosis.classify("Le document téléchargé n'est pas un PDF.") == diagnosis.KIND_FORMAT
+    # Azure, 15/10/2026 : page web servie aux centres de données à la place du PDF.
+    assert diagnosis.classify(
+        "Le document téléchargé n'est pas un PDF : page web reçue (text/html, HTTP 200). Accès bloqué par le site"
+    ) == diagnosis.KIND_BLOCKED
     assert diagnosis.classify("bizarre") == diagnosis.KIND_UNKNOWN
 
 

@@ -222,7 +222,7 @@ class MlflowTracker:
             mlflow.set_tags({"status": str(state.get("status", "")), "run_id_base": str(state.get("run_id") or "")})
             mlflow.log_dict(
                 {key: state.get(key) for key in (
-                    "status", "sources", "skipped_sources", "failed_sources", "preparation", "alerts",
+                    "status", "sources", "skipped_sources", "disabled_sources", "failed_sources", "preparation", "alerts",
                     "coverage", "cost_usd", "llm_usage", "extractor_stats", "node_durations", "errors",
                     "quality", "enrichment",
                 )},

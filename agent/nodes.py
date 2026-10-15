@@ -11,6 +11,7 @@ Les services (extraction, base, embeddings) arrivent par
 
 from __future__ import annotations
 
+import os
 from collections.abc import Mapping
 from datetime import date
 from typing import Any
@@ -58,11 +59,26 @@ def get_services(config: RunnableConfig) -> CollectionServices:
 # A. Planification
 # ---------------------------------------------------------------------------
 
+def disabled_sources() -> list[str]:
+    """Sources coupées sur ce serveur : variable `SOURCES_DESACTIVEES` (« document,rss »).
+
+    Ajout du 15/10/2026, pour Azure : le site de Sète agglopôle renvoie une page
+    web au lieu du PDF aux adresses des centres de données, alors qu'il sert
+    le PDF depuis une box. La source « document » est alors coupée sur Azure
+    (sinon elle remonterait comme une panne chaque nuit) et lue depuis le PC
+    (`python -m agent --source document`). Ses événements ne sont pas balayés :
+    seule une source lancée et lue sans échec peut l'être.
+    """
+
+    return [name.strip() for name in os.getenv("SOURCES_DESACTIVEES", "").split(",") if name.strip()]
+
+
 def plan_sources(state: CollectionState, config: RunnableConfig) -> dict[str, Any]:
     """Choisit les sources de la nuit (celles demandées, sinon celles par défaut)."""
 
     services = get_services(config)
     skipped: list[str] = []
+    disabled: list[str] = []
     if state.get("sources"):
         sources = list(state["sources"])  # demandées explicitement (--source)
     else:
@@ -78,10 +94,15 @@ def plan_sources(state: CollectionState, config: RunnableConfig) -> dict[str, An
         skipped = [name for name in services.default_sources if name not in sources]
         if skipped:
             logger.info("Sources sans configuration active, non lancées : %s.", skipped)
+        disabled = [name for name in sources if name in disabled_sources()]
+        if disabled:
+            sources = [name for name in sources if name not in disabled]
+            logger.info("Sources coupées sur ce serveur (SOURCES_DESACTIVEES) : %s.", disabled)
     logger.info("Collecte nocturne : sources prévues %s.", sources)
     return {
         "sources": sources,
         "skipped_sources": skipped,
+        "disabled_sources": disabled,
         "started_at": services.now().isoformat(),
         "attempts": 0,
         "errors": [],
@@ -640,6 +661,7 @@ def write_report(state: CollectionState, config: RunnableConfig) -> dict[str, An
                 "enrichment": state.get("enrichment", {}),
                 "source_rows": source_rows,
                 "skipped_sources": state.get("skipped_sources", []),
+                "disabled_sources": state.get("disabled_sources", []),
                 "purged": state.get("purged", {}),
                 "alerts": alerts,
                 "run_id": run_id,
