@@ -58,6 +58,8 @@ class CollectionState(TypedDict, total=False):
     events_total: int                     # taille de la base après la collecte
     ratings: dict[str, Any]               # notes des clients : nouvelles, moyenne, partenaires mal notés
     enrichment: dict[str, Any]            # bilan de l'enrichissement (refus, « pas une sortie »...)
+    vocabulary_size: int                  # racines de mots des titres (sujets reconnus par la recherche)
+    search_gaps: dict[str, Any]           # recherches de la semaine restées sans réponse exacte
 
     # Contrôle de qualité (juge Mistral sur un échantillon)
     quality: dict[str, Any]               # score, taux par question, exemples de problèmes
@@ -67,6 +69,8 @@ class CollectionState(TypedDict, total=False):
     watch_alerts: list[str]               # programmes, partenaires, couverture, coût
     cost_usd: float                       # coût Mistral estimé de la nuit
     proposals: list[dict[str, Any]]       # réparations proposées (à valider par un humain)
+    search_report: dict[str, Any]         # le lundi : recherches sans réponse exacte (bilan par mail)
+    search_learning: list[str]            # le lundi : pistes tirées des recherches ratées (mail)
 
     # Suivi (MLflow, collect_runs)
     node_durations: dict[str, float]      # secondes passées dans chaque nœud

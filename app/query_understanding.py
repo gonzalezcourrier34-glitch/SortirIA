@@ -32,6 +32,8 @@ import unicodedata
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
+from pathlib import Path
+from typing import Any
 from zoneinfo import ZoneInfo
 
 PARIS = ZoneInfo("Europe/Paris")
@@ -59,22 +61,32 @@ def plain(value: str) -> str:
 
 # Mots de la question qui désignent une catégorie (forme sans accents, sans
 # « s » final). Une demande de théâtre accepte aussi les spectacles : beaucoup
-# de pièces sont rangées en « spectacle » par les sources.
+# de pièces sont rangées en « spectacle » par les sources. « Spectacle »
+# n'inclut plus la danse (15/10/2026) : un bal folk ou une soirée salsa n'est
+# pas un spectacle ; un spectacle de danse le dit dans son titre.
 QUESTION_CATEGORIES: dict[str, tuple[str, ...]] = {
     "theatre": ("theatre", "spectacle"), "piece": ("theatre", "spectacle"),
     "comedie": ("theatre", "spectacle"), "impro": ("theatre", "spectacle"),
-    "improvisation": ("theatre", "spectacle"), "spectacle": ("spectacle", "theatre", "danse"),
+    "improvisation": ("theatre", "spectacle"), "spectacle": ("spectacle", "theatre"),
     "cirque": ("spectacle",), "humour": ("spectacle", "theatre"), "humoriste": ("spectacle", "theatre"),
     "concert": ("concert",), "musique": ("concert",), "jazz": ("concert",), "rock": ("concert",),
-    "danse": ("danse",), "ballet": ("danse",), "cinema": ("cinema",), "film": ("cinema",),
+    "danse": ("danse",), "ballet": ("danse",), "cinema": ("cinema",), "cine": ("cinema",), "film": ("cinema",),
     "projection": ("cinema",), "expo": ("exposition",), "exposition": ("exposition",),
     "musee": ("exposition", "visite"), "atelier": ("atelier",), "stage": ("atelier",),
     "conference": ("conference",), "visite": ("visite",), "festival": ("festival",),
-    "marche": ("marche",), "brocante": ("marche",), "sport": ("sport",), "match": ("sport",),
+    "marche": ("marche",), "brocante": ("marche",), "foire": ("marche", "fete"), "sport": ("sport",), "match": ("sport",),
     "course": ("sport",), "jeu": ("jeux",), "jeux": ("jeux",), "soiree": ("soiree",),
     "lecture": ("lecture",), "livre": ("lecture",), "conte": ("lecture", "spectacle"),
     "nature": ("nature",), "balade": ("nature",), "randonnee": ("nature",), "fete": ("fete",),
 }
+# Mots plus précis que leur catégorie (15/10/2026) : « cirque » est rangé en
+# « spectacle », mais un spectacle de danse n'est pas du cirque. Ces mots
+# doivent aussi figurer dans l'événement (recherche par mots-clés).
+PRECISE_SUBJECTS = frozenset({
+    "cirque", "humour", "humoriste", "jazz", "rock", "ballet", "impro", "improvisation",
+    "brocante", "conte", "randonnee", "musee", "match", "foire",
+})
+SHORT_SUBJECTS = frozenset({"dj", "bd", "vr"})   # sujets de 2 lettres (« soirée DJ »)
 CATEGORY_LABELS = {"theatre": "théâtre", "cinema": "cinéma", "conference": "conférence",
                    "marche": "marché", "soiree": "soirée", "fete": "fête"}
 
@@ -258,7 +270,8 @@ PUBLIC_WORDS = {
              "collegien", "collegiens", "jeunes"),
     "seniors": ("senior", "seniors", "retraite", "retraites", "aines", "personnes agees", "grand mere",
                 "grand pere", "grands parents"),
-    "soiree": ("soiree", "soirees", "bar", "bars", "fiesta", "festif", "festive", "amoureux", "clubbing"),
+    "soiree": ("soiree", "soirees", "bar", "bars", "fiesta", "festif", "festive", "amoureux", "clubbing",
+               "boite de nuit", "discotheque", "afterwork", "pub", "pubs"),
 }
 EVENING_WORDS = ("ce soir", "soir", "soiree", "nocturne", "nuit")
 FREE_WORDS = ("gratuit", "gratuite", "gratuits", "gratuites", "gratos", "sans payer", "entree libre")
@@ -362,7 +375,9 @@ def keywords_of(text: str, consumed: set[str]) -> tuple[str, ...]:
 
     words = []
     for word in text.split():
-        if len(word) < 3 or word in STOPWORDS or word in consumed or word.isdigit():
+        # Mots de 2 lettres ignorés, sauf quelques sujets (« DJ », « BD »).
+        if (len(word) < 3 and word not in SHORT_SUBJECTS) or word in STOPWORDS or word in consumed \
+                or word.isdigit():
             continue
         if word not in words:
             words.append(word)
@@ -452,8 +467,54 @@ class Understanding:
                     or self.near)
 
 
+# ----------------------------------------------------------------------------
+# Synonymes appris (config/synonymes.yaml, validés par un humain)
+# ----------------------------------------------------------------------------
+
+SYNONYMS_FILE = Path(__file__).resolve().parent.parent / "config" / "synonymes.yaml"
+_synonyms_cache: dict[str, Any] = {"key": None, "values": {}}
+
+
+def learned_synonyms(path: Path = SYNONYMS_FILE) -> dict[str, str]:
+    """Synonymes et corrections validés : {« zumba » : « fitness »}.
+
+    Relu seulement quand le fichier change : une proposition acceptée sert
+    dès la question suivante, sans redémarrer l'API.
+    """
+
+    try:
+        stat = path.stat()
+    except OSError:
+        return {}
+    key = (str(path), stat.st_mtime_ns, stat.st_size)       # fichier, date et taille : relu s'il change
+    if _synonyms_cache["key"] != key:
+        import yaml
+
+        try:
+            data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        except (OSError, yaml.YAMLError):
+            data = {}
+        values = data.get("synonymes") if isinstance(data, dict) else None
+        _synonyms_cache["values"] = {plain(str(word)): plain(str(target))
+                                     for word, target in (values or {}).items() if plain(str(word)) and plain(str(target))}
+        _synonyms_cache["key"] = key
+    return dict(_synonyms_cache["values"])
+
+
+def with_synonyms(question: str, synonyms: dict[str, str] | None = None) -> str:
+    """Ajoute à la question les mots connus de ses synonymes appris :
+    « de la zumba » -> « de la zumba fitness ». Le mot tapé reste."""
+
+    synonyms = learned_synonyms() if synonyms is None else synonyms
+    padded = f" {plain(question)} "
+    added = [target for word, target in synonyms.items() if f" {word} " in padded and f" {target} " not in padded]
+    return f"{question} {' '.join(added)}" if added else question
+
+
 def understand(question: str, now: datetime) -> Understanding:
     """Lit la question : quand, où, pour qui, combien, quoi, et les mots restants."""
+
+    question = with_synonyms(question)
 
     text = plain(question.replace("€", " euros "))      # le signe disparaîtrait avec la ponctuation
     padded = f" {text} "
@@ -483,7 +544,8 @@ def understand(question: str, now: datetime) -> Understanding:
         zone=zone,
         cities=cities,
         free_only=free,
-        evening=any(f" {word} " in padded for word in EVENING_WORDS[:2]),
+        # « marché nocturne » : le soir aussi (pas « nuit » : « boîte de nuit », « Nuit des musées »).
+        evening=any(f" {word} " in padded for word in (*EVENING_WORDS[:2], "nocturne")),
         categories=categories,
         keywords=keywords_of(text, consumed),
         max_price=max_price,
@@ -519,8 +581,17 @@ def is_follow_up(question: str) -> bool:
 
     text = plain(question)
     words = text.split()
-    return bool(words) and (words[0] in {"et", "plutot", "mais", "sinon", "aussi", "pareil", "meme", "ou"}
-                            or len(words) <= 4)
+    if not words:
+        return False
+    if words[0] in {"et", "plutot", "mais", "sinon", "aussi", "pareil", "meme", "ou"}:
+        return True
+    # Une question courte qui nomme un nouveau sujet (« photo », « du jazz »,
+    # « un concert ») est une nouvelle demande, pas une relance (15/10/2026) :
+    # « photo » après « du cirque » cherchait cirque ET photo.
+    if len(words) > 4:
+        return False
+    understood = understand(question, datetime.now(PARIS))
+    return not understood.categories and not understood.keywords
 
 
 def merge_with_filters(understanding: Understanding, *, public: str | None, zone: str | None,

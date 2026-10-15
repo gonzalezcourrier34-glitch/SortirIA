@@ -74,9 +74,10 @@ nav:
   - Base de données: base_de_donnees.md
   - MLOps et monitoring: monitoring.md
   - Provenance du code: provenance.md
+  - Évolutions possibles: evolutions.md
   - Référence du code:
       - Vue d'ensemble: reference/index.md
-      - RAG et API: reference/rag.md
+      - Recherche et API: reference/rag.md
       - Configuration: reference/config.md
       - Collecte - extracteurs: reference/extracteurs.md
       - Collecte - traitement: reference/traitement.md

@@ -104,3 +104,16 @@ def test_light_cleaning() -> None:
     event, _ = mapper.map_partner_row(row, PARTNER, today=TODAY)
     assert (event.title, event.city, event.url) == ("Soirée salsa", "Montpellier", "https://www.salsa.example/soiree")
     assert mapper.tidy_title("DJ") == "DJ"   # sigle court gardé
+
+
+@pytest.mark.parametrize("public", ["tout public", "Tous publics", "tout âge"])
+def test_all_audiences_includes_families(public) -> None:
+    row = {**ROW, "titre": "Exposition photo", "public": public, "age_min": "", "age_max": ""}
+    event, _ = mapper.map_partner_row(row, PARTNER, today=TODAY)
+    assert "famille" in event.audiences
+
+
+def test_all_audiences_for_adults_only_is_not_for_families() -> None:
+    row = {**ROW, "titre": "Dégustation", "public": "tout public", "age_min": "18", "age_max": ""}
+    event, _ = mapper.map_partner_row(row, PARTNER, today=TODAY)
+    assert "famille" not in event.audiences

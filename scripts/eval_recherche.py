@@ -47,7 +47,7 @@ from typing import Any
 
 import yaml
 
-from app.query_understanding import plain
+from app.query_understanding import QUESTION_CATEGORIES, plain
 from app.search_service import (
     PARIS,
     PROMPT_VERSION,
@@ -138,13 +138,22 @@ def card_errors(card: Mapping[str, Any], plan: QueryPlan, expected: Mapping[str,
         errors.append("budget")
     if expected.get("cadre") == "interieur" and str(card.get("category", "")).lower() in OUTDOOR:
         errors.append("cadre")
-    if expected.get("types") and str(card.get("category", "")).lower() not in expected["types"]:
-        errors.append("type")
-    if words:
-        # Titre, résumé et lieu : « au musée Fabre » est souvent le lieu, pas le titre.
-        text = plain(f"{card.get('title', '')} {card.get('summary', '')} {card.get('place', '')}")
-        if not any(re.search(rf"\b{re.escape(word)}", text) for word in words):
-            errors.append("mots")
+    # Titre, résumé et lieu : « au musée Fabre » est souvent le lieu, pas le titre.
+    text = plain(f"{card.get('title', '')} {card.get('summary', '')} {card.get('place', '')}")
+    words_found = any(re.search(rf"\b{re.escape(word)}", text) for word in words)
+    if words and not words_found:
+        errors.append("mots")
+    # Même règle que la recherche (15/10/2026) : du type demandé par sa
+    # catégorie, ou parce que le type est écrit dans le titre (« Atelier
+    # jeux ») ; le mot précis trouvé suffit (« Stage de cirque » pour « cirque »).
+    if expected.get("types") and not words_found:
+        # Titre, type et résumé : « Festival de cinéma » (CINÉMED), « Spectacle de danse ».
+        title = plain(f"{card.get('title', '')} {card.get('category', '')} {card.get('summary', '')}")
+        # Le type attendu, ou le mot de type de la question (« film », « balade »).
+        kinds = [*expected["types"], *(word for word in plan.keywords if word in QUESTION_CATEGORIES)]
+        in_title = any(re.search(rf"\b{re.escape(kind.rstrip('sx'))}", title) for kind in kinds)
+        if str(card.get("category", "")).lower() not in expected["types"] and not in_title:
+            errors.append("type")
     return errors
 
 
@@ -187,6 +196,10 @@ def evaluate(connection: Any, questions: Sequence[Mapping[str, Any]], services: 
             "propositions": len(cards), "correctes": good, "elargie": relaxed, "exact": exact,
             "erreurs": sorted({error for errors in problems for error in errors}),
             "titres": [card["title"] for card in cards],
+            # Détail de chaque carte, pour comprendre un écart sans relancer.
+            "cartes": [{"titre": card["title"], "type": card.get("category", ""), "publics": card.get("audiences", []),
+                        "resume": card.get("summary", ""), "partenaire": card.get("partner", False),
+                        "ecarts": errors} for card, errors in zip(cards, problems, strict=True)],
             "reponse": result["answer"] if services.write else "",
         })
     count = len(questions)

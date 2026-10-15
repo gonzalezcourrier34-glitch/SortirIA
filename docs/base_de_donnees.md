@@ -42,9 +42,10 @@ erDiagram
 | `02_events.sql` | `events` | événement unique (une séance), après déduplication | Ce que le RAG filtre et recherche (embedding Mistral de 1 024 dimensions). `source_credit` et `source_updated_at` gardent le producteur de la fiche et sa date de mise à jour, à citer d'après la Licence Ouverte. |
 | `03_collect.sql` | `collect_runs` | collecte nocturne | Statut et compteurs de la nuit. |
 | | `collect_run_sources` | source lue pendant une collecte | Les décisions de l'agent : essais, statut (`ok`, `partiel`, `echec`), événements apportés. |
-| `04_rag.sql` | `rag_requests` | question posée | Contraintes, événements proposés, **réponse rédigée**, mode dégradé, latence, tokens, coût en dollars, versions. |
+| `04_rag.sql` | `rag_requests` | question posée | Contraintes, événements proposés, **réponse rédigée**, mode dégradé, latence, tokens, coût en dollars, versions ; `constraints -> 'recherche'` : réponse exacte ou non et ce qui a manqué (bilan du lundi de l'agent). |
 | | `feedback` | avis sur une proposition | Pouce en haut ou en bas ; reste après la suppression de l'événement. |
 | | `query_cache` | réponse en cache | Même question, même jour, mêmes données : pas d'appel à Mistral. |
+| `07_vocabulary.sql` | `title_vocabulary` | racine d'un mot des titres | Sujets reconnus par la recherche (« photo », « poterie ») ; recalculée par l'agent après chaque collecte (`refresh_title_vocabulary()`). |
 
 ## Les règles que la base garantit
 

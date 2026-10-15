@@ -195,6 +195,7 @@ def load_events(state: CollectionState, config: RunnableConfig) -> dict[str, Any
         ratings = review_ratings(connection, services) if services.ratings_enabled else {}
         purged = repository.purge_old_data(connection)
         coverage_db = repository.fetch_weekly_coverage(connection, watch.COVERAGE_DAYS)
+    vocabulary_size, search_gaps = refresh_search_vocabulary(services)
     logger.info(
         "Base : %s enregistré(s), %s disparu(s) de leur source, %s expiré(s), %s enrichi(s) "
         "(%s réponse(s) refusée(s), %s lot(s) en échec), %s embedding(s), %s retiré(s) par le plafond, "
@@ -214,6 +215,8 @@ def load_events(state: CollectionState, config: RunnableConfig) -> dict[str, Any
         "events_capped": capped,
         "events_total": total,
         "coverage_db": coverage_db,
+        "vocabulary_size": vocabulary_size,
+        "search_gaps": search_gaps,
         "ratings": ratings,
         "llm_usage": watch.merge_usage(
             state.get("llm_usage", {}), enrichment["usage"],
@@ -395,6 +398,28 @@ def judge_quality(state: CollectionState, config: RunnableConfig) -> dict[str, A
 # E. Surveillance (ajoutée le 14/10/2026, voir agent/watch.py)
 # ---------------------------------------------------------------------------
 
+def refresh_search_vocabulary(services: CollectionServices) -> tuple[int, dict[str, Any]]:
+    """Après l'écriture : vocabulaire des titres recalculé (sujets reconnus par
+    la recherche) et recherches de la semaine restées sans réponse exacte.
+
+    Transaction à part : une base dont le schéma n'a pas encore la table
+    `title_vocabulary` ne fait pas échouer la collecte (la recherche lit
+    alors les titres directement).
+    """
+
+    try:
+        with services.connect() as connection:
+            size = repository.refresh_title_vocabulary(connection)
+            gaps = repository.fetch_search_gaps(connection, watch.SEARCH_REPORT_DAYS)
+    except Exception:
+        logger.warning("Vocabulaire des titres ou bilan de la recherche indisponible "
+                       "(lancer scripts/init_db.py ?).", exc_info=True)
+        return 0, {}
+    logger.info("Vocabulaire des titres : %s racine(s) ; recherche (7 j) : %s question(s), %s sans réponse exacte.",
+                size, gaps.get("questions", 0), gaps.get("not_exact", 0))
+    return size, gaps
+
+
 def watch_collection(state: CollectionState, config: RunnableConfig) -> dict[str, Any]:
     """Vérifie ce qui demande une intervention : programmes, partenaires, couverture, coût.
 
@@ -442,7 +467,26 @@ def watch_collection(state: CollectionState, config: RunnableConfig) -> dict[str
     alerts += discovery_alerts
     proposals += agenda_proposals(agendas, today)
     logger.info("Surveillance : couverture %s, coût estimé %.4f $, %s alerte(s).", counts, cost, len(alerts))
-    return {"coverage": counts, "cost_usd": cost, "watch_alerts": alerts, "proposals": proposals}
+    # Le lundi : ce que les utilisateurs ont cherché sans trouver (bilan par
+    # mail), et ce que l'agent en tire : synonymes, agendas à lire, pistes.
+    search_report = (state.get("search_gaps") or {}) if watch.search_report_due(today) else {}
+    learning_notes: list[str] = []
+    usage = state.get("llm_usage", {})
+    if search_report and services.learn_searches is not None and not state.get("dry_run"):
+        try:
+            learning = services.learn_searches(search_report, today)
+        except Exception as error:  # l'apprentissage ne doit jamais faire échouer la nuit
+            logger.exception("Apprentissage de la recherche impossible.")
+            learning_notes = [f"Apprentissage de la recherche impossible : {error}"]
+        else:
+            proposals += learning.proposals
+            learning_notes = learning.notes
+            usage = watch.merge_usage(usage, learning.usage)
+            cost = watch.nightly_cost(usage)
+            logger.info("Apprentissage de la recherche : %s proposition(s), %s piste(s).",
+                        len(learning.proposals), len(learning.notes))
+    return {"coverage": counts, "cost_usd": cost, "watch_alerts": alerts, "proposals": proposals,
+            "search_report": search_report, "search_learning": learning_notes, "llm_usage": usage}
 
 
 def discover_new_agendas(state: CollectionState, services: CollectionServices, inputs: Mapping[str, Any],
@@ -602,6 +646,9 @@ def write_report(state: CollectionState, config: RunnableConfig) -> dict[str, An
                 "coverage": state.get("coverage", {}),
                 "cost_usd": state.get("cost_usd", 0.0),
                 "llm_usage": state.get("llm_usage", {}),
+                "vocabulary_size": state.get("vocabulary_size"),
+                "search_report": state.get("search_report") or {},
+                "search_learning": state.get("search_learning") or [],
             })
         except Exception:
             logger.exception("Impossible d'envoyer le bilan.")

@@ -8,7 +8,7 @@ Trois couches, de la plus simple à la plus détaillée :
 
 | Couche | Ce qu'on y voit | Où |
 | --- | --- | --- |
-| **Mail de bilan** | Statut, chiffres, alertes, couverture de la semaine, coût de la nuit | `agent/report.py` (`REPORT_EMAIL_TO`) |
+| **Mail de bilan** | Statut, chiffres, alertes, couverture de la semaine, coût de la nuit ; le lundi, recherches ratées de la semaine et propositions de l'agent (synonymes, agendas) | `agent/report.py` (`REPORT_EMAIL_TO`) |
 | **Historique en base** | Une ligne par nuit (`collect_runs` : coût, tokens, couverture, durée de chaque nœud, alertes, version de la consigne PDF, lien MLflow) et une par source (`collect_run_sources`) ; vue `v_collect_health` | `sql/sortiria/03_collect.sql`, `05_views.sql` |
 | **Tableau de bord Grafana** | « SortirIA - Collecte nocturne » : statut et fraîcheur, événements par source, échecs et réessais, taux de rejet, coût, durée des étapes, sorties famille / soirée par zone, journal et alertes | http://localhost:3001, `monitoring/grafana/provisioning/` |
 | **MLflow** | Une exécution par nuit : paramètres (modèles, seuils, version de consigne), métriques (par source et par extracteur, qualité de la lecture des PDF, coût, tokens, couverture, durées), bilan complet (`bilan.json`) et **trace** du graphe LangGraph et de chaque appel Mistral | http://localhost:5000, expérience `sortiria-collecte`, `agent/tracking.py` |
@@ -38,6 +38,7 @@ PostgreSQL (`tests/event/test_schema_postgres.py`).
 | Journal de chaque requête : question, contraintes extraites, événements renvoyés, latence, tokens, coût | Table `rag_requests` (PostgreSQL) | `reference/p14_observabilite/src/api/services/audit.py`, `reference/p5_monitoring/app/services/prediction_logging_service.py` |
 | Collecte nocturne : événements ajoutés, rejetés, expirés, échecs par source, durée | Table `collect_runs` | nœud `H_report` de l'agent |
 | Fraîcheur : âge de la dernière collecte réussie, nombre d'événements à venir | Requête SQL + panneau Grafana | nouveau |
+| Recherches ratées : sans réponse exacte, mots inconnus de la base, sujets introuvables | `rag_requests.constraints -> 'recherche'`, bilan du lundi (`fetch_search_gaps`), `uv run python -m agent --bilan-recherche` | nouveau (15/10/2026) |
 | Dérive des questions (thèmes, quartiers, budgets demandés) | Evidently, rapport hebdomadaire | `reference/p5_monitoring/app/services/analysis_services/evidently_service.py` |
 | Qualité des réponses : respect des contraintes, pertinence des 3 premiers résultats | Jeu de 50 questions rejoué en CI + RAGAS | `scripts/eval_recherche.py`, historique dans `benchmarks/recherche/` |
 | Santé et version du service | Routes `/health` et `/version` | `reference/p14_observabilite/src/api/routes/` |

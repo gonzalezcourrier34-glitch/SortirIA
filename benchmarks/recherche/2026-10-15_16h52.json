@@ -1,0 +1,1028 @@
+{
+  "date": "2026-10-15T16:52:17+02:00",
+  "questions": 50,
+  "comprehension": 1.0,
+  "precision": 0.957,
+  "sans_resultat": 0,
+  "idees_voisines": 2,
+  "latence_mediane_s": 0.66,
+  "latence_p95_s": 1.22,
+  "detail": [
+    {
+      "question": "j'aimerais aller au théâtre",
+      "compris": "les 3 prochains mois · théâtre ou spectacle",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "OSONS LE THÉÂTRE THÉÂTRE AMATEUR AVEC LA FNCTA 34",
+        "JOURNÉES JEAN VILAR : VOUS ÊTES ICI | ÉDITH AMSELLEM – CIE ERD’O",
+        "LES PAS PERDUS — THÉÂTRE AMATEUR PAR LA TROUPE DE L'UTL34",
+        "Festival de théâtre amateur",
+        "Le rire dans l'histoire du théâtre",
+        "JOURNÉES JEAN VILAR : LA PROBLÉMATIQUE DE LA MISE EN SCÈNE CHEZ LOUIS JOUVET ET JEAN VILAR",
+        "SPECTACLE : UN CHOU EN HIVER",
+        "SOIRÉE THÉÂTRE & VINS PRIMEURS 2026"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un concert ce week-end",
+      "compris": "ce week-end · concert",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "SAISON DE CONCERTS D’ORGUE 2026-2027",
+        "RÉCITAL D’ORGUE EXCEPTIONNEL",
+        "TERRES DE FEU BRAHMS • GINASTERA • STRAVINSKY",
+        "CONCERT : GROOVE VOCAL",
+        "Wine & Live",
+        "I MESSAGERI : VOIX ET MUSIQUE DE CORSE",
+        "GINGER x NTABA2LONDON",
+        "THE JAZZ ROOM : UN HOMMAGE À FRANK SINATRA ET À LOUIS ARMSTRONG"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une exposition à voir en novembre",
+      "compris": "en novembre · exposition",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Exposition photo de l'étang (exemple)",
+        "EXPOSITION «CLAIR OBSCUR: EXPEDITION 33 – LA TOILE AUX RÊVES »",
+        "EXPOSITION PHOTO : CHEMINS DE TRAVERSE - PAYSAGES CULTURELS DU PATRIMOINE MONDIAL",
+        "EXPOSITION PHOTOGRAPHIQUE - MAISON DE LA NATURE",
+        "EXPOSITIONS \"MAISON-MAIN\" (COLLECTIVE) ET \"FOR KHEIRA,\" DE NESRINE SALEM",
+        "EXPOSITION \"PREMIÈRES FOIS / PREMIÈRES PHOTOS\"",
+        "VERNISSAGE EXPOSITION \"FATBOBSTUDIO\"",
+        "PRÉSENTATION EXPOSITION HORIZON MER : VIVRE, DÉCOUVRIR, PROTÉGER"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "du cinéma en plein air ou une projection",
+      "compris": "les 3 prochains mois · en plein air · cinéma",
+      "ecarts_comprehension": [],
+      "propositions": 1,
+      "correctes": 1,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "PROJECTION - ARRÊT SUR IMAGE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un spectacle de danse",
+      "compris": "les 3 prochains mois · spectacle ou théâtre ou danse",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Spectacle de marionnettes (exemple)",
+        "Bal folk (exemple)",
+        "DANS6T BOUZIANE BOUTELDJA",
+        "PITCHOUN ET LES MONDES CÉLESTES",
+        "BALLET OF LIGHTS : LA BELLE AU BOIS DORMANT DANS UN SPECTACLE ÉTINCELANT",
+        "Lyrica",
+        "JOURNÉES JEAN VILAR : VOUS ÊTES ICI | ÉDITH AMSELLEM – CIE ERD’O",
+        "SPECTACLE CABARET « DEUX BRÉSILIENS À PARIS »"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un marché ou une brocante dimanche",
+      "compris": "dim. 18 oct. · marché",
+      "ecarts_comprehension": [],
+      "propositions": 3,
+      "correctes": 3,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "MARCHÉ AUX PUCES & À LA BROCANTE",
+        "MARCHÉ AUX PUCES",
+        "LES DIMANCHES DU PEYROU"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un atelier créatif pour les enfants",
+      "compris": "les 3 prochains mois · famille · atelier",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "ATELIER CRÉATIF",
+        "ATELIER CRIC CRAC - POUR LES ENFANTS DE 7 À 12 ANS",
+        "ATELIER CRÉATIF \"LES PETITES AILES DE LA NUIT\"",
+        "ATELIERS JEUNE PUBLIC - POUSSES D'ARCHI",
+        "ATELIER CRÉATIF DE NOËL",
+        "ATELIERS DU MIAM - VACANCES DE NOËL",
+        "ATELIER CRÉATIF DES PETITS ARTISTES",
+        "ATELIER CREATIF - CUSTOMISE TON PLATEAU DECORATIF"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une visite guidée de Sète",
+      "compris": "les 3 prochains mois · Sète · visite",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "VISITE COMMENTÉE DE SÈTE AVEC DIVERS UNI VERS",
+        "LA VISITE GUIDÉE DE JEANNE",
+        "LES VISITES GUIDÉES - LES COLLECTIONS À LA CARTE !",
+        "VISITE DES TOUT-PETITS (6 - 36 MOIS)",
+        "LES VISITES EN FAMILLE - UNE HISTOIRE HAUTE EN COULEUR !",
+        "LES VISITES GUIDÉES - LES COULEURS DE JEAN VILAR",
+        "Résidence l’Epopée : Slow Visite au CRAC Occitanie de Sète",
+        "LES SENS DU REGARD - VISITE SENSORIELLE (PUBLIC AVEUGLE OU MALVOYANT)"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une conférence sur l'histoire",
+      "compris": "les 3 prochains mois · conférence",
+      "ecarts_comprehension": [],
+      "propositions": 4,
+      "correctes": 4,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "CONFÉRENCE - APPARITION ET DIFFUSION DU NOTARIAT MÉRIDIONAL AU MOYEN ÂGE",
+        "FEMMES MÉDECINS",
+        "CONFÉRENCE - L’INDUSTRIE DU JAYET EN LANGUEDOC AU XVIIIE ET XIXE SIÈCLES",
+        "MONTPELLIER WINE SHOW AVEC RAISIN D'ÊTRE EVENTS"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un festival en octobre",
+      "compris": "en octobre · festival",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "FESTIVAL ABRACADA BOUH",
+        "FESTIVAL DE LA PHOTO MONTARNENNE",
+        "HALLOWEEN UKULÉLÉ FESTIVAL",
+        "FESTIVAL EX TENEBRIS LUX – ACTE VIII",
+        "FESTIVAL VA SAVOIR ?! 2026",
+        "RIDE & VIBE FESTIVAL",
+        "FESTIVAL DE MUSIQUE ANCIENNE EN PIC SAINT-LOUP, GORGES DE L'HÉRAULT ET PAYS DE MONTPELLIER",
+        "VIGNOBLES EN SCÈNE ET FESTIVAL VÉLO, VINS & COPAINS"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "que faire ce soir ?",
+      "compris": "aujourd'hui (le soir)",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "SOIRÉE ASTRONOMIE",
+        "MASHUP | Student Party",
+        "APÉRO LITTÉRAIRE !",
+        "ASTRONOMIE : OBSERVEZ LA LUNE, JUPITER… AU TÉLESCOPE !",
+        "Faire vivre des lieux de lutte face à l'extrême droite",
+        "Théâtre : SILENCE, ÇA TOURNE de Chrystèle KHODR et Nadim DEAIBES",
+        "FAIRE DE LA VOILE A SETE",
+        "MONTPELLIER ENQUÊTE SUR MEURTRE: RÉSOLVEZ LE CAS!"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une sortie demain",
+      "compris": "demain",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "REPLAY",
+        "VENDREDI 16 OCTOBRE - GYAL TAKEOVER",
+        "SOIRÉE JEUX « ALEA JACTA EST »",
+        "APÉROQUIZ",
+        "PAUSE JEUX : Les échecs",
+        "HISTOIRES À JOUER",
+        "APÉRO LITTÉRAIRE !",
+        "Atelier Levez les Yeux \"TOUT DOIT DISPARAITRE\""
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "quoi faire samedi soir à Montpellier",
+      "compris": "sam. 17 oct. (le soir) · Montpellier et sa métropole",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "VOS SOIRÉES AU JOST",
+        "PROGRAMMATION OCTOBRE - LE RÉSERVOIR",
+        "LES SAMEDIS MERVEILLEUX",
+        "STAND UP AU MELICE",
+        "MONTPELLIER ENQUÊTE SUR MEURTRE: RÉSOLVEZ LE CAS!",
+        "BALADE INÉDITE AUTOUR DES PORTS ANCIENS",
+        "LEVEL-UP (by PELERITEK)",
+        "POLY'DAYS SPÉCIAL HALLOWEEN"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "des idées pour la semaine prochaine",
+      "compris": "la semaine prochaine",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "REMUE-MÉNINGES",
+        "LA BONNE FRANQUETTE",
+        "APÉRO LITTÉRAIRE !",
+        "LA PROGRAMMATION D'OCTOBRE À RESTANQUE",
+        "DES JEUX POUR LES GRANDS",
+        "RACONTE-MOI UNE HISTOIRE : 21 octobre",
+        "STAGE LOISIRS CRÉATIFS POUR LES 6-10 ANS / VACANCES D'AUTOMNE À LA HUNE",
+        "MARCHÉ MIXTE DU VENDREDI"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "le 31 octobre pour Halloween",
+      "compris": "sam. 31 oct.",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Atelier jeux en famille (exemple)",
+        "HALLOWEEN À CASTELNAU-LE-LEZ",
+        "POLY'DAYS SPÉCIAL HALLOWEEN",
+        "SOIRÉE HALLOWEEN",
+        "JOURNÉE HALLOWEEN EN FAMILLE",
+        "HALLOWEEN S’INVITE AU GOOLFY MONTPELLIER",
+        "HALLOWEEN AU PETIT PARADIS",
+        "DARK HALLOWEEN"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "que faire à Sète ce week-end ?",
+      "compris": "ce week-end · Sète",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "FAIRE DE LA VOILE A SETE",
+        "VISITE COMMENTÉE DE SÈTE AVEC DIVERS UNI VERS",
+        "SOIRÉE ASTRONOMIE",
+        "MARCHÉ AUX PUCES",
+        "MARCHÉ DES HALLES DE SÈTE",
+        "Quand Les Filles Chantent - La Cetta 16/10",
+        "L'AGENCE TOURISTE IMPROVISE !",
+        "JOURNÉES JEAN VILAR AU MUSÉE PAUL VALÉRY"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une balade nature autour de l'étang de Thau",
+      "compris": "les 3 prochains mois · bassin de Thau · nature",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "ENTRE NATURE ET TERROIR",
+        "SEMAINE DE LA RÉSILIENCE - BALADE SUR LE LITTORAL",
+        "Balades littéraires : Deux p’tites baltringues",
+        "SORTIE NATURE - LES OISEAUX DU BAGNAS",
+        "LA BALADE DES CÉPAGES AU DOMAINE SAINT-ANDRÉ",
+        "Balades littéraires : L’Histoire de la littérature",
+        "LEVER DE SOLEIL AU BAGNAS",
+        "SEMAINE DE LA RÉSILIENCE - CLOTURE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "sortir à Frontignan",
+      "compris": "les 3 prochains mois · Frontignan",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Initiation escalade enfants (exemple)",
+        "Stage de cirque vacances (exemple)",
+        "MARCHÉ TRADITIONNEL DE FRONTIGNAN",
+        "VISITE COMMENTÉE DE FRONTIGNAN-PLAGE AVEC DIVERS UNI VERS",
+        "MARCHÉ DES HALLES DE FRONTIGNAN",
+        "HALLOWEEN EN COEUR DE VILLE",
+        "HALLOWEEN À LA PEYRADE",
+        "GRANDE SOIRÉE PORTUGAISE CARITATIVE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "des activités à Lattes ou à Pérols",
+      "compris": "les 3 prochains mois · Lattes, Pérols",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "DE LA VIGNE À L'ASSIETTE : CUEILLETTE, CUISINE & ACCORDS METS-VINS",
+        "VINS ET FROMAGES",
+        "Journées nationales de l'Architecture 2026",
+        "VISITE GUIDÉE « AUX RACINES DE LA VIGNE ET DU VIN : VOYAGE HISTORIQUE ET ARCHÉOLOGIQUE »",
+        "ATELIER CRÉATION DE PARFUM PARENT / ENFANT",
+        "3E ÉDITION DU JAL (JEUX À LATTES)",
+        "BACHATA",
+        "BANQUET - VIGNOBLES EN SCÈNE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un concert à Mèze",
+      "compris": "les 3 prochains mois · Mèze · concert",
+      "ecarts_comprehension": [],
+      "propositions": 2,
+      "correctes": 2,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "CONCERT IN CHORUS : CHOEUR DE CHAMBRE A CAPPELLA",
+        "ERWAN NAOUR & LÉNA VASSILIU DUO — LES ITINÉRANCES D'AUTOMNE DU FESTIVAL DE THAU"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une sortie gratuite avec les enfants",
+      "compris": "les 3 prochains mois · famille · gratuit",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "LES VISITES EN FAMILLE - UNE HISTOIRE HAUTE EN COULEUR !",
+        "CINÉ-MINOT",
+        "ÉVEIL MUSICAL : Spécial Noël",
+        "MATINÉE DES BÉBÉS : Racontines",
+        "LES VISITES EN FAMILLE -À LA RECHERCHE DE LA CLEF PERDUE !",
+        "RACONTE-MOI UNE HISTOIRE : 16 décembre",
+        "LES VISITES GUIDÉES - LES COLLECTIONS À LA CARTE !",
+        "HISTOIRES À BRICOLER : spécial Noël"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un truc à faire avec des ados",
+      "compris": "les 3 prochains mois · ados",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 6,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "public"
+      ],
+      "titres": [
+        "DES JEUX POUR LES GRANDS",
+        "LES ADOLESCHIANTS",
+        "CINÉ-ADOS",
+        "ATELIER INITIATION THÉÂTRE ADOS",
+        "20 000 RÔLES SOUS LES EAUX",
+        "ATELIER CRIC CRAC - POUR LES ENFANTS DE 7 À 12 ANS",
+        "VIENS T'AMÉLIORER SUR L'ORDI !",
+        "CINÉ JEU(NES)"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une activité pour seniors",
+      "compris": "les 3 prochains mois · seniors",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "ACTIVITÉ : QIGONG FELDENKRAIS",
+        "FAIRE DE LA VOILE A SETE",
+        "SPEED DATING 45-65 ANS AVEC SOIRÉE DANSANTE",
+        "LA VOILE ROSE",
+        "Résidence l’Epopée : Slow Visite au CRAC Occitanie de Sète",
+        "LES ARCHIVES VOUS ACCOMPAGNENT : OBSERVER ET COMPRENDRE LES PHOTOS ANCIENNES",
+        "VISITE GUIDÉE POUR PUBLICS AVEUGLES ET MALVOYANTS — EXPOSITION \"LES COULEURS DE JEAN VILAR\"",
+        "JOURNÉES JEAN VILAR : VOUS ÊTES ICI | ÉDITH AMSELLEM – CIE ERD’O"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un bar à concerts pour une soirée entre amis",
+      "compris": "les 3 prochains mois · soirée · concert ou soirée",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 5,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "public",
+        "type"
+      ],
+      "titres": [
+        "Concert rock (exemple)",
+        "Karaoké géant (exemple)",
+        "SALON DE MUSIQUE",
+        "CONCERT BRAHMS",
+        "CONCERT DU NOUVEL AN MADE IN USA",
+        "SAISON DE CONCERTS D’ORGUE 2026-2027",
+        "SOIREE RESTO LIVE AVEC LE DUO \"UP RISE\" AVEC FABIEN & ALBAN",
+        "VOS SOIRÉES AU JOST"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "des spectacles gratuits à Montpellier",
+      "compris": "les 3 prochains mois · Montpellier et sa métropole · gratuit · spectacle ou théâtre ou danse",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 0,
+      "elargie": false,
+      "exact": false,
+      "erreurs": [
+        "gratuit",
+        "type"
+      ],
+      "titres": [
+        "SPECTACLE : UN CHOU EN HIVER",
+        "SPECTACLE « LE PETIT CHAT MAGICIEN »",
+        "BALLET OF LIGHTS : LA BELLE AU BOIS DORMANT DANS UN SPECTACLE ÉTINCELANT",
+        "SPECTACLE : L’ART D’ACCOMMODER LES RESTES",
+        "STAND UP AU MELICE",
+        "FESTIVAL MONDIAL DE LA MAGIE",
+        "FLOTTANTE",
+        "SPECTACLE CABARET « DEUX BRÉSILIENS À PARIS »"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "des jeux d'échecs",
+      "compris": "les 3 prochains mois · jeux",
+      "ecarts_comprehension": [],
+      "propositions": 2,
+      "correctes": 1,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "PAUSE JEUX : Les échecs",
+        "REMUE-MÉNINGES"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "du jazz",
+      "compris": "les 3 prochains mois · concert",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Concert jazz au port (exemple)",
+        "CONCERT : QUATUOR ESPRIT JAZZ",
+        "DUO TWOFER",
+        "MARTA JAZZ-CLUB BRAD LEALI TRIO",
+        "¡YA VOY ! KOA JAZZ FESTIVAL",
+        "Wine & Live",
+        "THE JAZZ ROOM : UN HOMMAGE À FRANK SINATRA ET À LOUIS ARMSTRONG",
+        "CONCERT : SWING COMBO OCCITANIE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une expo au musée Fabre",
+      "compris": "les 3 prochains mois · exposition ou visite",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 2,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "EXPOSITION GUIMET+ MONTPELLIER / CHINE",
+        "LES MYSTÈRES D'HÉRODIADE. ENQUÊTE AU MUSÉE FABRE",
+        "EXPOSITION GUIMET+ MONDE INDIEN",
+        "EXPOSITION : DES SPECTRES À LA PLAGE",
+        "DES DRAPEAUX POUR MA VILLE",
+        "Des drapeaux pour ma ville",
+        "EXPOSITION \"DUBOUT 50 ANS, DÉJÀ !\"",
+        "MILLE FORMES - SAISON 2"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une lecture de contes",
+      "compris": "les 3 prochains mois · lecture ou spectacle",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 7,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "type"
+      ],
+      "titres": [
+        "Contes au jardin (exemple)",
+        "Spectacle de marionnettes (exemple)",
+        "SOIRÉE CONTES \"L'ÂNE ET LE GOUVERNEMENT ET AUTRES CONTES\"",
+        "L’heure du conte : 6 novembre",
+        "L’heure du conte : 18 décembre",
+        "\"LE CHANT DES LUMIERES\", SPECTACLE DE CONTES",
+        "LECTURE CONTÉE (3/6 ANS) LES AVENTURES DE MAYOL ET COCO",
+        "CONTES D’HIVER ET DE SOLSTICE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une dégustation de vins ou d'huîtres",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "DÉGUSTATIONS DE VIN - VIGNOBLES EN SCÈNE",
+        "DÉGUSTATION VINS & CHOCOLATS - RESTAURANT ESENCIA & ÔME",
+        "JOURNÉE ŒNOLOGIE : CÉPAGES ET ARÔMES, RECONNAÎTRE LES VINS",
+        "GRAND DÉFILÉ AUTOMNE-HIVER 2026",
+        "ACCORDS METS ET VINS INSULAIRES",
+        "MARCHÉ TRADITIONNEL DE BOUZIGUES",
+        "ATELIER ACCORDS CHOCOLATS ET VINS",
+        "VIGNOBLES EN SCÈNE – IMMERSION AU CŒUR DE LA DÉGUSTATION"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "du théâtre",
+      "compris": "les 3 prochains mois · Montpellier et sa métropole · famille · gratuit · théâtre ou spectacle",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 0,
+      "elargie": false,
+      "exact": false,
+      "erreurs": [
+        "gratuit",
+        "public"
+      ],
+      "titres": [
+        "OSONS LE THÉÂTRE THÉÂTRE AMATEUR AVEC LA FNCTA 34",
+        "Festival de théâtre amateur",
+        "COCHONS D’INDE - LES THÉÂTRALES",
+        "SOIRÉE THÉÂTRE & VINS PRIMEURS 2026",
+        "THÉÂTRE « MIRABEAU L’INSOLENT »",
+        "PARADOXE",
+        "REPRENONS",
+        "LE CERCLE DES POÈTES DISPARUS - LES THÉÂTRALES"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un concert",
+      "compris": "ce week-end · bassin de Thau · concert",
+      "ecarts_comprehension": [],
+      "propositions": 2,
+      "correctes": 2,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "I MESSAGERI : VOIX ET MUSIQUE DE CORSE",
+        "Revival by Cassou"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un concert à moins de 15 €",
+      "compris": "les 3 prochains mois · moins de 15 € · concert",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Concert jazz au port (exemple)",
+        "SALON DE MUSIQUE",
+        "CONCERTI POUR PIANOS",
+        "CONCERT HARMONIE",
+        "LE MINI CONCERT DE NOEL",
+        "CONCERT DE LA SAINTE CÉCILE",
+        "CONCERT DE LA CHORALE LES TIMBRÉS",
+        "CONCERT : QUATUOR ESPRIT JAZZ"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une sortie pas chère avec les enfants",
+      "compris": "les 3 prochains mois · famille · moins de 15 €",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Initiation escalade enfants (exemple)",
+        "CHASSE AU TRÉSOR HALLOWEEN",
+        "LES VISITES EN FAMILLE - UNE HISTOIRE HAUTE EN COULEUR !",
+        "MES P'TITES VACANCES",
+        "LES VISITES EN FAMILLE -À LA RECHERCHE DE LA CLEF PERDUE !",
+        "STAGE LOISIRS CRÉATIFS POUR LES 6-10 ANS / VACANCES D'AUTOMNE À LA HUNE",
+        "MATINÉE DES BÉBÉS : Racontines",
+        "LA PETITE FILLE AUX ALLUMETTES"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "que faire s'il pleut ce week-end ?",
+      "compris": "ce week-end · en intérieur",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Visite et Médiation autour de l'exposition \"TOUT DOIT DISPARAITRE, terrains à rendre\"",
+        "SOIRÉE AU COIN DU JEU : Spécial pirate-aventure",
+        "REPLAY",
+        "APÉRO LITTÉRAIRE !",
+        "CINEMA : TOMBÉE DU CIEL",
+        "Atelier Levez les Yeux \"TOUT DOIT DISPARAITRE\"",
+        "SÉJOUR LES PÉPITES DU SUD",
+        "PUDIQUE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une balade en plein air",
+      "compris": "les 3 prochains mois · en plein air · nature",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Balades littéraires : Deux p’tites baltringues",
+        "BALADE GUIDÉE INÉDITE ET TERRIFIANTE",
+        "LA BALADE DES CÉPAGES AU DOMAINE SAINT-ANDRÉ",
+        "Balades littéraires : L’Histoire de la littérature",
+        "SEMAINE DE LA RÉSILIENCE - BALADE SUR LE LITTORAL",
+        "LEVER DE SOLEIL AU BAGNAS",
+        "ECHAPPÉE NOCTURNE AU JARDIN DES PLANTES",
+        "MYSTÈRES DE LA GARRIGUE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un atelier près de Sète",
+      "compris": "les 3 prochains mois · à moins de 10 km de Sète · atelier",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Atelier cuisine parents-enfants (exemple)",
+        "Atelier jeux en famille (exemple)",
+        "ATELIERS DU MIAM - VACANCES DE NOËL",
+        "Résidence l’Epopée : Atelier «Transmission»",
+        "ATELIER CRIC CRAC - POUR LES ENFANTS DE 7 À 12 ANS",
+        "ATELIER PHOTO : CLICHÉS D’ARTISTES",
+        "ATELIER EN FAMILLE - LES PEINTRES TAPISSIERS",
+        "ATELIERS DU MIAM - SAMEDI EN FAMILLE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "que faire à moins de 15 km de Frontignan ?",
+      "compris": "les 3 prochains mois · à moins de 15 km de Frontignan",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Stage de cirque vacances (exemple)",
+        "VISITE COMMENTÉE DE FRONTIGNAN-PLAGE AVEC DIVERS UNI VERS",
+        "MARCHÉ TRADITIONNEL DE FRONTIGNAN",
+        "ATELIERS PHOTO : Que faire de vos photos ?",
+        "STAGE LOISIRS CRÉATIFS POUR LES 6-10 ANS / VACANCES D'AUTOMNE À LA HUNE",
+        "MARCHÉ DES HALLES DE FRONTIGNAN",
+        "DES JEUX POUR LES GRANDS",
+        "SEMAINE DE LA RÉSILIENCE - BALADE SUR LE LITTORAL"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un spectacle pour les enfants dimanche",
+      "compris": "dim. 18 oct. · famille · spectacle ou théâtre ou danse",
+      "ecarts_comprehension": [],
+      "propositions": 2,
+      "correctes": 1,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "type"
+      ],
+      "titres": [
+        "PITCHOUN ET LES MONDES CÉLESTES",
+        "LA CONFESSION D'UN ENFANT DU SIÈCLE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une sortie en amoureux samedi soir",
+      "compris": "sam. 17 oct. (le soir) · soirée",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "SÉJOUR LES PÉPITES DU SUD",
+        "SOIRÉE AU COIN DU JEU : Spécial pirate-aventure",
+        "SOIRÉE ASTRONOMIE",
+        "SPEED DATING 45-65 ANS AVEC SOIRÉE DANSANTE",
+        "SAMEDI 17 OCTOBRE - DA PUTA FIESTA",
+        "STAND UP AU MELICE",
+        "Magie Noire 13th Anniversary w/ Lamalice (live) & Monile",
+        "VENDREDI 16 OCTOBRE - GYAL TAKEOVER"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un concert gratuit à Sète",
+      "compris": "les 3 prochains mois · Sète · gratuit · concert",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "CONCERT DE LA SAINTE CÉCILE",
+        "CONCERT HARMONIE",
+        "CONCERT SYMPHONIQUE",
+        "SALON DE MUSIQUE",
+        "CONCERTI POUR PIANOS",
+        "SALON DE MUSIQUE : Les musiques du monde et les ports",
+        "SALON DE MUSIQUE : Cesaria Evora & les musiques du Cap-vert",
+        "LATINUS BRASS BAND"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "que faire avec des ados ce week-end à Montpellier ?",
+      "compris": "ce week-end · Montpellier et sa métropole · ados",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "MONTPELLIER ENQUÊTE SUR MEURTRE: RÉSOLVEZ LE CAS!",
+        "BALADES BIO GOURMANDES D’OCCITANIE",
+        "Les ateliers du mercredi | Pousses d'Archi",
+        "ATELIER COUTURE PAR TSIKY - PARTEA TIME",
+        "ATELIER BRIQUES LEGO®: LES MONDES PERDUS",
+        "STAGE VACANCES AUTOMNE ET HALLOWEEN - BRICKS 4 KIDZ MONTPELLIER",
+        "CINÉMED",
+        "PRÉSENTATION EXPOSITION HORIZON MER : VIVRE, DÉCOUVRIR, PROTÉGER"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une conférence la semaine prochaine",
+      "compris": "la semaine prochaine · conférence",
+      "ecarts_comprehension": [],
+      "propositions": 6,
+      "correctes": 6,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "SALON \"BIEN-ÊTRE EN THAU\"",
+        "Rencontre : Traverser les marges : AJAP 2023",
+        "Rencontre avec l’auteur Karim KATTAN, autour de son livre \"Septentrionale\".",
+        "FILM DÉBAT \"L'HOMME AU CHEVET DES CORAUX\"",
+        "FEU ET BIODIVERSITÉ : COMPRENDRE POUR PRÉSERVER",
+        "LE CLUB DU DISQUE | ADELE, 21"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un atelier pour les seniors",
+      "compris": "les 3 prochains mois · seniors · atelier",
+      "ecarts_comprehension": [],
+      "propositions": 3,
+      "correctes": 3,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "LES ARCHIVES VOUS ACCOMPAGNENT : OBSERVER ET COMPRENDRE LES PHOTOS ANCIENNES",
+        "ACTIVITÉ : QIGONG FELDENKRAIS",
+        "DÉGUSTATION VINS & CHOCOLATS - RESTAURANT ESENCIA & ÔME"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "des jeux de société à Frontignan",
+      "compris": "les 3 prochains mois · Frontignan · jeux",
+      "ecarts_comprehension": [],
+      "propositions": 2,
+      "correctes": 2,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "DES JEUX POUR LES GRANDS",
+        "EN CONSTRUCTION"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une exposition gratuite à Montpellier",
+      "compris": "les 3 prochains mois · Montpellier et sa métropole · gratuit · exposition",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Exposition A+Art \"La Part de l'Art #1\"",
+        "Méridionalité ? | Exposition des AJAP et autres voies de l’Architecture en Occitanie",
+        "Exposition photos \"TOUT DOIT DISPARAITRE\"",
+        "Vernissage « Méridionalité ? » : exposition des AJAP et autres voies de l’architecture en Occitanie",
+        "Visite et Médiation autour de l'exposition \"TOUT DOIT DISPARAITRE, terrains à rendre\"",
+        "Exposition : \"RE-LIGHTHOUSE\"",
+        "RE-LIGHTHOUSE. Installation monumentale pour l’espace public de Shareef SARHAN",
+        "Vernissage \"Méridionalité ?\""
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un festival près de Montpellier",
+      "compris": "les 3 prochains mois · Montpellier et sa métropole · festival",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "FESTIVAL VA SAVOIR ?! 2026",
+        "FESTIVAL FLAMENCO MONTPELLIER MÉTROPOLE",
+        "FESTIVAL DE MUSIQUE ANCIENNE EN PIC SAINT-LOUP, GORGES DE L'HÉRAULT ET PAYS DE MONTPELLIER",
+        "L'ILLUMINÉ FESTIVAL",
+        "HALLOWEEN UKULÉLÉ FESTIVAL",
+        "KOA JAZZ FESTIVAL",
+        "FESTIVAL ABRACADA BOUH",
+        "FESTIVAL DE L'ÉVEIL DES TOUT-PETITS"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une visite guidée demain",
+      "compris": "demain · visite",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "VISITES GUIDÉES AVEC UN MÉDIATEUR",
+        "VISITES GUIDÉES AVEC UN MÉDIATEUR",
+        "LES VISITES GUIDÉES - LES COULEURS DE JEAN VILAR",
+        "VISITE VITI-PATRIMONIALE VIP DANS LE DOMAINE",
+        "VISITES GUIDÉES AVEC UN MÉDIATEUR",
+        "VISITE COMMENTÉE DE SÈTE AVEC DIVERS UNI VERS",
+        "VISITE COMMENTÉE DE FRONTIGNAN-PLAGE AVEC DIVERS UNI VERS",
+        "VINS, CHÂTEAU & CHAMPIGNONS AU CHÂTEAU DE FLAUGERGUES AVEC PERMA SOCIAL CLUB"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un marché de Noël en décembre",
+      "compris": "en décembre · marché",
+      "ecarts_comprehension": [],
+      "propositions": 4,
+      "correctes": 4,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "MARCHÉ DE NOËL DE PIGNAN",
+        "MARCHÉ DE NOËL DE MONTPELLIER",
+        "Marché de Noël",
+        "Les Pépites de Noël"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une projection de film pour les enfants",
+      "compris": "les 3 prochains mois · famille · cinéma",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "PROJECTION D’UN FILM D’ANIMATION",
+        "CINÉ-MINOT",
+        "MINI-CINÉ-MINOT",
+        "CINÉMA JEUNESSE : LE CHIEN JAUNE DE MONGOLIE",
+        "MOIS DU FILM DOCUMENTAIRE : Visages, villages",
+        "L’heure du film : La Magie de Noël",
+        "CINÉMA JEUNESSE : L'INCROYABLE NOËL DE SHAUN LE MOUTON ET DE TIMMY",
+        "CINÉMA JEUNESSE : MARCEL, LE PÈRE NOËL ET LE PETIT LIVREUR DE PIZZAS"
+      ],
+      "reponse": ""
+    }
+  ],
+  "mode": "recherche",
+  "jeu": "31619098",
+  "prompt_version": "2026-10-15.9",
+  "note": ""
+}

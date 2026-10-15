@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS sortiria.rag_requests (
     asked_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
     session_id        UUID,
     question          TEXT        NOT NULL,
-    -- Contraintes extraites par Ministral : date, zone, budget, type, public.
+    -- Cases cochées et contraintes comprises (app/query_understanding.py) ;
+    -- clé « recherche » : réponse exacte ou non et ce qui a manqué (15/10/2026).
     constraints       JSONB       NOT NULL DEFAULT '{}'::jsonb,
     event_ids         TEXT[]      NOT NULL DEFAULT '{}',
     from_cache        BOOLEAN     NOT NULL DEFAULT FALSE,

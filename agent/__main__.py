@@ -5,6 +5,8 @@
     uv run python -m agent            # collecte complète (PostgreSQL requis)
     uv run python -m agent --essai    # sans écriture en base, pour tester
     uv run python -m agent --decouverte   # avec la découverte des agendas OpenAgenda (~6 min de plus)
+    uv run python -m agent --bilan-recherche   # ce que les utilisateurs ont cherché sans trouver (7 j)
+    uv run python -m agent --bilan-recherche --apprendre   # + propositions de l'agent (fait d'office le lundi)
 """
 
 from __future__ import annotations
@@ -26,9 +28,17 @@ def main() -> None:
     parser.add_argument("--source", action="append", help="Source à collecter (répétable).")
     parser.add_argument("--decouverte", action="store_true",
                         help="Cherche aussi les nouveaux agendas OpenAgenda (fait d'office le dimanche).")
+    parser.add_argument("--bilan-recherche", action="store_true",
+                        help="Affiche seulement le bilan de la recherche (envoyé d'office le lundi).")
+    parser.add_argument("--apprendre", action="store_true",
+                        help="Avec --bilan-recherche : l'agent en tire des propositions (synonymes, agendas).")
     args = parser.parse_args()
 
     load_environment()
+
+    if args.bilan_recherche:
+        print_search_report(learn=args.apprendre)
+        return
 
     state = run_nightly_collection(sources=args.source, dry_run=args.essai,
                                    discover_agendas=args.decouverte)
@@ -39,6 +49,42 @@ def main() -> None:
                     "coverage", "cost_usd", "llm_usage", "failed_sources", "alerts", "errors", "run_id")
     }
     print(json.dumps(summary, ensure_ascii=False, indent=2))
+
+
+def print_search_report(days: int = 7, learn: bool = False) -> None:
+    """Bilan de la recherche à la demande : vocabulaire recalculé, puis ce que
+    les utilisateurs ont cherché sans trouver ces `days` derniers jours.
+
+    `learn` : l'agent en tire aussi ses propositions (synonymes, agendas à
+    lire), enregistrées en attente de validation comme celles de la nuit.
+    """
+
+    from datetime import datetime
+
+    from agent.report import describe_action, search_report_lines
+    from agent.services import connect_postgres, learn_from_week
+    from src.event import event_repository as repository
+    from src.event.event_normalizer import PARIS
+
+    with connect_postgres() as connection:
+        size = repository.refresh_title_vocabulary(connection)
+        gaps = repository.fetch_search_gaps(connection, days)
+    print(f"Vocabulaire des titres : {size} mot(s) reconnus par la recherche.")
+    print("\n".join(search_report_lines(gaps)).strip() or f"Aucune question ces {days} derniers jours.")
+    if not learn:
+        return
+    learning = learn_from_week(gaps, datetime.now(PARIS).date())
+    with connect_postgres() as connection:
+        repository.record_proposals(connection, None, learning.proposals)
+    print("\nCe que l'agent en tire")
+    for proposal in learning.proposals:
+        print(f"- proposition : {describe_action(proposal)}")
+    for note in learning.notes:
+        print(f"- {note}")
+    if not learning.proposals and not learning.notes:
+        print("- rien à proposer (aucun mot cherché au moins 2 fois et absent de la base).")
+    if learning.proposals:
+        print("Pour décider : uv run python -m agent.proposals (puis --accepter N ou --refuser N)")
 
 
 if __name__ == "__main__":

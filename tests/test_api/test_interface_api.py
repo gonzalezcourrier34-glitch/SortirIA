@@ -25,7 +25,8 @@ def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
 
     monkeypatch.setattr(search_service, "run_search", fake_search)
     monkeypatch.setattr(search_service, "event_detail",
-                        lambda connection, event_id: {"event_id": event_id} if event_id == "e1" else None)
+                        lambda connection, event_id, visitor_key=None:
+                        ({"event_id": event_id, "visitor": visitor_key} if event_id == "e1" else None))
     monkeypatch.setattr(search_service, "partner_highlights", lambda connection, limit: [{"limit": limit}])
     monkeypatch.setattr(search_service, "active_sources", lambda connection: [{"name": "OpenAgenda", "events": 3}])
     monkeypatch.setattr(search_service, "events_to_rate",
@@ -91,7 +92,11 @@ def test_search_refuses_unknown_filters(client: TestClient) -> None:
 
 
 def test_detail_highlights_and_sources(client: TestClient) -> None:
-    assert client.get("/api/v1/evenements/e1").json() == {"event_id": "e1"}
+    assert client.get("/api/v1/evenements/e1").json() == {"event_id": "e1", "visitor": None}
+    # L'identifiant du navigateur n'arrive jamais en clair au service : son empreinte salée.
+    own = client.get("/api/v1/evenements/e1?visiteur=session-de-test-0123456789").json()
+    assert own["visitor"] and own["visitor"] != "session-de-test-0123456789"
+    assert client.get("/api/v1/evenements/e1?visiteur=court").status_code == 422
     assert client.get("/api/v1/evenements/inconnu").status_code == 404
     assert client.get("/api/v1/partenaires/a-ne-pas-manquer?limit=2").json() == [{"limit": 2}]
     assert client.get("/api/v1/partenaires/a-ne-pas-manquer?limit=50").status_code == 422

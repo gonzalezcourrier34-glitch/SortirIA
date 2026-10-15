@@ -9,17 +9,28 @@ le 6 novembre 2026. Plutôt que de repartir de zéro, il **industrialise deux pr
 | Brique | Projet d'origine | Ce qu'elle apporte |
 | --- | --- | --- |
 | Collecte des données | CheckIt.AI (projet 12) | Moteur multi-sources réutilisable : un moteur par type de source, un adaptateur et une configuration YAML par fournisseur, validation, déduplication, PostgreSQL, Airflow |
-| Recherche et réponse | Assistant RAG OpenAgenda (projet 6) | Préfiltrage structuré, recherche sémantique, classement explicable, génération par Mistral, API FastAPI (interface Streamlit remplacée par Angular) |
+| Recherche et réponse | Assistant RAG OpenAgenda (projet 6) | Point de départ de l'API FastAPI ; remplacé par une recherche hybride PostgreSQL + pgvector (sens et mots), une compréhension des questions par règles, une rédaction sourcée par Mistral et une interface Angular |
 | Suivi en production | Scoring crédit (projet 5), triage médical (projet 14) | Journalisation des requêtes, Evidently, Prometheus, Grafana, CI/CD |
-| Agent de collecte | Chess Agent (projet 13) | Graphe LangGraph pour la collecte nocturne |
+| Agent de collecte | Chess Agent (projet 13) | Graphe LangGraph : collecte nocturne, surveillance, propositions de réparation, apprentissage des recherches ratées |
 
-!!! info "État du projet au 13/10/2026"
-    Tout ce qui servait à la détection de fake news a été retiré (sources de presse,
-    datasets étiquetés, scrapers de fact-checking). Les moteurs de collecte génériques
-    sont conservés ; leur modèle de données « article » doit maintenant devenir un
-    modèle **événement**. Les étapes sont planifiées semaine par semaine dans
-    [Provenance du code](provenance.md). Chaque module indique son origine dans sa docstring
-    (voir la [référence du code](reference/index.md)).
+!!! info "État du projet au 15/10/2026"
+    - **Collecte** : 7 types de sources (OpenAgenda, DATAtourisme, RSS, iCal, PDF lus
+      par Mistral, fichiers des partenaires, agendas en ligne), pilotées chaque nuit par
+      l'[agent](agent.md), qui enrichit, contrôle, surveille et propose ses réparations.
+    - **Recherche** : compréhension de la question, recherche hybride, offres partenaires
+      en tête quand elles répondent, élargissement au sujet plutôt que des idées sans
+      rapport ; 99 % de propositions correctes sur le jeu de 50 questions
+      ([Interface](interface.md)).
+    - **Boucle d'apprentissage** : ce que les gens cherchent sans trouver est gardé ;
+      chaque lundi, l'agent en tire des synonymes et des agendas à lire, validés par un
+      humain.
+    - **À venir** : déploiement Azure, CI complète, suivi Grafana de la recherche,
+      limite de débit des routes publiques. Après la soutenance : une base de lieux
+      (bowling, padel, restaurants…) et le fine-tuning d'un modèle
+      ([Évolutions possibles](evolutions.md)).
+
+    Le détail, étape par étape, est dans [Provenance du code](provenance.md). Chaque
+    module indique son origine dans sa docstring (voir la [référence du code](reference/index.md)).
 
 ## Ce que le MVP doit prouver
 

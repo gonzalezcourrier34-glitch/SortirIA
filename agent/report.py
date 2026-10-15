@@ -72,9 +72,10 @@ def build_report_email(report: Mapping[str, Any]) -> tuple[str, str]:
         + (f" (dont {(report.get('enrichment') or {}).get('not_outing', 0)} signalé(s) « pas une sortie »)"
            if (report.get("enrichment") or {}).get("not_outing") else ""),
         f"- embeddings calculés : {report.get('events_embedded', 0)}",
-        "",
-        "Sources",
     ]
+    if report.get("vocabulary_size"):
+        lines.append(f"- vocabulaire des titres : {report['vocabulary_size']} mot(s) reconnus par la recherche")
+    lines += ["", "Sources"]
     for row in report.get("source_rows") or []:
         lines.append(f"- {row['source_id']} : {row['status']}, {row['events_kept']} événement(s), {row['attempts']} essai(s)")
     skipped = report.get("skipped_sources") or []
@@ -105,6 +106,12 @@ def build_report_email(report: Mapping[str, Any]) -> tuple[str, str]:
         lines += ["", heading]
         lines += [f"- {problem}" for problem in quality.get("problems", [])]
 
+    lines += search_report_lines(report.get("search_report") or {})
+    learning = report.get("search_learning") or []
+    if learning:
+        lines += ["", "Ce que l'agent en tire (les propositions sont plus haut)"]
+        lines += [f"- {note}" for note in learning]
+
     coverage = report.get("coverage") or {}
     if coverage:
         lines += ["", "Sorties des 7 prochains jours (famille / soirée)"]
@@ -126,6 +133,29 @@ def build_report_email(report: Mapping[str, Any]) -> tuple[str, str]:
     if report.get("mlflow_run_id"):
         lines.append(f"Suivi MLflow : expérience « sortiria-collecte », exécution {report['mlflow_run_id']}.")
     return subject, "\n".join(lines) + "\n"
+
+
+def search_report_lines(gaps: Mapping[str, Any]) -> list[str]:
+    """Bilan hebdomadaire de la recherche : ce que les utilisateurs ont cherché
+    sans trouver. Des pistes à examiner, rien n'est changé automatiquement."""
+
+    if not gaps or not gaps.get("questions"):
+        return []
+    total, not_exact = int(gaps["questions"]), int(gaps.get("not_exact", 0))
+    lines = ["", f"Recherche des {gaps.get('days', 7)} derniers jours",
+             f"- questions posées : {total}",
+             f"- sans réponse exacte : {not_exact} ({not_exact / total:.0%})",
+             f"- sans aucune proposition sur le sujet : {gaps.get('no_answer', 0)}"]
+    words = gaps.get("unknown_words") or []
+    if words:
+        lines.append("- mots cherchés qui ne figurent dans aucun titre (une source, un partenaire "
+                     "ou un synonyme à envisager) :")
+        lines.append("  " + ", ".join(f"{word} ({times})" for word, times in words))
+    unanswered = gaps.get("unanswered") or []
+    if unanswered:
+        lines.append("- questions sans réponse exacte les plus fréquentes :")
+        lines += [f"  « {question} » ({times})" for question, times in unanswered]
+    return lines
 
 
 def send_report_by_email(report: Mapping[str, Any]) -> bool:
@@ -157,7 +187,11 @@ def describe_action(proposal: Mapping[str, Any]) -> str:
     if isinstance(action, str):
         action = json.loads(action)
     source = proposal.get("source_id") or "?"
+    if action.get("type") == "ajouter_synonyme":
+        return (f"recherche : « {action.get('word')} » cherchera aussi « {action.get('target')} » "
+                f"({action.get('nature', 'synonyme')}, cherché {action.get('times', '?')} fois sans réponse)")
     if action.get("type") == "ajouter_agenda":
+        wanted = f" ; cherché : « {action['word']} »" if action.get("word") else ""
         return (f"{source} : ajouter l'agenda {action.get('new')} ({action.get('events')} événement(s) "
-                f"dans la zone) - {action.get('url')}")
+                f"dans la zone{wanted}) - {action.get('url')}")
     return f"{source} : remplacer {action.get('old')} par {action.get('new')}"

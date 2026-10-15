@@ -84,7 +84,9 @@ REASON_MISSING_LINK = "lien_manquant"
 
 TRUE_WORDS = {"oui", "o", "x", "vrai", "true", "1", "yes"}
 FALSE_WORDS = {"non", "n", "faux", "false", "0", "no"}
-FAMILY_PUBLIC_WORDS = ("famille", "enfant", "jeune public", "parent")
+# « Tout public » écrit par un partenaire comprend les familles (15/10/2026).
+FAMILY_PUBLIC_WORDS = ("famille", "enfant", "jeune public", "parent", "tout public", "tous publics",
+                       "tout age", "tous ages")
 NIGHT_PUBLIC_WORDS = ("soiree", "nuit", "club", "boite")
 STATUS_WORDS = {"complet": "complet", "annule": "annule", "reporte": "reporte"}
 
@@ -275,7 +277,8 @@ def map_partner_row(
     start_at = to_iso(start)
     audiences = infer_audiences([title, category, public], start_at, start_time is not None, age_min, age_max)
     public_words = normalize_for_comparison(public)
-    if any(word in public_words for word in FAMILY_PUBLIC_WORDS) and "famille" not in audiences:
+    adults_only = age_min is not None and age_min >= 18
+    if any(word in public_words for word in FAMILY_PUBLIC_WORDS) and "famille" not in audiences and not adults_only:
         audiences.append("famille")
     if any(word in public_words for word in NIGHT_PUBLIC_WORDS) and "soiree" not in audiences:
         audiences.append("soiree")

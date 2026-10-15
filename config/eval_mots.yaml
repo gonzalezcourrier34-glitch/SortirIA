@@ -1,0 +1,323 @@
+# Les recherches les plus courantes sur un site de sorties (15/10/2026) : 125.
+#
+# Deuxième jeu d'évaluation de la recherche, à côté des 50 questions de
+# config/eval_recherche.yaml : ici, des recherches courtes, comme les tapent
+# les visiteurs (un mot, deux au plus), dans toutes les rubriques d'un agenda
+# de sorties.
+#
+# D'où vient la liste : elle ne vient PAS d'une mesure. SortirIA n'a pas
+# encore d'utilisateurs ; la liste reprend les rubriques et les mots-clés
+# courants des agendas de sorties (OpenAgenda, agendas des offices de
+# tourisme et des villes, sites de sorties grand public) et quelques
+# spécialités locales (joutes, huîtres), puis (le soir) une liste d'activités
+# de loisirs et de sorties du soir : bowling, laser game, padel, rooftop…
+# Beaucoup de ces dernières sont des LIEUX ouverts toute l'année, pas des
+# événements datés : un agenda n'en parle que lors d'un événement (tournoi,
+# soirée). Leur absence mesure ce que la base ne couvre pas. Elle sera remplacée, ou complétée,
+# par les mots réellement tapés : journal rag_requests, bilan du lundi de
+# l'agent (uv run python -m agent --bilan-recherche).
+#
+# Lancement :
+#     uv run python -m scripts.eval_recherche --fichier config/eval_mots.yaml
+#
+# Même format que config/eval_recherche.yaml :
+#   compris  ce que la recherche doit comprendre (type, public, quand…) ;
+#   mots     au moins un de ces mots doit figurer dans chaque proposition
+#            (titre, résumé ou lieu) : c'est la pertinence par le contenu.
+# Un mot absent de la base n'est pas une erreur de la recherche : la réponse
+# le dit (« idées voisines » ou « rien sur ce sujet »), compté à part.
+
+questions:
+
+  # --- Musique et scène ---
+  - question: "concert"
+    compris: {types: [concert]}
+  - question: "concert gratuit"
+    compris: {types: [concert], gratuit: true}
+  - question: "jazz"
+    compris: {types: [concert]}
+    mots: [jazz]
+  - question: "rock"
+    compris: {types: [concert]}
+    mots: [rock]
+  - question: "rap"
+    mots: [rap]
+  - question: "électro"
+    mots: [electro]
+  - question: "DJ"
+    mots: [dj]
+  - question: "musique classique"
+    compris: {types: [concert]}
+    mots: [classique]
+  - question: "chorale"
+    mots: [chorale, choral, choeur, chant]
+  - question: "opéra"
+    mots: [opera]
+  - question: "festival"
+    compris: {types: [festival]}
+  - question: "théâtre"
+    compris: {types: [theatre, spectacle]}
+  - question: "spectacle"
+    compris: {types: [spectacle]}
+  - question: "spectacle enfants"
+    compris: {types: [spectacle], public: "famille"}
+  - question: "humour"
+    compris: {types: [spectacle, theatre]}
+    mots: [humour, humoriste, comique]
+  - question: "stand-up"
+    mots: [stand]
+  - question: "impro"
+    compris: {types: [theatre, spectacle]}
+    mots: [impro, improvisation]
+  - question: "cirque"
+    compris: {types: [spectacle]}
+    mots: [cirque]
+  - question: "magie"
+    mots: [magie, magique, magicien]
+  - question: "danse"
+    compris: {types: [danse]}
+  - question: "ballet"
+    compris: {types: [danse]}
+    mots: [ballet]
+  - question: "marionnettes"
+    mots: [marionnette]
+  - question: "cabaret"
+    mots: [cabaret]
+
+  # --- Soirées ---
+  - question: "soirée"
+    compris: {public: "soiree"}
+  - question: "ce soir"
+    compris: {quand: "aujourd'hui", soir: true}
+  - question: "karaoké"
+    mots: [karaoke]
+  - question: "blind test"
+    mots: [blind]
+  - question: "quiz"
+    mots: [quiz]
+  - question: "bal"
+    mots: [bal]
+  - question: "salsa"
+    mots: [salsa]
+  - question: "tango"
+    mots: [tango]
+  - question: "apéro"
+    mots: [apero]
+  - question: "bar"
+    compris: {public: "soiree"}
+
+  # --- Culture ---
+  - question: "exposition"
+    compris: {types: [exposition]}
+  - question: "expo photo"
+    compris: {types: [exposition]}
+    mots: [photo]
+  - question: "musée"
+    compris: {types: [exposition, visite]}
+    mots: [musee]
+  - question: "visite guidée"
+    compris: {types: [visite]}
+  - question: "patrimoine"
+    mots: [patrimoine]
+  - question: "château"
+    mots: [chateau]
+  - question: "histoire"
+    mots: [histoire, historique]
+  - question: "conférence"
+    compris: {types: [conference]}
+  - question: "lecture"
+    compris: {types: [lecture]}
+  - question: "contes"
+    compris: {types: [lecture]}
+    mots: [conte]
+  - question: "livre"
+    compris: {types: [lecture]}
+  - question: "BD"
+    mots: [bd, bande dessinee]
+  - question: "cinéma"
+    compris: {types: [cinema]}
+  - question: "ciné plein air"
+    compris: {types: [cinema], cadre: "exterieur"}
+  - question: "film"
+    compris: {types: [cinema]}
+  - question: "science"
+    mots: [science]
+  - question: "astronomie"
+    mots: [astronomie, etoile, ciel]
+  - question: "peinture"
+    mots: [peinture, peintre]
+
+  # --- Ateliers ---
+  - question: "atelier"
+    compris: {types: [atelier]}
+  - question: "atelier enfants"
+    compris: {types: [atelier], public: "famille"}
+  - question: "stage"
+    compris: {types: [atelier]}
+  - question: "poterie"
+    mots: [poterie, ceramique]
+  - question: "couture"
+    mots: [couture]
+  - question: "cuisine"
+    mots: [cuisine, culinaire]
+  - question: "jardinage"
+    mots: [jardin]
+  - question: "jeux vidéo"
+    compris: {types: [jeux]}
+    mots: [video]
+
+  # --- Jeux ---
+  - question: "jeux"
+    compris: {types: [jeux]}
+  - question: "jeux de société"
+    compris: {types: [jeux]}
+    mots: [societe]
+  - question: "escape game"
+    mots: [escape]
+  - question: "échecs"
+    mots: [echec]
+  - question: "loto"
+    mots: [loto]
+
+  # --- Gastronomie ---
+  - question: "dégustation"
+    mots: [degustation]
+  - question: "vin"
+    mots: [vin]
+  - question: "bière"
+    mots: [biere]
+  - question: "huîtres"
+    mots: [huitre]
+  - question: "food truck"
+    mots: [food]
+  - question: "brunch"
+    mots: [brunch]
+
+  # --- Marchés et fêtes ---
+  - question: "marché"
+    compris: {types: [marche]}
+  - question: "brocante"
+    compris: {types: [marche]}
+    mots: [brocante]
+  - question: "vide-grenier"
+    mots: [vide]
+  - question: "marché de Noël"
+    compris: {types: [marche]}
+    mots: [noel]
+  - question: "fête"
+    compris: {types: [fete]}
+  - question: "Halloween"
+    mots: [halloween]
+  - question: "feu d'artifice"
+    mots: [artifice]
+  - question: "carnaval"
+    mots: [carnaval]
+  - question: "joutes"
+    mots: [joute]
+  - question: "salon"
+    mots: [salon]
+
+  # --- Sport et nature ---
+  - question: "sport"
+    compris: {types: [sport]}
+  - question: "match"
+    compris: {types: [sport]}
+  - question: "course à pied"
+    compris: {types: [sport]}
+  - question: "randonnée"
+    compris: {types: [nature]}
+  - question: "balade"
+    compris: {types: [nature]}
+  - question: "vélo"
+    mots: [velo]
+  - question: "kayak"
+    mots: [kayak, canoe]
+  - question: "plage"
+    mots: [plage]
+  - question: "yoga"
+    mots: [yoga]
+  - question: "bien-être"
+    mots: [bien]
+  - question: "escalade"
+    mots: [escalade]
+
+  # --- Contraintes ---
+  - question: "gratuit"
+    compris: {gratuit: true}
+  - question: "pas cher"
+    compris: {budget: 15}
+  - question: "en famille"
+    compris: {public: "famille"}
+  - question: "avec des ados"
+    compris: {public: "ados"}
+  - question: "pour seniors"
+    compris: {public: "seniors"}
+  - question: "ce week-end"
+    compris: {quand: "ce week-end"}
+  - question: "demain"
+    compris: {quand: "demain"}
+  - question: "en plein air"
+    compris: {cadre: "exterieur"}
+  - question: "s'il pleut"
+    compris: {cadre: "interieur"}
+
+  # --- Loisirs en intérieur (liste du 15/10/2026, soir) ---
+  - question: "activités en intérieur"
+    compris: {cadre: interieur}
+  - question: "bowling"
+    mots: [bowling]
+  - question: "laser game"
+    mots: [laser]
+  - question: "trampoline park"
+    mots: [trampoline]
+  - question: "billard"
+    mots: [billard]
+  - question: "réalité virtuelle"
+    mots: [virtuel, vr]
+
+  # --- Sorties sportives et dynamiques ---
+  - question: "padel"
+    mots: [padel]
+  - question: "karting"
+    mots: [karting, kart]
+  - question: "accrobranche"
+    mots: [accrobranche]
+  - question: "paintball"
+    mots: [paintball]
+  - question: "piscine"
+    mots: [piscine, aquatique]
+  - question: "VTT"
+    mots: [vtt]
+  - question: "patinoire"
+    mots: [patinoire, glace]
+
+  # --- Soirées, bars et restauration ---
+  - question: "bar à cocktails"
+    compris: {public: "soiree"}
+    mots: [cocktail]
+  - question: "restaurant"
+    mots: [restaurant]
+  - question: "rooftop"
+    mots: [rooftop]
+  - question: "pub"
+    compris: {public: "soiree"}
+  - question: "boîte de nuit"
+    compris: {public: "soiree"}
+  - question: "afterwork"
+    compris: {public: "soiree"}
+  - question: "comedy club"
+    mots: [comedy, comedie, stand]
+  - question: "tapas"
+    mots: [tapas]
+  - question: "club"
+    mots: [club]
+
+  # --- Événements et culture ---
+  - question: "foire"
+    compris: {types: [marche, fete]}
+    mots: [foire]
+  - question: "marché nocturne"
+    compris: {types: [marche], soir: true}
+    mots: [nocturne]
+  - question: "quiz room"
+    mots: [quiz]

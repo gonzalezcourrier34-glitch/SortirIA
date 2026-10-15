@@ -160,8 +160,8 @@
                                         <div class="card-place">{{ card.place }}</div>
 
                                         <div class="tags">
-                                            @if (card.category) {
-                                                <span class="tag">{{ card.category }}</span>
+                                            @if (card.category_label) {
+                                                <span class="tag">{{ card.category_label }}</span>
                                             }
                                             <span class="tag tag-price">{{ card.price }}</span>
                                         </div>
@@ -284,12 +284,15 @@
                     }
 
                     <div class="tags">
-                        @if (event.category) {
-                            <span class="tag">{{ event.category }}</span>
+                        @if (event.category_label) {
+                            <span class="tag">{{ event.category_label }}</span>
                         }
                         <span class="tag tag-price">{{ event.price }}</span>
+                        <!-- Un public qui dit la même chose que le type (« soirée ») n'est pas répété. -->
                         @for (audience of event.audiences; track audience) {
-                            <span class="tag tag-public">{{ audience }}</span>
+                            @if (audience !== event.category_label) {
+                                <span class="tag tag-public">{{ audience }}</span>
+                            }
                         }
                     </div>
 
@@ -322,7 +325,7 @@
                             <div class="detail-label">Avis sur le lieu</div>
                             <span>
                                 <span class="stars" aria-hidden="true">{{ stars(event.venue_rating) }}</span>
-                                {{ ratingLabel(event) }}
+                                {{ ratingLabel(event, event.venue_ratings) }}
                             </span>
                         </div>
 
@@ -348,6 +351,27 @@
                         <div class="detail-label">Votre avis</div>
                         @if (ratingMessage(); as message) {
                             <p class="rating-done" role="status">{{ message }}</p>
+                        }
+                        @if (event.my_rating && !editingRating()) {
+                            <div class="own-rating">
+                                <span>
+                                    <span class="stars" aria-hidden="true">{{ stars(event.my_rating.stars) }}</span>
+                                    Vous avez noté {{ event.my_rating.stars }}/5 le {{ event.my_rating.date }}
+                                </span>
+                                @if (event.my_rating.comment) {
+                                    <blockquote>« {{ event.my_rating.comment }} »</blockquote>
+                                }
+                                @if (ownCommentStatus(event.my_rating.comment_status); as status) {
+                                    <span class="small">{{ status }}</span>
+                                }
+                                @if (event.can_rate) {
+                                    <button type="button" class="link-button" (click)="editRating()">
+                                        Modifier mon avis
+                                    </button>
+                                }
+                            </div>
+                        } @else if (ratingMessage()) {
+                            <!-- Avis envoyé : le message ci-dessus, le détail se recharge. -->
                         } @else if (event.can_rate) {
                             <div class="rating-stars" role="radiogroup" aria-label="Votre note sur 5"
                                 (mouseleave)="ratingHover.set(0)">

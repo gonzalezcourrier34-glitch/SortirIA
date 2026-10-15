@@ -71,6 +71,25 @@ Les colonnes du modèle et celles du lecteur viennent de la même liste
 (`TEMPLATE_COLUMNS`, `src/event/partner_mapper.py`) ; le modèle se régénère
 avec `uv run python -m scripts.creer_modele_partenaire`.
 
+Le **public** se déduit de la colonne `public` et des âges : « famille »,
+« enfants », « jeune public », mais aussi « tout public » ou « tous âges »
+donnent le public famille, sauf avec un âge minimal de 18 ans ;
+« soirée », « nuit » ou « club » donnent le public soirée.
+
+## Dans la recherche
+
+Une offre partenaire qui répond à la demande (contraintes respectées, type
+ou mots demandés présents) passe **en tête des cartes**, avec l'encadré
+terracotta « Offre partenaire » ; Mistral la cite en premier. Une offre qui
+ne répond pas reste dans « À ne pas manquer », jamais mêlée aux cartes. Le
+type se lit aussi dans le titre et la catégorie du fichier : « Atelier jeux »
+répond à « jeux », « Soirée DJ » à « soirée ». Détail et contrôle sur les
+fichiers d'exemple : page [Interface](interface.md).
+
+Chaque lundi, le bilan de l'agent peut suggérer un sujet à proposer aux
+partenaires (« kitesurf : cherché 3 fois, absent de la base et des agendas
+de la zone »).
+
 ## En base
 
 À chaque collecte, dans la même transaction que les événements :

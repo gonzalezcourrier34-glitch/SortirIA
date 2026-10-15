@@ -48,11 +48,14 @@ export class SearchService {
 
     // # Lectures simples
 
+    /** Détail d'un événement ; `sessionId` renvoie aussi l'avis de ce visiteur. */
     getEvent(
-        eventId: string
+        eventId: string,
+        sessionId = ''
     ): Observable<EventDetail> {
+        const visitor = sessionId ? `?visiteur=${encodeURIComponent(sessionId)}` : '';
         return this.http.get<EventDetail>(
-            `${API}/evenements/${encodeURIComponent(eventId)}`
+            `${API}/evenements/${encodeURIComponent(eventId)}${visitor}`
         );
     }
 

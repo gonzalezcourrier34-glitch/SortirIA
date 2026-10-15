@@ -11,7 +11,7 @@ expérience `sortiria-evaluation-recherche`, quand le serveur répond).
 | Colonne | Sens |
 |---|---|
 | `mode` | `recherche` (sans rédaction) ou `avec_redaction` (réponse de Mistral) |
-| `jeu` | empreinte de `config/eval_recherche.yaml` : deux scores ne se comparent que sur le même jeu |
+| `jeu` | empreinte du jeu de questions : deux scores ne se comparent que sur le même jeu (`config/eval_recherche.yaml`, les 50 questions ; `config/eval_mots.yaml`, les 100 recherches courtes) |
 | `comprehension` | part des questions comprises comme attendu |
 | `precision` | part des propositions qui respectent les contraintes attendues (objectif 0,95) |
 | `idees_voisines` | questions sans rien d'exact dans la base (la réponse le dit) |

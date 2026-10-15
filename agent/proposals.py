@@ -84,7 +84,36 @@ def apply_proposal(proposal: Mapping[str, Any], path: Path = SOURCES_FILE) -> tu
     if action.get("type") == "ajouter_agenda" and action.get("new"):
         return add_agenda_to_config(str(action["new"]), action.get("events", "?"),
                                     str(action.get("found_on") or "?"), path)
+    if action.get("type") == "ajouter_synonyme" and action.get("word") and action.get("target"):
+        return add_synonym_to_config(str(action["word"]), str(action["target"]), action.get("times", "?"),
+                                     str(action.get("found_on") or "?"))
     return False, f"action « {action.get('type')} » à faire à la main."
+
+
+def add_synonym_to_config(word: str, target: str, times: Any, found_on: str,
+                          path: Path | None = None) -> tuple[bool, str]:
+    """Ajoute « mot tapé : mot connu » à config/synonymes.yaml. Renvoie (fait ?, explication).
+
+    La recherche relit ce fichier dès qu'il change : le synonyme sert à la
+    question suivante, sans redémarrer l'API.
+    """
+
+    from app.query_understanding import SYNONYMS_FILE, learned_synonyms, plain
+
+    path = path or SYNONYMS_FILE
+    word, target = plain(word), plain(target)
+    if not word or not target or not re.fullmatch(r"[a-z0-9 ]+", f"{word} {target}"):
+        return False, f"synonyme « {word} » -> « {target} » illisible : à ajouter à la main."
+    if word in learned_synonyms(path):
+        return False, f"« {word} » est déjà dans {path.name}."
+    raw = path.read_bytes().decode("utf-8") if path.exists() else "synonymes:\n"
+    newline = "\r\n" if "\r\n" in raw else "\n"
+    if not re.search(r"^synonymes:", raw, re.MULTILINE):
+        return False, f"clé « synonymes: » absente de {path.name} : à ajouter à la main."
+    entry = f"  {word}: {target}"
+    raw = raw.rstrip("\r\n") + newline + f"{entry:<30} # cherché {times} fois (proposé le {found_on})" + newline
+    path.write_bytes(raw.encode("utf-8"))
+    return True, f"{path.name} mis à jour : « {word} » cherche aussi « {target} »."
 
 
 def describe(proposal: Mapping[str, Any]) -> str:

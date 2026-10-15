@@ -120,9 +120,11 @@ def test_full_night_success() -> None:
     # embeddings (lecture + écriture), purge RGPD, bilan, détail par source
     # Suppressions (disparus, passés, plafond) : requêtes « WITH … DELETE » qui
     # gardent leurs statistiques ; puis taille de la base, embeddings, purge, bilan.
-    # ... puis le SELECT de la couverture de la semaine (surveillance) avant le bilan.
+    # ... puis le SELECT de la couverture de la semaine (surveillance), le
+    # vocabulaire des titres et le bilan de la recherche (transaction à part,
+    # la fausse base ne sait pas y répondre : la collecte continue), le bilan.
     assert kinds == ["SELECT", "INSERT", "WITH", "WITH", "WITH", "SELECT", "SELECT", "UPDATE", "SELECT", "SELECT",
-                     "INSERT", "INSERT"]
+                     "SELECT", "WITH", "INSERT", "INSERT"]
     assert state["purged"] == {"requests": 3, "cache": 1, "runs": 0}
 
 

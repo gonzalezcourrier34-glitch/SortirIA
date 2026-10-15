@@ -29,13 +29,15 @@ import os
 import re
 import time
 from collections.abc import Callable, Iterator, Mapping, Sequence
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
 
 from agent.watch import DEFAULT_PRICE, PRICES_USD_PER_MILLION
 from app.query_understanding import (
+    CATEGORY_LABELS,
+    PRECISE_SUBJECTS,
     QUESTION_CATEGORIES,
     QueryPlan,
     Understanding,
@@ -49,7 +51,7 @@ from app.query_understanding import (
 )
 
 PARIS = ZoneInfo("Europe/Paris")
-PROMPT_VERSION = "2026-10-15.4"   # toutes les dates comptées sur les cartes : renouvelle le cache
+PROMPT_VERSION = "2026-10-15.16"  # carte = séance trouvée ; mot seulement en description = idée voisine
 DEFAULT_SEARCH_MODEL = "mistral-small-latest"
 CANDIDATES = 80          # séances comparées à la question (regroupées ensuite par événement)
 MAX_PROPOSALS = 8        # événements montrés et donnés à Mistral (2 rangées de 4 cartes, 15/10)
@@ -90,6 +92,8 @@ Règles :
   présente pas un événement qui ne les respecte pas comme s'il y répondait ;
 - privilégie les événements qui répondent le mieux à la demande, pas forcément
   les premiers de la liste ; cite-en 2 à 4, pas plus ;
+- les événements marqués « offre partenaire » répondent à la demande : cite-les
+  en premier, simplement, sans ton publicitaire ;
 - propose 3 questions de relance courtes (moins de 6 mots chacune) que
   l'utilisateur pourrait poser ensuite.
 
@@ -178,9 +182,13 @@ OUTDOOR_CATEGORIES = "ARRAY['nature', 'marche', 'sport', 'fete', 'festival']"
 OUTDOOR_TEXT = "'plein air|balade|randonn|plage|jardin|en exterieur|a l exterieur|sentier|kayak|velo'"
 EVENT_TEXT = (f"translate(lower(concat_ws(' ', e.title, e.summary, left(e.description, 600))), "
               f"'{ACCENTS_FROM}', '{ACCENTS_TO}')")
-INDOOR_CONDITION = (f"(lower(COALESCE(e.category_norm, e.category, '')) <> ALL ({OUTDOOR_CATEGORIES}) "
+# Catégorie d'un événement : l'unifiée (Mistral), sinon celle de la source.
+# category_norm vaut '' (et non NULL) tant que l'événement n'est pas classé :
+# sans NULLIF, « Lecture » ou « Sport » d'un partenaire ne comptaient pas.
+EVENT_CATEGORY = "lower(COALESCE(NULLIF(e.category_norm, ''), e.category, ''))"
+INDOOR_CONDITION = (f"({EVENT_CATEGORY} <> ALL ({OUTDOOR_CATEGORIES}) "
                     f"AND {EVENT_TEXT} !~ {OUTDOOR_TEXT})")
-OUTDOOR_CONDITION = (f"(lower(COALESCE(e.category_norm, e.category, '')) = ANY ({OUTDOOR_CATEGORIES}) "
+OUTDOOR_CONDITION = (f"({EVENT_CATEGORY} = ANY ({OUTDOOR_CATEGORIES}) "
                      f"OR {EVENT_TEXT} ~ {OUTDOOR_TEXT})")
 NEAR_CONDITION = """(sortiria.normalize_city(e.city) = %(near_city)s OR (
         e.latitude IS NOT NULL AND sortiria.distance_km(
@@ -198,14 +206,31 @@ def lexical_query(keywords: Sequence[str]) -> str:
     plus il y en a, mieux l'événement est classé)."""
 
     words = [word for word in (plain(keyword) for keyword in keywords) if re.fullmatch(r"[a-z0-9]+", word)]
-    return " | ".join(dict.fromkeys(words))
+    # Préfixe (15/10/2026) : « photo » trouve aussi « photographies », « ciné »
+    # trouve « cinéma » (le mot est d'abord ramené à sa racine, puis complété).
+    return " | ".join(f"{word}:*" if len(word) >= 4 else word for word in dict.fromkeys(words))
+
+
+def type_query(words: Sequence[str]) -> str:
+    """Types de sortie au format to_tsquery, racines exactes : « jeux | concert »."""
+
+    kept = [word for word in (plain(word) for word in words) if re.fullmatch(r"[a-z]+", word)]
+    return " | ".join(dict.fromkeys(kept))
+
+
+def type_keywords(keywords: Sequence[str]) -> list[str]:
+    """Mots de la question qui désignent un type de sortie (« jeux », « concert »)."""
+
+    return [word for word in keywords if word in QUESTION_CATEGORIES or word.rstrip("sx") in QUESTION_CATEGORIES]
 
 
 def distinctive_keywords(keywords: Sequence[str]) -> list[str]:
     """Mots précis de la question (« échecs », « Fabre », « Halloween ») : ni un
     type de sortie (« concert », « expo »), déjà traité par la catégorie."""
 
-    return [word for word in keywords if word not in QUESTION_CATEGORIES and word.rstrip("sx") not in QUESTION_CATEGORIES]
+    return [word for word in keywords
+            if word in PRECISE_SUBJECTS or word.rstrip("sx") in PRECISE_SUBJECTS
+            or (word not in QUESTION_CATEGORIES and word.rstrip("sx") not in QUESTION_CATEGORIES)]
 
 
 def keep_exact_matches(rows: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], bool, bool]:
@@ -219,13 +244,124 @@ def keep_exact_matches(rows: list[dict[str, Any]]) -> tuple[list[dict[str, Any]]
     Renvoie (lignes, mots trouvés ?, type trouvé ?).
     """
 
-    by_words = [row for row in rows if row.get("keyword_match")]
+    # Plusieurs mots précis : seulement ceux qui en ont le plus (« blind test » :
+    # les deux mots, pas une dictée qui propose de « tester » son orthographe).
+    # Parmi eux, d'abord ceux où le visiteur voit les mots (titre, résumé, lieu).
+    def counts(row: Mapping[str, Any]) -> tuple[int, int]:
+        hits = int(row.get("keyword_hits") or (1 if row.get("keyword_match") else 0))
+        return int(row.get("visible_hits") or 0), hits
+
+    best = max((counts(row) for row in rows if row.get("keyword_match")), default=(0, 0))
+    by_words = [row for row in rows if row.get("keyword_match") and counts(row) >= best]
     if by_words:
         rows = by_words
     by_type = [row for row in rows if row.get("category_match")]
     if by_type:
         rows = by_type
     return rows, bool(by_words), bool(by_type)
+
+
+PARTNER_CANDIDATES = 20     # séances partenaires toujours examinées, en plus des 80 meilleures
+
+
+def fetch_candidates(connection: Any, plan: QueryPlan, vector: str | None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Séances candidates : les mieux classées, plus les meilleures séances des
+    partenaires qui respectent les mêmes filtres (15/10/2026).
+
+    Sans question (cases cochées seules), le classement se fait par date : un
+    karaoké partenaire dans 15 jours tombait au-delà des 80 premières séances
+    et n'était jamais examiné. Les séances partenaires sont ajoutées à la fin ;
+    `partners_first` décide ensuite si elles répondent (et les met en tête).
+    """
+
+    sql, params = build_search_query(plan, vector)
+    rows = fetch_rows(connection, sql, params)
+    seen = {str(row["event_id"]) for row in rows}
+    partner_sql, partner_params = build_search_query(plan, vector, limit=PARTNER_CANDIDATES, partners_only=True)
+    rows += [row for row in fetch_rows(connection, partner_sql, partner_params) if str(row["event_id"]) not in seen]
+    return rows, params
+
+
+WIDER_PERIOD = timedelta(days=90)   # sujet introuvable : jusqu'aux 3 prochains mois
+
+
+# Mots de la question qui figurent dans au moins un titre de la base
+# (sql/sortiria/07_vocabulary.sql). Tant que le vocabulaire n'a pas été
+# calculé (base neuve), les titres sont lus directement.
+KNOWN_SUBJECTS_SQL = """
+SELECT DISTINCT w.word
+FROM unnest(%(words)s::text[]) AS w(word),
+     LATERAL unnest(sortiria.title_lexemes(w.word)) AS s
+WHERE EXISTS (
+        SELECT 1 FROM sortiria.title_vocabulary AS v
+        WHERE CASE WHEN length(w.word) >= 4 THEN v.lexeme LIKE s.lexeme || '%%' ELSE v.lexeme = s.lexeme END)
+   OR (NOT EXISTS (SELECT 1 FROM sortiria.title_vocabulary)
+       AND EXISTS (SELECT 1 FROM sortiria.events AS e
+                   WHERE e.is_outing AND sortiria.title_lexemes(e.title) @@ (
+                       quote_literal(s.lexeme) || CASE WHEN length(w.word) >= 4 THEN ':*' ELSE '' END)::tsquery))
+"""
+
+
+def known_subjects(connection: Any, words: Sequence[str]) -> set[str]:
+    """Mots de la question écrits dans au moins un titre d'événement de la base.
+
+    Aucune liste à tenir à la main : le vocabulaire suit la base. Une base
+    sans la table (schéma pas encore mis à jour) : aucun mot reconnu, la
+    recherche fonctionne comme avant.
+    """
+
+    if not words:
+        return set()
+    try:
+        return {str(row["word"]) for row in fetch_rows(connection, KNOWN_SUBJECTS_SQL, {"words": list(words)})}
+    except Exception:  # noqa: BLE001 (la reconnaissance des sujets est un plus)
+        connection.rollback()
+        return set()
+
+
+def on_subject(rows: Sequence[Mapping[str, Any]], plan: QueryPlan) -> list[Mapping[str, Any]]:
+    """Lignes qui parlent du sujet de la question : les mots précis (« photo »,
+    « cirque ») s'il y en a, sinon le type demandé (« concert »)."""
+
+    if distinctive_keywords(plan.keywords):
+        return [row for row in rows if row.get("keyword_match")]
+    return [row for row in rows if row.get("category_match")]
+
+
+def widen_for_subject(connection: Any, plan: QueryPlan, vector: str | None,
+                      ) -> tuple[list[dict[str, Any]], QueryPlan, list[str]]:
+    """Le sujet demandé est absent avec les contraintes choisies (15/10/2026).
+
+    Plutôt que 8 idées sans rapport (« cirque » → ateliers et jeux), on cherche
+    le sujet lui-même en relâchant les contraintes, une étape à la fois :
+    1. public, gratuit, budget, soirée, intérieur/plein air ;
+    2. puis la période, étendue aux 3 prochains mois ;
+    3. puis le lieu.
+    Renvoie (lignes sur le sujet, plan élargi, contraintes relâchées) ; aucune
+    ligne si le sujet n'existe nulle part : mieux vaut le dire que proposer
+    n'importe quoi.
+    """
+
+    dropped: list[str] = []
+    if plan.public:
+        dropped.append({"soiree": "en soirée"}.get(plan.public, f"pour le public « {plan.public} »"))
+    if plan.free_only or plan.max_price is not None:
+        dropped.append("gratuit" if plan.free_only else f"à moins de {plan.max_price:g} €")
+    if plan.evening:
+        dropped.append("le soir")
+    if plan.setting:
+        dropped.append({"interieur": "en intérieur", "exterieur": "en plein air"}[plan.setting])
+    steps = [(replace(plan, public=None, free_only=False, max_price=None, evening=False, setting=None,
+                      from_question=set()), list(dropped))]
+    longer = replace(steps[0][0], end=max(plan.end, plan.start + WIDER_PERIOD), period_label="3 prochains mois")
+    steps.append((longer, [*dropped, f"pour « {plan.period_label} »"]))
+    if plan.zone or plan.cities or plan.near:
+        steps.append((replace(longer, zone=None, cities=(), near=None), [*steps[-1][1], "à cet endroit"]))
+    for wider, relaxed in steps:
+        rows = on_subject(fetch_candidates(connection, wider, vector)[0], wider)
+        if rows:
+            return list(rows), wider, relaxed
+    return [], plan, []
 
 
 def plan_from_filters(filters: SearchFilters, now: datetime, categories: Sequence[str] = ()) -> QueryPlan:
@@ -238,7 +374,7 @@ def plan_from_filters(filters: SearchFilters, now: datetime, categories: Sequenc
 
 def build_search_query(plan: QueryPlan | SearchFilters, vector: str | None, now: datetime | None = None,
                        limit: int = CANDIDATES,
-                       categories: Sequence[str] = ()) -> tuple[str, dict[str, Any]]:
+                       categories: Sequence[str] = (), partners_only: bool = False) -> tuple[str, dict[str, Any]]:
     """Requête de recherche hybride sur `v_upcoming_events` (paramètres psycopg2).
 
     1. **Filtres stricts** : période, public, zone ou communes, gratuit, soirée.
@@ -258,6 +394,8 @@ def build_search_query(plan: QueryPlan | SearchFilters, vector: str | None, now:
     if isinstance(plan, SearchFilters):
         plan = plan_from_filters(plan, now or datetime.now(PARIS), categories)
     conditions = ["e.is_outing", "COALESCE(e.end_at, e.start_at) >= %(start)s", "e.start_at < %(end)s"]
+    if partners_only:
+        conditions.append("e.partner_id IS NOT NULL")
     params: dict[str, Any] = {"start": plan.start, "end": plan.end, "limit": limit, "pool": POOL,
                               "categories": list(plan.categories)}
     if plan.public:
@@ -289,7 +427,6 @@ def build_search_query(plan: QueryPlan | SearchFilters, vector: str | None, now:
         conditions.append("(NOT e.time_known OR EXTRACT(HOUR FROM e.start_at AT TIME ZONE 'Europe/Paris') >= 17)")
 
     lexical = lexical_query(plan.keywords)
-    distinctive = lexical_query(distinctive_keywords(plan.keywords))
     ctes = [f"""base AS (
     SELECT e.event_id, e.embedding, {LEXICAL_DOCUMENT} AS document
     FROM sortiria.v_upcoming_events AS e
@@ -313,20 +450,45 @@ def build_search_query(plan: QueryPlan | SearchFilters, vector: str | None, now:
         joins.append("LEFT JOIN by_words ON by_words.event_id = b.event_id")
         score.append(f"COALESCE(1.0 / ({RRF_K} + by_words.rank), 0)")
     score_sql = " + ".join(score) or "0"
-    category_sql = "lower(COALESCE(e.category_norm, e.category, '')) = ANY (%(categories)s)"
-    keyword_sql = "false"
-    if distinctive:
-        params["distinctive"] = distinctive
-        keyword_sql = "b.document @@ to_tsquery('french', %(distinctive)s)"
+    category_sql = f"{EVENT_CATEGORY} = ANY (%(categories)s)"
+    # Le type demandé écrit dans le TITRE ou la catégorie de la source compte
+    # aussi (15/10/2026) : « Atelier jeux en famille », rangé en « atelier »,
+    # répond à « jeux » ; « Soirée DJ » (catégorie d'un bar) à « soirée ». Pas
+    # la description : « après le concert » ne fait pas un concert. Racines
+    # exactes, sans préfixe : « jeux » ne doit pas trouver « jeudi ».
+    type_words = type_query([*type_keywords(plan.keywords), *plan.categories])
+    if type_words:
+        params["type_words"] = type_words
+        category_sql = (f"({category_sql} OR to_tsvector('french', translate(lower(concat_ws(' ', e.title, "
+                        f"e.category)), '{ACCENTS_FROM}', '{ACCENTS_TO}')) @@ to_tsquery('french', %(type_words)s))")
+    # Mots précis trouvés dans l'événement, comptés un par un (15/10/2026) :
+    # « blind test » ne doit pas garder tout ce qui contient « tester » (une
+    # dictée, une dégustation). `keep_exact_matches` garde ceux qui en ont le plus.
+    # Mots trouvés là où le visiteur les voit (titre, résumé, lieu) : une carte
+    # « Concert acoustique » pour « karaoké », parce que la longue description
+    # cite un karaoké, ne se comprend pas. Ceux-là passent devant, et les
+    # autres ne servent que s'il n'y en a aucun (`keep_exact_matches`).
+    visible_text = (f"to_tsvector('french', translate(lower(concat_ws(' ', e.title, e.summary, e.venue_name)), "
+                    f"'{ACCENTS_FROM}', '{ACCENTS_TO}'))")
+    hits, visible = [], []
+    for index, word in enumerate(dict.fromkeys(w for w in lexical_query(distinctive_keywords(plan.keywords))
+                                               .split(" | ") if w)):
+        params[f"word{index}"] = word
+        hits.append(f"(b.document @@ to_tsquery('french', %(word{index})s))::int")
+        visible.append(f"({visible_text} @@ to_tsquery('french', %(word{index})s))::int")
+    hits_sql = " + ".join(hits) or "0"
+    visible_sql = " + ".join(visible) or "0"
     sql = (
         f"WITH {', '.join(ctes)}\n"
-        f"SELECT {EVENT_COLUMNS}, ({category_sql}) AS category_match, ({keyword_sql}) AS keyword_match,\n"
+        f"SELECT {EVENT_COLUMNS}, ({category_sql}) AS category_match, ({hits_sql}) > 0 AS keyword_match,\n"
+        f"       ({hits_sql}) AS keyword_hits, ({visible_sql}) AS visible_hits,\n"
         f"       ({score_sql}) AS score\n"
         "FROM base AS b\n"
         "JOIN sortiria.v_upcoming_events AS e ON e.event_id = b.event_id\n"
         "LEFT JOIN sortiria.partners AS p ON p.partner_id = e.partner_id\n"
         + "".join(f"{join}\n" for join in joins)
-        + "ORDER BY keyword_match DESC, category_match DESC, score DESC, e.start_at\nLIMIT %(limit)s"
+        + "ORDER BY visible_hits DESC, keyword_hits DESC, category_match DESC, score DESC, e.start_at\n"
+        + "LIMIT %(limit)s"
     )
     return sql, params
 
@@ -392,6 +554,22 @@ WHERE comment_status = 'publie' AND comment <> ''
   AND %(venue)s <> ''
 ORDER BY updated_at DESC
 LIMIT %(limit)s"""
+
+# Nombre de notes sur le lieu, même sous le seuil de 3 où la moyenne s'affiche
+# (15/10/2026) : « 1 avis » plutôt que « pas encore d'avis » après avoir noté.
+VENUE_RATING_COUNT_SQL = """
+SELECT count(*) AS ratings
+FROM sortiria.event_ratings
+WHERE sortiria.normalize_city(city) = sortiria.normalize_city(%(city)s)
+  AND lower(btrim(venue_name)) = lower(btrim(%(venue)s))
+  AND %(venue)s <> ''"""
+
+# L'avis du visiteur sur cet événement (empreinte anonyme de son navigateur) :
+# il le revoit, avec l'état de son commentaire (publié, en relecture, refusé).
+OWN_RATING_SQL = """
+SELECT stars, comment, comment_status, updated_at
+FROM sortiria.event_ratings
+WHERE event_id = %(event_id)s AND user_key = %(user_key)s"""
 
 # « À ne pas manquer » : toutes les offres partenaires proposables (3 mois),
 # mises en avant d'abord, puis celles des 30 prochains jours, puis les autres.
@@ -515,6 +693,38 @@ def occurrence_key(row: Mapping[str, Any]) -> tuple[str, str, str]:
 
 
 MAX_PER_VENUE = 2          # diversité : pas plus de 2 propositions au même lieu
+PARTNER_TOP_RANK = 40      # sans type ni mot précis : une offre partenaire doit être parmi les 40 plus proches
+
+
+def partners_first(rows: list[dict[str, Any]], plan: QueryPlan, exact: bool) -> list[dict[str, Any]]:
+    """Place en tête les offres partenaires qui répondent à la demande (15/10/2026).
+
+    - Réponse exacte : une séance de partenaire déjà retenue respecte toutes
+      les contraintes (période, lieu, public, gratuit) et, si la question
+      précise un type ou des mots (« concert », « jazz »), elle les a aussi
+      (`keep_exact_matches`). Sans type ni mot précis, elle doit en plus être
+      parmi les plus proches de la question par le sens. Ces offres passent
+      en tête des cartes, dans leur ordre de pertinence.
+    - Pas de réponse exacte : une offre partenaire qui parle du sujet (mot ou
+      type demandé) reste en tête des cartes ; les autres quittent les cartes
+      d'idées voisines, les plus proches sont proposées à part, dans
+      l'encadré « offres partenaires » (`partner_offers`), et restent dans la
+      colonne de droite.
+    """
+
+    if not exact:
+        # Idées voisines : une offre partenaire qui parle du sujet (mot ou type
+        # demandé) reste dans les cartes, en tête ; les autres en sortent.
+        on_topic = [row for row in rows if row.get("partner_id") is not None
+                    and (row.get("keyword_match") or row.get("category_match"))]
+        return on_topic + [row for row in rows if row.get("partner_id") is None]
+    precise = bool(plan.categories) or bool(distinctive_keywords(plan.keywords))
+    ranked_by_meaning = any(row.get("score") for row in rows)
+    ahead, rest = [], []
+    for rank, row in enumerate(rows):
+        answers = precise or not ranked_by_meaning or rank < PARTNER_TOP_RANK
+        (ahead if row.get("partner_id") is not None and answers else rest).append(row)
+    return ahead + rest
 
 
 def group_occurrences(rows: Sequence[Mapping[str, Any]], now: datetime,
@@ -564,7 +774,8 @@ def sibling_rows(connection: Any, row: Mapping[str, Any], limit: int = 60) -> li
 
 
 def complete_occurrences(connection: Any, row: Mapping[str, Any], plan: QueryPlan,
-                         now: datetime) -> tuple[Mapping[str, Any], list[Mapping[str, Any]]]:
+                         now: datetime, found: Sequence[Mapping[str, Any]] = ()
+                         ) -> tuple[Mapping[str, Any], list[Mapping[str, Any]]]:
     """Séance montrée et autres dates d'une carte, d'après TOUTES les séances à venir.
 
     Correction du 15/10/2026 : la carte ne comptait que les séances trouvées par
@@ -572,10 +783,18 @@ def complete_occurrences(connection: Any, row: Mapping[str, Any], plan: QueryPla
     le 12 décembre alors qu'une séance avait lieu le 17 octobre. Maintenant :
     la séance montrée est la prochaine dans la période demandée, et toutes les
     autres sont comptées, comme dans le détail.
+
+    Correction du soir (évaluation des 100 recherches) : la séance montrée est
+    choisie parmi celles que la recherche a **trouvées** (`row` et `found`),
+    qui respectent toutes les contraintes. Chaque séance a son propre
+    enrichissement : pour « Halloween », la carte montrait la séance du 24/10
+    (sans Halloween) au lieu de celle du 31/10 ; pour « ados », une séance
+    sans le public ados.
     """
 
     everyone = [row, *sibling_rows(connection, row)]
-    in_period = [r for r in everyone if r["start_at"] < plan.end and (r.get("end_at") or r["start_at"]) >= plan.start]
+    matching = [row, *found]
+    in_period = [r for r in matching if r["start_at"] < plan.end and (r.get("end_at") or r["start_at"]) >= plan.start]
     main = min(in_period or [row], key=lambda r: (r["start_at"] < now, r["start_at"]))
     others = sorted((r for r in everyone if r["event_id"] != main["event_id"]), key=lambda r: r["start_at"])
     return main, others[:MAX_OTHER_DATES]
@@ -585,6 +804,13 @@ def other_dates(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, str]]:
     """Autres dates d'un événement, telles que l'interface les affiche."""
 
     return [{"event_id": str(row["event_id"]), "date": event_date_label(row)} for row in rows]
+
+
+def category_display(row: Mapping[str, Any]) -> str:
+    """Type de sortie tel qu'on l'écrit : « soirée », « théâtre », « marché »."""
+
+    category = str(row.get("category_norm") or row.get("category") or "").strip()
+    return CATEGORY_LABELS.get(category.lower(), category)
 
 
 def to_card(row: Mapping[str, Any], ref: int | None = None) -> dict[str, Any]:
@@ -604,8 +830,12 @@ def to_card(row: Mapping[str, Any], ref: int | None = None) -> dict[str, Any]:
         "city": str(row.get("city") or "").strip(),
         "zone": str(row.get("zone") or ""),
         "category": str(row.get("category_norm") or row.get("category") or "").strip(),
+        # Libellé affiché (« soirée », « théâtre ») ; la catégorie brute sert aux calculs.
+        "category_label": category_display(row),
         "price": price_label(row),
         "price_min": float(row["price_min"]) if row.get("price_min") is not None else None,
+        # Tous les publics (filtres, évaluation) ; l'interface ne répète pas
+        # celui qui dit la même chose que le type (« soirée »).
         "audiences": [PUBLIC_LABELS.get(item, item) for item in row.get("audiences") or []],
         "summary": short_summary(row),
         "url": str(row.get("url") or ""),
@@ -619,8 +849,11 @@ def to_card(row: Mapping[str, Any], ref: int | None = None) -> dict[str, Any]:
     }
 
 
-def event_detail(connection: Any, event_id: str, comments: int = 3) -> dict[str, Any] | None:
-    """Détail d'un événement proposable, avec les derniers avis publiés sur son lieu."""
+def event_detail(connection: Any, event_id: str, comments: int = 3,
+                 visitor_key: str | None = None) -> dict[str, Any] | None:
+    """Détail d'un événement proposable, avec les derniers avis publiés sur son
+    lieu, leur nombre, et l'avis du visiteur (`visitor_key` : empreinte de son
+    navigateur) s'il en a donné un."""
 
     rows = fetch_rows(connection, DETAIL_SQL, {"event_id": event_id}) or \
         fetch_rows(connection, RECENT_DETAIL_SQL, {"event_id": event_id})
@@ -640,6 +873,16 @@ def event_detail(connection: Any, event_id: str, comments: int = 3) -> dict[str,
         for item in fetch_rows(connection, VENUE_COMMENTS_SQL, {
             "city": row.get("city") or "", "venue": row.get("venue_name") or "", "limit": comments})
     ]
+    venue = {"city": row.get("city") or "", "venue": row.get("venue_name") or ""}
+    counted = fetch_rows(connection, VENUE_RATING_COUNT_SQL, venue)
+    card["venue_ratings"] = int(counted[0]["ratings"]) if counted else 0
+    card["my_rating"] = None
+    if visitor_key:
+        own = fetch_rows(connection, OWN_RATING_SQL, {"event_id": str(row["event_id"]), "user_key": visitor_key})
+        if own:
+            card["my_rating"] = {"stars": int(own[0]["stars"]), "comment": str(own[0]["comment"] or ""),
+                                 "comment_status": str(own[0]["comment_status"]),
+                                 "date": own[0]["updated_at"].astimezone(PARIS).strftime("%d/%m/%Y")}
     return card
 
 
@@ -769,6 +1012,8 @@ def events_for_prompt(cards: Sequence[Mapping[str, Any]]) -> str:
     lines = []
     for card in cards:
         details = [card["date"], card["place"], card["category"], card["price"]]
+        if card.get("partner"):
+            details.append("offre partenaire")
         if card["audiences"]:
             details.append("public : " + ", ".join(card["audiences"]))
         if card.get("other_dates"):
@@ -793,6 +1038,31 @@ def parse_answer(raw: str, count: int) -> tuple[str, list[str]]:
     answer = re.sub(r"\s+([.,;:!?])", r"\1", re.sub(r" {2,}", " ", answer)).strip()
     suggestions = [str(item).strip() for item in data.get("suggestions") or [] if str(item).strip()][:3]
     return answer, suggestions
+
+
+def order_cards(cards: list[dict[str, Any]], answer: str) -> tuple[list[dict[str, Any]], str]:
+    """Ordre des cartes affichées (15/10/2026) : d'abord les offres partenaires,
+    puis les événements que la réponse cite (dans l'ordre où elle les cite),
+    puis les autres. Les numéros sont refaits de 1 à n, et les citations de
+    la réponse ([5] → [2]) suivent, pour que [n] désigne toujours la n-ième carte.
+    """
+
+    cited: list[int] = []
+    for match in CITATION.finditer(answer):
+        ref = int(match.group(1))
+        if 1 <= ref <= len(cards) and ref not in cited:
+            cited.append(ref)
+    partners = [ref for ref in range(1, len(cards) + 1) if cards[ref - 1].get("partner")]
+    order = partners + [ref for ref in cited if ref not in partners]
+    order += [ref for ref in range(1, len(cards) + 1) if ref not in order]
+    new_ref = {old: new for new, old in enumerate(order, start=1)}
+    ordered = []
+    for old in order:
+        card = dict(cards[old - 1])
+        card["ref"] = new_ref[old]
+        ordered.append(card)
+    answer = CITATION.sub(lambda m: f"[{new_ref.get(int(m.group(1)), int(m.group(1)))}]", answer)
+    return ordered, answer
 
 
 def fallback_answer(cards: Sequence[Mapping[str, Any]], filters: QueryPlan | SearchFilters) -> tuple[str, list[str]]:
@@ -874,6 +1144,10 @@ class SearchResult:
     # Pas de réponse exacte : les offres de nos partenaires les plus proches
     # de la demande (affichées à part, dans un encadré « partenaire »).
     partner_offers: list[dict[str, Any]] = field(default_factory=list)
+    # Ce qui a manqué (15/10/2026), gardé dans le journal pour le bilan
+    # hebdomadaire de l'agent : mots écrits dans aucun titre de la base,
+    # contraintes relâchées, mots absents des propositions, sujet introuvable.
+    gaps: dict[str, Any] = field(default_factory=dict)
 
 
 def progress(step: str, status: str, message: str = "") -> dict[str, Any]:
@@ -884,12 +1158,15 @@ def progress(step: str, status: str, message: str = "") -> dict[str, Any]:
 
 def cache_key(question: str, context: str, filters: SearchFilters, now: datetime, version: str) -> str:
     """Empreinte de la demande : question et contexte normalisés, cases cochées,
-    jour, version du prompt et de la base."""
+    jour, version du prompt et de la base, synonymes appris (un synonyme
+    validé sert dès la question suivante, sans attendre la fin du cache)."""
 
     import hashlib
 
+    from app.query_understanding import learned_synonyms
+
     parts = [PROMPT_VERSION, version, now.astimezone(PARIS).date().isoformat(), plain(question), plain(context),
-             json.dumps(asdict(filters), sort_keys=True)]
+             json.dumps(asdict(filters), sort_keys=True), json.dumps(learned_synonyms(), sort_keys=True)]
     return hashlib.sha256("|".join(parts).encode("utf-8")).hexdigest()
 
 
@@ -1012,16 +1289,14 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
             vector = services.embed(embed_text)
         except Exception:  # noqa: BLE001 (sans vecteur, mots-clés et date : la recherche continue)
             degraded = True
-    sql, params = build_search_query(plan, vector)
-    candidates = fetch_rows(connection, sql, params)
+    candidates, params = fetch_candidates(connection, plan, vector)
     relaxed = ""
     if not candidates and plan.from_question:
         # Les contraintes lues dans la question ne laissent rien : on les
         # relâche (sauf la date) et Mistral le dira.
         relaxed = plan.describe()
         plan = plan.relaxed()
-        sql, params = build_search_query(plan, vector)
-        candidates = fetch_rows(connection, sql, params)
+        candidates, params = fetch_candidates(connection, plan, vector)
     how = " + ".join(part for part, used in (("sens", vector), ("mots-clés", params.get("lexical"))) if used)
     found = f"{len(candidates)} séances ({how or 'triées par date'})"
     if relaxed:
@@ -1032,23 +1307,82 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
     # Seulement ce qui répond exactement (mots précis, type demandé), quand il y
     # en a : 2 concerts à Mèze valent mieux que 2 concerts et 4 autres choses.
     candidates, words_found, type_found = keep_exact_matches(candidates)
+    words = distinctive_keywords(plan.keywords)
+    has_subject = bool(words) or bool(plan.categories)
+    # Sujet net : un type de sortie (« concert »), un genre (« cirque »,
+    # « jazz ») ou un mot qui figure dans des titres de la base (« photo »,
+    # « poterie ») ; un mot écrit dans aucun titre (« romantique ») est une
+    # ambiance, que seul le sens retrouve. Le vocabulaire n'est lu que si les
+    # mots manquent.
+    unknown_words: list[str] = []
+    precise_words: list[str] = []
+    if words and not words_found:
+        known = known_subjects(connection, words)
+        precise_words = [word for word in words if word in known or word in PRECISE_SUBJECTS
+                         or word.rstrip("sx") in PRECISE_SUBJECTS]
+        unknown_words = [word for word in words if word not in precise_words]
+    clear_subject = bool(plan.categories) or bool(precise_words)
+    widened: list[str] = []
+    nothing_on_subject = False
+    asked_plan = plan
+    # Le sujet manque avec ces contraintes (aucun mot ni type trouvé, ou un
+    # genre précis absent : des concerts mais pas de jazz) : on le cherche
+    # ailleurs (sans gratuit, sur 3 mois…) plutôt que des idées sans rapport.
+    if has_subject and not words_found and (not type_found or precise_words):
+        wider_rows, wider_plan, dropped = widen_for_subject(connection, plan, vector)
+        if wider_rows:
+            candidates, plan, widened = wider_rows, wider_plan, dropped
+        elif not type_found and clear_subject:
+            candidates, nothing_on_subject = [], True        # le sujet n'existe nulle part
+        # Sinon : les concerts trouvés (sans jazz), ou les idées voisines par le
+        # sens pour un mot d'ambiance ; Mistral dit ce qui manque.
+        words_found = any(row.get("keyword_match") for row in candidates)
+        type_found = any(row.get("category_match") for row in candidates)
     missing_words = distinctive_keywords(plan.keywords) if not words_found else []
-    exact = bool(candidates) and not relaxed and (type_found or not plan.categories) and not missing_words
+    # Exact seulement si la carte montre le sujet (15/10/2026, évaluation des
+    # 100 recherches) : des mots trouvés dans la seule description (« bière »
+    # dans le programme d'un bar) donnent des idées voisines, annoncées comme
+    # telles ; et tous les mots d'une expression doivent être là (« feu
+    # d'artifice » : pas seulement « feu »), sauf une alternative (« vins ou huîtres »).
+    shown_words = not words or any(int(row.get("visible_hits") or 0) for row in candidates) or not any(
+        "visible_hits" in row for row in candidates)
+    # Un synonyme appris est une alternative (« zumba » ou « fitness »), pas un mot de plus à exiger.
+    from app.query_understanding import learned_synonyms
+
+    synonyms = learned_synonyms()
+    core = [word for word in words if word not in synonyms and word not in synonyms.values()]
+    asked = len({word for word in lexical_query(core).split(" | ") if word})
+    best_hits = max((int(row.get("keyword_hits") or 0) for row in candidates), default=0)
+    partial = words_found and asked > 1 and best_hits < asked and " ou " not in f" {plain(question)} " \
+        and any("keyword_hits" in row for row in candidates)
+    # Le mot précis trouvé suffit (15/10/2026) : « cirque » est rangé en
+    # « spectacle », mais un stage de cirque répond aussi à « cirque ».
+    exact = bool(candidates) and not relaxed and not widened and not missing_words and shown_words \
+        and not partial and (type_found or words_found or not plan.categories)
+    # Offres partenaires qui répondent (au sujet, même élargi) : en tête des
+    # cartes ; sinon, hors des cartes.
+    candidates = partners_first(candidates, plan, exact or bool(widened))
     # Un événement à plusieurs dates ne prend qu'une carte (sa prochaine date),
     # les autres dates y sont rattachées.
     cards = []
-    for index, (row, _found) in enumerate(group_occurrences(candidates, now), start=1):
-        main, others = complete_occurrences(connection, row, plan, now)
+    for index, (row, found) in enumerate(group_occurrences(candidates, now), start=1):
+        main, others = complete_occurrences(connection, row, plan, now, found)
         card = to_card(main, index)
         card["other_dates"] = other_dates(others)
         cards.append(card)
-    matching = sum(1 for card in cards if card["category"].lower() in plan.categories)
+    # Du type demandé : par la catégorie, ou par le titre (« Atelier jeux »).
+    named = [word.rstrip("sx") for word in type_keywords(plan.keywords)]
+    matching = sum(1 for card in cards if card["category"].lower() in plan.categories
+                   or any(word and word in plain(card["title"]) for word in named))
     kept = f"{len(cards)} retenus"
     if plan.categories:
         kept += f", dont {matching} de type {category_label(plan.categories)}"
     # Rien d'exact : on propose aussi les offres partenaires les plus proches.
     offers: list[dict[str, Any]] = []
-    if not exact:
+    # Idées voisines : les offres partenaires les plus proches par le sens,
+    # à part. Sujet élargi : celles qui en parlent sont déjà dans les cartes ;
+    # sujet introuvable : pas d'offre sans rapport.
+    if not exact and not widened and not nothing_on_subject:
         try:
             offers = partner_offers(connection, plan, vector, [card["event_id"] for card in cards])
         except Exception:  # noqa: BLE001 (un plus : la réponse principale ne dépend pas d'elles)
@@ -1063,20 +1397,28 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
     if cards and services.write is not None:
         try:
             asked = writer_question(question, plan.categories, matching, relaxed=relaxed, context=embed_text,
-                                    missing_words=missing_words)
+                                    missing_words=missing_words, widened=widened, asked=asked_plan.describe())
             raw, tokens, model = services.write(asked, plan, cards)
             answer, suggestions = parse_answer(raw, len(cards))
         except Exception:  # noqa: BLE001 (Mistral absent ou réponse illisible : réponse simple)
             degraded = True
             answer, suggestions = fallback_answer(cards, plan)
+    elif nothing_on_subject:
+        subject = " ".join(precise_words) or category_label(plan.categories)
+        answer = (f"Je n'ai trouvé aucun événement sur « {subject} » dans notre base, ni pour "
+                  f"{asked_plan.describe()}, ni sur les 3 prochains mois dans toute la zone.")
+        suggestions = []
     else:
         answer, suggestions = fallback_answer(cards, plan)
     suggestions = suggestions or default_suggestions(plan)
+    cards, answer = order_cards(cards, answer)
     yield progress(STEP_WRITE, "completed", "réponse sourcée" if not degraded else "réponse simplifiée")
 
     result = SearchResult(answer=answer, events=cards, suggestions=suggestions, filters=plan.describe(),
                           degraded=degraded, tokens=tokens, context=embed_text[-1000:], exact=exact,
-                          partner_offers=offers)
+                          partner_offers=offers,
+                          gaps={"mots_inconnus": unknown_words, "elargi": widened,
+                                "mots_absents": missing_words, "sujet_introuvable": nothing_on_subject})
     if key and cards and not degraded:
         write_cache(connection, key, question, plan, result, version, now)
     if services.log:
@@ -1086,7 +1428,8 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
 
 
 def writer_question(question: str, categories: Sequence[str], matching: int, *,
-                    relaxed: str = "", context: str = "", missing_words: Sequence[str] = ()) -> str:
+                    relaxed: str = "", context: str = "", missing_words: Sequence[str] = (),
+                    widened: Sequence[str] = (), asked: str = "") -> str:
     """Demande transmise à Mistral, avec les précisions utiles : relance d'une
     question précédente, type de sortie absent, contraintes relâchées."""
 
@@ -1102,6 +1445,10 @@ def writer_question(question: str, categories: Sequence[str], matching: int, *,
     if relaxed:
         notes.append(f"Rien ne correspond exactement à « {relaxed} » : la recherche a été élargie. "
                      "Dis-le d'abord, puis présente ces idées voisines.")
+    if widened:
+        notes.append(f"Rien sur ce sujet pour « {asked} ». Les événements de la liste parlent bien du sujet, "
+                     f"mais sans ces contraintes : {', '.join(widened)}. Dis-le d'abord en une phrase, "
+                     "puis présente-les en précisant ce qui diffère (prix, date, lieu, public).")
     return question + "".join(f"\n({note})" for note in notes)
 
 
@@ -1130,7 +1477,10 @@ def log_request(connection: Any, question: str, filters: SearchFilters, result: 
         rows = fetch_rows(connection, LOG_SQL, {
             "question": question or "(filtres seuls)",
             # Filtres cochés et contraintes comprises : la base du suivi de précision.
-            "constraints": json.dumps({**asdict(filters), **({"compris": plan_summary(plan)} if plan else {})},
+            # « recherche » : réponse exacte ou non, et ce qui a manqué (bilan
+            # hebdomadaire de l'agent, `fetch_search_gaps`).
+            "constraints": json.dumps({**asdict(filters), **({"compris": plan_summary(plan)} if plan else {}),
+                                       "recherche": {"exact": result.exact, **result.gaps}},
                                       ensure_ascii=False),
             "event_ids": [card["event_id"] for card in result.events],
             "status": "ok" if result.events else "aucun_resultat",

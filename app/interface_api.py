@@ -93,11 +93,16 @@ def search_stream(
 
 
 @router.get("/evenements/{event_id}")
-def event_detail(event_id: str, connection: Any = Depends(get_connection)) -> dict[str, Any]:  # noqa: B008
+def event_detail(event_id: str, visiteur: str | None = Query(default=None, min_length=16, max_length=100),
+                 connection: Any = Depends(get_connection)) -> dict[str, Any]:  # noqa: B008
     """Détail d'un événement encore proposable, ou passé depuis moins de
-    7 jours (pour pouvoir le noter)."""
+    7 jours (pour pouvoir le noter). `visiteur` : identifiant aléatoire du
+    navigateur, pour lui renvoyer son propre avis (jamais stocké en clair)."""
 
-    detail = search_service.event_detail(connection, event_id)
+    from src.event.event_ratings import user_key
+
+    detail = search_service.event_detail(connection, event_id,
+                                         visitor_key=user_key(visiteur) if visiteur else None)
     if detail is None:
         raise HTTPException(status_code=404, detail="Événement introuvable ou passé.")
     return detail

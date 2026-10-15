@@ -230,6 +230,37 @@ GROUP BY 1, 2
 
 PURGE_OLD_DATA_SQL = "SELECT requests_deleted, cache_deleted, runs_deleted FROM sortiria.purge_old_data()"
 
+# Vocabulaire des titres (15/10/2026, sql/sortiria/07_vocabulary.sql) : les
+# sujets que la recherche reconnaît, recalculés après chaque collecte.
+REFRESH_TITLE_VOCABULARY_SQL = "SELECT sortiria.refresh_title_vocabulary()"
+
+# Bilan de la recherche (15/10/2026) : ce que les utilisateurs ont cherché sans
+# trouver, d'après le journal `rag_requests` (champ constraints->'recherche').
+RECENT_SEARCHES_CTE = """
+WITH recent AS (
+    SELECT lower(btrim(question)) AS question, status, constraints -> 'recherche' AS r
+    FROM sortiria.rag_requests
+    WHERE asked_at >= now() - make_interval(days => %(days)s) AND question <> '(filtres seuls)'
+)
+"""
+SEARCH_GAPS_TOTALS_SQL = RECENT_SEARCHES_CTE + """
+SELECT count(*) AS questions,
+       count(*) FILTER (WHERE status = 'aucun_resultat' OR (r ->> 'exact') = 'false') AS not_exact,
+       count(*) FILTER (WHERE status = 'aucun_resultat' OR (r ->> 'sujet_introuvable') = 'true') AS no_answer
+FROM recent
+"""
+SEARCH_GAPS_WORDS_SQL = RECENT_SEARCHES_CTE + """
+SELECT word, count(*) AS times
+FROM recent, jsonb_array_elements_text(COALESCE(r -> 'mots_inconnus', '[]'::jsonb)) AS word
+GROUP BY word ORDER BY times DESC, word LIMIT %(limit)s
+"""
+SEARCH_GAPS_QUESTIONS_SQL = RECENT_SEARCHES_CTE + """
+SELECT question, count(*) AS times
+FROM recent
+WHERE status = 'aucun_resultat' OR (r ->> 'exact') = 'false'
+GROUP BY question ORDER BY times DESC, question LIMIT %(limit)s
+"""
+
 # Partenaires (ajout du 14/10/2026) : la configuration fait foi pour le nom, le
 # secteur, le site et la fin du partenariat ; les notes saisies en base restent.
 UPSERT_PARTNER_SQL = """
@@ -689,3 +720,35 @@ def purge_old_data(connection: Any) -> dict[str, int]:
         cursor.execute(PURGE_OLD_DATA_SQL)
         row = cursor.fetchone() or (0, 0, 0)
     return {"requests": int(row[0]), "cache": int(row[1]), "runs": int(row[2])}
+
+
+def refresh_title_vocabulary(connection: Any) -> int:
+    """Recalcule le vocabulaire des titres (sujets reconnus par la recherche).
+    Renvoie le nombre de racines de mots connues."""
+
+    with connection.cursor() as cursor:
+        cursor.execute(REFRESH_TITLE_VOCABULARY_SQL)
+        row = cursor.fetchone()
+    return int(row[0]) if row and row[0] is not None else 0
+
+
+def fetch_search_gaps(connection: Any, days: int = 7, limit: int = 10) -> dict[str, Any]:
+    """Ce que les utilisateurs ont cherché sans trouver ces `days` derniers jours.
+
+    - questions posées, sans réponse exacte, sans aucune réponse sur le sujet ;
+    - mots écrits dans aucun titre de la base (« zumba ») : une source, un
+      partenaire ou un synonyme à envisager ;
+    - questions sans réponse exacte les plus fréquentes.
+    L'agent le met dans son bilan du lundi ; il ne change rien lui-même.
+    """
+
+    params = {"days": int(days), "limit": int(limit)}
+    with connection.cursor() as cursor:
+        cursor.execute(SEARCH_GAPS_TOTALS_SQL, params)
+        questions, not_exact, no_answer = cursor.fetchone() or (0, 0, 0)
+        cursor.execute(SEARCH_GAPS_WORDS_SQL, params)
+        words = [(str(word), int(times)) for word, times in cursor.fetchall()]
+        cursor.execute(SEARCH_GAPS_QUESTIONS_SQL, params)
+        unanswered = [(str(question), int(times)) for question, times in cursor.fetchall()]
+    return {"days": int(days), "questions": int(questions or 0), "not_exact": int(not_exact or 0),
+            "no_answer": int(no_answer or 0), "unknown_words": words, "unanswered": unanswered}

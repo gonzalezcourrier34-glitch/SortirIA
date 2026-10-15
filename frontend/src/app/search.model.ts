@@ -35,6 +35,8 @@ export interface EventCard {
     start_at: string;
     place: string;
     category: string;
+    /** Type tel qu'on l'écrit (« soirée », « théâtre ») : c'est lui qui s'affiche. */
+    category_label: string;
     price: string;
     audiences: string[];
     summary: string;
@@ -67,6 +69,19 @@ export interface EventDetail extends EventCard {
     can_rate: boolean;
     /** Sinon, date à partir de laquelle il sera possible (« Sam. 17 oct. »). */
     rate_from: string;
+    /** Notes données sur ce lieu, même sous le seuil de 3 où la moyenne s'affiche. */
+    venue_ratings: number;
+    /** L'avis de ce visiteur sur cet événement, s'il en a donné un. */
+    my_rating: OwnRating | null;
+}
+
+
+/** L'avis que le visiteur a donné (il le revoit dans le détail). */
+export interface OwnRating {
+    stars: number;
+    comment: string;
+    comment_status: 'aucun' | 'publie' | 'refuse' | 'en_attente';
+    date: string;
 }
 
 

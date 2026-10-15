@@ -17,6 +17,10 @@ docker compose up -d db   # PostgreSQL 16 avec l'extension pgvector
 uv run python -m scripts.init_db --verifier   # schéma créé au premier démarrage
 ```
 
+Après une mise à jour du schéma (nouveau fichier dans `sql/sortiria/`, comme
+`07_vocabulary.sql` le 15/10/2026) : `uv run python -m scripts.init_db`. Les
+fichiers sont réexécutables.
+
 ## Tests
 
 ```bash
@@ -27,15 +31,26 @@ Les tests n'ont besoin d'aucune clé d'API : `tests/conftest.py` crée des secre
 et tous les appels réseau sont simulés.
 
 !!! note "Tests vérifiés au 15/10/2026"
-    3 421 tests passent, dont ceux du schéma sur un vrai PostgreSQL. Les tests RSS
+    3 458 tests passent, dont ceux du schéma sur un vrai PostgreSQL. Les tests RSS
     (`feedparser`) n'ont pas pu être lancés dans l'environnement de vérification ;
     ils doivent être relancés avec `uv run pytest` après `uv sync`.
 
 ## API et interface
 
 ```bash
-uv run uvicorn app.main:app --reload            # API sur http://127.0.0.1:8000/docs
+uv run uvicorn app.main:app --reload --port 8010   # API sur http://127.0.0.1:8010/docs (8000 : triage médical)
 cd frontend && npm start                       # interface (http://localhost:4210)
+```
+
+## Agent de collecte
+
+```bash
+uv run python -m agent                     # collecte complète (chaque nuit à 2 h en production)
+uv run python -m agent --essai             # sans écrire en base
+uv run python -m agent --bilan-recherche   # ce que les gens ont cherché sans trouver (7 jours)
+uv run python -m agent --bilan-recherche --apprendre   # + propositions de l'agent
+uv run python -m agent.proposals           # propositions en attente (--accepter N, --refuser N)
+uv run python -m scripts.eval_recherche    # évaluation de la recherche (50 questions)
 ```
 
 ## Image Docker de l'API
@@ -48,5 +63,5 @@ docker build -f docker/Dockerfile.api -t sortiria-api .
 
 ```bash
 uv sync --group docs
-uv run mkdocs serve       # http://127.0.0.1:8000
+uv run mkdocs serve -a 127.0.0.1:8001   # http://127.0.0.1:8001 (8000 : triage médical)
 ```

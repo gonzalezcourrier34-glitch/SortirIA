@@ -79,6 +79,9 @@ class CollectionServices:
     judge: Callable[[list[dict[str, Any]]], tuple[dict[str, Any], dict[str, dict[str, int]]]] | None = None
     # Suivi des exécutions (MLflow en production ; par défaut : rien).
     tracker: Any = field(default_factory=lambda: NullTracker())
+    # Le lundi : apprend des recherches ratées de la semaine (agent/search_learning.py) ;
+    # reçoit (bilan de la recherche, date) et renvoie un LearningResult. None : jamais.
+    learn_searches: Callable[[Mapping[str, Any], Any], Any] | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -283,6 +286,67 @@ def judge_events(rows: list[dict[str, Any]]) -> tuple[dict[str, Any], dict[str, 
     return judge_with_mistral(rows)
 
 
+MAX_AGENDAS_PER_WORD = 40     # agendas de la zone interrogés pour un mot (un appel chacun)
+
+
+def find_agendas_for_words(words: Sequence[str]) -> dict[str, dict[str, dict[str, Any]]]:
+    """Cherche des sujets (« zumba ») dans les agendas OpenAgenda de la zone
+    que la collecte ne lit pas encore.
+
+    Les agendas de la zone sont trouvés comme pour la découverte (recherche par
+    termes : Montpellier, Sète, Thau…) ; pour chacun, une seule page filtrée
+    par le mot (`oaq[what]`), puis le même filtre géographique que la
+    collecte. Renvoie {mot: {agenda: {"events": n, "examples": [titres]}}}.
+    """
+
+    from src.event.event_normalizer import pick_localized
+    from src.event.openagenda_mapper import get_path
+    from src.extractors.apis.source.openagenda_extractor import (
+        OPENAGENDA_EXTRACTOR,
+        fetch_agenda_page,
+        get_api_key,
+        is_in_area,
+        search_agenda_uids,
+    )
+
+    source = dict(OPENAGENDA_EXTRACTOR.source)
+    api_key = get_api_key()
+    configured = {str(uid).strip() for uid in source.get("agenda_uids") or []}
+    agendas = [uid for uid in search_agenda_uids({**source, "agenda_uids": []}, api_key) if uid not in configured]
+    found: dict[str, dict[str, dict[str, Any]]] = {}
+    for word in words:
+        for uid in agendas[:MAX_AGENDAS_PER_WORD]:
+            try:
+                events = fetch_agenda_page({**source, "search_text": word}, uid, api_key, 0, 50)
+            except Exception:  # un agenda privé ou en erreur n'arrête pas la recherche
+                continue
+            titles = [pick_localized(get_path(item, ("title",)), "fr") for item in events if is_in_area(item, source)]
+            titles = [str(title) for title in titles if title]
+            if titles:
+                found.setdefault(word, {})[uid] = {"events": len(titles), "examples": titles[:3]}
+    return found
+
+
+def known_title_words(words: Sequence[str]) -> set[str]:
+    """Mots présents dans les titres de la base (vocabulaire des titres)."""
+
+    from app.search_service import known_subjects
+
+    with connect_postgres() as connection:
+        return known_subjects(connection, list(words))
+
+
+def learn_from_week(gaps: Mapping[str, Any], today: Any) -> Any:
+    """Apprentissage réel : Mistral lit les mots, la base vérifie, OpenAgenda cherche."""
+
+    from agent.search_learning import learn_from_searches, read_words_with_mistral
+
+    return learn_from_searches(
+        gaps, today, read_words=read_words_with_mistral, known_words=known_title_words,
+        find_agendas=find_agendas_for_words if source_is_configured("openagenda") else None,
+    )
+
+
 def build_default_services() -> CollectionServices:
     """Services réels : moteur CheckIt.AI, PostgreSQL, Mistral."""
 
@@ -301,4 +365,5 @@ def build_default_services() -> CollectionServices:
         moderate=moderate_comment,
         judge=judge_events if os.getenv("JUGE_ACTIF", "true").lower() not in ("false", "0", "non") else None,
         enrich=enrich_events if os.getenv("ENRICHISSEMENT_ACTIF", "true").lower() not in ("false", "0", "non") else None,
+        learn_searches=learn_from_week,
     )

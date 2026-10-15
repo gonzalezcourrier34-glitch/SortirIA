@@ -31,7 +31,7 @@ SQL_DIR = Path(__file__).resolve().parents[1] / "sql" / "sortiria"
 EXPECTED_TABLES = (
     "sources", "partners", "partner_imports", "events", "collect_runs",
     "collect_run_sources", "rag_requests", "feedback", "query_cache",
-    "agent_proposals", "deleted_event_stats", "event_ratings",
+    "agent_proposals", "deleted_event_stats", "event_ratings", "title_vocabulary",
 )
 EXPECTED_VIEWS = ("v_upcoming_events", "v_coverage", "v_collect_health", "v_daily_quality",
                   "v_venue_ratings", "v_partner_ratings")

@@ -91,6 +91,9 @@ def test_relaxed_plan_keeps_ticked_filters_and_date() -> None:
 def test_follow_up_keeps_the_previous_request() -> None:
     assert is_follow_up("et pour les enfants ?") and is_follow_up("plutôt samedi")
     assert not is_follow_up("je cherche une exposition de photographie à Montpellier")
+    # Un nouveau sujet, même en un mot, est une nouvelle demande (15/10/2026).
+    assert not is_follow_up("photo") and not is_follow_up("du jazz") and not is_follow_up("un concert")
+    assert is_follow_up("à Sète ?") and is_follow_up("en famille") and is_follow_up("moins cher")
     merged = combine(understand("concert de jazz à Sète samedi", NOW), understand("et dimanche ?", NOW))
     assert merged.period[2] == "dim. 18 oct." and merged.cities == ("sete",)
     assert merged.categories == ("concert",) and "jazz" in merged.keywords

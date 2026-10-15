@@ -6,10 +6,10 @@ et le fichier d'origine, et ce qui a été modifié pour SortirIA le cas échéa
 
 | Page | Contenu | Origine |
 | --- | --- | --- |
-| [RAG et API](rag.md) | `app/` | Assistant RAG OpenAgenda (projet 6) |
+| [Recherche et API](rag.md) | `app/` | Nouveau (point de départ : Assistant RAG OpenAgenda, projet 6) |
 | [Configuration](config.md) | `config/` | CheckIt.AI (projet 12) |
 | [Collecte - extracteurs](extracteurs.md) | `src/extractors/`, `src/robot/` | CheckIt.AI (projet 12) |
 | [Collecte - traitement](traitement.md) | `src/event/` (nouveau), `src/article/`, `src/cleaner/` | CheckIt.AI (projet 12) |
 | [Collecte - utilitaires](stockage.md) | `src/utils/`, `src/logger.py` | CheckIt.AI (projet 12) |
 | [Agent de collecte](agent.md) | `agent/` | Nouveau (organisation reprise de Chess Agent, projet 13) |
-| [Orchestration Airflow](dags.md) | `dags/` | CheckIt.AI (projet 12) |
+| [Orchestration Airflow](dags.md) | `dags/` | Nouveau (DAG nocturne qui lance l'agent) |

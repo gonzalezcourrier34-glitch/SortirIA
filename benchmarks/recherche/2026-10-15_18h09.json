@@ -1,0 +1,2093 @@
+{
+  "date": "2026-10-15T18:09:51+02:00",
+  "questions": 100,
+  "comprehension": 1.0,
+  "precision": 0.808,
+  "sans_resultat": 0,
+  "idees_voisines": 1,
+  "latence_mediane_s": 0.87,
+  "latence_p95_s": 1.47,
+  "detail": [
+    {
+      "question": "concert",
+      "compris": "les 3 prochains mois · concert",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Concert rock (exemple)",
+        "Concert jazz au port (exemple)",
+        "CONCERT HARMONIE",
+        "CONCERTI POUR PIANOS",
+        "CONCERT BRAHMS",
+        "CONCERT IN CHORUS : CHOEUR DE CHAMBRE A CAPPELLA",
+        "CONCERT SYMPHONIQUE",
+        "CONCERT DE L’AVENT BRITTEN • DOHNÁNYI • COPLAND"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "concert gratuit",
+      "compris": "les 3 prochains mois · gratuit · concert",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "CONCERT HARMONIE",
+        "CONCERTI POUR PIANOS",
+        "CONCERT DE LA SAINTE CÉCILE",
+        "CONCERT SYMPHONIQUE",
+        "SALON DE MUSIQUE",
+        "RÉSILIENCE",
+        "Gens du Québec - Céline Faucher & Manu Bergon",
+        "Chansons françaises par Philippe Lafon et François Fava"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "jazz",
+      "compris": "les 3 prochains mois · concert",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Concert jazz au port (exemple)",
+        "CONCERT : QUATUOR ESPRIT JAZZ",
+        "MARTA JAZZ-CLUB BRAD LEALI TRIO",
+        "KOA JAZZ FESTIVAL",
+        "¡YA VOY ! KOA JAZZ FESTIVAL",
+        "THE JAZZ ROOM : UN HOMMAGE À FRANK SINATRA ET À LOUIS ARMSTRONG",
+        "DUO TWOFER",
+        "CONCERT : SWING COMBO OCCITANIE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "rock",
+      "compris": "les 3 prochains mois · concert",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 7,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "Concert rock (exemple)",
+        "EXPOSITION ROCK ECANTO - LA DISTILLERIE",
+        "Philippe Manoeuvre - Un enfant du Rock raconte",
+        "CLUB SANDWICH - 40 ANS DU ROCKSTORE",
+        "INDIAN OCEAN VIBES",
+        "SOIREE RESTO LIVE AVEC LE DUO \"UP RISE\" AVEC FABIEN & ALBAN",
+        "LE CLUB DU DISQUE | QUEEN – A NIGHT AT THE OPERA",
+        "BASED MTP INVITE SHELDON ET PEET"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "rap",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 7,
+      "correctes": 6,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "CONCERT NES - BASED MTP",
+        "A6EL + ROMSII",
+        "BASED MTP INVITE NES",
+        "BASED MTP INVITE SHELDON ET PEET",
+        "BIGFLO & OLI",
+        "COCO GROOVE",
+        "GINGER x NTABA2LONDON"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "électro",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 7,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "Soirée DJ électro (exemple)",
+        "SOLEIL D'HIVER | SOLO POUR OUD ÉLECTRONIQUE, BANDES MAGNÉTIQUES ET PROJECTIONS | GRÉGORY DARGENT",
+        "Les stages vacances de Toussaint sont là ! Code, Création de jeux vidéo, électroniques ..",
+        "A6EL + ROMSII",
+        "KICK-OFF PARTY BY COQUILLE",
+        "Magie Noire 13th Anniversary w/ Lamalice (live) & Monile",
+        "NUIT ORANGE- MUSÉE FABRE",
+        "MASHUP | Student Party"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "DJ",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 7,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "Soirée DJ électro (exemple)",
+        "KICK-OFF PARTY BY COQUILLE",
+        "GETTIN GROOVE",
+        "LA VOILE ROSE",
+        "DJK PARIS - American Borderline",
+        "MY LIFE X JORIS DELACROIX LIVE ROMAIN GARCIA",
+        "BRUNCH SONORE",
+        "VOS SOIRÉES AU JOST"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "musique classique",
+      "compris": "les 3 prochains mois · concert",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 5,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots",
+        "type"
+      ],
+      "titres": [
+        "CANDLELIGHT : LES CLASSIQUES DE NOËL",
+        "AU CŒUR DU 7ÈME ART EN MUSIQUE",
+        "CONCERT : QUATUOR ESPRIT JAZZ",
+        "CONCERT \"TRIO TROMPETTES ORGUE\"",
+        "ALESSANDRA NOVAGA - CONCERT DE GUITARE",
+        "QUARTUOR COQUELICOT",
+        "CANDLELIGHT : LES QUATRE SAISONS DE VIVALDI",
+        "LA BONNE FRANQUETTE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "chorale",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 5,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "CHANT CHORAL",
+        "CONCERT DE LA CHORALE LES TIMBRÉS",
+        "LES CHŒURS DU SUD",
+        "OPÉRA JUNIOR & BUSAN METROPOLITAN JUNIOR CHORUS",
+        "CONCERT DE L’AVENT BRITTEN • DOHNÁNYI • COPLAND",
+        "CONCERT \"TRIO TROMPETTES ORGUE\"",
+        "CONCERT IN CHORUS : CHOEUR DE CHAMBRE A CAPPELLA",
+        "Nadal occitan"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "opéra",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "VACANCES DE LA TOUSSAINT À L'OPÉRA COMÉDIE",
+        "PASSION OPÉRA",
+        "LE BAISER DE LA FÉE THÉODORE AKIMENKO",
+        "L’OPÉRA DES FLEURS HWAJEONGA UZONG CHOE | CRÉATION FRANÇAISE",
+        "LES COULISSES DE L'OPÉRA COMÉDIE",
+        "LE CLUB DU DISQUE | QUEEN – A NIGHT AT THE OPERA",
+        "OPÉRA JUNIOR & BUSAN METROPOLITAN JUNIOR CHORUS",
+        "SOPRANE | DAVID GAUCHARD – EMMANUELLE HIRON – JEANNE CROUSAUD – CIE L’UNIJAMBISTE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "festival",
+      "compris": "les 3 prochains mois · festival",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "RIDE & VIBE FESTIVAL",
+        "FESTIVAL VA SAVOIR ?! 2026",
+        "FESTIVAL EX TENEBRIS LUX – ACTE VIII",
+        "FESTIVAL DE LA PHOTO MONTARNENNE",
+        "FESTIVAL ABRACADA BOUH",
+        "HALLOWEEN UKULÉLÉ FESTIVAL",
+        "L'ILLUMINÉ FESTIVAL",
+        "KOA JAZZ FESTIVAL"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "théâtre",
+      "compris": "les 3 prochains mois · théâtre ou spectacle",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Spectacle de marionnettes (exemple)",
+        "OSONS LE THÉÂTRE THÉÂTRE AMATEUR AVEC LA FNCTA 34",
+        "LES PAS PERDUS — THÉÂTRE AMATEUR PAR LA TROUPE DE L'UTL34",
+        "Festival de théâtre amateur",
+        "JOURNÉES JEAN VILAR : VOUS ÊTES ICI | ÉDITH AMSELLEM – CIE ERD’O",
+        "Le rire dans l'histoire du théâtre",
+        "STAGES ET ATELIERS - THÉÂTRE BEAUX- ARTS TABARD",
+        "LES THÉÂTRALES DE GIGEAN — L’ILLUSION CONJUGALE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "spectacle",
+      "compris": "les 3 prochains mois · spectacle ou théâtre ou danse",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 6,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "type"
+      ],
+      "titres": [
+        "Spectacle de marionnettes (exemple)",
+        "Bal folk (exemple)",
+        "Soirée salsa (exemple)",
+        "SPECTACLE : QUI TOC À MON CŒUR ?",
+        "SPECTACLE : L’ART D’ACCOMMODER LES RESTES",
+        "SPECTACLE D’IMPROVISATION : DESTINATION LE BONHEUR",
+        "SPECTACLE « LE PETIT CHAT MAGICIEN »",
+        "SPECTACLE CABARET « DEUX BRÉSILIENS À PARIS »"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "spectacle enfants",
+      "compris": "les 3 prochains mois · famille · spectacle ou théâtre ou danse",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 7,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "type"
+      ],
+      "titres": [
+        "Spectacle de marionnettes (exemple)",
+        "Bal folk (exemple)",
+        "SPECTACLE : UN CHOU EN HIVER",
+        "SPECTACLE « LE PETIT CHAT MAGICIEN »",
+        "SPECTACLE : QUI TOC À MON CŒUR ?",
+        "PITCHOUN ET LES MONDES CÉLESTES",
+        "SPECTACLE D'HALLOWEEN \" LA NUIT OÙ JE SUIS DEVENUE GÉANTE\"",
+        "SPECTACLE JEUNE PUBLIC : POUR Y CUEILLIR DU ROMARIN"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "humour",
+      "compris": "les 3 prochains mois · spectacle ou théâtre",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "SPECTACLE HUMOUR DE KEVIN LEVY \"COCU\"",
+        "SPECTACLE HUMOUR DE TOM BALDETTI \"TOME 1\"",
+        "Festival de théâtre amateur",
+        "JUVI'RIRE PREMIÈRE ÉDITION",
+        "PARADOXE",
+        "SOIRÉE STAND UP AU CLANDESTIN",
+        "DRÔLE D’ÉPOQUE",
+        "EXPOSITION \"DUBOUT 50 ANS, DÉJÀ !\""
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "stand-up",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 6,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "STAND UP – SOUTH COMEDY CLUB",
+        "SOUTH COMEDY CLUB À LA BARBOTE",
+        "SOIRÉE STAND UP AU DOPPIO MALTO",
+        "STAND UP AU MELICE",
+        "DRÔLE D’ÉPOQUE",
+        "SOIRÉE STAND UP AU CLANDESTIN",
+        "AN IDIOT’S GUIDE TO WINE : VERRES DE VIN SUR FOND DE COMÉDIE",
+        "SPECTACLE HUMOUR DE KEVIN LEVY \"COCU\""
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "impro",
+      "compris": "les 3 prochains mois · théâtre ou spectacle",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 6,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots",
+        "type"
+      ],
+      "titres": [
+        "ATELIER IMPRO ADULTE",
+        "Les instantanés, duo d’impro + DE FIRN",
+        "SPECTACLE D’IMPROVISATION : DESTINATION LE BONHEUR",
+        "L'AGENCE TOURISTE IMPROVISE !",
+        "ATELIER INITIATION THÉÂTRE ADOS",
+        "JUVI'RIRE PREMIÈRE ÉDITION",
+        "REPRENONS",
+        "REPLAY"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "cirque",
+      "compris": "les 3 prochains mois · spectacle",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 6,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "Stage de cirque vacances (exemple)",
+        "STAGE DE CIRQUE ENFANTS 4-6 ANS ET 7-11 ANS",
+        "OVO – LE CIRQUE DU SOLEIL",
+        "LA VIE DE MA MÈRE | OLIVIER DEBELHOIR – CIE D’UN OURS",
+        "NOCTURNE (PARADE)",
+        "LA NOCE D'ALFONSE | CIRQUE D'ALFONSE",
+        "ÉCHAUFFEMENT OUVERT AU PUBLIC — CIRQUE ALFONSE",
+        "Jonglage et illusion \"Eclipse\" par Le Cirque des Petites Natures"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "magie",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 4,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "FESTIVAL MONDIAL DE LA MAGIE",
+        "MATINÉE DES BÉBÉS : Racontine «La magie de l’hiver»",
+        "ESCAPE GAME GÉANT LA QUÊTE FANTASTIQUE - LE SECRET DE L'ALCHIMISTE",
+        "Magie Noire 13th Anniversary w/ Lamalice (live) & Monile",
+        "SPECTACLE « LE PETIT CHAT MAGICIEN »",
+        "Rudy le renne a disparu",
+        "L’ANTRE MAGIQUE DE GEORGE MÉLIÈS",
+        "CABINET DE CURIOSITÉS MAGIQUE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "danse",
+      "compris": "les 3 prochains mois · danse",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 5,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "type"
+      ],
+      "titres": [
+        "Bal folk (exemple)",
+        "Soirée salsa (exemple)",
+        "DANS6T BOUZIANE BOUTELDJA",
+        "ATELIER DANSE-THÉÂTRE",
+        "MATINÉE DES BÉBÉS : Danse avec Mélina Doudoux",
+        "SPEED DATING 45-65 ANS AVEC SOIRÉE DANSANTE",
+        "PITCHOUN ET LES MONDES CÉLESTES",
+        "TERRAIN BORIS CHARMATZ MUETTE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "ballet",
+      "compris": "les 3 prochains mois · danse",
+      "ecarts_comprehension": [],
+      "propositions": 1,
+      "correctes": 1,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "BALLET OF LIGHTS : LA BELLE AU BOIS DORMANT DANS UN SPECTACLE ÉTINCELANT"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "marionnettes",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 7,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "Spectacle de marionnettes (exemple)",
+        "ATELIER MARIONNETTES",
+        "NOCTURNE (PARADE)",
+        "SPECTACLE : L’ART D’ACCOMMODER LES RESTES",
+        "CHOUETTES ET CHAUVE-SOURIS",
+        "FLOTTANTE",
+        "LE NOËL EXTRAORDINAIRE DU GRAND LOUP GRIS",
+        "SPECTACLE : UN CHOU EN HIVER"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "cabaret",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 7,
+      "correctes": 6,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "LA NUIT DES CAPUCINES",
+        "LA CRYPTE",
+        "MEURTRE EN COULISSE",
+        "LES REINES DU BURLESQUE",
+        "SPECTACLE CABARET « DEUX BRÉSILIENS À PARIS »",
+        "DRÔLE D’ÉPOQUE",
+        "MÉDITERRANÉE BURLESQUE FESTIVAL"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "soirée",
+      "compris": "les 3 prochains mois · soirée · soirée",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 2,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "public"
+      ],
+      "titres": [
+        "Soirée DJ électro (exemple)",
+        "Soirée salsa (exemple)",
+        "SOIRÉE AU COIN DU JEU",
+        "VOS SOIRÉES AU JOST",
+        "SOIRÉE AU COIN DU JEU : Spécial pirate-aventure",
+        "Résidence l’Epopée : Clôture de la résidence",
+        "LA NUIT DES COPINES",
+        "SOIRÉE STAND UP AU CLANDESTIN"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "ce soir",
+      "compris": "aujourd'hui (le soir)",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "SOIRÉE ASTRONOMIE",
+        "APÉRO LITTÉRAIRE !",
+        "EXPOSITION TEMPORAIRE LA NUIT MONTPELLIÉRAINE - KALEIDO BAR",
+        "Théâtre : SILENCE, ÇA TOURNE de Chrystèle KHODR et Nadim DEAIBES",
+        "A6EL + ROMSII",
+        "MASHUP | Student Party",
+        "ASTRONOMIE : OBSERVEZ LA LUNE, JUPITER… AU TÉLESCOPE !",
+        "Cours d'aquarelle avec Valfantasy"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "karaoké",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 2,
+      "correctes": 1,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "Karaoké géant (exemple)",
+        "CONCERT ACOUSTIQUE LIVE DE YANIN SAAVEDRA"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "blind test",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 3,
+      "correctes": 2,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "Blind test géant (exemple)",
+        "LE BLIND TEST DU VIN AU GAZETTE CAFÉ",
+        "PROGRAMMATION OCTOBRE - LE RÉSERVOIR"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "quiz",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 5,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "APÉRO QUIZZ SPÉCIAL HALLOWEEN",
+        "HALLOWEEN - GOÛTER-QUIZZ \"DE LA MORT QUI TUE\"",
+        "APÉROQUIZ",
+        "CINÉ JEU(NES)",
+        "VIGNOBLES EN SCÈNE – IMMERSION AU CŒUR DE LA DÉGUSTATION",
+        "MONTPELLIER WINE SHOW AVEC RAISIN D'ÊTRE EVENTS",
+        "FESTIVAL VA SAVOIR ?! 2026",
+        "CENTRE HISTORIQUE POUR LES ENFANTS AVEC PERETTE LA MOUETTE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "bal",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Bal folk (exemple)",
+        "Balèti pour tous",
+        "Initiation et baléti à bretelles",
+        "Balèti",
+        "BAL TRADITIONNEL AVEC OYNA K",
+        "FOLLE DE RAGE X HALLE TROPISME : LE GRAND BAL D’HALLOWEEN",
+        "SOIRÉE HALLOWEEN",
+        "Martror"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "salsa",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 5,
+      "correctes": 2,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "Soirée salsa (exemple)",
+        "CALLE LATINA #2 by Nuit Brune",
+        "COCO GROOVE",
+        "SPEED DATING 45-65 ANS AVEC SOIRÉE DANSANTE",
+        "ERWAN NAOUR & LÉNA VASSILIU DUO — LES ITINÉRANCES D'AUTOMNE DU FESTIVAL DE THAU"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "tango",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 2,
+      "correctes": 0,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "CONCERT : QUATUOR ESPRIT JAZZ",
+        "Jonglage et illusion \"Eclipse\" par Le Cirque des Petites Natures"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "apéro",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 5,
+      "correctes": 5,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "APÉRO LUDO",
+        "APÉRO QUIZZ SPÉCIAL HALLOWEEN",
+        "APÉRO LITTÉRAIRE !",
+        "APÉROQUIZ",
+        "APÉROQUIZ"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "bar",
+      "compris": "les 3 prochains mois · soirée",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 4,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "public"
+      ],
+      "titres": [
+        "Blind test géant (exemple)",
+        "Karaoké géant (exemple)",
+        "RÉVEILLON AVEC BARBARA BUTCH",
+        "SOUTH COMEDY CLUB À LA BARBOTE",
+        "SOIRÉE D'HALLOWEEN HAPPY HOUR AU BIKUBE",
+        "Tablée gourmande chez Simplici'Thé / Balaruc les bains",
+        "SOIRÉE JEUX « ALEA JACTA EST »",
+        "EXPOSITION ROCK ECANTO - LA DISTILLERIE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "exposition",
+      "compris": "les 3 prochains mois · exposition",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Exposition photo de l'étang (exemple)",
+        "EXPOSITION «CLAIR OBSCUR: EXPEDITION 33 – LA TOILE AUX RÊVES »",
+        "Exposition A+Art \"La Part de l'Art #1\"",
+        "Exposition photos \"TOUT DOIT DISPARAITRE\"",
+        "EXPOSITION \"MÉRIDIONALITÉ ?\"",
+        "EXPOSITION ROCK ECANTO - LA DISTILLERIE",
+        "EXPOSITION PHOTOGRAPHIQUE - MAISON DE LA NATURE",
+        "MÉDIATION EXPOSITION HORIZON MER"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "expo photo",
+      "compris": "les 3 prochains mois · exposition",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Exposition photo de l'étang (exemple)",
+        "EXPOSITION ROCK ECANTO - LA DISTILLERIE",
+        "EXPOSITION \"PREMIÈRES FOIS / PREMIÈRES PHOTOS\"",
+        "CONCOURS ET EXPOSITION PHOTO",
+        "EXPOSITION PHOTOGRAPHIQUE - MAISON DE LA NATURE",
+        "EXPOSITION TEMPORAIRE LA NUIT MONTPELLIÉRAINE - KALEIDO BAR",
+        "EXPOSITION PHOTO ENTRE 4 MURS DE FLORIAN SANA AKA ABUZ ONE",
+        "EXPOSITION PHOTO : CHEMINS DE TRAVERSE - PAYSAGES CULTURELS DU PATRIMOINE MONDIAL"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "musée",
+      "compris": "les 3 prochains mois · exposition ou visite",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "MUSÉE DE L’ÉTANG DE THAU LOUIS HIGOUNET : Visites guidées",
+        "MUSÉE GALLO-ROMAIN VILLA-LOUPIAN : Visites guidées",
+        "EXPOSITION GUIMET+ MONTPELLIER / CHINE",
+        "MUSÉE DE LA VOITURE MINIATURE ET DU TRAIN (MVT)",
+        "LES MYSTÈRES D'HÉRODIADE. ENQUÊTE AU MUSÉE FABRE",
+        "NUIT ORANGE- MUSÉE FABRE",
+        "LES VISITES GUIDÉES - LES COLLECTIONS À LA CARTE !",
+        "LES VISITES EN FAMILLE -À LA RECHERCHE DE LA CLEF PERDUE !"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "visite guidée",
+      "compris": "les 3 prochains mois · visite",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "LA VISITE GUIDÉE DE JEANNE",
+        "AU COEUR DE LA SÉRIE UN SI GRAND SOLEIL : QUARTIERS CONTEMPORAINS",
+        "AU CŒUR DE LA SÉRIE UN SI GRAND SOLEIL : CENTRE HISTORIQUE",
+        "CENTRE HISTORIQUE POUR LES ENFANTS AVEC PERETTE LA MOUETTE",
+        "MUSÉE GALLO-ROMAIN VILLA-LOUPIAN : Visites guidées",
+        "LA FACULTÉ DE MÉDECINE: UN BÂTIMENT HISTORIQUE",
+        "VISITES GUIDÉES AVEC UN MÉDIATEUR",
+        "MUSÉE DE L’ÉTANG DE THAU LOUIS HIGOUNET : Visites guidées"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "patrimoine",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 6,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "EXPOSITION PHOTO : CHEMINS DE TRAVERSE - PAYSAGES CULTURELS DU PATRIMOINE MONDIAL",
+        "VISITE GUIDÉE : LES TRÉSORS PHOTOGRAPHIQUES DES ARCHIVES",
+        "PATRIMOINE ET TRADITIONS - SAINT-GENIÈS-DES-MOURGUES",
+        "NOCTURNE PATRIMOINE À FLAUGERGUES",
+        "VISITE GUIDÉE : LE BAGNAS ENTRE PATRIMOINE NATUREL ET BÂTI",
+        "MONTPELLIER ET LE VIN",
+        "30 ANS DU CLASSEMENT UNESCO DU CANAL DU MIDI",
+        "LA RETIRADA : Témoignages et patrimonialisation"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "château",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "LA NUIT DES CHÂTEAUX - CHÂTEAU DE LUMIÈRES",
+        "VISITES DU CHÂTEAU DE LUMIÈRES",
+        "NOËL AU CHÂTEAU DE CASTRIES",
+        "VINS, CHÂTEAU & CHAMPIGNONS AU CHÂTEAU DE FLAUGERGUES AVEC PERMA SOCIAL CLUB",
+        "CHASSE AU TRÉSOR HALLOWEEN",
+        "NOCTURNE PATRIMOINE À FLAUGERGUES",
+        "VISITES GUIDÉE DU CHÂTEAU DES COMTES DE MELGUEIL",
+        "VISITE NOCTURNE ET VIEUX MILLÉSIMES"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "histoire",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Contes au jardin (exemple)",
+        "Cie Terrence et Malik - La folle histoire de France",
+        "HISTOIRE(S) D'AMOUR(S)",
+        "Balades littéraires : L’Histoire de la littérature",
+        "L’heure du conte : 6 novembre",
+        "RACONTE-MOI UNE HISTOIRE : 21 octobre",
+        "RACONTE-MOI UNE HISTOIRE : 16 décembre",
+        "L’heure du conte : 18 décembre"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "conférence",
+      "compris": "les 3 prochains mois · conférence",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "CONFÉRENCE NATACHA CALESTRÉMÉ",
+        "CONFÉRENCE : À L’ÉCOUTE DES POISSONS ET DE L'OCÉAN",
+        "BORIS CYRULNIK, CONFERENCE EXCEPTIONNELLE, \"LES PETITS BONHEURS SACCAGES\"",
+        "CONFÉRENCE DE STÉPHANE ALLIX ET SABRINA JECKER",
+        "CONFÉRENCE C.E.R.M \"LA RÉVOLUTION NÉOLITHIQUE EN MÉDITERRANÉE\"",
+        "CONFÉRENCE C.E.R.M \"LA MÉDITERRANÉE DE LAMARTINE\"",
+        "FAIRE LA PAIX AVEC SES ÉMOTIONS",
+        "CONFÉRENCE - APPARITION ET DIFFUSION DU NOTARIAT MÉRIDIONAL AU MOYEN ÂGE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "lecture",
+      "compris": "les 3 prochains mois · lecture",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Contes au jardin (exemple)",
+        "LECTURES À VUE",
+        "LECTURES ET JEUX « FÊTE DU SOL VIVANT »",
+        "LECTURE-GOÛTER",
+        "CINÉ LECTURE",
+        "GOÛTER-LECTURES DE NOËL",
+        "LECTURE CONTÉE (3/6 ANS) LES AVENTURES DE MAYOL ET COCO",
+        "LE TEMPS DES LIVRES"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "contes",
+      "compris": "les 3 prochains mois · lecture ou spectacle",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Contes au jardin (exemple)",
+        "Spectacle de marionnettes (exemple)",
+        "CONTES D’HIVER ET DE SOLSTICE",
+        "SOIRÉE CONTES \"L'ÂNE ET LE GOUVERNEMENT ET AUTRES CONTES\"",
+        "CINÉ-CONTES: CHIEN BLEU, ET AUTRES BELLES HISTOIRES",
+        "\"LE CHANT DES LUMIERES\", SPECTACLE DE CONTES",
+        "L’heure du conte : 6 novembre",
+        "L’heure du conte : 4 décembre"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "livre",
+      "compris": "les 3 prochains mois · lecture",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 4,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "type"
+      ],
+      "titres": [
+        "Contes au jardin (exemple)",
+        "L’OALIVRE ET LES LIVRES ACCORDÉONS",
+        "LES BEAUX LIVRES : À glisser au pied du sapin !",
+        "ATELIER DE PRATIQUES ARTISTIQUES - LIVRE AU NOIR",
+        "Prix des lecteurs",
+        "Rencontre avec l’auteur Karim KATTAN, autour de son livre \"Septentrionale\".",
+        "LE TEMPS DES LIVRES",
+        "Les lectures électriques - Vers la Palestine"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "BD",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 3,
+      "correctes": 2,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "SALON DU DISQUE ET DE LA BD",
+        "ATELIER BD",
+        "ATELIER CARNET DE PARTAGE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "cinéma",
+      "compris": "les 3 prochains mois · cinéma",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 7,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "type"
+      ],
+      "titres": [
+        "CINEMA : SI TU PENSES BIEN",
+        "Résidence « Le Cinéma est à Nous » : Projection de clôture de la résidence, restitution finale",
+        "Focus sur le jeune cinéma égyptien",
+        "CINÉMED",
+        "Le cinéma fantastique des pays arabes méditerranéens",
+        "CINÉMA : FRAGILE",
+        "OLYMPE FAIT SON CINÉMA : Spécial Noël",
+        "CINÉMA : LA MAISON DE NOS RÊVES"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "ciné plein air",
+      "compris": "les 3 prochains mois · en plein air · cinéma",
+      "ecarts_comprehension": [],
+      "propositions": 6,
+      "correctes": 1,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "type"
+      ],
+      "titres": [
+        "CINÉMED",
+        "L'ILLUMINÉ FESTIVAL",
+        "CINÉ/CONFÉRENCE \"CUBA HASTA SIEMPRE\"",
+        "FÊTE DU FILM D’ANIMATION",
+        "FESTIVAL EX TENEBRIS LUX – ACTE VIII",
+        "PROJECTION - ARRÊT SUR IMAGE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "film",
+      "compris": "les 3 prochains mois · cinéma",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 5,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "type"
+      ],
+      "titres": [
+        "MOIS DU FILM DOCUMENTAIRE : Sous son regard l’étincelle",
+        "MOIS DU FILM DOCUMENTAIRE : Le siècle",
+        "MOIS DU FILM DOCUMENTAIRE : Les Habitants",
+        "1 SOIRÉE, 3 FILMS — MIAM",
+        "FÊTE DU FILM D’ANIMATION",
+        "FILM DÉBAT \"L'HOMME AU CHEVET DES CORAUX\"",
+        "MOIS DU FILM DOCUMENTAIRE : Visages, villages",
+        "Projection du film \"LYD\" de Rami YOUNIS et Sarah Ema FRIEDLAND"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "science",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 4,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "ATELIER SCIENTIFIQUE SPÉCIAL HALLOWEEN — LES KURIONAUTES",
+        "LES ÉCHAPPÉES INATTENDUES DU CNRS : LA SCIENCE À LA RENCONTRE DES MONDES PERDUS",
+        "EXPOSITION : LA SCIENCE À LA RENCONTRE DES MONDES PERDUS",
+        "OLYMPE FAIT SON CINÉMA : Spécial Fête de la Science",
+        "STAGE CRÉATIF : MON FOSSILE IMAGINAIRE",
+        "FESTIVAL VA SAVOIR ?! 2026",
+        "ATELIER ÉPOUVANTE EXPÉRIMENTALE +DE FIRN",
+        "CONFÉRENCE DE STÉPHANE ALLIX ET SABRINA JECKER"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "astronomie",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 4,
+      "correctes": 3,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "ASTRONOMIE : OBSERVEZ LA LUNE, JUPITER… AU TÉLESCOPE !",
+        "SOIRÉE ASTRONOMIE",
+        "ASTRONOMIE : OBSERVEZ LE SOLEIL AU TÉLESCOPE !",
+        "LA PARABOLE DU SEUM"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "peinture",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "PAINT IN THE DARK - CANVAS CLUB",
+        "PAINT & DRINK AU JOST",
+        "PAINT & DRINK AVEC LE CANVAS CLUB AUX HALLES DU VERGER",
+        "LES SAMEDIS MERVEILLEUX",
+        "Exposition Terre et Mer de Frédéric Leprince",
+        "EXPOSITION - APRÈS LA PLUIE - KEIKO OGAWA",
+        "STAGES ENFANTS 4-11 ANS DES VACANCES DE LA TOUSSAINT",
+        "VERNISSAGE EXPOSITION \"FATBOBSTUDIO\""
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "atelier",
+      "compris": "les 3 prochains mois · atelier",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Atelier jeux en famille (exemple)",
+        "Atelier cuisine parents-enfants (exemple)",
+        "Initiation escalade enfants (exemple)",
+        "Stage de cirque vacances (exemple)",
+        "Atelier pour enfants | La méridionalité à hauteur d'enfant",
+        "LES ATELIERS DE LA CABANE : PLIAGE ET PAPOTAGE",
+        "ATELIER CINÉMA - DOUBLAGE",
+        "ATELIERS JEUNE PUBLIC - POUSSES D'ARCHI"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "atelier enfants",
+      "compris": "les 3 prochains mois · famille · atelier",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Atelier cuisine parents-enfants (exemple)",
+        "Atelier jeux en famille (exemple)",
+        "Initiation escalade enfants (exemple)",
+        "Stage de cirque vacances (exemple)",
+        "ATELIERS JEUNE PUBLIC - POUSSES D'ARCHI",
+        "Atelier pour enfants | La méridionalité à hauteur d'enfant",
+        "Atelier pour enfants | La méridionalité à hauteur d'enfant",
+        "ATELIER CRIC CRAC - POUR LES ENFANTS DE 7 À 12 ANS"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "stage",
+      "compris": "les 3 prochains mois · atelier",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Stage de cirque vacances (exemple)",
+        "Atelier cuisine parents-enfants (exemple)",
+        "Atelier jeux en famille (exemple)",
+        "Initiation escalade enfants (exemple)",
+        "STAGES ET ATELIERS - THÉÂTRE BEAUX- ARTS TABARD",
+        "STAGES ADO 10-15 ANS DES VACANCES DE LA TOUSSAINT",
+        "STAGE DE CIRQUE ENFANTS 4-6 ANS ET 7-11 ANS",
+        "STAGE FLAMENCO"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "poterie",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 1,
+      "correctes": 1,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "ATELIER DE POTERIE : IMPROVISATIONS - LA TERRE - LE JEU QUI CRÉE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "couture",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 6,
+      "correctes": 5,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "ATELIER COUTURE PAR TSIKY - PARTEA TIME",
+        "ATELIER COUTURE PAR TSIKY - AU BOTAN",
+        "ATELIER COUTURE PAR TSIKY - REPAIRE DE BIIVERS",
+        "ATELIER COUTURE",
+        "ATELIER COUTURE PAR TSIKY - CAFÉ SOLO",
+        "MOHAMED LEKLETI EN DÉSÉQUILIBRE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "cuisine",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 5,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "Atelier cuisine parents-enfants (exemple)",
+        "DE LA VIGNE À L'ASSIETTE : CUEILLETTE, CUISINE & ACCORDS METS-VINS",
+        "Atelier de cuisine des fêtes",
+        "LE DÉJEUNER DE LA TOUR - DOMAINE DE LA TOUR",
+        "DE LA VIGNE À L’ASSIETTE AVEC LES DOMAINES DE VERCHANT ET MASSILLAN",
+        "MARCHÉ TRADITIONNEL DE BOUZIGUES",
+        "SAVE THE DATE - FÊTE DE LA SOUPE !",
+        "SPECTACLE : UN CHOU EN HIVER"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "jardinage",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 2,
+      "correctes": 2,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "ATELIER JARDINAGE",
+        "LECTURES ET JEUX « FÊTE DU SOL VIVANT »"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "jeux vidéo",
+      "compris": "les 3 prochains mois · jeux",
+      "ecarts_comprehension": [],
+      "propositions": 6,
+      "correctes": 5,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "JEUX VIDÉO : JUST DANCE",
+        "PAUSE JEUX : Les jeux de société et les jeux vidéos",
+        "SATURDAY GAMES",
+        "SOIRÉE HALLOWEEN",
+        "SATURDAY GAME",
+        "Les stages vacances de Toussaint sont là ! Code, Création de jeux vidéo, électroniques .."
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "jeux",
+      "compris": "les 3 prochains mois · jeux",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Atelier jeux en famille (exemple)",
+        "Blind test géant (exemple)",
+        "PAUSE JEUX : Les jeux de société et les jeux vidéos",
+        "DES JEUX POUR LES BÉBÉS",
+        "PAUSE JEUX",
+        "JEUX VIDÉO : JUST DANCE",
+        "PAUSE JEUX",
+        "SOIRÉE JEUX « ALEA JACTA EST »"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "jeux de société",
+      "compris": "les 3 prochains mois · jeux",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 7,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "Atelier jeux en famille (exemple)",
+        "PAUSE JEUX : Les jeux de société et les jeux vidéos",
+        "JEUX DE SOCIÉTÉ",
+        "DES JEUX POUR LES GRANDS",
+        "PAUSE JEUX",
+        "PAUSE JEUX",
+        "PAUSE JEUX",
+        "REMUE-MÉNINGES"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "escape game",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 6,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "ESCAPE GAME : VOYAGE AU PAYS DES RÊVES",
+        "ESCAPE GAME HARRY POTTER",
+        "ESCAPE GAME GÉANT LA QUÊTE FANTASTIQUE - LE SECRET DE L'ALCHIMISTE",
+        "ESCAPE GAME LE PRINCE DES ÉTOILES",
+        "Atelier : Escape Game botanique & sensoriel",
+        "MONTPELLIER ENQUÊTE SUR MEURTRE: RÉSOLVEZ LE CAS!",
+        "LUDO-FIESTA",
+        "FESTIVAL VA SAVOIR ?! 2026"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "échecs",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 4,
+      "correctes": 1,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "PAUSE JEUX : Les échecs",
+        "REMUE-MÉNINGES",
+        "PROGRAMMATION OCTOBRE - LE RÉSERVOIR",
+        "Lento e violento - Compagnie Calentina Vortese"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "loto",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 3,
+      "correctes": 2,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "LOTO BURLESQUE",
+        "LOTO DU LIONS CLUB PALAVAS MÉDITERRANÉE",
+        "LA PROGRAMMATION D'OCTOBRE À RESTANQUE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "dégustation",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 7,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "DÉGUSTATION VINS & CHOCOLATS - RESTAURANT ESENCIA & ÔME",
+        "VIGNOBLES EN SCÈNE – IMMERSION AU CŒUR DE LA DÉGUSTATION",
+        "DÉGUSTATIONS DE VIN - VIGNOBLES EN SCÈNE",
+        "Goûter et dégustation de sirops artisanaux / Atelier du sirop à Mèze",
+        "GRAND DÉFILÉ AUTOMNE-HIVER 2026",
+        "JOURNÉE ŒNOLOGIE : CÉPAGES ET ARÔMES, RECONNAÎTRE LES VINS",
+        "LA NOISETTE D'OC : ATELIERS - DÉCOUVERTES - DÉGUSTATION",
+        "LE BLIND TEST DU VIN AU GAZETTE CAFÉ"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "vin",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "LE BLIND TEST DU VIN AU GAZETTE CAFÉ",
+        "JOURNÉE ŒNOLOGIE : CÉPAGES ET ARÔMES, RECONNAÎTRE LES VINS",
+        "ACCORDS METS ET VINS INSULAIRES",
+        "VIGNOBLES EN SCÈNE ET FESTIVAL VÉLO, VINS & COPAINS",
+        "AN IDIOT’S GUIDE TO WINE : VERRES DE VIN SUR FOND DE COMÉDIE",
+        "DE LA VIGNE À L'ASSIETTE : CUEILLETTE, CUISINE & ACCORDS METS-VINS",
+        "VINS ET FROMAGES",
+        "SOIRÉE THÉÂTRE & VINS PRIMEURS 2026"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "bière",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 4,
+      "correctes": 0,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "PROGRAMMATION OCTOBRE - LE RÉSERVOIR",
+        "MARCHÉ TRADITIONNEL DE GIGEAN",
+        "EXPOSITION ROCK ECANTO - LA DISTILLERIE",
+        "LA LOCURA VOL.1"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "huîtres",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 7,
+      "correctes": 2,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "MARCHÉ TRADITIONNEL DE BOUZIGUES",
+        "LA NOISETTE D'OC : ATELIERS - DÉCOUVERTES - DÉGUSTATION",
+        "MARCHÉ DES HALLES DE MÈZE",
+        "MARCHÉ TRADITIONNEL DE L'ÎLE DE THAU",
+        "GRAND DÉFILÉ AUTOMNE-HIVER 2026",
+        "Marché de Saint-Clément-de-Rivière",
+        "MARCHÉ TRADITIONNEL DE POUSSAN"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "food truck",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 4,
+      "correctes": 0,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "Marché de Saint-Clément-de-Rivière",
+        "SOIRÉE THÉÂTRE & VINS PRIMEURS 2026",
+        "MODERN RAVE : HARD DOCK EDITION w/ SKÖNE & KODAMAN (18.10)",
+        "Saint Bau fête Noël"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "brunch",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 1,
+      "correctes": 1,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "BRUNCH SONORE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "marché",
+      "compris": "les 3 prochains mois · marché",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "MARCHÉ TRADITIONNEL DU MERCREDI À SÈTE",
+        "MARCHÉ TRADITIONNEL DE POUSSAN",
+        "MARCHÉ TRADITIONNEL DU JEUDI À SÈTE",
+        "MARCHÉ DES HALLES DE MÈZE",
+        "MARCHÉ TRADITIONNEL DE VILLEVEYRAC",
+        "MARCHÉ TRADITIONNEL DE GIGEAN",
+        "MARCHÉ HEBDOMADAIRE DE MARSEILLAN",
+        "MARCHÉ DES HALLES DE MARSEILLAN"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "brocante",
+      "compris": "les 3 prochains mois · marché",
+      "ecarts_comprehension": [],
+      "propositions": 4,
+      "correctes": 2,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "LES DIMANCHES DU PEYROU",
+        "MARCHÉ AUX PUCES & À LA BROCANTE",
+        "MARCHÉ AUX PUCES",
+        "LES PUCES DE CARNON-PLAGE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "vide-grenier",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 5,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "PAUSE JEUX : Les jeux de société et les jeux vidéos",
+        "SATURDAY GAMES",
+        "SOIRÉE HALLOWEEN",
+        "JEUX VIDÉO : JUST DANCE",
+        "CŒUR DE VILLE EN LUMIÈRES",
+        "Les stages vacances de Toussaint sont là ! Code, Création de jeux vidéo, électroniques ..",
+        "NUIT ORANGE- MUSÉE FABRE",
+        "ATELIERS DE CALLIGRAPHIE TRADITIONNELLE CHINOISE – STYLE RÉGULIER"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "marché de Noël",
+      "compris": "les 3 prochains mois · marché",
+      "ecarts_comprehension": [],
+      "propositions": 4,
+      "correctes": 4,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "MARCHÉ DE NOËL DE MONTPELLIER",
+        "MARCHÉ DE NOËL DE PIGNAN",
+        "Marché de Noël",
+        "Les Pépites de Noël"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "fête",
+      "compris": "les 3 prochains mois · fête",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "FÊTE DE FIN DES VENDANGES AU DOMAINE VILLA NORIA",
+        "SAVE THE DATE - FÊTE DE LA SOUPE !",
+        "FÊTE DU FILM D’ANIMATION",
+        "FÊTE DU MIEL",
+        "LE MARCHÉ ENCHANTÉ",
+        "Atelier de cuisine des fêtes",
+        "BANQUET - VIGNOBLES EN SCÈNE",
+        "NOËL AU CHÂTEAU DE CASTRIES"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "Halloween",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 7,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "Atelier jeux en famille (exemple)",
+        "POLY'DAYS SPÉCIAL HALLOWEEN",
+        "HALLOWEEN À CASTELNAU-LE-LEZ",
+        "STAGE VACANCES AUTOMNE ET HALLOWEEN - BRICKS 4 KIDZ MONTPELLIER",
+        "HALLOWEEN S’INVITE AU GOOLFY MONTPELLIER",
+        "HALLOWEEN AU PETIT PARADIS",
+        "HALLOWEEN À LA PEYRADE",
+        "JOURNÉE HALLOWEEN EN FAMILLE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "feu d'artifice",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 3,
+      "correctes": 0,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "CONCERT SAM SAUVAGE",
+        "MARCHÉ DE NOËL DE PIGNAN",
+        "BALLET OF LIGHTS : LA BELLE AU BOIS DORMANT DANS UN SPECTACLE ÉTINCELANT"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "carnaval",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 1,
+      "correctes": 1,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "SPECTACLE CABARET « DEUX BRÉSILIENS À PARIS »"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "joutes",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 1,
+      "correctes": 1,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "TAILLÉS SUR MESURE, UN SIÈCLE DE COSTUMES DE JOUTEURS À SÈTE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "salon",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 7,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "Salon Gourmand du Gras",
+        "SALON DE MUSIQUE",
+        "SALON DU DISQUE ET DE LA BD",
+        "SALON \"BIEN-ÊTRE EN THAU\"",
+        "RÉTRO MOTORS MONTPELLIER",
+        "SALON DE MUSIQUE : Les musiques du monde et les ports",
+        "CALLE LATINA #2 by Nuit Brune",
+        "EXPOSITION PATRICK QUÉROL"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "sport",
+      "compris": "les 3 prochains mois · sport",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 7,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "type"
+      ],
+      "titres": [
+        "Initiation escalade enfants (exemple)",
+        "MATINÉE DES BÉBÉS : Motricité avec Hérault Sport",
+        "HERAIA 3",
+        "TOURNOI ANNUEL ADULTE DE TAMBOURIN EN SALLE",
+        "ECORUN DE MONTFERRIER SUR LEZ",
+        "TOURNOI ANNUEL JEUNE DE TAMBOURIN EN SALLE",
+        "TRAIL DE L’OPPIDUM",
+        "17ÈME FOULÉES DE LA SOLIDARITÉ"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "match",
+      "compris": "les 3 prochains mois · sport",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 7,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "type"
+      ],
+      "titres": [
+        "Initiation escalade enfants (exemple)",
+        "HANDBALL : MHB VS BUCAREST",
+        "HOCKEY SUR GLACE : VIPERS VS TOULON",
+        "HANDBALL : MHB VS LIMOGES",
+        "HANDBALL : MHB VS SARAN",
+        "LES MATCHS DE RUGBY DU RCM",
+        "HANDBALL : MHB VS CESSON RENNES",
+        "FOOTBALL : MHSC VS RED STAR"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "course à pied",
+      "compris": "les 3 prochains mois · sport",
+      "ecarts_comprehension": [],
+      "propositions": 2,
+      "correctes": 2,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "COMPLET - Trail des Calades",
+        "ECORUN DE MONTFERRIER SUR LEZ"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "randonnée",
+      "compris": "les 3 prochains mois · nature",
+      "ecarts_comprehension": [],
+      "propositions": 1,
+      "correctes": 1,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Marche Nationale Pour La vue"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "balade",
+      "compris": "les 3 prochains mois · nature",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 6,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "type"
+      ],
+      "titres": [
+        "Balades littéraires : Deux p’tites baltringues",
+        "BALADE INÉDITE AUTOUR DES PORTS ANCIENS",
+        "BALADE GUIDÉE INÉDITE ET TERRIFIANTE",
+        "Balades littéraires : L’Histoire de la littérature",
+        "LA BALADE DES CÉPAGES AU DOMAINE SAINT-ANDRÉ",
+        "BALADES BIO GOURMANDES D’OCCITANIE",
+        "SEMAINE DE LA RÉSILIENCE - BALADE SUR LE LITTORAL",
+        "MYSTÈRES DE LA GARRIGUE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "vélo",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 3,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "BOURSE AUX VÉLOS – RÊVE DE VÉLO",
+        "BALADE GUIDÉE INÉDITE ET TERRIFIANTE",
+        "VIGNOBLES EN SCÈNE ET FESTIVAL VÉLO, VINS & COPAINS",
+        "BALADE INÉDITE AUTOUR DES PORTS ANCIENS",
+        "QUARTUOR COQUELICOT",
+        "STREET ART, VUE D'ENSEMBLE",
+        "COMME UN AIR DU JAPON, ÉDITION AUTOMNE - DOMAINE DE LA TOUR",
+        "Repair Café"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "kayak",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 0,
+      "elargie": false,
+      "exact": false,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "LECTURE CONTÉE (3/6 ANS) LES AVENTURES DE MAYOL ET COCO",
+        "CINÉ/CONFÉRENCE \"GRAND NORD : LA TRAVERSÉE DES GLACES EN VOILIER\"",
+        "ANOKI",
+        "STAGES NAUTIQUES D'AUTOMNE",
+        "BAL TRADITIONNEL AVEC OYNA K",
+        "ANOKI",
+        "¡YA VOY ! KOA JAZZ FESTIVAL",
+        "SPECTACLE : L’ART D’ACCOMMODER LES RESTES"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "plage",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 4,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "EXPOSITION : DES SPECTRES À LA PLAGE",
+        "VISITE COMMENTÉE DE FRONTIGNAN-PLAGE AVEC DIVERS UNI VERS",
+        "LES PUCES DE CARNON-PLAGE",
+        "JEU DE PISTE : LE PETIT CRABE DE MARSEILLAN CHERCHE SON AMI LE POISSON",
+        "MÉDIATION EXPOSITION HORIZON MER",
+        "VILLAGE DE NOËL \"LES FLOTS ENCHANTÉS\"",
+        "SEMAINE DE LA RÉSILIENCE - BALADE SUR LE LITTORAL",
+        "EXPOSITION : HORIZON MER : VIVRE, DÉCOUVRIR, PROTÉGER"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "yoga",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 3,
+      "correctes": 2,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "ATELIER YOGA LIRE",
+        "YOGA DU RIRE",
+        "CONFÉRENCE DE STÉPHANE ALLIX ET SABRINA JECKER"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "bien-être",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 5,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "SALON \"BIEN-ÊTRE EN THAU\"",
+        "Atelier coffret bien-être",
+        "ATELIER BIEN-ÊTRE",
+        "LECTURES ZEN",
+        "SPECTACLE : L’ART D’ACCOMMODER LES RESTES",
+        "SPECTACLE JEUNE PUBLIC : POUR BIEN DORMIR",
+        "ATELIER MENSUEL D’AUTO-MASSAGE ET D’AUTO-SOINS",
+        "ATELIERS MENSUELS SUR LES CINQ ÉLÉMENTS ET LA MÉDECINE TRADITIONNELLE CHINOISE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "escalade",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 1,
+      "correctes": 1,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Initiation escalade enfants (exemple)"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "gratuit",
+      "compris": "les 3 prochains mois · gratuit",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "MUL TIMÉDIA : INSTALL PARTY",
+        "Atelier Levez les Yeux \"TOUT DOIT DISPARAITRE\"",
+        "Visite et Médiation autour de l'exposition \"TOUT DOIT DISPARAITRE, terrains à rendre\"",
+        "MERCREDI LUDI",
+        "SOIRÉE JEUX « ALEA JACTA EST »",
+        "ÉVEIL MUSICAL : Spécial Noël",
+        "OLYMPE FAIT SON CINÉMA : Spécial Noël",
+        "FABRIQUE TON CABINET DE CURIOSITÉS MAGIQUE"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "pas cher",
+      "compris": "les 3 prochains mois · moins de 15 €",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "CINEMA : SI TU PENSES BIEN",
+        "CINEMA : TOMBÉE DU CIEL",
+        "THÉÂTRE « MIRABEAU L’INSOLENT »",
+        "PÉTROLE",
+        "THÉÂTRE « Y’A DES EMPREINTES PARTOUT »",
+        "PAUSE JEUX : Les échecs",
+        "PARTIR UN JOUR",
+        "SPECTACLE : UN CHOU EN HIVER"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "en famille",
+      "compris": "les 3 prochains mois · famille",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Atelier jeux en famille (exemple)",
+        "Atelier cuisine parents-enfants (exemple)",
+        "ATELIERS DU MIAM - SAMEDI EN FAMILLE",
+        "DÉCOUVERTE EN FAMILLE DES EXPOSITIONS DU CRAC",
+        "ATELIER EN FAMILLE - LE VASE ENTRE EN SCÈNE !",
+        "LES VISITES EN FAMILLE -À LA RECHERCHE DE LA CLEF PERDUE !",
+        "LES VISITES EN FAMILLE - UNE HISTOIRE HAUTE EN COULEUR !",
+        "ATELIER EN FAMILLE - LES PEINTRES TAPISSIERS"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "avec des ados",
+      "compris": "les 3 prochains mois · ados",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 5,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "public"
+      ],
+      "titres": [
+        "LES ADOLESCHIANTS",
+        "DES JEUX POUR LES GRANDS",
+        "CINÉ-ADOS",
+        "JEUX VIDÉO : JUST DANCE",
+        "VIENS T'AMÉLIORER SUR L'ORDI !",
+        "LES MERCREDIS DES OCÉANS : VISITES GUIDÉES DES EXPOSITIONS POUR ENFANTS",
+        "STAGES ADO 10-15 ANS DES VACANCES DE LA TOUSSAINT",
+        "ATELIER CRIC CRAC - POUR LES ENFANTS DE 7 À 12 ANS"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "pour seniors",
+      "compris": "les 3 prochains mois · seniors",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 7,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "public"
+      ],
+      "titres": [
+        "SPEED DATING 45-65 ANS AVEC SOIRÉE DANSANTE",
+        "LA VOILE ROSE",
+        "COMPLET - Trail des Calades",
+        "Résidence l’Epopée : Slow Visite au CRAC Occitanie de Sète",
+        "EXPOSITION : HORIZON MER : VIVRE, DÉCOUVRIR, PROTÉGER",
+        "PRÉSENTATION EXPOSITION HORIZON MER : VIVRE, DÉCOUVRIR, PROTÉGER",
+        "3 FEMMES AU BORD DE LA CRISE DE MÈRE",
+        "Visite guidée de Saint-Mathieu-de-Tréviers"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "ce week-end",
+      "compris": "ce week-end",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "SEMAINE DE LA RÉSILIENCE - CLOTURE",
+        "VIGNOBLES EN SCÈNE ET FESTIVAL VÉLO, VINS & COPAINS",
+        "SEMAINE DE LA RÉSILIENCE - BALADE SUR LE LITTORAL",
+        "SÉJOUR LES PÉPITES DU SUD",
+        "Atelier Levez les Yeux \"TOUT DOIT DISPARAITRE\"",
+        "STAND UP AU MELICE",
+        "APÉRO LITTÉRAIRE !",
+        "SOIRÉE STAND UP AU CLANDESTIN"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "demain",
+      "compris": "demain",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "EXPOSITION DREAMLAND - RENO LEMAIRE",
+        "EXPOSITIONS \"MAISON-MAIN\" (COLLECTIVE) ET \"FOR KHEIRA,\" DE NESRINE SALEM",
+        "PRÉSENTATION EXPOSITION HORIZON MER : VIVRE, DÉCOUVRIR, PROTÉGER",
+        "SOUDAIN",
+        "ACCORDS METS ET VINS INSULAIRES",
+        "Atelier Levez les Yeux \"TOUT DOIT DISPARAITRE\"",
+        "Le cinéma fantastique des pays arabes méditerranéens",
+        "MARCHÉ DE POMÉROLS"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "en plein air",
+      "compris": "les 3 prochains mois · en plein air",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Contes au jardin (exemple)",
+        "ATELIER D'ECRITURE : PLUME SAUVAGE, QUAND LA NATURE INSPIRE VOS MOTS.",
+        "EXPOSITION ELLA ZADOK",
+        "EXPOSITION : DES SPECTRES À LA PLAGE",
+        "STREET ART, VUE D'ENSEMBLE",
+        "COMME UN AIR DU JAPON, ÉDITION AUTOMNE - DOMAINE DE LA TOUR",
+        "ATELIER PHOTO : UN PORTRAIT AU COLLODION HUMIDE",
+        "Résidence « Racines en Mouvement » : Déambulation artistique"
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "s'il pleut",
+      "compris": "les 3 prochains mois · en intérieur",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "MATINÉE DES BÉBÉS : Éveil musical «La pluie»",
+        "SI TU PENSES BIEN",
+        "CINEMA : SI TU PENSES BIEN",
+        "SOLEIL D'HIVER | SOLO POUR OUD ÉLECTRONIQUE, BANDES MAGNÉTIQUES ET PROJECTIONS | GRÉGORY DARGENT",
+        "SOUS LE SAPIN LES EMMERDES",
+        "SOUDAIN",
+        "CINEMA : TOMBÉE DU CIEL",
+        "CONTES D’HIVER ET DE SOLSTICE"
+      ],
+      "reponse": ""
+    }
+  ],
+  "mode": "recherche",
+  "jeu": "28bd2d59",
+  "prompt_version": "2026-10-15.14",
+  "note": "100 mots"
+}

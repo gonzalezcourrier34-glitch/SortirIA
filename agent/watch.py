@@ -316,6 +316,18 @@ def check_ratings(ratings: Mapping[str, Any]) -> list[str]:
     ]
 
 
+# Bilan de la recherche (15/10/2026) : le lundi, ce que les utilisateurs ont
+# cherché sans trouver pendant les 7 derniers jours.
+SEARCH_REPORT_WEEKDAY = 0      # lundi
+SEARCH_REPORT_DAYS = 7
+
+
+def search_report_due(today: date) -> bool:
+    """Le bilan de la recherche part une fois par semaine, le lundi."""
+
+    return today.weekday() == SEARCH_REPORT_WEEKDAY
+
+
 def merge_usage(*usages: Mapping[str, Mapping[str, int]]) -> dict[str, dict[str, int]]:
     """Additionne plusieurs relevés {modèle: {"input": n, "output": n}}."""
 

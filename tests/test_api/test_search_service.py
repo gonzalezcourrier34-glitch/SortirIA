@@ -95,7 +95,7 @@ def test_query_applies_every_filter() -> None:
     assert "e.is_free" in sql and "embedding <=> %(vector)s::vector" in sql
     sql, params = service.build_search_query(SearchFilters(), None, NOW)
     assert "by_meaning" not in sql and "by_words" not in sql and "public" not in params
-    assert "ORDER BY keyword_match DESC, category_match DESC, score DESC, e.start_at" in sql
+    assert "ORDER BY visible_hits DESC, keyword_hits DESC, category_match DESC, score DESC, e.start_at" in sql
 
 
 # ----------------------------------------------------------------------------
@@ -149,14 +149,16 @@ def test_search_streams_the_four_steps_then_the_result() -> None:
                      for status in ("running", "completed")]
     result = events[-1]["result"]
     assert result["answer"] == "Essayez la balade [1]." and result["suggestions"] == ["Le matin ?"]
-    assert [card["ref"] for card in result["events"]] == [1, 2] and result["events"][1]["partner"] is True
+    # L'offre partenaire répond à la demande : elle passe en tête (15/10/2026).
+    assert [card["ref"] for card in result["events"]] == [1, 2] and result["events"][0]["partner"] is True
+    assert "offre partenaire" in service.events_for_prompt(seen["cards"]).split("\n")[0]
     assert result["request_id"] == 7 and result["degraded"] is False
     assert seen["question"] == "sortie en famille"
     search = next(params for sql, params in connection.queries if "vector" in params)
     assert search["vector"] == "[0.1]"
     assert any("query_cache" in sql for sql, _ in connection.queries)      # cherchée puis gardée
     logged = connection.queries[-1][1]
-    assert logged["event_ids"] == ["e1", "e2"] and logged["prompt_tokens"] == 100
+    assert logged["event_ids"] == ["e2", "e1"] and logged["prompt_tokens"] == 100
 
 
 def test_search_survives_mistral_outage() -> None:
@@ -202,8 +204,9 @@ def test_search_query_puts_wanted_categories_first():
 
     sql, params = build_search_query(SearchFilters(), "[0.1]", datetime(2026, 10, 15, tzinfo=PARIS),
                                      categories=("spectacle", "theatre"))
-    assert sql.rstrip().split("\n")[-2] == "ORDER BY keyword_match DESC, category_match DESC, score DESC, e.start_at"
-    assert "ANY (%(categories)s)) AS category_match" in sql
+    assert sql.rstrip().split("\n")[-2] == "ORDER BY visible_hits DESC, keyword_hits DESC, category_match DESC, score DESC, e.start_at"
+    assert "= ANY (%(categories)s) OR to_tsvector" in sql and "AS category_match" in sql
+    assert params["type_words"] == "spectacle | theatre"
     assert params["categories"] == ["spectacle", "theatre"]
 
 
@@ -274,3 +277,173 @@ def test_multi_day_events_show_their_span():
     festival = {"start_at": datetime(2026, 10, 30, 10, 0, tzinfo=PARIS),
                 "end_at": datetime(2026, 11, 1, 18, 0, tzinfo=PARIS), "time_known": True}
     assert event_date_label(festival, now) == "Du 30 oct. au 1 nov."
+
+
+# ----------------------------------------------------------------------------
+# Offres partenaires en tête des cartes (15/10/2026)
+# ----------------------------------------------------------------------------
+
+def plan_for(question: str) -> service.QueryPlan:
+    return service.plan_search(question, SearchFilters(), NOW)[0]
+
+
+def test_matching_partner_offers_come_first_in_relevance_order() -> None:
+    rows = [row("e1", score=0.03), row("p1", partner_id=1, score=0.02), row("e2", score=0.01),
+            row("p2", partner_id=2, score=0.005)]
+    ordered = service.partners_first(rows, plan_for("un concert ce week-end"), exact=True)
+    assert [r["event_id"] for r in ordered] == ["p1", "p2", "e1", "e2"]
+
+
+def test_partner_offer_far_from_a_vague_question_stays_in_its_place() -> None:
+    rows = [row(f"e{i}", score=1 / (60 + i)) for i in range(service.PARTNER_TOP_RANK)]
+    rows.append(row("p1", partner_id=1, score=0.001))
+    ordered = service.partners_first(rows, plan_for("quelque chose de sympa"), exact=True)
+    assert ordered[-1]["event_id"] == "p1"
+    near = service.partners_first([row("e1", score=0.03), row("p1", partner_id=1, score=0.02)],
+                                  plan_for("quelque chose de sympa"), exact=True)
+    assert near[0]["event_id"] == "p1"
+
+
+def test_partner_offers_leave_the_cards_when_nothing_answers_exactly() -> None:
+    rows = [row("e1"), row("p1", partner_id=1)]
+    ordered = service.partners_first(rows, plan_for("du théâtre"), exact=False)
+    assert [r["event_id"] for r in ordered] == ["e1"]
+
+
+def test_cards_open_with_the_partner_offer_that_answers() -> None:
+    connection = FakeConnection([row("e1", title="Concert de jazz", category_norm="concert", category_match=True),
+                                 row("p1", title="Soirée jazz au bar", category_norm="concert", category_match=True,
+                                     partner_id=4, partner_name="Le Bar", venue_name="Bar", city="Sète")])
+    events = list(service.run_search(connection, "un concert", SearchFilters(),
+                                     SearchServices(embed=None, write=None, now=lambda: NOW)))
+    cards = events[-1]["result"]["events"]
+    assert [card["event_id"] for card in cards] == ["p1", "e1"] and cards[0]["partner"] is True
+
+
+def test_cards_order_partners_then_cited_then_the_rest() -> None:
+    cards = [{"ref": i, "event_id": f"e{i}", "partner": i == 6} for i in range(1, 9)]
+    ordered, answer = service.order_cards(cards, "Idées : [5] FABRIQUE, [7] LUDI ou [8] BRIQUES, et [5].")
+    assert [card["event_id"] for card in ordered] == ["e6", "e5", "e7", "e8", "e1", "e2", "e3", "e4"]
+    assert [card["ref"] for card in ordered] == list(range(1, 9))
+    assert answer == "Idées : [2] FABRIQUE, [3] LUDI ou [4] BRIQUES, et [2]."
+    assert cards[0]["ref"] == 1                      # les cartes reçues ne sont pas modifiées
+
+
+# ----------------------------------------------------------------------------
+# Sujet introuvable : recherche élargie au sujet (15/10/2026)
+# ----------------------------------------------------------------------------
+
+class SubjectConnection(FakeConnection):
+    """Rien sur le sujet avec « gratuit » coché ; le sujet existe sans cette case."""
+
+    def __init__(self, strict: list[dict[str, Any]], wider: list[dict[str, Any]]) -> None:
+        super().__init__([])
+        self.strict, self.wider = strict, wider
+
+    def execute(self, sql: str, params: dict[str, Any]) -> None:
+        self.queries.append((sql, params))
+        if "rag_requests" in sql:
+            self._result = [{"request_id": 7}]
+        elif "WITH base" in sql:
+            self._result = self.strict if "AND e.is_free" in sql else self.wider
+        else:
+            self._result = []
+        self.description = [(key,) for key in (self._result[0] if self._result else {"x": 0})]
+
+
+def search(connection: FakeConnection, question: str, write=None) -> dict[str, Any]:
+    filters = SearchFilters(public="famille", period="7jours", free_only=True)
+    events = list(service.run_search(connection, question, filters,
+                                     SearchServices(embed=None, write=write, now=lambda: NOW)))
+    return events[-1]["result"]
+
+
+def test_precise_subject_words_are_searched_in_the_text() -> None:
+    assert service.distinctive_keywords(["cirque", "spectacle", "jazz", "concert", "photo"]) == [
+        "cirque", "jazz", "photo"]
+
+
+def test_missing_subject_is_searched_without_the_constraints_instead_of_unrelated_ideas() -> None:
+    unrelated = [row("a1", title="Histoires à jouer", category_norm="atelier"),
+                 row("a2", title="Pause jeux", category_norm="jeux")]
+    circus = [row("c1", title="Stage de cirque vacances", category_norm="atelier", keyword_match=True,
+                  is_free=False, price_text="60 €", partner_id=2, partner_name="Ludothèque"),
+              row("a1", title="Histoires à jouer", category_norm="atelier", keyword_match=False,
+                  is_free=True, price_text="", partner_id=None, partner_name=None)]
+    seen: dict[str, Any] = {}
+
+    def write(question, plan, cards):
+        seen["question"] = question
+        return json.dumps({"reponse": "Pas gratuit, mais il y a [1].", "suggestions": []}), {}, "m"
+
+    result = search(SubjectConnection(unrelated, circus), "cirque", write)
+    assert [card["event_id"] for card in result["events"]] == ["c1"]
+    assert result["events"][0]["partner"] is True and result["exact"] is False
+    assert "gratuit" in seen["question"] and "pour le public « famille »" in seen["question"]
+    assert result["partner_offers"] == []
+
+
+def test_clear_subject_found_nowhere_gives_no_unrelated_card() -> None:
+    unrelated = [row("a1", title="Histoires à jouer", category_norm="atelier")]
+    result = search(SubjectConnection(unrelated, unrelated), "cirque")
+    assert result["events"] == [] and "« cirque »" in result["answer"] and result["partner_offers"] == []
+
+
+def test_mood_word_found_nowhere_keeps_the_ideas_closest_in_meaning() -> None:
+    # « romantique » n'est écrit nulle part : le sens reste le meilleur guide.
+    nearby = [row("a1", title="Dîner-concert au bord de l'étang", category_norm="concert")]
+    seen: dict[str, Any] = {}
+
+    def write(question, plan, cards):
+        seen["question"] = question
+        return json.dumps({"reponse": "Idée voisine : [1].", "suggestions": []}), {}, "m"
+
+    result = search(SubjectConnection(nearby, nearby), "un endroit romantique", write)
+    assert [card["event_id"] for card in result["events"]] == ["a1"] and result["exact"] is False
+    assert "romantique" in seen["question"]
+
+
+def test_missing_genre_is_searched_before_settling_for_the_type() -> None:
+    # Des concerts gratuits cette semaine, mais le jazz est payant : on montre le jazz.
+    concerts = [row("c1", title="Concert de chorale", category_norm="concert", category_match=True,
+                    keyword_match=False)]
+    jazz = [row("j1", title="Soirée jazz", category_norm="concert", category_match=True, keyword_match=True,
+                is_free=False)]
+    result = search(SubjectConnection(concerts, jazz), "un concert de jazz")
+    assert [card["event_id"] for card in result["events"]] == ["j1"] and result["exact"] is False
+
+
+def test_words_are_searched_by_prefix() -> None:
+    assert service.lexical_query(["photo", "cine", "art"]) == "photo:* | cine:* | art"
+
+
+def test_partner_circus_course_answers_circus_even_if_filed_as_a_course() -> None:
+    """Capture du 15/10/2026 : le stage de cirque du partenaire était relégué dans
+    l'encadré « offres partenaires » parce qu'il est rangé en « stage », pas en
+    « spectacle ». Le mot « cirque » trouvé suffit : il passe en tête des cartes."""
+
+    rows = [row("d1", title="Stage de cirque enfants", category_norm="atelier", keyword_match=True,
+                category_match=False, partner_id=None, partner_name=None),
+            row("p1", title="Stage de cirque vacances", category_norm="atelier", keyword_match=True,
+                category_match=False, partner_id=3, partner_name="Ludothèque")]
+    result = search(SubjectConnection(rows, rows), "cirque")
+    assert [card["event_id"] for card in result["events"]] == ["p1", "d1"]
+    assert result["exact"] is True and result["partner_offers"] == []
+
+
+def test_on_topic_partner_offer_stays_among_neighbour_ideas() -> None:
+    rows = [row("e1", keyword_match=False, category_match=False),
+            row("p1", partner_id=1, keyword_match=False, category_match=True),
+            row("p2", partner_id=2, keyword_match=False, category_match=False)]
+    ordered = service.partners_first(rows, plan_for("du théâtre"), exact=False)
+    assert [r["event_id"] for r in ordered] == ["p1", "e1"]
+
+
+def test_type_written_in_the_title_counts_as_the_type() -> None:
+    """« jeux » : « Atelier jeux en famille », rangé en atelier, répond aussi (15/10/2026)."""
+
+    sql, params = service.build_search_query(plan_for("des jeux"), None)
+    assert params["type_words"] == "jeux" and "to_tsquery('french', %(type_words)s)" in sql
+    assert "NULLIF(e.category_norm, '')" in sql
+    sql, params = service.build_search_query(plan_for("une sortie demain"), None)
+    assert "type_words" not in params

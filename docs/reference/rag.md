@@ -1,3 +1,3 @@
-# RAG et API
+# Recherche et API
 
 ::: app

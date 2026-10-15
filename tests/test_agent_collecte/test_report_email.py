@@ -125,3 +125,19 @@ def test_smtp_failure_does_not_raise(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr(report_module, "send_email", broken)
     assert send_report_by_email(REPORT) is False
+
+
+def test_weekly_search_report_section() -> None:
+    from datetime import date
+
+    from agent import watch
+    from agent.report import search_report_lines
+
+    lines = search_report_lines({"days": 7, "questions": 40, "not_exact": 6, "no_answer": 2,
+                                 "unknown_words": [("zumba", 4), ("escalade", 2)],
+                                 "unanswered": [("de la zumba", 3)]})
+    text = "\n".join(lines)
+    assert "sans réponse exacte : 6 (15%)" in text and "zumba (4), escalade (2)" in text
+    assert "« de la zumba » (3)" in text
+    assert search_report_lines({}) == [] and search_report_lines({"questions": 0}) == []
+    assert watch.search_report_due(date(2026, 10, 19)) and not watch.search_report_due(date(2026, 10, 15))

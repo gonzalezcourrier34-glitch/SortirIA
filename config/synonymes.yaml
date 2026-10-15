@@ -1,0 +1,11 @@
+# Synonymes et corrections appris par la recherche SortirIA (15/10/2026).
+#
+# Chaque semaine, l'agent lit les recherches restées sans réponse et propose
+# un synonyme ou une correction quand un mot cherché (« zumba », « cirqe »)
+# correspond à un mot connu de la base (« fitness », « cirque »). Rien n'est
+# ajouté ici sans validation humaine :
+#     uv run python -m agent.proposals --accepter N
+#
+# Forme : mot tapé (minuscules, sans accents) : mot connu de la base.
+# Le mot tapé est gardé ; le mot connu est cherché en plus.
+synonymes:

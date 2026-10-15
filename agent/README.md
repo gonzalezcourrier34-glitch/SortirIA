@@ -1,8 +1,15 @@
 # Agent de collecte nocturne
 
-**Son rôle** : être le gardien nocturne de la base. Chaque nuit, apporter des
-événements frais, fiables et sourcés, sans jamais dégrader la base en cas de
-panne, et ne prévenir que lorsqu'une intervention humaine est utile.
+**Son rôle** : être le gardien nocturne de la base, et la faire progresser.
+
+- Chaque nuit, apporter des événements frais, fiables et sourcés, sans jamais
+  dégrader la base en cas de panne, et ne prévenir que lorsqu'une
+  intervention humaine est utile.
+- Chaque lundi, lire ce que les gens ont cherché sans trouver et proposer de
+  quoi y répondre : un synonyme, une correction, un agenda à lire.
+
+Il propose, un humain décide : aucune configuration n'est modifiée sans
+`uv run python -m agent.proposals --accepter N`.
 
 Chaque nuit à 2 h (heure de Paris), l'agent met à jour la base d'événements de
 Montpellier et du bassin de Thau. Il est déclenché par le DAG Airflow
@@ -10,22 +17,23 @@ Montpellier et du bassin de Thau. Il est déclenché par le DAG Airflow
 Container Apps Job en production (même cron : `0 2 * * *`).
 
 Organisation reprise du graphe LangGraph de Chess Agent
-(`reference/p13_agent/backend/app/agent/`) : services injectés, nœuds,
-routage séparé, tout testable sans réseau.
+(`reference/p13_agent/backend/app/agent/`, gardé comme référence) : services
+injectés, nœuds, routage séparé, tout testable sans réseau.
 
 | Fichier | Rôle |
 | --- | --- |
 | `state.py` | État partagé entre les nœuds |
-| `services.py` | Services injectés : extraction (moteur CheckIt.AI), PostgreSQL, embeddings Mistral, sources configurées |
+| `services.py` | Services injectés : extraction (moteur CheckIt.AI), PostgreSQL, embeddings et appels Mistral, sources configurées, recherche d'un sujet dans les agendas OpenAgenda |
 | `nodes.py` | Les étapes et les décisions de l'agent |
 | `routing.py` | Après l'extraction : préparer, réessayer, ou aller au bilan |
 | `graph.py` | L'enchaînement des nœuds et `run_nightly_collection()` |
 | `watch.py` | La surveillance : programmes PDF à renouveler, partenaires à relancer, couverture par public et par zone, coût Mistral |
 | `tracking.py` | Le suivi MLflow : une nuit = une exécution (paramètres, métriques, trace des appels Mistral) |
 | `diagnosis.py` | Le diagnostic des pannes et la recherche d'une réparation (document déplacé) |
-| `proposals.py` | La validation humaine : `uv run python -m agent.proposals` (`--accepter N`, `--refuser N`) |
+| `search_learning.py` | L'apprentissage des recherches ratées : lecture des mots par Mistral, synonymes vérifiés dans la base, agendas qui traitent un sujet absent |
+| `proposals.py` | La validation humaine : `uv run python -m agent.proposals` (`--accepter N`, `--refuser N`) ; applique un agenda (`config/sources.yaml`), une adresse de PDF ou un synonyme (`config/synonymes.yaml`) |
 | `report.py` | Le bilan envoyé par mail |
-| `__main__.py` | Lancement manuel : `uv run python -m agent` (`--essai` : sans écrire en base, `--source` : une source précise, `--decouverte` : avec la découverte des agendas OpenAgenda) |
+| `__main__.py` | Lancement manuel : `uv run python -m agent` (`--essai` : sans écrire en base, `--source` : une source précise, `--decouverte` : avec la découverte des agendas OpenAgenda, `--bilan-recherche` : seulement le bilan de la recherche, `--apprendre` : avec les propositions qui en découlent) |
 
 ## Le graphe
 
@@ -46,9 +54,9 @@ flowchart LR
 | `plan_sources` | Choisit les sources de la nuit : OpenAgenda, DATAtourisme, calendriers iCal, programmes PDF, fichiers des partenaires, **seulement celles qui ont une configuration active** |
 | `extract_sources` | Lance les extracteurs CheckIt.AI (un adaptateur par API, un moteur « fichiers » commun à l'iCal et aux PDF lus par Mistral) |
 | `prepare` | Convertit en `Event`, valide (annulés, en ligne, offres d'emploi rejetés), déduplique titre + jour + lieu |
-| `load_events` | Dans **une seule transaction** : partenaires et bilan de leurs fichiers, enregistrement, ménage des événements disparus, retrait des passés, embeddings Mistral des nouveaux, purge RGPD |
+| `load_events` | Dans **une seule transaction** : partenaires et bilan de leurs fichiers, enregistrement, ménage des événements disparus, retrait des passés, enrichissement et embeddings Mistral des nouveaux, modération des commentaires en attente, purge RGPD. Puis, à part : vocabulaire des titres recalculé et recherches de la semaine relues |
 | `judge_quality` | Mistral juge 20 événements tirés au hasard (cohérence, sortie ou non, publics, catégorie) : score de qualité de la nuit |
-| `watch` | Surveillance et diagnostic (voir plus bas) ; calculée à partir de l'état et de la configuration, elle fonctionne aussi en mode essai et après un échec total |
+| `watch` | Surveillance et diagnostic (voir plus bas) ; calculée à partir de l'état et de la configuration, elle fonctionne aussi en mode essai et après un échec total. Le lundi : bilan de la recherche et apprentissage |
 | `write_report` | Statut, alertes, bilan dans `collect_runs` et détail par source dans `collect_run_sources`, envoi du bilan par mail |
 
 ## Les décisions de l'agent
@@ -76,6 +84,8 @@ C'est ce qui le distingue d'un ETL, qui exécuterait toujours la même suite :
 | La base dépasse 10 000 événements | Les plus lointains sont retirés (statistiques gardées) et une alerte est envoyée ; alerte dès 90 % |
 | C'est le jour de la découverte (`discovery_weekday`, dimanche par défaut), ou `--decouverte` | Recherche complète des agendas OpenAgenda (~6 min) ; chaque agenda utile absent de `agenda_uids` devient une **proposition** « ajouter l'agenda » (nombre d'événements dans la zone, lien), jamais ajoutée seule ; un agenda refusé n'est plus reproposé |
 | Une source tombe en panne | Diagnostic (document déplacé, accès refusé, quota, réseau, format) et conseil ; pour un document déplacé, l'agent cherche et vérifie la nouvelle adresse, puis **propose** la réparation, appliquée seulement après accord humain |
+| Chaque nuit, après l'écriture | Vocabulaire des titres recalculé : les sujets que la recherche reconnaît (« photo » est un sujet, « romantique » une ambiance) |
+| C'est lundi | Bilan de la recherche des 7 derniers jours dans le mail, puis, pour chaque mot cherché au moins 2 fois et absent de la base : **proposition** de synonyme ou de correction, **proposition** d'agenda OpenAgenda qui traite le sujet, ou piste pour les partenaires (détail plus bas) |
 
 Les rappels de surveillance figurent dans le mail mais ne changent pas le
 statut : ce ne sont pas des pannes.
@@ -91,6 +101,8 @@ statut : ce ne sont pas des pannes.
 | Fin de programme PDF | 21 jours avant | `watch.DOCUMENT_EXPIRY_WARNING_DAYS` |
 | Partenaire inactif | 30 jours sans mise à jour | `watch.PARTNER_STALE_DAYS` |
 | Découverte des agendas OpenAgenda | le dimanche (6) | `discovery_weekday` dans `config/sources.yaml` |
+| Bilan et apprentissage de la recherche | le lundi, 7 derniers jours | `watch.SEARCH_REPORT_WEEKDAY`, `SEARCH_REPORT_DAYS` |
+| Mots appris par semaine | 5 au plus, cherchés au moins 2 fois | `search_learning.MAX_WORDS`, `MIN_TIMES` |
 | Couverture | 10 sorties par case et par semaine | `.env` : `COUVERTURE_MIN_SEMAINE` (0 : désactivé) |
 | Budget Mistral | 0,50 $ par nuit | `.env` : `MISTRAL_BUDGET_NUIT_USD` |
 
@@ -118,6 +130,52 @@ pour Gmail, il faut un mot de passe d'application. Un mail qui ne part pas est
 journalisé mais ne fait jamais échouer la collecte, et aucun mail n'est envoyé
 en mode essai (`--essai`).
 
+## Bilan de la recherche (15/10/2026)
+
+Après chaque collecte, l'agent recalcule le **vocabulaire des titres**
+(`sortiria.refresh_title_vocabulary()`, table `title_vocabulary`) : les mots
+que la recherche reconnaît comme sujets. Chaque **lundi**, le mail ajoute ce
+que les utilisateurs ont cherché sans trouver pendant les 7 derniers jours,
+d'après le journal `rag_requests` :
+
+- questions posées, sans réponse exacte, sans aucune proposition sur le sujet ;
+- mots cherchés qui ne figurent dans aucun titre (« zumba (4) ») : une source,
+  un partenaire ou un synonyme à envisager ;
+- questions sans réponse exacte les plus fréquentes.
+
+Comme pour les sources, l'agent signale et propose ; il ne change rien seul.
+À la demande : `uv run python -m agent --bilan-recherche`. Ce qui a manqué à
+chaque question est gardé dans `rag_requests.constraints -> 'recherche'`
+(voir la page Interface, `docs/interface.md`) : le bilan ne compte que les
+questions posées depuis le 15/10/2026.
+
+### L'agent apprend des recherches ratées (`agent/search_learning.py`)
+
+Le lundi, pour chaque mot cherché au moins 2 fois et écrit dans aucun titre
+(5 au plus par semaine) :
+
+1. **Mistral dit ce que c'est** : faute de frappe (« cirqe »), synonyme
+   (« zumba », « stand-up »), sujet à part entière (« escalade ») ou ambiance
+   (« romantique »), avec quelques mots équivalents.
+2. **Faute ou synonyme** : le premier équivalent **présent dans les titres de
+   la base** devient une proposition `ajouter_synonyme` (« zumba » cherchera
+   aussi « fitness »). Un équivalent inconnu de la base n'est jamais proposé :
+   il ne servirait à rien.
+3. **Sujet absent** : l'agent le cherche dans les agendas OpenAgenda de la
+   zone qu'on ne lit pas encore ; chaque agenda qui en propose devient une
+   proposition `ajouter_agenda` (même circuit que la découverte). Sinon : une
+   piste dans le mail (« à proposer aux partenaires »).
+4. **Ambiance** : rien, la recherche par le sens s'en charge.
+
+Une fois acceptée (`uv run python -m agent.proposals --accepter N`), la
+proposition modifie `config/synonymes.yaml` ou `config/sources.yaml` ; la
+recherche relit les synonymes dès qu'ils changent. La boucle complète est
+testée sur une vraie base : « de la zumba » ne trouve rien, puis trouve le
+cours de fitness une fois le synonyme accepté.
+
+À la demande, sans attendre lundi :
+`uv run python -m agent --bilan-recherche --apprendre`.
+
 ## Chiffres de la collecte du 14/10/2026
 
 1 059 événements : 780 autour de Montpellier, 279 sur le bassin de Thau
@@ -143,6 +201,7 @@ suivie dans MLflow (`tracking.py`) et visible dans Grafana. Voir
 | --- | --- | --- |
 | Enrichissement (catégorie, publics, résumé) | `mistral-small-latest` | Liste fermée de catégories et de publics, validation Pydantic, une phrase tirée du texte ; n'efface jamais les données des sources ; les publics des sources sont conservés |
 | Juge de qualité | `mistral-medium-latest` | Un autre modèle que celui de l'enrichissement ; quatre questions fermées ; un contrôle, jamais une modification |
+| Lecture des recherches ratées (faute, synonyme, sujet, ambiance) | `mistral-small-latest` (`LEARNING_MODEL`) | Réponse JSON contrôlée (mots demandés seulement, natures connues, un mot par équivalent) ; un synonyme n'est proposé que s'il existe dans les titres de la base ; un agenda seulement s'il a des événements du sujet dans la zone ; un humain décide, une proposition refusée n'est jamais reproposée |
 | Diagnostic et réparation | pas de LLM (règles + vérification de l'adresse) | L'agent propose, un humain décide ; rien n'est modifié sans `--accepter` |
 
 Cas réel qui a motivé le diagnostic (14/10/2026) : le PDF de l'Agglopôle est

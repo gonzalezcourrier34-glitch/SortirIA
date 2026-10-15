@@ -96,6 +96,14 @@ const SESSION_KEY = 'sortiria_session';
 const SEEN_KEY = 'sortiria_sorties_vues';
 const MAX_SEEN = 30;
 
+/** État du commentaire du visiteur, rappelé sous son avis. */
+const OWN_COMMENT_STATUS: Record<string, string> = {
+    aucun: '',
+    publie: 'Commentaire publié.',
+    en_attente: 'Commentaire en relecture : il sera publié après la modération (au plus tard la nuit prochaine).',
+    refuse: 'Commentaire non publié (refusé par la modération) ; la note compte.'
+};
+
 const COMMENT_MESSAGES: Record<string, string> = {
     aucun: 'Merci, votre note est enregistrée.',
     publie: 'Merci, votre avis est publié.',
@@ -218,6 +226,8 @@ export class AppComponent implements OnInit {
     readonly ratingMessage = signal<string | null>(null);
 
     readonly ratingError = signal<string | null>(null);
+    /** Le visiteur a déjà noté et veut changer son avis. */
+    readonly editingRating = signal(false);
 
     readonly starChoices = [1, 2, 3, 4, 5];
 
@@ -435,7 +445,7 @@ export class AppComponent implements OnInit {
         this.resetRatingForm();
         this.rememberSeen(eventId);
 
-        this.searchService.getEvent(eventId).subscribe({
+        this.searchService.getEvent(eventId, this.sessionId).subscribe({
             next: detail => {
                 if (this.selectedId() === eventId) {
                     this.detail.set(detail);
@@ -490,6 +500,8 @@ export class AppComponent implements OnInit {
                 this.ratingSending.set(false);
                 this.ratingMessage.set(COMMENT_MESSAGES[result.comment_status] ?? COMMENT_MESSAGES['aucun']);
                 this.toRate.update(items => items.filter(item => item.event_id !== event.event_id));
+                this.editingRating.set(false);
+                this.refreshDetail(event.event_id);
             },
             error: (error: { status?: number }) => {
                 this.ratingSending.set(false);
@@ -500,7 +512,34 @@ export class AppComponent implements OnInit {
         });
     }
 
+    /** Recharge le détail après un avis : le visiteur voit tout de suite son
+     *  avis, le nombre d'avis du lieu et, s'il est publié, son commentaire. */
+    private refreshDetail(eventId: string): void {
+        this.searchService.getEvent(eventId, this.sessionId).subscribe({
+            next: detail => {
+                if (this.selectedId() === eventId) {
+                    this.detail.set(detail);
+                }
+            },
+            error: () => undefined
+        });
+    }
+
+    /** Remet le formulaire à la note déjà donnée, pour la modifier. */
+    editRating(): void {
+        const own = this.detail()?.my_rating;
+        this.ratingMessage.set(null);
+        this.ratingStars.set(own?.stars ?? 0);
+        this.ratingComment.set(own?.comment ?? '');
+        this.editingRating.set(true);
+    }
+
+    ownCommentStatus(status: string): string {
+        return OWN_COMMENT_STATUS[status] ?? '';
+    }
+
     private resetRatingForm(): void {
+        this.editingRating.set(false);
         this.ratingStars.set(0);
         this.ratingHover.set(0);
         this.ratingComment.set('');
@@ -576,9 +615,12 @@ export class AppComponent implements OnInit {
         return 'Aussi le : ' + card.other_dates.map(other => other.date).join(', ');
     }
 
-    ratingLabel(card: EventCard): string {
+    ratingLabel(card: EventCard, given = 0): string {
         if (card.venue_rating === null) {
-            return 'Pas encore assez d’avis';
+            // La moyenne d'un lieu ne s'affiche qu'à partir de 3 notes.
+            return given > 0
+                ? `${given} avis · moyenne affichée à partir de 3`
+                : 'Pas encore assez d’avis';
         }
 
         return `${card.venue_rating.toLocaleString('fr-FR')} · ${card.venue_rating_count} avis`;

@@ -52,7 +52,7 @@ def clean(db: Any) -> None:
         cursor.execute(
             "TRUNCATE sortiria.events, sortiria.rag_requests, sortiria.query_cache, "
             "sortiria.collect_runs, sortiria.partner_imports, sortiria.partners, sortiria.deleted_event_stats, "
-            "sortiria.agent_proposals, sortiria.event_ratings RESTART IDENTITY CASCADE"
+            "sortiria.agent_proposals, sortiria.event_ratings, sortiria.title_vocabulary RESTART IDENTITY CASCADE"
         )
 
 
@@ -798,8 +798,17 @@ def test_rating_from_the_interface(db: Any) -> None:
     session = "session-de-test-0123456789"
     seen = ["futur", "hier", "ancien", "inconnu"]
     assert [item["event_id"] for item in service.events_to_rate(db, seen, session)] == ["hier"]
-    submit_rating(db, "hier", session, 4, "Très bien", moderate=lambda text: ("publie", {}))
+    assert yesterday["my_rating"] is None and yesterday["venue_ratings"] == 0
+    submit_rating(db, "hier", session, 4, "Très bien", moderate=lambda text: ("en_attente", {}))
     assert service.events_to_rate(db, seen, session) == []              # déjà noté : plus proposé
+    # Le visiteur revoit son avis et son état (15/10/2026), même avant la
+    # moyenne du lieu (affichée à partir de 3 notes) et avant la modération.
+    from src.event.event_ratings import user_key
+
+    mine = service.event_detail(db, "hier", visitor_key=user_key(session))
+    assert mine["my_rating"]["stars"] == 4 and mine["my_rating"]["comment_status"] == "en_attente"
+    assert mine["venue_ratings"] == 1 and mine["venue_rating"] is None and mine["comments"] == []
+    assert service.event_detail(db, "hier", visitor_key=user_key("autre-visiteur-0123456789"))["my_rating"] is None
     assert [i["event_id"] for i in service.events_to_rate(db, seen, "autre-visiteur-0123456789")] == ["hier"]
 
 
@@ -873,10 +882,19 @@ def test_partner_offers_when_nothing_matches_exactly(db: Any) -> None:
     def result(question: str) -> dict:
         return list(service.run_search(db, question, SearchFilters(), services))[-1]["result"]
 
-    nothing = result("du théâtre à Sète")                         # pas de théâtre : idées voisines
+    # Un sujet absent partout (théâtre) : ni carte ni offre sans rapport (15/10/2026).
+    theatre = result("du théâtre à Sète")
+    assert theatre["exact"] is False and theatre["events"] == [] and theatre["partner_offers"] == []
+    assert "théâtre" in theatre["answer"]
+    # Sans sujet, rien à Frontignan : idées voisines, et les offres partenaires
+    # les plus proches à part (hors des cartes).
+    nothing = result("une sortie à Frontignan")
     assert nothing["exact"] is False and [card["event_id"] for card in nothing["events"]] == ["expo"]
     assert [offer["event_id"] for offer in nothing["partner_offers"]][:2] == ["jeux", "loin"]   # la plus proche d'abord
     assert all(offer["partner"] for offer in nothing["partner_offers"])
+    # Le sujet existe ailleurs : il est proposé (poterie à Mèze pour « poterie à Sète »).
+    elsewhere = result("de la poterie à Sète")
+    assert [card["event_id"] for card in elsewhere["events"]] == ["loin"] and elsewhere["events"][0]["partner"]
     exact = result("une exposition à Sète")
     assert exact["exact"] is True and exact["partner_offers"] == []
     shown = result("des jeux à Mèze")                             # déjà parmi les propositions : pas en double
@@ -969,3 +987,247 @@ def test_card_counts_every_date_like_the_detail(db: Any) -> None:
     assert [d["event_id"] for d in card["other_dates"]] == ["crypte2", "crypte0"]
     detail = service.event_detail(db, card["event_id"])
     assert len(detail["other_dates"]) == len(card["other_dates"])         # même compte que le détail
+
+
+def test_title_vocabulary_tells_subjects_from_moods(db: Any) -> None:
+    """Sujets reconnus d'après les titres de la base, sans liste écrite à la main (15/10/2026)."""
+
+    from app import search_service as service
+    from src.event import event_repository as repository
+
+    insert_event(db, event_id="expo", title="Exposition de photographies", city="Bouzigues")
+    insert_event(db, event_id="poterie", title="Atelier poterie", city="Sète")
+    insert_event(db, event_id="offre", title="Cirque d'emploi", is_outing=False)   # pas une sortie : ignoré
+    words = ["photo", "poterie", "romantique", "cirque"]
+    # Vocabulaire pas encore calculé : les titres sont lus directement.
+    assert service.known_subjects(db, words) == {"photo", "poterie"}
+    assert repository.refresh_title_vocabulary(db) >= 4
+    assert scalar(db, "SELECT events FROM sortiria.title_vocabulary WHERE lexeme = 'poter'") == 1
+    assert service.known_subjects(db, words) == {"photo", "poterie"}
+    # « photo » trouve « photographies » (préfixe) ; « art » (court) ne trouve pas « atelier ».
+    assert service.known_subjects(db, ["art"]) == set()
+
+
+def test_search_gaps_report_what_users_did_not_find(db: Any) -> None:
+    """Bilan de la recherche : questions sans réponse exacte et mots inconnus de la base (15/10/2026)."""
+
+    import json
+
+    from src.event import event_repository as repository
+
+    def ask(question: str, status: str = "ok", **recherche: Any) -> None:
+        with db.cursor() as cursor:
+            cursor.execute("INSERT INTO sortiria.rag_requests (question, status, constraints) VALUES (%s, %s, %s)",
+                           (question, status, json.dumps({"recherche": recherche})))
+
+    ask("du jazz", exact=True)
+    ask("de la zumba", exact=False, mots_inconnus=["zumba"])
+    ask("De la zumba ", exact=False, mots_inconnus=["zumba"])
+    ask("du cirque", status="aucun_resultat", exact=False, sujet_introuvable=True)
+    ask("(filtres seuls)", exact=False)                                   # pas une question
+    with db.cursor() as cursor:                                           # trop ancienne
+        cursor.execute("INSERT INTO sortiria.rag_requests (question, asked_at, constraints) "
+                       "VALUES ('vieux', now() - interval '10 days', '{\"recherche\": {\"exact\": false}}')")
+    gaps = repository.fetch_search_gaps(db, days=7)
+    assert (gaps["questions"], gaps["not_exact"], gaps["no_answer"]) == (4, 3, 1)
+    assert gaps["unknown_words"] == [("zumba", 2)]
+    assert gaps["unanswered"] == [("de la zumba", 2), ("du cirque", 1)]
+
+
+def test_search_finds_a_known_subject_beyond_the_ticked_boxes(db: Any) -> None:
+    """« photo » avec Famille coché : l'expo (tout public, non marquée famille)
+    est proposée plutôt que des ateliers sans rapport ; « romantique », écrit
+    dans aucun titre, garde les idées proches par le sens (15/10/2026)."""
+
+    from app import search_service as service
+    from app.search_service import SearchFilters, SearchServices
+    from src.event import event_repository as repository
+
+    near = "[" + ",".join(["0.1"] * 1024) + "]"
+    insert_event(db, event_id="expo", title="Exposition photo de l'étang", city="Bouzigues", is_free=True,
+                 category_norm="exposition", embedding=near)
+    insert_event(db, event_id="jeux", title="Après-midi jeux", city="Sète", is_free=True, audiences=["famille"],
+                 category_norm="jeux", embedding=near)
+    repository.refresh_title_vocabulary(db)
+    services = SearchServices(embed=lambda text: near, write=None, now=lambda: datetime.now(PARIS), cache=False)
+
+    def result(question: str) -> dict:
+        filters = SearchFilters(public="famille", period="3mois", free_only=True)
+        return list(service.run_search(db, question, filters, services))[-1]["result"]
+
+    photo = result("photo")
+    assert [card["event_id"] for card in photo["events"]] == ["expo"] and photo["exact"] is False
+    mood = result("un endroit romantique")
+    assert [card["event_id"] for card in mood["events"]] == ["jeux"]
+    logged = scalar(db, "SELECT constraints -> 'recherche' FROM sortiria.rag_requests ORDER BY request_id DESC LIMIT 1")
+    assert logged["mots_inconnus"] == ["romantique"] and logged["exact"] is False
+
+
+def test_partner_workshop_named_after_the_type_comes_first(db: Any) -> None:
+    """Capture du 15/10/2026 : « jeux » ; l'« Atelier jeux » du partenaire (rangé
+    en atelier) était relégué en bas. Le type écrit dans le titre compte."""
+
+    from app import search_service as service
+    from app.search_service import SearchFilters, SearchServices
+
+    near = "[" + ",".join(["0.1"] * 1024) + "]"
+    ludo = scalar(db, "INSERT INTO sortiria.partners (name, sector) VALUES ('Ludo', 'enfants') RETURNING partner_id")
+    insert_event(db, event_id="pause", title="Pause jeux", city="Balaruc-les-Bains", category_norm="jeux",
+                 audiences=["famille"], embedding=near)
+    insert_event(db, event_id="ludo", title="Atelier jeux en famille", city="Sète", category_norm="atelier",
+                 audiences=["famille"], partner_id=ludo, embedding=near)
+    insert_event(db, event_id="poterie", title="Atelier poterie", city="Sète", category_norm="atelier",
+                 audiences=["famille"], embedding=near)
+    services = SearchServices(embed=lambda text: near, write=None, now=lambda: datetime.now(PARIS), cache=False)
+    result = list(service.run_search(db, "jeux", SearchFilters(public="famille", period="3mois"), services))[-1]
+    cards = result["result"]["events"]
+    assert [card["event_id"] for card in cards] == ["ludo", "pause"] and cards[0]["partner"]
+    assert result["result"]["exact"] is True and result["result"]["partner_offers"] == []
+
+
+def test_unclassified_events_keep_their_source_category(db: Any) -> None:
+    """Audit du 15/10/2026 : tant que Mistral n'a pas classé un événement,
+    category_norm vaut '' ; la catégorie de la source doit compter (« Lecture »
+    d'un partenaire pour « lecture », « Soirée DJ » d'un bar pour « soirée »)."""
+
+    from app import search_service as service
+    from app.search_service import SearchFilters, SearchServices
+
+    insert_event(db, event_id="contes", title="Contes au jardin", category="Lecture", city="Balaruc-les-Bains")
+    insert_event(db, event_id="dj", title="Nuit électro", category="Soirée DJ", city="Montpellier",
+                 audiences=["soiree"])
+    insert_event(db, event_id="jeudi", title="Les jeudis du port", category="Concert", city="Sète")
+    services = SearchServices(embed=None, write=None, now=lambda: datetime.now(PARIS), cache=False, log=False)
+
+    def ids(question: str) -> list[str]:
+        result = list(service.run_search(db, question, SearchFilters(period="3mois"), services))[-1]["result"]
+        return [card["event_id"] for card in result["events"]] if result["exact"] else []
+
+    assert ids("une lecture") == ["contes"]
+    assert ids("une soirée") == ["dj"]
+    assert "jeudi" not in ids("des jeux")             # racine exacte : « jeux » ne trouve pas « jeudis »
+
+
+def test_learned_synonym_answers_the_failed_search(db: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+    """La boucle complète (15/10/2026) : « zumba » ne trouve rien ; une fois le
+    synonyme accepté (« zumba » -> « fitness »), la même question trouve le cours."""
+
+    from app import query_understanding
+    from app import search_service as service
+    from app.search_service import SearchFilters, SearchServices
+
+    insert_event(db, event_id="fitness", title="Cours de fitness en plein air", city="Sète")
+    services = SearchServices(embed=None, write=None, now=lambda: datetime.now(PARIS), cache=False, log=False)
+
+    def ask() -> dict:
+        return list(service.run_search(db, "de la zumba", SearchFilters(period="3mois"), services))[-1]["result"]
+
+    monkeypatch.setattr(query_understanding, "learned_synonyms", lambda path=None: {})
+    before = ask()
+    assert before["exact"] is False and before["gaps"]["mots_inconnus"] == ["zumba"]
+    monkeypatch.setattr(query_understanding, "learned_synonyms", lambda path=None: {"zumba": "fitness"})
+    after = ask()
+    assert after["exact"] is True and [card["event_id"] for card in after["events"]] == ["fitness"]
+
+
+def test_partner_offer_beyond_the_first_candidates_still_comes_first(db: Any) -> None:
+    """Capture du 15/10/2026 : cases « Soirée » et « 3 mois » sans question ; le
+    karaoké partenaire du 30/10 tombait après les 80 premières séances (triées
+    par date) et n'apparaissait pas. Les séances partenaires sont toujours
+    examinées ; le type s'affiche « soirée »."""
+
+    from app import search_service as service
+    from app.search_service import SearchFilters, SearchServices
+
+    bar = scalar(db, "INSERT INTO sortiria.partners (name, sector) VALUES ('Bar', 'soiree') RETURNING partner_id")
+    soon = datetime.now(PARIS).replace(hour=21, minute=0, second=0, microsecond=0)
+    for index in range(service.CANDIDATES + 10):
+        insert_event(db, event_id=f"s{index}", title=f"Soirée {index}", city="Montpellier", audiences=["soiree"],
+                     start_at=(soon + timedelta(days=1, minutes=index)).isoformat(), venue_name=f"Lieu {index}")
+    insert_event(db, event_id="karaoke", title="Karaoké géant", city="Montpellier", audiences=["soiree"],
+                 category_norm="soiree", partner_id=bar, start_at=(soon + timedelta(days=15)).isoformat())
+    services = SearchServices(embed=None, write=None, now=lambda: datetime.now(PARIS), cache=False, log=False)
+    result = list(service.run_search(db, "", SearchFilters(public="soiree", period="3mois"), services))[-1]["result"]
+    first = result["events"][0]
+    assert first["event_id"] == "karaoke" and first["partner"] is True
+    # Le type s'affiche « soirée » ; le public reste dans les données (filtres,
+    # évaluation) et l'interface ne le répète pas à côté du type.
+    assert first["category_label"] == "soirée" and first["audiences"] == ["soirée"]
+
+
+def test_several_precise_words_keep_the_events_that_have_them_all(db: Any) -> None:
+    """Capture du 15/10/2026 : « blind test » gardait 6 intrus qui contiennent
+    « tester » (une dictée, des dégustations). Seuls les événements qui ont le
+    plus de mots précis de la question sont gardés."""
+
+    from app import search_service as service
+    from app.search_service import SearchFilters, SearchServices
+
+    insert_event(db, event_id="blind", title="Blind test géant", city="Montpellier", category_norm="jeux")
+    insert_event(db, event_id="vin", title="Le blind test du vin", city="Montpellier", category_norm="jeux")
+    insert_event(db, event_id="dictee", title="Dictée", city="Sète", category_norm="lecture",
+                 description="Venez tester votre orthographe.")
+    insert_event(db, event_id="fromage", title="Vins et fromages", city="Sète", category_norm="atelier",
+                 description="Testez les accords parfaits.")
+    services = SearchServices(embed=None, write=None, now=lambda: datetime.now(PARIS), cache=False, log=False)
+
+    def ids(question: str) -> set[str]:
+        result = list(service.run_search(db, question, SearchFilters(period="3mois"), services))[-1]["result"]
+        return {card["event_id"] for card in result["events"]}
+
+    assert ids("un blind test") == {"blind", "vin"}
+    assert ids("une dictée") == {"dictee"}                   # un seul mot : comme avant
+
+
+def test_words_seen_on_the_card_come_before_words_hidden_in_the_description(db: Any) -> None:
+    """Évaluation des 100 recherches (15/10/2026) : « karaoké » ramenait un concert
+    acoustique dont seule la longue description cite un karaoké. Quand des
+    événements montrent le mot (titre, résumé, lieu), seuls eux sont gardés."""
+
+    from app import search_service as service
+    from app.search_service import SearchFilters, SearchServices
+
+    insert_event(db, event_id="karaoke", title="Karaoké géant", city="Montpellier")
+    insert_event(db, event_id="concert", title="Concert acoustique", city="Montpellier",
+                 description="Après le concert, la soirée se termine par un karaoké.")
+    insert_event(db, event_id="tango", title="Quatuor jazz", city="Sète", description="Un détour par le tango.")
+    services = SearchServices(embed=None, write=None, now=lambda: datetime.now(PARIS), cache=False, log=False)
+
+    def ids(question: str) -> list[str]:
+        result = list(service.run_search(db, question, SearchFilters(period="3mois"), services))[-1]["result"]
+        return [card["event_id"] for card in result["events"]]
+
+    assert ids("karaoké") == ["karaoke"]
+    assert ids("tango") == ["tango"]           # le mot n'est que dans une description : on la garde
+
+
+def test_the_card_shows_the_session_that_answers(db: Any) -> None:
+    """Évaluation des 100 recherches (15/10/2026) : « Halloween » trouvait la
+    séance du 31/10 de l'atelier jeux, mais la carte montrait celle du 24/10
+    (sans Halloween). La carte montre la séance trouvée ; « bière » cité dans la
+    seule description donne une idée voisine ; « feu d'artifice » n'est pas
+    trouvé avec « feu » seulement."""
+
+    from app import search_service as service
+    from app.search_service import SearchFilters, SearchServices
+
+    first = (datetime.now(PARIS) + timedelta(days=9)).replace(hour=14, minute=30, second=0, microsecond=0)
+    insert_event(db, event_id="j24", title="Atelier jeux en famille", venue_name="Ludothèque", city="Sète",
+                 start_at=first.isoformat(), summary="Jeux de société pour petits et grands.")
+    insert_event(db, event_id="j31", title="Atelier jeux en famille", venue_name="Ludothèque", city="Sète",
+                 start_at=(first + timedelta(days=7)).isoformat(), summary="Spécial Halloween : jeux d'enquête.")
+    insert_event(db, event_id="bar", title="Programmation du Réservoir", city="Montpellier",
+                 description="Concerts, tournois et dégustation de bière artisanale.")
+    insert_event(db, event_id="feu", title="Contes au coin du feu", city="Mèze")
+    services = SearchServices(embed=None, write=None, now=lambda: datetime.now(PARIS), cache=False, log=False)
+
+    def search(question: str) -> dict:
+        return list(service.run_search(db, question, SearchFilters(period="3mois"), services))[-1]["result"]
+
+    halloween = search("Halloween")
+    assert [card["event_id"] for card in halloween["events"]] == ["j31"] and halloween["exact"] is True
+    assert [other["event_id"] for other in halloween["events"][0]["other_dates"]] == ["j24"]
+    beer = search("de la bière")
+    assert [card["event_id"] for card in beer["events"]] == ["bar"] and beer["exact"] is False
+    fireworks = search("un feu d'artifice")
+    assert fireworks["exact"] is False
