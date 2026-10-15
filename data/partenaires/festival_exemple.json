@@ -1,0 +1,39 @@
+{
+  "evenements": [
+    {
+      "titre": "Exposition photo de l'étang (exemple)",
+      "date": "2026-10-15",
+      "date_fin": "2026-11-30",
+      "lieu": "Galerie Exemple",
+      "commune": "Bouzigues",
+      "prix": "Gratuit",
+      "gratuit": "oui",
+      "public": "tout public",
+      "categorie": "Exposition",
+      "description": "Vingt photographies de l'étang de Thau au lever du jour."
+    },
+    {
+      "titre": "Concert jazz au port (exemple)",
+      "date": "2026-11-14",
+      "heure_debut": "20:30",
+      "lieu": "Scène Exemple",
+      "commune": "Marseillan",
+      "prix": "15 €",
+      "public": "tout public",
+      "categorie": "Concert",
+      "description": "Quartet de jazz manouche en ouverture du festival."
+    },
+    {
+      "titre": "Bal folk (exemple)",
+      "date": "2026-11-15",
+      "heure_debut": "21:00",
+      "heure_fin": "23:30",
+      "lieu": "Scène Exemple",
+      "commune": "Marseillan",
+      "prix": "8 €",
+      "public": "soirée",
+      "categorie": "Bal",
+      "description": "Danses traditionnelles, initiation en début de soirée."
+    }
+  ]
+}

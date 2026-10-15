@@ -9,6 +9,9 @@ logs/
 *.log
 data/*
 !data/.gitkeep
+# Fichiers des partenaires : copiés dans l'image Docker de production
+# (exemples fictifs pour la démonstration, et modèles à remplir).
+!data/partenaires/
 secrets/
 .env
 .env.*

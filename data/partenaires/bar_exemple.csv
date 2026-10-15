@@ -1,0 +1,6 @@
+﻿titre;date;heure_debut;date_fin;heure_fin;lieu;adresse;code_postal;commune;prix;gratuit;public;age_min;age_max;categorie;description;lien;statut
+Soirée DJ électro (exemple);31/10/2026;23h;;5h;Bar Exemple;;;Montpellier;10 à 15 €;;soirée;18;;Soirée DJ;Deux DJ résidents, entrée réduite avant minuit.;;
+Karaoké géant (exemple);30/10/2026;21h30;;;Bar Exemple;;;Montpellier;Entrée libre;oui;soirée;18;;Soirée;Scène ouverte, plus de 5 000 titres.;;
+Blind test géant (exemple);06/11/2026;21h;;;Bar Exemple;;;Montpellier;5 €;;soirée;18;;Soirée jeux;Par équipes de 2 à 6, lots à gagner.;;
+  SOIRÉE   SALSA (EXEMPLE) ;13/11/2026;21h;;;Bar Exemple;;;montpellier;8 €;;soirée;18;;Soirée dansante;Initiation à 21 h, puis piste libre.;www.example.org/bar/salsa;
+Concert rock (exemple);07/11/2026;20h30;;23h30;Bar Exemple;;;Montpellier;12 à 18 €;;tout public;;;Concert;Trois groupes locaux sur la même scène.;;

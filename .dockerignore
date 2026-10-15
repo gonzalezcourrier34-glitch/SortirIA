@@ -1,0 +1,19 @@
+# Contexte de construction des images Docker (docker/Dockerfile.api).
+# Ajout SortirIA (15/10/2026) : aucun secret ni fichier privé dans le contexte.
+.env
+.env.*
+!.env.example
+perso/
+.git/
+.venv/
+logs/
+data/raw/
+data/processed/
+data/mlflow/
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+**/__pycache__/
+.pytest_cache/
+.ruff_cache/
+site/

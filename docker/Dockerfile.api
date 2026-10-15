@@ -33,6 +33,9 @@ COPY src/ ./src/
 COPY config/ ./config/
 # agent/ : connexion PostgreSQL et embeddings partagés avec l'agent de collecte.
 COPY agent/ ./agent/
+# Fichiers des partenaires (exemples fictifs pour la démonstration, à présenter
+# comme tels) : la collecte de la nuit les importe depuis data/partenaires/.
+COPY data/partenaires/ ./data/partenaires/
 
 # L'API ne tourne jamais en root.
 RUN useradd --create-home --uid 10001 appuser \
