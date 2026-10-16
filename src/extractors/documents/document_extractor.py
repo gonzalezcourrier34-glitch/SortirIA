@@ -30,7 +30,7 @@ Exemple de source :
 
 Essai sans appeler Mistral (texte extrait seulement) :
 
-    uv run python -m src.extractors.documents.document_extractor --texte perso/programme.txt
+    uv run python -m src.extractors.documents.document_extractor --texte <texte_du_pdf>.txt
 """
 
 from __future__ import annotations

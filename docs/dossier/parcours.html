@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mon parcours : de cinq projets à SortirIA | SortirIA</title>
+<meta content="SortirIA est la suite de cinq de mes projets de la formation Ingénieur IA : la frise, qui apporte quoi, trois avant / après avec le code d'origine et le code actuel, ce qui est nouveau, et ma méthode de travail." name="description"/>
+<link href="css/style.css" rel="stylesheet"/>
+</head>
+<body>
+<header class="header">
+<nav class="nav container">
+<a class="logo" href="index.html">Sortir<span>IA</span></a>
+<div class="nav-links"><a href="index.html">Projet</a><a class="active" href="parcours.html">Parcours</a><a href="architecture.html">Architecture</a><a href="agent.html">Agent</a><a href="recherche.html">Recherche</a><a href="modeles.html">Modèles</a><a href="interface.html">Interface</a><a href="resultats.html">Résultats</a><a href="deploiement.html">Déploiement</a><a href="procedures.html">Procédures</a><a href="limites.html">Limites</a></div>
+</nav>
+</header>
+<main>
+
+<!-- HERO -->
+<section class="hero project-hero">
+<div class="container hero-content">
+<p class="eyebrow">SORTIRIA · MON PARCOURS</p>
+<h1>Mon parcours<span>de cinq projets à SortirIA</span></h1>
+<p class="hero-text"><strong>SortirIA ne part pas de zéro : il assemble et industrialise cinq de mes projets</strong> de la formation Ingénieur IA. J'en suis l'auteur, ils sont publics sur GitHub, et SortirIA en reprend et adapte le code : la collecte de CheckIt.AI, l'organisation de l'agent et l'interface de Chess Agent, l'API de l'Assistant RAG OpenAgenda, la livraison du triage médical, le suivi du scoring crédit. Cette page montre ce que chaque projet m'a appris, ce qu'il apporte, et ce que j'ai dû changer.</p>
+<div class="result-grid">
+<div class="result-card"><strong>5</strong><span>projets précédents réutilisés</span></div>
+<div class="result-card"><strong>134</strong><span>commits dans ces cinq dépôts</span></div>
+<div class="result-card"><strong>mars → oct.</strong><span>2026, du projet 6 à SortirIA</span></div>
+<div class="result-card"><strong>6</strong><span>dépôts publics, SortirIA compris</span></div>
+</div>
+<p class="table-note">Sources : dépôts GitHub publics de l'auteur (dates du premier et du dernier commit, nombre de commits : 40 + 45 + 6 + 16 + 27) ; <code>PROVENANCE.md</code> (copie du code le 13/10/2026).</p>
+<div class="hero-tags"><span>CheckIt.AI</span><span>Chess Agent</span><span>Assistant RAG OpenAgenda</span><span>Triage médical</span><span>Scoring crédit</span></div>
+<div class="hero-actions">
+<a class="button primary" href="#s01">Voir la frise</a>
+<a class="button secondary" href="#s03">Voir le code avant / après</a>
+</div>
+</div>
+</section>
+
+<!-- 01 LA FRISE -->
+<section class="section" id="s01">
+<div class="container">
+<p class="section-number">01</p>
+<h2>La frise</h2>
+<p class="section-intro">Cinq projets en sept mois, dans l'ordre où je les ai commencés. Chacun répondait à un autre sujet ; chacun m'a laissé une brique que SortirIA réutilise.</p>
+<div class="timeline">
+<div class="timeline-item"><span>Projet 6 • 17/03 → 10/04/2026 • 40 commits</span><h3>Assistant RAG OpenAgenda</h3>
+<p><strong>Objectif.</strong> Démontrer la faisabilité d'un assistant qui recommande des événements culturels à partir d'une question libre, sur des données réelles d'OpenAgenda (Montpellier) : recherche vectorielle FAISS, réponse de Mistral contrainte par le contexte, API FastAPI et tableau Streamlit.</p>
+<p><strong>Ce que j'y ai appris.</strong> La chaîne RAG complète, et sa limite : une recherche par le sens respecte mal « samedi », « à Sète » ou « gratuit ». Mon README le notait déjà : « pas encore de recherche hybride vectorielle et lexicale », « le filtrage métier reste encore perfectible », et « déploiement cloud » en piste.</p>
+<p><strong>Ce qu'il apporte à SortirIA.</strong> L'appel à l'API OpenAgenda (porté dans l'extracteur), le point d'entrée de l'API (<code>app/main.py</code>, <code>app/security.py</code>), l'idée du texte indexé. Ses limites sont devenues le cahier des charges de la recherche.</p>
+<a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/rag-openagenda">Dépôt rag-openagenda →</a></div>
+<div class="timeline-item"><span>Projet 5 • 14/04 → 13/05/2026 • 45 commits</span><h3>Scoring crédit « Prêt à dépenser »</h3>
+<p><strong>Objectif.</strong> Mettre un modèle de scoring crédit en production : API FastAPI, prédictions historisées dans PostgreSQL, monitoring (dérive avec Evidently, latence P95 et P99, temps d'inférence), tableau Streamlit, optimisation ONNX, CI/CD.</p>
+<p><strong>Ce que j'y ai appris.</strong> Un modèle en production se surveille : tracer chaque appel, séparer la latence de l'API et le temps du modèle, suivre la dérive et un coût métier.</p>
+<p><strong>Ce qu'il apporte à SortirIA.</strong> La façon de suivre le service : chaque question est journalisée dans <code>rag_requests</code> (contraintes comprises, latence, tokens, coût) et le P95 est mesuré. Ses modules de suivi sont copiés comme modèles dans <code>reference/p5_monitoring/</code>, non importés.</p>
+<a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/pret_a_depenser">Dépôt pret_a_depenser →</a></div>
+<div class="timeline-item"><span>Projet 12 • 26/07 → 30/07/2026 • 6 commits</span><h3>CheckIt.AI</h3>
+<p><strong>Objectif.</strong> Un pipeline d'acquisition d'articles de presse destinés au fact-checking : flux RSS, API d'actualité, scraping, réseaux sociaux et jeux de données académiques, puis validation, déduplication et stockage PostgreSQL, orchestrés par Airflow.</p>
+<p><strong>Ce que j'y ai appris.</strong> Séparer un moteur générique par famille de sources d'un adaptateur par fournisseur, décrire les sources en YAML, compter les motifs de rejet plutôt que d'ignorer les erreurs.</p>
+<p><strong>Ce qu'il apporte à SortirIA.</strong> Les moteurs de collecte (API, RSS, scraper, jeux de données), le contrat d'adaptateur, <code>config/sources.yaml</code> et le DAG Airflow, qui a servi de modèle au DAG de la nuit.</p>
+<a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">Dépôt checkit_ai →</a></div>
+<div class="timeline-item"><span>Projet 13 • 18/08 → 14/10/2026 • 16 commits</span><h3>Chess Agent</h3>
+<p><strong>Objectif.</strong> Aider à apprendre les ouvertures d'échecs : à partir d'une position, produire une analyse pédagogique qui combine python-chess, Lichess, Stockfish, un RAG Wikichess (Milvus), YouTube et un LLM local ; le tout orchestré par LangGraph, exposé par FastAPI, affiché par Angular.</p>
+<p><strong>Ce que j'y ai appris.</strong> Écrire un agent LangGraph lisible : un état commun, des nœuds sans routage, un routage à part et testé. Et un principe : « Stockfish calcule, les sources documentaires apportent le contexte et le LLM explique ».</p>
+<p><strong>Ce qu'il apporte à SortirIA.</strong> L'organisation de l'agent (état, nœuds, routage, services injectés par la configuration), la configuration Angular, le Dockerfile et la lecture du flux SSE de l'interface, la CI GitHub Actions.</p>
+<a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Dépôt chess_agent →</a></div>
+<div class="timeline-item"><span>Projet 14 • 22/09 → 13/10/2026 • 27 commits</span><h3>Triage médical</h3>
+<p><strong>Objectif.</strong> Un petit modèle de langage (Qwen3-1.7B-Base, QLoRA, SFT puis DPO) qui classe un patient en P1, P2 ou P3 et justifie sa décision, servi par vLLM derrière une API FastAPI, avec Docker et une CI/CD.</p>
+<p><strong>Ce que j'y ai appris.</strong> Un protocole d'évaluation qui sépare strictement sélection et mesure (un test gelé), une API qui ne dépend pas du modèle (un moteur simulé pour la CI), une livraison automatique, et un site de documentation par pages.</p>
+<p><strong>Ce qu'il apporte à SortirIA.</strong> Le Dockerfile de l'API, la CD (<code>cd.yml</code>), Prometheus et Grafana (<code>monitoring/</code>), la forme de ce site. La même discipline se retrouve dans le juge de pertinence : calibré sur une grille, puis vérifié sur 135 cartes nouvelles.</p>
+<a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/medical_triage_agent">Dépôt medical_triage_agent →</a></div>
+<div class="timeline-item"><span>SortirIA • code copié le 13/10, dépôt à partir du 14/10/2026</span><h3>SortirIA</h3>
+<p><strong>Objectif.</strong> Un assistant de sorties pour Montpellier et le bassin de Thau : des événements réels, à venir, qui respectent la demande et citent leur source, mis à jour chaque nuit, en production sur <code>www.sortiria-montpellier.fr</code> depuis le 15/10/2026.</p>
+<p><strong>Ce que j'y fais.</strong> J'assemble les briques des cinq projets, je les adapte à des événements datés et situés, et j'écris ce qui n'existait nulle part : l'agent qui propose, la lecture des PDF, la recherche sous contraintes, le déploiement Azure, les mesures (section 06).</p>
+<a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/SortirIA">Dépôt SortirIA →</a></div>
+</div>
+<p class="table-note">Objectifs résumés d'après le README de chaque dépôt ; apports d'après <code>PROVENANCE.md</code> et les tableaux « D'où vient le code » de ce site.</p>
+</div>
+</section>
+
+<!-- 02 QUI APPORTE QUOI -->
+<section class="section section-alt" id="s02">
+<div class="container">
+<p class="section-number">02</p>
+<h2>Qui apporte quoi</h2>
+<p class="section-intro">Chaque flèche part d'un projet et arrive sur la brique de SortirIA qu'il a nourrie. Trait plein : du code repris puis adapté. Pointillés : une organisation ou une idée reprise, avec un code écrit pour SortirIA.</p>
+<figure class="story-figure"><svg class="story-svg" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 600" role="img" aria-label="Schéma qui apporte quoi. À gauche, les cinq projets dans l'ordre chronologique ; à droite, huit briques de SortirIA. Assistant RAG OpenAgenda (projet 6) : code repris pour la collecte (appel OpenAgenda) et pour la recherche (point d'entrée de l'API). Scoring crédit (projet 5) : idée reprise pour le suivi (journal des requêtes). CheckIt.AI (projet 12) : code repris pour la collecte (moteurs et adaptateurs), idée reprise pour la base (schéma SQL versionné). Chess Agent (projet 13) : organisation reprise pour l'agent (graphe LangGraph), code repris pour l'interface (Angular, flux SSE) et pour la CI. Triage médical (projet 14) : code repris pour la CD, le déploiement (Dockerfile de l'API) et le suivi (Prometheus, Grafana).">
+<rect width="1080" height="600" rx="18" fill="#111a22"/>
+<defs><marker id="arr-parcours-1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#48c9b0"/></marker>
+<marker id="arr-parcours-2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#98a8ad"/></marker></defs>
+<text x="40" y="46" fill="#edf4f4" font-size="22" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">Qui apporte quoi</text>
+<text x="40" y="72" fill="#98a8ad" font-size="14" font-family="Inter, 'Segoe UI', Arial, sans-serif">Cinq projets, huit briques : chaque brique de SortirIA a au moins une origine.</text>
+<text x="40" y="106" fill="#48c9b0" font-size="11" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" letter-spacing="1.3">MES PROJETS PRÉCÉDENTS</text>
+<text x="720" y="106" fill="#48c9b0" font-size="11" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" letter-spacing="1.3">BRIQUES DE SORTIRIA</text>
+
+<!-- Projets -->
+<rect x="40" y="120" width="320" height="66" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
+<text x="56" y="144" fill="#48c9b0" font-size="11" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" letter-spacing="1.1">PROJET 6 · MARS-AVRIL</text>
+<text x="56" y="170" fill="#edf4f4" font-size="16" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">Assistant RAG OpenAgenda</text>
+<rect x="40" y="202" width="320" height="66" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
+<text x="56" y="226" fill="#48c9b0" font-size="11" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" letter-spacing="1.1">PROJET 5 · AVRIL-MAI</text>
+<text x="56" y="252" fill="#edf4f4" font-size="16" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">Scoring crédit</text>
+<rect x="40" y="284" width="320" height="66" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
+<text x="56" y="308" fill="#48c9b0" font-size="11" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" letter-spacing="1.1">PROJET 12 · JUILLET</text>
+<text x="56" y="334" fill="#edf4f4" font-size="16" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">CheckIt.AI</text>
+<rect x="40" y="366" width="320" height="66" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
+<text x="56" y="390" fill="#48c9b0" font-size="11" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" letter-spacing="1.1">PROJET 13 · AOÛT-OCTOBRE</text>
+<text x="56" y="416" fill="#edf4f4" font-size="16" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">Chess Agent</text>
+<rect x="40" y="448" width="320" height="66" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
+<text x="56" y="472" fill="#48c9b0" font-size="11" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" letter-spacing="1.1">PROJET 14 · SEPTEMBRE-OCTOBRE</text>
+<text x="56" y="498" fill="#edf4f4" font-size="16" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">Triage médical</text>
+
+<!-- Briques -->
+<rect x="720" y="120" width="320" height="40" rx="10" fill="#17232d" stroke="#48c9b0" stroke-width="1.5"/>
+<text x="736" y="145" fill="#edf4f4" font-size="14" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">Collecte</text>
+<text x="846" y="145" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">moteurs + adaptateurs</text>
+<rect x="720" y="170" width="320" height="40" rx="10" fill="#17232d" stroke="#48c9b0" stroke-width="1.5"/>
+<text x="736" y="195" fill="#edf4f4" font-size="14" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">Base</text>
+<text x="846" y="195" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">PostgreSQL + pgvector</text>
+<rect x="720" y="220" width="320" height="40" rx="10" fill="#17232d" stroke="#48c9b0" stroke-width="1.5"/>
+<text x="736" y="245" fill="#edf4f4" font-size="14" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">Agent</text>
+<text x="846" y="245" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">LangGraph, chaque nuit</text>
+<rect x="720" y="270" width="320" height="40" rx="10" fill="#17232d" stroke="#48c9b0" stroke-width="1.5"/>
+<text x="736" y="295" fill="#edf4f4" font-size="14" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">Recherche</text>
+<text x="846" y="295" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">API, filtres SQL</text>
+<rect x="720" y="320" width="320" height="40" rx="10" fill="#17232d" stroke="#48c9b0" stroke-width="1.5"/>
+<text x="736" y="345" fill="#edf4f4" font-size="14" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">Interface</text>
+<text x="846" y="345" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">Angular, flux SSE</text>
+<rect x="720" y="370" width="320" height="40" rx="10" fill="#17232d" stroke="#48c9b0" stroke-width="1.5"/>
+<text x="736" y="395" fill="#edf4f4" font-size="14" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">CI/CD</text>
+<text x="846" y="395" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">GitHub Actions</text>
+<rect x="720" y="420" width="320" height="40" rx="10" fill="#17232d" stroke="#48c9b0" stroke-width="1.5"/>
+<text x="736" y="445" fill="#edf4f4" font-size="14" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">Déploiement</text>
+<text x="846" y="445" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">Docker, Azure</text>
+<rect x="720" y="470" width="320" height="40" rx="10" fill="#17232d" stroke="#48c9b0" stroke-width="1.5"/>
+<text x="736" y="495" fill="#edf4f4" font-size="14" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">Suivi</text>
+<text x="846" y="495" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">journal, Grafana</text>
+
+<!-- Flèches : trait plein = code repris et adapté ; pointillés = organisation ou idée reprise -->
+<path d="M360,147 C540,147 540,134 716,134" fill="none" stroke="#48c9b0" stroke-width="1.6" marker-end="url(#arr-parcours-1)"/>
+<path d="M360,159 C540,159 540,290 716,290" fill="none" stroke="#48c9b0" stroke-width="1.6" marker-end="url(#arr-parcours-1)"/>
+<path d="M360,235 C540,235 540,484 716,484" fill="none" stroke="#98a8ad" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#arr-parcours-2)"/>
+<path d="M360,311 C540,311 540,146 716,146" fill="none" stroke="#48c9b0" stroke-width="1.6" marker-end="url(#arr-parcours-1)"/>
+<path d="M360,323 C540,323 540,190 716,190" fill="none" stroke="#98a8ad" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#arr-parcours-2)"/>
+<path d="M360,391 C540,391 540,240 716,240" fill="none" stroke="#98a8ad" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#arr-parcours-2)"/>
+<path d="M360,399 C540,399 540,340 716,340" fill="none" stroke="#48c9b0" stroke-width="1.6" marker-end="url(#arr-parcours-1)"/>
+<path d="M360,407 C540,407 540,386 716,386" fill="none" stroke="#48c9b0" stroke-width="1.6" marker-end="url(#arr-parcours-1)"/>
+<path d="M360,473 C540,473 540,394 716,394" fill="none" stroke="#48c9b0" stroke-width="1.6" marker-end="url(#arr-parcours-1)"/>
+<path d="M360,481 C540,481 540,440 716,440" fill="none" stroke="#48c9b0" stroke-width="1.6" marker-end="url(#arr-parcours-1)"/>
+<path d="M360,489 C540,489 540,496 716,496" fill="none" stroke="#48c9b0" stroke-width="1.6" marker-end="url(#arr-parcours-1)"/>
+
+<!-- Légende -->
+<line x1="40" y1="548" x2="84" y2="548" stroke="#48c9b0" stroke-width="1.6" marker-end="url(#arr-parcours-1)"/>
+<text x="96" y="553" fill="#edf4f4" font-size="13" font-family="Inter, 'Segoe UI', Arial, sans-serif">code repris, puis adapté</text>
+<line x1="330" y1="548" x2="374" y2="548" stroke="#98a8ad" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#arr-parcours-2)"/>
+<text x="386" y="553" fill="#edf4f4" font-size="13" font-family="Inter, 'Segoe UI', Arial, sans-serif">organisation ou idée reprise, code écrit pour SortirIA</text>
+<text x="40" y="580" fill="#98a8ad" font-size="13" font-family="Inter, 'Segoe UI', Arial, sans-serif">Azure, l'agent qui propose, la lecture des PDF et le juge sont nouveaux : voir la section 06.</text>
+</svg><figcaption>Les flèches suivent les tableaux « D'où vient le code » des autres pages et <code>PROVENANCE.md</code>. Exemple : l'appel à OpenAgenda vient du projet 6, le moteur qui l'exécute du projet 12. Le détail : <a class="project-link" href="architecture.html#s06">Architecture →</a></figcaption></figure>
+</div>
+</section>
+
+<!-- 03 CHECKIT -->
+<section class="section" id="s03">
+<div class="container">
+<p class="section-number">03</p>
+<h2>Avant / après : de CheckIt.AI à la collecte d'événements</h2>
+<p class="section-intro">CheckIt.AI collectait des articles de presse étiquetés vrai ou faux. SortirIA collecte des événements datés et situés. Le moteur multi-sources est gardé presque tel quel ; ce qui change, ce sont les adaptateurs, la configuration et le modèle de données. <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">Dépôt checkit_ai →</a></p>
+
+<h3>Une source = un adaptateur</h3>
+<div class="api-example">
+<div><span>AVANT · CHECKIT.AI · src/extractors/apis/api_adapter.py</span><pre><code>@dataclass(frozen=True, slots=True)
+class ApiAdapter:
+    """Regroupe les fonctions propres au format d'une API."""
+
+    source_id: str
+    default_name: str
+    iter_items: IterApiItemsCallable
+    build_article: BuildApiArticleCallable
+    validate_item: ValidateApiItemCallable | None = None</code></pre></div>
+<div><span>APRÈS · SORTIRIA · src/extractors/apis/source/openagenda_extractor.py</span><pre><code>OPENAGENDA_ADAPTER = ApiAdapter(
+    source_id="openagenda",
+    default_name="OpenAgenda",
+    iter_items=iter_openagenda_items,
+    build_article=build_openagenda_article,
+    validate_item=validate_openagenda_item,
+)</code></pre></div>
+</div>
+<p>Le contrat d'adaptateur est le même fichier, à la mention de provenance près. Une nouvelle source se branche en écrivant trois fonctions (parcourir, construire, valider), sans toucher au moteur.</p>
+
+<h3>Les sources décrites en YAML</h3>
+<div class="api-example">
+<div><span>AVANT · CHECKIT.AI · config/sources.yaml</span><pre><code>api_sources:
+  newsdata:
+    name: "NewsData.io"
+    enabled: true
+    source_id: "newsdata"
+    type: "api"
+    role: "acquisition"
+    language: "fr"
+    country: "France"
+    category: "general"
+    max_articles: 100
+    endpoint: "https://newsdata.io/api/1/latest"</code></pre></div>
+<div><span>APRÈS · SORTIRIA · config/sources.yaml</span><pre><code>  - name: "OpenAgenda - Montpellier et bassin de Thau"
+    source_id: "openagenda"
+    type: "api"
+    role: "acquisition"
+    endpoint: "https://openagenda.com/agendas"
+    agendas_search_url: "https://api.openagenda.com/v2/agendas"
+    api_key_secret_name: "openagenda_api_key"
+    zone: "Montpellier"</code></pre></div>
+</div>
+<p>Même forme (identifiant, type, rôle, adresse, nom du secret), autre contenu : des agendas d'une zone au lieu de flux d'actualité. La clé reste dans <code>.env</code>, le fichier ne porte que le nom du secret.</p>
+
+<h3>D'un article étiqueté à un événement daté</h3>
+<div class="api-example">
+<div><span>AVANT · CHECKIT.AI · sql/01_articles.sql</span><pre><code>    CONSTRAINT ck_articles_dataset_role
+        CHECK (
+            dataset_role IS NULL
+            OR dataset_role IN (
+                'acquisition',
+                'labeled_reference',
+                'multimodal_reference',
+                'fact_check_reference',
+                'social_reference'
+            )
+        ),</code></pre></div>
+<div><span>APRÈS · SORTIRIA · sql/sortiria/02_events.sql</span><pre><code>    -- Quand
+    start_at         TIMESTAMPTZ NOT NULL,
+    end_at           TIMESTAMPTZ,
+    time_known       BOOLEAN     NOT NULL DEFAULT TRUE,
+
+    -- Où
+    venue_name       TEXT        NOT NULL DEFAULT '',
+    address          TEXT        NOT NULL DEFAULT '',
+    city             TEXT        NOT NULL DEFAULT '',
+    postal_code      TEXT        NOT NULL DEFAULT '',
+    latitude         DOUBLE PRECISION,
+    longitude        DOUBLE PRECISION,</code></pre></div>
+</div>
+<p>La table <code>checkit.articles</code> rangeait des articles selon leur rôle dans un corpus de vérification. La table <code>sortiria.events</code> range ce qui compte pour sortir : quand, où, combien, pour qui, et un vecteur <code>vector(1024)</code> pour la recherche.</p>
+
+<table class="story-table params-table">
+<thead><tr><th>Élément</th><th>Gardé</th><th>Changé</th><th>Pourquoi</th></tr></thead>
+<tbody>
+<tr><td>Moteur API (<code>api_extractor.py</code>)</td><td>Pagination, nouveaux essais, secrets, métriques.</td><td>Une ligne, le 14/10 : <code>params=request_params or None</code>.</td><td>Avec des paramètres vides, le lien « page suivante » de DATAtourisme perdait ses filtres et son curseur.</td></tr>
+<tr><td>Contrat d'adaptateur</td><td>Tel quel.</td><td>Nouveaux adaptateurs : OpenAgenda, DATAtourisme, iCal, PDF, partenaires, RSS d'agenda, agenda en ligne.</td><td>Chaque source garde ses particularités hors du moteur.</td></tr>
+<tr><td><code>config/sources.yaml</code></td><td>Une section par moteur, la même description de source.</td><td>Sources de presse retirées ; zones (<code>areas</code>), agendas, fenêtre de 90 jours ajoutés.</td><td>Le périmètre est Montpellier et le bassin de Thau.</td></tr>
+<tr><td>Modèle de données</td><td>L'« article » comme format intermédiaire des moteurs.</td><td>Converti en <code>Event</code> par <code>src/event/</code> ; étiquettes vrai / faux (<code>BINARY_LABELS</code>, <code>LIAR_LABELS</code>, <code>LABEL_MAPPING</code>…) et rôles <code>*_reference</code> retirés le 16/10, avec leurs 68 tests.</td><td>Un événement n'est ni vrai ni faux : il est daté, situé, gratuit ou payant.</td></tr>
+<tr><td>Base</td><td>Des scripts SQL versionnés, rejouables.</td><td>Table <code>articles</code> → table <code>events</code> (schéma <code>sql/sortiria/</code>) ; anciens fichiers archivés dans <code>reference/sql_checkit/</code>.</td><td>Les filtres de la recherche se font en SQL : les contraintes doivent être des colonnes.</td></tr>
+<tr><td>Extracteurs de presse</td><td>Les moteurs génériques (API, RSS, scraper, jeux de données).</td><td>22 extracteurs de presse et de fact-checking, le moteur réseaux sociaux et <code>praw</code> retirés le 13/10.</td><td>Hors du sujet ; l'ancien code reste dans l'historique git.</td></tr>
+</tbody>
+</table>
+<p class="table-note">Extraits copiés des fichiers d'origine (CheckIt.AI, commit 93632c5) et actuels ; retraits et dates d'après <code>PROVENANCE.md</code>.</p>
+</div>
+</section>
+
+<!-- 04 CHESS AGENT -->
+<section class="section section-alt" id="s04">
+<div class="container">
+<p class="section-number">04</p>
+<h2>Avant / après : de Chess Agent à l'agent de collecte</h2>
+<p class="section-intro">Chess Agent analysait une position d'échecs à la demande. L'agent de SortirIA collecte chaque nuit. J'ai repris l'organisation (graphe, état, routage, nœuds, services injectés) et réécrit le contenu : aucun nœud n'est commun. <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Dépôt chess_agent →</a></p>
+
+<h3>Le graphe : des transitions, aucune logique métier</h3>
+<div class="api-example">
+<div><span>AVANT · CHESS AGENT · backend/app/agent/graph.py</span><pre><code>    graph_builder.add_edge(START, VALIDATE_POSITION_NODE)
+
+    graph_builder.add_conditional_edges(
+        VALIDATE_POSITION_NODE,
+        route_after_validation,
+        _build_route_map(
+            DETECT_THEORY_NODE,
+            ENGINE_ANALYSIS_NODE,
+            RETRIEVE_CONTEXT_NODE,
+            RETRIEVE_VIDEOS_NODE,
+            GENERATE_RESPONSE_NODE,
+            SAVE_ANALYSIS_NODE,</code></pre></div>
+<div><span>APRÈS · SORTIRIA · agent/graph.py</span><pre><code>    builder.add_edge(START, PLAN)
+    builder.add_edge(PLAN, EXTRACT)
+    builder.add_conditional_edges(
+        EXTRACT,
+        route_after_extraction,
+        {ROUTE_RETRY: EXTRACT, ROUTE_PREPARE: PREPARE, ROUTE_REPORT: WATCH},
+    )
+    builder.add_edge(PREPARE, LOAD)
+    builder.add_edge(LOAD, JUDGE)
+    builder.add_edge(JUDGE, WATCH)
+    builder.add_edge(WATCH, REPORT)
+    builder.add_edge(REPORT, END)</code></pre></div>
+</div>
+<p>Chess Agent avait 8 nœuds et 7 routages conditionnels, pilotés par les options de l'utilisateur. Une nuit de collecte est une chaîne : 7 nœuds et une seule bifurcation, après l'extraction.</p>
+
+<h3>Le routage : décidé par le résultat, plus par les options</h3>
+<div class="api-example">
+<div><span>AVANT · CHESS AGENT · backend/app/agent/routing.py</span><pre><code>def route_after_validation(state: ChessAnalysisState) -&gt; ValidationRoute:
+    """Choisit l'étape suivant la validation."""
+
+    if _workflow_has_failed(state):
+        return "end"
+
+    options = state.options
+
+    if options.include_opening:
+        return "detect_theory"</code></pre></div>
+<div><span>APRÈS · SORTIRIA · agent/routing.py</span><pre><code>    has_attempt_left = state.get("attempts", 0) &lt; state.get("max_attempts", DEFAULT_MAX_ATTEMPTS)
+    if has_attempt_left and (failed_source_ids(state) or not state.get("articles")):
+        return ROUTE_RETRY
+    if state.get("articles"):
+        return ROUTE_PREPARE
+    return ROUTE_REPORT</code></pre></div>
+</div>
+<p>La fonction de routage de SortirIA regarde ce qui s'est passé : sources en échec, éléments extraits, essais restants. Depuis le 14/10, seules les sources en échec sont relancées.</p>
+
+<h3>L'état : ce que l'agent sait au fil de la nuit</h3>
+<div class="api-example">
+<div><span>AVANT · CHESS AGENT · backend/app/agent/state.py</span><pre><code>class ChessAnalysisState(BaseModel):
+    """État partagé entre tous les nœuds LangGraph."""
+
+    model_config = ConfigDict(extra="forbid", validate_assignment=True)
+
+    # Entrée
+
+    fen: str = Field(
+        ..., min_length=1, description="Position à analyser au format FEN."
+    )
+
+    moves: list[str] = Field(</code></pre></div>
+<div><span>APRÈS · SORTIRIA · agent/state.py</span><pre><code>class CollectionState(TypedDict, total=False):
+    """Ce que l'agent sait au fil de la collecte."""
+
+    # Paramètres
+    dry_run: bool                     # True : aucune écriture en base
+    discover_agendas: bool            # True : découverte OpenAgenda forcée (sinon le jour prévu)
+    max_attempts: int                 # nombre maximal d'essais d'extraction
+
+    # Planification
+    sources: list[str]                # extracteurs à lancer (ex. ["openagenda"])
+    started_at: str                   # début de la collecte (ISO 8601)
+    skipped_sources: list[str]        # sources sans configuration active, non lancées</code></pre></div>
+</div>
+<p>Même règle que dans Chess Agent : chaque nœud renvoie une mise à jour partielle, et les services ne sont jamais dans l'état, ils arrivent par la configuration du graphe.</p>
+
+<table class="story-table params-table">
+<thead><tr><th>Élément</th><th>Gardé</th><th>Changé</th><th>Pourquoi</th></tr></thead>
+<tbody>
+<tr><td>Graphe (<code>graph.py</code>)</td><td>Nœuds nommés, transitions déclarées à un seul endroit, aucune logique métier.</td><td>Analyse d'une position → collecte nocturne ; durée de chaque nœud mesurée (<code>timed</code>) ; suivi MLflow autour du graphe.</td><td>La durée par nœud et le coût alimentent <code>collect_runs</code> et Grafana.</td></tr>
+<tr><td>État (<code>state.py</code>)</td><td>Mises à jour partielles, services hors de l'état.</td><td>Modèle Pydantic → <code>TypedDict</code> ; champs de collecte, de coût, de couverture, de propositions.</td><td>L'état final est remis tel quel au suivi (<code>services.tracker.finish(state)</code>).</td></tr>
+<tr><td>Routage (<code>routing.py</code>)</td><td>Séparé des nœuds, testé à part.</td><td>7 fonctions guidées par les options → 1 fonction guidée par le résultat.</td><td>La seule décision d'une nuit : réessayer, préparer, ou écrire un bilan d'échec.</td></tr>
+<tr><td>Nœuds</td><td>Le principe : un nœud, une responsabilité.</td><td>Écrits pour SortirIA : <code>plan_sources</code>, <code>extract_sources</code>, <code>prepare</code>, <code>load_events</code>, <code>judge_quality</code>, <code>watch_collection</code>, <code>write_report</code>.</td><td>Rien de commun entre une analyse d'échecs et une collecte.</td></tr>
+<tr><td>Interface Angular</td><td>Configuration Angular, proxy <code>/api</code>, Dockerfile, lecture du flux SSE (<code>sse.ts</code>).</td><td>L'écran est écrit pour SortirIA, d'après la maquette validée.</td><td>La recherche s'affiche en direct, étape par étape, comme l'analyse de Chess Agent.</td></tr>
+<tr><td>CI (<code>ci.yml</code>)</td><td>La structure du workflow GitHub Actions.</td><td>Sans Milvus, Ollama ni Angular ; PostgreSQL avec pgvector, MkDocs et rejeu de l'évaluation de la recherche ajoutés.</td><td>Les tests doivent tourner sur une vraie base, et la qualité de la recherche bloquer un push.</td></tr>
+<tr><td>Principe</td><td>« Stockfish calcule, les sources apportent le contexte, le LLM explique. »</td><td>Le SQL filtre, la base fournit les événements, Mistral rédige.</td><td>Le modèle ne décide ni d'une date ni d'un prix : il ne peut pas en inventer.</td></tr>
+</tbody>
+</table>
+<p class="table-note">Extraits copiés des fichiers d'origine (Chess Agent, commit 5606117) et actuels ; détail : <a class="project-link" href="agent.html#s08">Agent →</a></p>
+</div>
+</section>
+
+<!-- 05 RAG -->
+<section class="section" id="s05">
+<div class="container">
+<p class="section-number">05</p>
+<h2>Avant / après : de l'Assistant RAG à la recherche</h2>
+<p class="section-intro">L'Assistant RAG OpenAgenda préfiltrait les documents en Python, cherchait par le sens dans un index FAISS, puis réordonnait les résultats avec un score métier. Il ne savait pas garantir « samedi soir à Sète, gratuit ». SortirIA filtre d'abord en SQL, cherche ensuite par le sens et par les mots, et laisse Mistral rédiger à partir des seuls événements retenus. <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/rag-openagenda">Dépôt rag-openagenda →</a></p>
+
+<h3>La recherche par le sens : de FAISS à pgvector</h3>
+<div class="api-example">
+<div><span>AVANT · ASSISTANT RAG · app/rag_service.py</span><pre><code>        if not candidate_docs:
+            return []
+
+        local_vectorstore = self._build_local_vectorstore(candidate_docs)
+
+        raw_results = local_vectorstore.similarity_search_with_score(
+            query=question,
+            k=min(self.top_k_retrieval, len(candidate_docs)),
+        )</code></pre></div>
+<div><span>APRÈS · SORTIRIA · app/search_service.py</span><pre><code>    if vector:
+        params["vector"] = vector
+        ctes.append("""by_meaning AS (
+    SELECT event_id, row_number() OVER (ORDER BY embedding &lt;=&gt; %(vector)s::vector) AS rank
+    FROM base WHERE embedding IS NOT NULL
+    ORDER BY embedding &lt;=&gt; %(vector)s::vector LIMIT %(pool)s)""")</code></pre></div>
+</div>
+<p>Avant, un index FAISS était reconstruit en mémoire sur le sous-corpus à chaque question. Après, les vecteurs sont calculés la nuit et stockés dans PostgreSQL ; la comparaison se fait dans la même requête que les filtres.</p>
+
+<h3>Les contraintes : de réordonner à filtrer</h3>
+<div class="api-example">
+<div><span>AVANT · ASSISTANT RAG · app/retrieval_service.py</span><pre><code>class RetrievalService:
+    """
+    Service de ranking métier après la recherche vectorielle.
+    """
+    # Ce service intervient après FAISS.
+    # Son rôle n'est plus de filtrer brutalement,
+    # mais de réordonner intelligemment les candidats
+    # avec un score hybride vectoriel + métier.</code></pre></div>
+<div><span>APRÈS · SORTIRIA · app/search_service.py</span><pre><code>    conditions = ["e.is_outing", "COALESCE(e.end_at, e.start_at) &gt;= %(start)s", "e.start_at &lt; %(end)s"]
+    if partners_only:
+        conditions.append("e.partner_id IS NOT NULL")
+    params: dict[str, Any] = {"start": plan.start, "end": plan.end, "limit": limit, "pool": POOL,
+                              "categories": list(plan.categories)}
+    if plan.public:
+        conditions.append("%(public)s = ANY (e.audiences)")
+        params["public"] = plan.public
+    if plan.cities:
+        conditions.append("sortiria.normalize_city(e.city) = ANY (%(cities)s)")
+        params["cities"] = list(plan.cities)</code></pre></div>
+</div>
+<p>Dans le RAG, le préfiltre se relâchait quand il ne trouvait rien (la ville était abandonnée), puis les contraintes pesaient dans un score : un événement hors contrainte pouvait remonter. Dans SortirIA, il est exclu avant tout classement, et un élargissement est annoncé comme tel : 98,7 % des propositions respectent les contraintes sur 50 questions annotées.</p>
+
+<table class="story-table params-table">
+<thead><tr><th>Élément</th><th>Avant (projet 6)</th><th>Après (SortirIA)</th><th>Pourquoi</th></tr></thead>
+<tbody>
+<tr><td>Index</td><td>FAISS, construit en mémoire.</td><td>PostgreSQL + pgvector, colonne <code>embedding vector(1024)</code> remplie la nuit.</td><td>Une seule base pour les filtres, les vecteurs, le journal et les avis.</td></tr>
+<tr><td>Contraintes</td><td>Préfiltre en Python, relâché quand il ne trouve rien ; puis signaux métier qui réordonnent les candidats.</td><td>Filtres SQL stricts : période, public, zone ou commune, gratuit, budget, soirée, intérieur ou extérieur.</td><td>Une proposition hors contrainte est une erreur, pas un moins bon score.</td></tr>
+<tr><td>Classement</td><td>Vectoriel, puis score métier.</td><td>Hybride : sens (pgvector) et mots (plein texte français), rangs fusionnés (RRF).</td><td>Les mots retrouvent les noms propres que le sens rate ; c'était une limite écrite dans mon README.</td></tr>
+<tr><td>Compréhension</td><td>Extraction de signaux dans le service de classement.</td><td>Module dédié, <code>app/query_understanding.py</code> : règles et synonymes validés, 100 % sur 50 questions, sans appel à un modèle.</td><td>Testable seule, en 1 ms et sans coût.</td></tr>
+<tr><td>Rédaction</td><td>Mistral avec le contexte récupéré.</td><td>Mistral ne voit que les événements retenus, cite [1], [2]… ; citations vérifiées ; repli sans Mistral.</td><td>Aucun événement inventé, et une réponse même si Mistral ne répond pas.</td></tr>
+<tr><td>Ce qui reste du projet 6</td><td colspan="2"><code>app/main.py</code>, <code>app/config.py</code>, <code>app/security.py</code>, l'appel à l'API OpenAgenda (porté dans l'extracteur) et l'idée du texte indexé. L'ancien RAG (<code>rag_service</code>, <code>retrieval_service</code>, routes <code>/ask</code> et <code>/rebuild</code>, Streamlit, FAISS) est retiré le 15/10.</td><td>L'ancien code reste dans l'historique git.</td></tr>
+</tbody>
+</table>
+<p class="table-note">Extraits copiés des fichiers d'origine (Assistant RAG, commit 18f7ce1) et actuels ; chiffres : <code>docs/evaluation.md</code>. Détail : <a class="project-link" href="recherche.html#s07">Recherche →</a></p>
+</div>
+</section>
+
+<!-- 06 NOUVEAU -->
+<section class="section section-alt" id="s06">
+<div class="container">
+<p class="section-number">06</p>
+<h2>Ce qui est nouveau dans SortirIA</h2>
+<p class="section-intro">Ce qui suit n'existait dans aucun de mes projets précédents. C'est ce qui transforme un assemblage de briques en service.</p>
+<div class="reflection-grid">
+<div class="reflection-card"><h3>Un agent qui propose, un humain qui valide</h3><p>L'agent diagnostique une panne, propose une réparation, un synonyme ou un agenda ; tout passe par <code>agent_proposals</code> et attend une décision humaine. Il ne modifie jamais seul sa configuration.</p></div>
+<div class="reflection-card"><h3>Le programme PDF lu par Mistral</h3><p>Première source non structurée : 434 événements du programme de Sète agglopôle, avec des garde-fous (titre présent dans la page, date dans la période du document).</p></div>
+<div class="reflection-card"><h3>Les documents des partenaires</h3><p>Un tableur, ou un PDF ou un Word mis en page librement et lu par Mistral ; l'import est proposé avec un aperçu, publié après validation.</p></div>
+<div class="reflection-card"><h3>La compréhension par règles</h3><p>Quand, où, pour qui, quel budget : 100 % sur 50 questions, sans appel à un modèle. J'ai abandonné l'extraction par un petit modèle, inutile ici.</p></div>
+<div class="reflection-card"><h3>La recherche sous contraintes</h3><p>Filtres SQL stricts, puis sens et mots fusionnés ; élargissement au sujet plutôt que des idées sans rapport : 98,7 % des propositions respectent la demande.</p></div>
+<div class="reflection-card"><h3>L'évaluation rejouée en CI</h3><p>À chaque push, le jeu de questions est rejoué sur une base figée ; sous 95 % de propositions conformes, la CI échoue.</p></div>
+<div class="reflection-card"><h3>Un juge de pertinence calibré</h3><p>Mistral Large, consigne v7 figée : 98,6 % d'accord avec mon jugement (AC1 0,985) sur la grille de calibrage, 91,9 % (AC1 0,889) sur 135 cartes nouvelles.</p></div>
+<div class="reflection-card"><h3>L'enrichissement et le juge des fiches</h3><p>Chaque nuit, Mistral range les nouveaux événements dans un vocabulaire commun ; un autre modèle juge 20 fiches : 89 à 94 % de qualité.</p></div>
+<div class="reflection-card"><h3>Le déploiement Azure</h3><p>Static Web Apps, Container Apps et sa tâche de la nuit, PostgreSQL Flexible Server ; déploiement à chaque push par OpenID Connect ; en ligne depuis le 15/10/2026.</p></div>
+<div class="reflection-card"><h3>Le coût borné</h3><p>Cache des réponses, limite de débit par visiteur et pour tout le service, coût suivi : 0,12 $ pour 1 000 questions, environ 10 $ par mois la 1re année.</p></div>
+</div>
+<p class="table-note">Sources : <code>PROVENANCE.md</code> (tâches cochées des 13 au 16/10/2026), <code>docs/evaluation.md</code>, <code>docs/couts.md</code>, <code>docs/deploiement.md</code>.</p>
+</div>
+</section>
+
+<!-- 07 METHODE -->
+<section class="section" id="s07">
+<div class="container">
+<p class="section-number">07</p>
+<h2>Méthode de travail</h2>
+<div class="callout">
+<span class="eyebrow">CE QUI EST À MOI</span>
+<strong>Je suis parti de mes projets, et c'est moi qui ai décidé.</strong>
+<p>J'ai fait les choix : le périmètre, les sources autorisées, Azure. J'ai annoté à la main les grilles de pertinence, contesté le juge jusqu'à sa version figée, et exécuté moi-même le déploiement. Je me suis aidé d'un assistant IA pour adapter et documenter le code ; chaque modification a été relue, testée et commitée par moi.</p>
+</div>
+</div>
+</section>
+
+<!-- CONTACT -->
+<section class="section contact">
+<div class="container">
+<p class="eyebrow">CONTINUER</p>
+<h2>Voir comment ces briques s'assemblent, ou lire le code.</h2>
+<div class="hero-actions">
+<a class="button primary" href="architecture.html">L'architecture</a>
+<a class="button secondary" href="https://github.com/gonzalezcourrier34-glitch/SortirIA">Le dépôt SortirIA</a>
+<a class="button secondary" href="index.html">Le projet</a>
+</div>
+</div>
+</section>
+</main>
+<footer>
+<div class="container footer-content">
+<span>SortirIA • Projet de fin de formation Ingénieur IA (OpenClassrooms)</span>
+<span>Montpellier et bassin de Thau • 2026</span>
+</div>
+</footer>
+<script src="js/main.js"></script>
+</body>
+</html>

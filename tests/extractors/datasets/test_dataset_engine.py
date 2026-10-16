@@ -873,7 +873,7 @@ def test_get_dataset_filters_forces_dataset_role(
 ) -> None:
     source = {
         "role": "custom",
-        "require_label": True
+        "require_url": True
     }
     received: dict[str, Any] = {}
 

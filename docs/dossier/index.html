@@ -11,7 +11,7 @@
 <header class="header">
 <nav class="nav container">
 <a class="logo" href="index.html">Sortir<span>IA</span></a>
-<div class="nav-links"><a class="active" href="index.html">Projet</a><a href="architecture.html">Architecture</a><a href="agent.html">Agent</a><a href="recherche.html">Recherche</a><a href="modeles.html">Modèles</a><a href="interface.html">Interface</a><a href="resultats.html">Résultats</a><a href="deploiement.html">Déploiement</a><a href="procedures.html">Procédures</a><a href="limites.html">Limites</a></div>
+<div class="nav-links"><a class="active" href="index.html">Projet</a><a href="parcours.html">Parcours</a><a href="architecture.html">Architecture</a><a href="agent.html">Agent</a><a href="recherche.html">Recherche</a><a href="modeles.html">Modèles</a><a href="interface.html">Interface</a><a href="resultats.html">Résultats</a><a href="deploiement.html">Déploiement</a><a href="procedures.html">Procédures</a><a href="limites.html">Limites</a></div>
 </nav>
 </header>
 <main>
@@ -184,30 +184,31 @@
 <p class="section-number">04</p>
 <h2>Ce que j'ai repris et ce que j'ai écrit</h2>
 <p class="section-intro">Plutôt que de repartir de zéro, SortirIA industrialise mes projets précédents. Chaque module Python indique son origine dans sa docstring (projet, fichier, commit).</p>
+<p>Ces cinq projets sont les miens et leurs dépôts sont publics. Le récit complet, de mars à octobre 2026, avec le code d'origine et le code actuel côte à côte : <a class="project-link" href="parcours.html">Mon parcours →</a></p>
 <div class="projects-grid">
 <article class="project-card">
 <div class="project-top"><span class="project-type">REPRIS · PROJET 12</span></div>
 <h3>CheckIt.AI : les moteurs de collecte</h3>
 <p>Un moteur par type de source (API, RSS, scraper, fichiers), un adaptateur et une configuration YAML par fournisseur. J'ai retiré 22 extracteurs de presse et de fact-checking, puis écrit les adaptateurs d'événements et <code>src/event/</code>.</p>
-<a class="project-link" href="architecture.html">Architecture →</a>
+<a class="project-link" href="architecture.html">Architecture →</a> · <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">Dépôt checkit_ai →</a>
 </article>
 <article class="project-card">
 <div class="project-top"><span class="project-type">REPRIS · PROJET 6</span></div>
 <h3>Assistant RAG OpenAgenda</h3>
 <p>Le point de départ de l'API FastAPI. L'index FAISS ne savait pas filtrer « samedi soir à Sète, gratuit » : je l'ai remplacé par une recherche hybride PostgreSQL + pgvector sous filtres SQL, retiré le 15/10.</p>
-<a class="project-link" href="recherche.html">Recherche →</a>
+<a class="project-link" href="recherche.html">Recherche →</a> · <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/rag-openagenda">Dépôt rag-openagenda →</a>
 </article>
 <article class="project-card">
 <div class="project-top"><span class="project-type">REPRIS · PROJET 13</span></div>
 <h3>Chess Agent : LangGraph, Angular, CI</h3>
 <p>Le squelette du graphe (état, routage, nœuds), la configuration Angular et la lecture du flux SSE, la CI GitHub Actions. Les nœuds de SortirIA et l'écran sont écrits pour ce projet.</p>
-<a class="project-link" href="agent.html">Agent →</a>
+<a class="project-link" href="agent.html">Agent →</a> · <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Dépôt chess_agent →</a>
 </article>
 <article class="project-card">
 <div class="project-top"><span class="project-type">REPRIS · PROJETS 14 ET 5</span></div>
 <h3>Triage médical et scoring crédit</h3>
 <p>Le Dockerfile de l'API et la CD (projet 14), les idées de suivi en production : journal des requêtes, tableaux Grafana (projets 5 et 14).</p>
-<a class="project-link" href="deploiement.html">Déploiement →</a>
+<a class="project-link" href="deploiement.html">Déploiement →</a> · <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/medical_triage_agent">Dépôt medical_triage_agent →</a> · <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/pret_a_depenser">Dépôt pret_a_depenser →</a>
 </article>
 <article class="project-card">
 <div class="project-top"><span class="project-type">ÉCRIT · RECHERCHE</span></div>

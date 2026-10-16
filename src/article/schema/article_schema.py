@@ -90,8 +90,7 @@ ARTICLE_CATEGORIES: frozenset[str] = frozenset({
     "crime",
     "entertainment",
     "sports",
-    "social",
-    "fact_check"
+    "social"
 })
 
 SUPPORTED_LANGUAGES: frozenset[str] = frozenset({
@@ -99,29 +98,8 @@ SUPPORTED_LANGUAGES: frozenset[str] = frozenset({
     "en"
 })
 
-BINARY_LABELS: frozenset[str] = frozenset({
-    "fake",
-    "real"
-})
-
-NUMERIC_BINARY_LABELS: frozenset[str] = frozenset({
-    "0",
-    "1"
-})
-
-LIAR_LABELS: frozenset[str] = frozenset({
-    "pants-fire",
-    "false",
-    "barely-true",
-    "half-true",
-    "mostly-true",
-    "true"
-})
-
+# Modifié pour SortirIA : les étiquettes vrai / faux (binaires, numériques,
+# LIAR) et les rôles de référence étiquetée de CheckIt.AI ont été retirés.
 DATASET_ROLES: frozenset[str] = frozenset({
-    "acquisition",
-    "labeled_reference",
-    "multimodal_reference",
-    "fact_check_reference",
-    "social_reference"
+    "acquisition"
 })

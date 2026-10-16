@@ -20,7 +20,6 @@ from src.utils.filter_utils import (
     get_fallback_filters,
     get_filter_configuration,
     load_default_filters,
-    normalize_allowed_labels,
     normalize_filter_configuration
 )
 
@@ -39,8 +38,7 @@ from src.utils.filter_utils import (
         {"type": "api"},
         {"type": "social"},
         {"type": "scraper"},
-        {"role": "acquisition"},
-        {"role": "social_reference"}
+        {"role": "acquisition"}
     ]
 )
 def test_get_default_filter_section_returns_acquisition_section(
@@ -60,15 +58,10 @@ def test_get_default_filter_section_returns_acquisition_section(
         {"type": "dataset"},
         {"type": " DATASET "},
         {"role": "dataset"},
-        {"role": "labeled_reference"},
-        {"role": "multimodal_reference"},
-        {"role": "fact_check_reference"},
-        {"role": "claim_reference"},
-        {"dataset_role": "labeled_reference"},
-        {"dataset_role": "multimodal_reference"},
+        {"dataset_role": "dataset"},
         {
             "role": "",
-            "dataset_role": "claim_reference"
+            "dataset_role": "dataset"
         }
     ]
 )
@@ -88,7 +81,7 @@ def test_get_default_filter_section_prioritizes_role_over_dataset_role() -> None
 
     source = {
         "role": "acquisition",
-        "dataset_role": "labeled_reference"
+        "dataset_role": "dataset"
     }
 
     assert (
@@ -145,7 +138,7 @@ acquisition_filters:
   min_title_length: 15
 
 dataset_filters:
-  require_label: true
+  require_url: false
 """,
         encoding="utf-8"
     )
@@ -174,27 +167,18 @@ acquisition_filters:
   require_url: true
 
 dataset_filters:
-  require_label: true
   require_url: false
-  allowed_labels:
-    - fake
-    - real
 """,
         encoding="utf-8"
     )
 
     result = load_default_filters(
-        source={"role": "labeled_reference"},
+        source={"role": "dataset"},
         file_path=file_path
     )
 
     assert result == {
-        "require_label": True,
-        "require_url": False,
-        "allowed_labels": [
-            "fake",
-            "real"
-        ]
+        "require_url": False
     }
 
 
@@ -328,105 +312,6 @@ def test_load_default_filters_rejects_non_mapping_configuration(
     assert result == {}
 
 
-# Normalisation des labels autorisés
-
-@pytest.mark.parametrize(
-    "labels",
-    [
-        None,
-        {},
-        {"fake": True},
-        object()
-    ]
-)
-def test_normalize_allowed_labels_returns_empty_list_for_invalid_values(
-    labels: Any
-) -> None:
-    """Une valeur non exploitable doit produire une liste vide."""
-
-    assert normalize_allowed_labels(labels) == []
-
-
-@pytest.mark.parametrize(
-    ("labels", "expected"),
-    [
-        ("fake", ["fake"]),
-        (" FAKE ", ["fake"]),
-        ("real", ["real"]),
-        (1, ["fake"]),
-        (0, ["real"]),
-        (True, ["true"]),
-        (False, ["false"]),
-        ("unknown", ["unknown"]),
-        ("", [])
-    ]
-)
-
-def test_normalize_allowed_labels_accepts_scalar_values(
-    labels: Any,
-    expected: list[str]
-) -> None:
-    """Une valeur simple doit devenir une liste contenant un label."""
-
-    assert normalize_allowed_labels(labels) == expected
-
-
-@pytest.mark.parametrize(
-    ("labels", "expected"),
-    [
-        (
-            ["fake", "real"],
-            ["fake", "real"]
-        ),
-        (
-            [" FAKE ", "fake", "REAL", "real"],
-            ["fake", "real"]
-        ),
-        (
-            ["fake", None, "", "real"],
-            ["fake", "real"]
-        ),
-        (
-            ("fake", "real", "fake"),
-            ["fake", "real"]
-        ),
-        (
-            iter(["fake", "real", "fake"]),
-            ["fake", "real"]
-        ),
-        (
-            [0, 1],
-            ["real", "fake"]
-        )
-    ]
-)
-def test_normalize_allowed_labels_normalizes_iterables(
-    labels: Any,
-    expected: list[str]
-) -> None:
-    """Les labels d'un itérable doivent être normalisés et dédupliqués."""
-
-    assert normalize_allowed_labels(labels) == expected
-
-
-def test_normalize_allowed_labels_preserves_order() -> None:
-    """L'ordre de première apparition des labels doit être conservé."""
-
-    labels = [
-        "real",
-        "fake",
-        "unknown",
-        "real",
-        "fake"
-    ]
-
-    assert normalize_allowed_labels(labels) == [
-        "real",
-        "fake",
-        "unknown"
-    ]
-
-
 # Normalisation de la configuration
 
 def test_normalize_filter_configuration_normalizes_all_fields() -> None:
@@ -437,18 +322,12 @@ def test_normalize_filter_configuration_normalizes_all_fields() -> None:
         "require_text": "true",
         "require_image": 1,
         "require_url": 0,
-        "require_label": "oui",
         "remove_deleted_content": "non",
         "remove_duplicates": "yes",
         "validate_urls": "off",
         "min_title_length": "15",
         "min_text_length": "20.0",
         "min_total_text_length": 50,
-        "allowed_labels": [
-            "fake",
-            "REAL",
-            "fake"
-        ],
         "custom_field": "preserved"
     }
 
@@ -466,17 +345,12 @@ def test_normalize_filter_configuration_normalizes_all_fields() -> None:
         "require_text": True,
         "require_image": True,
         "require_url": False,
-        "require_label": True,
         "remove_deleted_content": False,
         "remove_duplicates": True,
         "validate_urls": False,
         "min_title_length": 15,
         "min_text_length": 20,
         "min_total_text_length": 50,
-        "allowed_labels": [
-            "fake",
-            "real"
-        ],
         "custom_field": "preserved"
     }
 
@@ -525,11 +399,11 @@ def test_normalize_filter_configuration_does_not_modify_input() -> None:
 
     filters = {
         "require_title": "false",
-        "allowed_labels": ["fake"]
+        "min_title_length": "15"
     }
     original_filters = {
         "require_title": "false",
-        "allowed_labels": ["fake"]
+        "min_title_length": "15"
     }
 
     normalize_filter_configuration(
@@ -628,12 +502,7 @@ def test_get_filter_configuration_normalizes_merged_values(
         "src.utils.filter_utils.load_default_filters",
         lambda source, file_path: {
             "require_title": "false",
-            "min_title_length": "25",
-            "allowed_labels": [
-                "FAKE",
-                "real",
-                "fake"
-            ]
+            "min_title_length": "25"
         }
     )
 
@@ -643,10 +512,6 @@ def test_get_filter_configuration_normalizes_merged_values(
 
     assert result["require_title"] is False
     assert result["min_title_length"] == 25
-    assert result["allowed_labels"] == [
-        "fake",
-        "real"
-    ]
 
 
 @pytest.mark.parametrize(

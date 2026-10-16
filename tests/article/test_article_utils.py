@@ -546,11 +546,11 @@ def test_get_article_role_returns_standard_role(
 
     result = module.get_article_role(
         {
-            "role": "  Labeled_Reference "
+            "role": "  Partenaire "
         }
     )
 
-    assert result == "labeled_reference"
+    assert result == "partenaire"
 
 
 def test_get_article_role_uses_dataset_role_fallback(
@@ -565,11 +565,11 @@ def test_get_article_role_uses_dataset_role_fallback(
     result = module.get_article_role(
         {
             "role": "",
-            "dataset_role": " Multimodal_Reference "
+            "dataset_role": " Agenda_Local "
         }
     )
 
-    assert result == "multimodal_reference"
+    assert result == "agenda_local"
 
 
 def test_get_article_role_prioritizes_standard_role(
@@ -584,7 +584,7 @@ def test_get_article_role_prioritizes_standard_role(
     result = module.get_article_role(
         {
             "role": "Acquisition",
-            "dataset_role": "Labeled_Reference"
+            "dataset_role": "Partenaire"
         }
     )
 

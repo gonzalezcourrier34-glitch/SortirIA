@@ -57,7 +57,6 @@ defaults:
       require_text: false
       require_image: false
       require_url: true
-      require_label: false
       min_title_length: 3
       min_text_length: 0
       # Hérité de CheckIt.AI (articles de presse) : 10. Pour un événement, le
@@ -70,7 +69,6 @@ defaults:
       # chaîne d'événements par titre + jour + lieu.
       remove_duplicates: false
       validate_urls: true
-      allowed_labels: []
 
 
 # ---------------------------------------------------------------------------
@@ -241,7 +239,6 @@ datasets:
     chunksize: 1000
     max_articles: 3000
     filters:                     # mêmes règles que les autres sources d'événements
-      require_label: false       # (le moteur datasets de CheckIt.AI exigeait un label vrai/faux)
       require_url: true
       min_title_length: 3
       min_text_length: 0
@@ -274,7 +271,7 @@ datasets:
 # src/extractors/scrapers/source/agenda_scraper.py, sélecteurs CSS ci-dessous).
 # RÈGLE : seulement avec l'autorisation écrite de l'éditeur. En attendant,
 # enabled: false (l'agent ne lance pas la source). Essai sans requête au site :
-#   uv run python -m src.extractors.scrapers.source.agenda_scraper --fichier perso/frontignan_agenda.html
+#   uv run python -m src.extractors.scrapers.source.agenda_scraper --fichier <page_enregistree>.html
 scraper_sources:
   - name: "Ville de Frontignan - Agenda"
     source_id: "frontignan_agenda"

@@ -11,7 +11,6 @@ from typing import Any
 from config.constants import (
     DEFAULT_DATASET_ROLE,
     EMPTY_CATEGORY_VALUES,
-    LABEL_MAPPING,
     LANGUAGE_MAPPING
 )
 from src.article.schema.article_schema import DATASET_ROLES, SUPPORTED_LANGUAGES
@@ -62,13 +61,6 @@ def normalize_category(value: Any) -> str:
     return ", ".join(dict.fromkeys(categories))
 
 
-def normalize_label(value: Any) -> str:
-    """Normalise un label de classification."""
-
-    label = normalize_value(value).lower()
-    return LABEL_MAPPING.get(label, label)
-
-
 def normalize_dataset_role(value: Any) -> str:
     """Normalise le rôle métier porté par l'article."""
 
@@ -91,9 +83,6 @@ def transform_article(article: Mapping[str, Any]) -> dict[str, Any]:
     )
     transformed_article["category"] = normalize_category(
         transformed_article.get("category")
-    )
-    transformed_article["label"] = normalize_label(
-        transformed_article.get("label")
     )
 
     role = (

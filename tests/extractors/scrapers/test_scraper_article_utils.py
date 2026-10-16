@@ -34,7 +34,7 @@ def build_source(
         "language": "fr",
         "category": "actualité",
         "country": "FR",
-        "role": "fact_checking",
+        "role": "partenaire",
         "selectors": {}
     }
     source.update(overrides)
@@ -555,7 +555,7 @@ def test_build_scraped_article_builds_expected_article(
     monkeypatch.setattr(
         module,
         "extract_label",
-        lambda soup, source, article_json_ld: "fake"
+        lambda soup, source, article_json_ld: "Concert"
     )
     monkeypatch.setattr(
         module,
@@ -610,14 +610,14 @@ def test_build_scraped_article_builds_expected_article(
         "source": "Source HTML",
         "title": "Titre",
         "text": "Contenu",
-        "label": "fake",
+        "label": "Concert",
         "image_url": "https://example.com/image.jpg",
         "published_at": "2026-07-28T10:00:00+00:00",
         "author": "Jean Dupont",
         "language": "fr",
         "url": "https://example.com/canonical",
         "category": "Politique",
-        "role": "fact_checking",
+        "role": "partenaire",
         "metadata": {
             "source_id": "html_test",
             "source_type": "scraper",

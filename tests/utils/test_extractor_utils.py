@@ -44,10 +44,6 @@ def test_build_standard_article_returns_normalized_article(
         "src.utils.extractor_utils.normalize_dataset_role",
         lambda value: value
     )
-    monkeypatch.setattr(
-        "src.utils.extractor_utils.normalize_label",
-        lambda value: str(value).strip().casefold()
-    )
 
     result = build_standard_article(
         identifier="article-123",
@@ -61,8 +57,8 @@ def test_build_standard_article_returns_normalized_article(
         author=" Jean Dupont ",
         language=" FR ",
         category=" Politique ",
-        label=" FAKE ",
-        role=" labeled_reference ",
+        label=" Concert ",
+        role=" test_role ",
         metadata={
             "country": "France",
             "score": 0.8
@@ -86,8 +82,8 @@ def test_build_standard_article_returns_normalized_article(
         "author": "Jean Dupont",
         "language": "fr",
         "category": "Politique",
-        "label": "fake",
-        "role": "labeled_reference",
+        "label": "Concert",
+        "role": "test_role",
         "extracted_at": "2026-07-27T12:00:00+00:00",
         "metadata": {
             "country": "France",
@@ -116,10 +112,6 @@ def test_build_standard_article_uses_url_as_identifier(
     monkeypatch.setattr(
         "src.utils.extractor_utils.normalize_dataset_role",
         lambda value: value
-    )
-    monkeypatch.setattr(
-        "src.utils.extractor_utils.normalize_label",
-        lambda value: ""
     )
 
     result = build_standard_article(
@@ -158,10 +150,6 @@ def test_build_standard_article_builds_identifier_from_article_fields(
     monkeypatch.setattr(
         "src.utils.extractor_utils.normalize_dataset_role",
         lambda value: value
-    )
-    monkeypatch.setattr(
-        "src.utils.extractor_utils.normalize_label",
-        lambda value: ""
     )
 
     result = build_standard_article(
@@ -203,10 +191,6 @@ def test_build_standard_article_ignores_empty_identifier_parts(
     monkeypatch.setattr(
         "src.utils.extractor_utils.normalize_dataset_role",
         lambda value: value
-    )
-    monkeypatch.setattr(
-        "src.utils.extractor_utils.normalize_label",
-        lambda value: ""
     )
 
     result = build_standard_article(
@@ -283,17 +267,13 @@ def test_build_standard_article_prefers_role_over_dataset_role(
         "src.utils.extractor_utils.normalize_dataset_role",
         fake_normalize_role
     )
-    monkeypatch.setattr(
-        "src.utils.extractor_utils.normalize_label",
-        lambda value: ""
-    )
 
     result = build_standard_article(
         identifier="article-1",
         source="Reuters",
         title="Titre",
         role="acquisition",
-        dataset_role="labeled_reference"
+        dataset_role="test_role"
     )
 
     assert received["value"] == "acquisition"
@@ -327,20 +307,16 @@ def test_build_standard_article_uses_dataset_role_when_role_is_empty(
         "src.utils.extractor_utils.normalize_dataset_role",
         fake_normalize_role
     )
-    monkeypatch.setattr(
-        "src.utils.extractor_utils.normalize_label",
-        lambda value: ""
-    )
 
     build_standard_article(
         identifier="article-1",
         source="Reuters",
         title="Titre",
         role="",
-        dataset_role="labeled_reference"
+        dataset_role="test_role"
     )
 
-    assert received["value"] == "labeled_reference"
+    assert received["value"] == "test_role"
 
 
 @pytest.mark.parametrize(
@@ -375,10 +351,6 @@ def test_build_standard_article_replaces_invalid_metadata(
         "src.utils.extractor_utils.normalize_dataset_role",
         lambda value: ""
     )
-    monkeypatch.setattr(
-        "src.utils.extractor_utils.normalize_label",
-        lambda value: ""
-    )
 
     result = build_standard_article(
         identifier="article-1",
@@ -409,10 +381,6 @@ def test_build_standard_article_copies_metadata(
     )
     monkeypatch.setattr(
         "src.utils.extractor_utils.normalize_dataset_role",
-        lambda value: ""
-    )
-    monkeypatch.setattr(
-        "src.utils.extractor_utils.normalize_label",
         lambda value: ""
     )
 
@@ -459,10 +427,6 @@ def test_build_standard_article_calls_schema_normalizer(
     )
     monkeypatch.setattr(
         "src.utils.extractor_utils.normalize_dataset_role",
-        lambda value: ""
-    )
-    monkeypatch.setattr(
-        "src.utils.extractor_utils.normalize_label",
         lambda value: ""
     )
 

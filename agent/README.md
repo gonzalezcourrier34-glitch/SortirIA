@@ -51,13 +51,21 @@ flowchart LR
 
 | Nœud | Ce qu'il fait |
 | --- | --- |
-| `plan_sources` | Choisit les sources de la nuit : OpenAgenda, DATAtourisme, calendriers iCal, programmes PDF, fichiers des partenaires, **seulement celles qui ont une configuration active** |
-| `extract_sources` | Lance les extracteurs CheckIt.AI (un adaptateur par API, un moteur « fichiers » commun à l'iCal et aux PDF lus par Mistral) |
-| `prepare` | Convertit en `Event`, valide (annulés, en ligne, offres d'emploi rejetés), déduplique titre + jour + lieu |
-| `load_events` | Dans **une seule transaction** : partenaires et bilan de leurs fichiers, enregistrement, ménage des événements disparus, retrait des passés, enrichissement et embeddings Mistral des nouveaux, modération des commentaires en attente, purge RGPD. Puis, à part : vocabulaire des titres recalculé et recherches de la semaine relues |
-| `judge_quality` | Mistral juge 20 événements tirés au hasard (cohérence, sortie ou non, publics, catégorie) : score de qualité de la nuit |
+| `plan_sources` | Choisit les sources de la nuit : OpenAgenda, DATAtourisme, calendriers iCal, programmes PDF, fichiers des partenaires, **seulement celles qui ont une configuration active**, moins celles coupées sur ce serveur (`SOURCES_DESACTIVEES`). Un `config/sources.yaml` illisible donne un bilan d'échec, pas un plantage |
+| `extract_sources` | Lance les extracteurs CheckIt.AI (un adaptateur par API, un moteur « fichiers » commun à l'iCal et aux PDF lus par Mistral, le moteur « datasets » pour les partenaires). Au 2e essai, seulement les sources en échec : un extracteur relancé remplace son bilan du premier essai. Une exception devient une erreur tracée ; les tokens Mistral de la lecture des PDF sont relevés |
+| `prepare` | Convertit en `Event`, valide (annulés, en ligne, offres d'emploi rejetés, chaque rejet compté par motif), déduplique titre + jour + heure + lieu, puis fusionne le même événement venu de deux sources (détail : page Sources, `docs/sources.md`) |
+| `load_events` | Dans **une seule transaction** : partenaires et bilan de leurs fichiers, enregistrement, ménage des événements disparus, retrait des passés, plafond de 10 000, enrichissement et embeddings Mistral des nouveaux, modération des commentaires en attente, purge RGPD. Si une étape échoue, la base reste celle de la veille. Puis, à part : vocabulaire des titres recalculé et recherches de la semaine relues |
+| `judge_quality` | Mistral juge 20 événements tirés au hasard (cohérence, sortie ou non, publics, catégorie) : score de qualité de la nuit. Une panne du juge laisse le score absent, sans faire échouer la nuit |
 | `watch` | Surveillance et diagnostic (voir plus bas) ; calculée à partir de l'état et de la configuration, elle fonctionne aussi en mode essai et après un échec total. Le lundi : bilan de la recherche et apprentissage |
-| `write_report` | Statut, alertes, bilan dans `collect_runs` et détail par source dans `collect_run_sources`, envoi du bilan par mail |
+| `write_report` | Statut (`success`, `partial_success`, `failed`), alertes, bilan dans `collect_runs` et détail par source dans `collect_run_sources`, propositions dans `agent_proposals`, envoi du bilan par mail |
+
+Chaque nuit est écrite **en entier ou pas du tout** : jamais une base à moitié
+mise à jour. En retour, rien à l'intérieur de la transaction ne doit lever
+d'exception évitable : un lot d'enrichissement ou d'embeddings en échec est
+journalisé et passé (avant le 15/10/2026, une seule erreur d'embeddings
+annulait toute la nuit, enrichissements payés compris), et un événement hors
+contrainte est ramené dans les valeurs admises avant l'écriture
+(`event_validator.conform_to_schema`).
 
 ## Agent ou ETL ? Ce que LangGraph apporte vraiment
 
@@ -108,14 +116,15 @@ Les décisions de routage et de surveillance, nuit après nuit :
 | Un événement à venir a disparu de sa source (retiré, ou désormais refusé) | Il est supprimé, mais seulement pour une source lue en entier, sans échec ni baisse anormale ; un événement passé est gardé 7 jours pour la notation |
 | Plus de 20 % des événements sont rejetés | Alerte |
 | Un programme PDF se termine dans moins de 21 jours (ou est terminé) | Rappel « chercher le prochain programme » |
-| Un fichier partenaire n'a plus de séance à venir, ou n'a pas changé depuis 30 jours | Rappel « relancer le partenaire » |
+| Un fichier partenaire n'a plus de séance à venir, ou n'a pas changé depuis 30 jours | Rappel « relancer le partenaire », seulement si les fichiers des partenaires ont été lus sans échec cette nuit (sinon chacun recevrait « plus aucune séance » à tort) |
 | Un partenaire a déposé un PDF ou un document Word, pas encore validé | Lu par Mistral (une fois, mis en cache), séances comptées, **proposition** « importer » avec un aperçu ; rien n'est publié avant l'accord (`uv run python -m agent.proposals --accepter N`) |
 | Moins de 10 sorties « famille » ou « soirée » à Montpellier ou sur le bassin de Thau dans les 7 jours (compté dans la base, toutes sources confondues) | Rappel « couverture faible » (la promesse du service) |
 | Le coût Mistral estimé de la nuit dépasse le budget | Alerte |
-| Nouvel événement, ou texte modifié | Enrichi par Mistral : catégorie unifiée, publics (famille, soirée, ados, seniors), résumé d'une phrase ; signalé s'il ne s'agit pas d'une sortie. Contrôles (15/10) : un titre explicite (« Pause jeux », « Visite guidée ») fixe la catégorie ; un résumé qui cite un nom ou un nombre absent de la source est écarté (16/10 : les siècles en chiffres romains, « DJ », les âges et les prix ne comptent plus comme inventés) |
+| Nouvel événement, ou texte modifié | Enrichi par Mistral (lots de 15, 3 000 par nuit au plus) : catégorie unifiée parmi 18 (chaque source a son propre vocabulaire), publics (famille, soirée, ados, seniors), résumé d'une phrase ; signalé s'il ne s'agit pas d'une sortie (`is_outing` faux : gardé en base, mais plus proposé par la recherche), jamais supprimé pour autant. La tranche de prix est calculée sans modèle ; la catégorie et le résumé entrent dans le texte vectorisé, ce qui aide la recherche. Une catégorie hors liste devient « autre » au lieu de faire perdre publics et résumé ; accents et variantes (« Théâtre », « enfants ») sont ramenés à la liste (14/10 : plus de la moitié des lots perdus pour cela). Changer la consigne (`ENRICHMENT_VERSION`) fait ré-enrichir tous les événements à venir. Contrôles (15/10) : un titre explicite (« Pause jeux », « Visite guidée ») fixe la catégorie ; un résumé qui cite un nom ou un nombre absent de la source est écarté (16/10 : les siècles en chiffres romains, « DJ », les âges et les prix ne comptent plus comme inventés) |
 | Le même événement publié par deux sources (titres écrits autrement) | Fusionné : même jour, même commune, heures compatibles, titres presque identiques ; la fiche du partenaire, sinon d'OpenAgenda, est gardée et complétée par l'autre |
 | Score du juge de qualité sous 80 % | Alerte, avec des exemples de problèmes (16/10 : le juge connaît la liste fermée des catégories et ne reproche plus « marché » au lieu de « brocante ») |
-| Des commentaires clients attendent une modération | Modérés par Mistral Moderation (publiés ou refusés) |
+| Des commentaires clients attendent une modération (service indisponible au moment du dépôt) | Modérés par Mistral Moderation (publiés ou refusés) |
+| Mistral ne répond pas (quota, clé, panne) | Enrichissement, embeddings, juge et modération sont passés pour cette nuit et repris la suivante ; les événements sont quand même écrits. Trois lots d'embeddings en échec de suite arrêtent les embeddings de la nuit |
 | Un partenaire a 2,5/5 ou moins sur 5 notes clients au moins | Alerte « à contacter » |
 | La base dépasse 10 000 événements | Les plus lointains sont retirés (statistiques gardées) et une alerte est envoyée ; alerte dès 90 % |
 | C'est le jour de la découverte (`discovery_weekday`, dimanche par défaut), ou `--decouverte` | Recherche complète des agendas OpenAgenda (~6 min) ; chaque agenda utile absent de `agenda_uids` devient une **proposition** « ajouter l'agenda » (nombre d'événements dans la zone, lien), jamais ajoutée seule ; un agenda refusé n'est plus reproposé |
@@ -123,19 +132,59 @@ Les décisions de routage et de surveillance, nuit après nuit :
 | Chaque nuit, après l'écriture | Vocabulaire des titres recalculé : les sujets que la recherche reconnaît (« photo » est un sujet, « romantique » une ambiance) |
 | C'est lundi | Bilan de la recherche des 7 derniers jours dans le mail, puis, pour chaque mot cherché au moins 2 fois et absent de la base : **proposition** de synonyme ou de correction, **proposition** d'agenda OpenAgenda qui traite le sujet, ou piste pour les partenaires (détail plus bas) |
 
-Les rappels de surveillance figurent dans le mail mais ne changent pas le
-statut : ce ne sont pas des pannes.
+Le statut d'une source vient du bilan de son extracteur : `ok` (`success`
+ou `empty`), `partiel` (`partial_success` : des événements, mais une partie
+de la lecture a échoué) ou `echec` (`failed`). Le statut de la nuit en
+découle : `success` si tout a été lu, `partial_success` dès qu'une source est
+en échec ou en baisse anormale, ou qu'une erreur est tracée, `failed` si rien
+n'a été gardé. Les rappels de surveillance (programme, partenaire,
+couverture, coût, qualité) figurent dans le mail mais ne changent pas le
+statut : ce ne sont pas des pannes, mais quelqu'un doit agir.
+
+## Propositions et validation humaine
+
+Ce que l'agent ne fait jamais seul, il le **propose** : une ligne
+`en_attente` dans `agent_proposals`, citée dans le mail. Un humain les liste
+avec `uv run python -m agent.proposals`, puis `--accepter N` (statut
+`appliquee`, ou `acceptee` si le changement reste à faire à la main) ou
+`--refuser N` (`refusee`). Une proposition déjà en attente n'est pas
+dupliquée ; une proposition refusée n'est jamais reproposée. Un changement
+accepté est pris en compte à la collecte suivante.
+
+| Action | D'où elle vient | Ce que fait `--accepter` |
+| --- | --- | --- |
+| `remplacer_url` | Diagnostic d'un document déplacé | Remplace l'ancienne adresse par la nouvelle dans `config/sources.yaml`, seulement si l'ancienne y figure exactement une fois ; sinon rien n'est touché |
+| `ajouter_agenda` | Découverte du dimanche, ou sujet absent cherché le lundi | Ajoute l'agenda à la fin de `agenda_uids`, avec un commentaire (nombre d'événements, date) ; le fichier garde ses commentaires et ses fins de ligne |
+| `ajouter_synonyme` | Recherches ratées du lundi | Ajoute « mot tapé : mot connu » à `config/synonymes.yaml` |
+| `valider_document_partenaire` | PDF ou Word déposé par un partenaire | Inscrit le fichier et son empreinte dans `_documents_valides.json` (voir `docs/partenaires.md`) |
+
+Le diagnostic (`agent/diagnosis.py`) classe chaque échec de la nuit d'après
+son message, sans modèle de langage :
+
+| Diagnostic | Reconnu à | Conseil ou action |
+| --- | --- | --- |
+| `document_deplace` | 404, « introuvable » | Même nom de fichier cherché dans les dossiers mensuels voisins (convention WordPress `uploads/AAAA/MM/`, 6 mois avant, 2 après), adresse vérifiée (réponse 200, c'est bien un PDF), puis **proposée** |
+| `acces_bloque` | page web reçue au lieu du document | Lire depuis une autre machine et couper la source sur ce serveur (`SOURCES_DESACTIVEES`) |
+| `acces_refuse` | 401, 403 | Vérifier la clé de l'API dans le `.env` : elle a pu expirer |
+| `quota` | 429 | Relue la nuit suivante ; espacer les appels si cela dure |
+| `reseau` | délai dépassé, 502 à 504 | En général passager, à surveiller |
+| `format_inattendu` | JSON illisible, « n'est pas un PDF » | La source a peut-être changé de format : vérifier l'adaptateur |
+| `inconnue` | autre | Voir le journal (`logs/pipeline.log`) |
 
 ## Calibrage (14/10/2026)
 
 | Réglage | Valeur | Où |
 | --- | --- | --- |
 | Essais d'extraction | 2 (le 2e pour les sources en échec seulement) | `routing.DEFAULT_MAX_ATTEMPTS` |
-| Baisse anormale | au moins 20 la dernière fois, moins de 50 % cette nuit | `nodes.DROP_MIN_PREVIOUS`, `DROP_RATIO` |
+| Baisse anormale | moins de 50 % cette nuit du meilleur des 7 derniers bilans réussis de la source, s'il valait au moins 20 (le meilleur, pas le dernier : une nuit déjà en baisse ne sert pas de référence) | `nodes.DROP_MIN_PREVIOUS`, `DROP_RATIO` |
 | Alerte de rejets | plus de 20 % | `nodes.REJECTION_ALERT_RATIO` |
-| Embeddings par nuit | 10 000 au plus, par lots de 64 ; un lot en échec est passé, trois de suite arrêtent les embeddings de la nuit | `nodes.MAX_EMBEDDINGS_PER_RUN` |
+| Enrichissement par nuit | 3 000 au plus, par lots de 15 | `nodes.MAX_ENRICHMENTS_PER_RUN`, `ENRICHMENT_BATCH_SIZE` |
+| Embeddings par nuit | 10 000 au plus, par lots de 64 ; un lot en échec est passé, trois de suite arrêtent les embeddings de la nuit | `nodes.MAX_EMBEDDINGS_PER_RUN`, `EMBEDDING_BATCH_SIZE`, `MAX_EMBEDDING_FAILURES` |
+| Échantillon du juge | 20 événements | `quality_judge.SAMPLE_SIZE` |
+| Événement passé gardé pour la notation | 7 jours après la fin | `event_repository.RATING_WINDOW_DAYS` |
 | Fin de programme PDF | 21 jours avant | `watch.DOCUMENT_EXPIRY_WARNING_DAYS` |
 | Partenaire inactif | 30 jours sans mise à jour | `watch.PARTNER_STALE_DAYS` |
+| Alerte de capacité | 90 % du plafond | `watch.CAPACITY_WARNING_RATIO` |
 | Découverte des agendas OpenAgenda | le dimanche (6) | `discovery_weekday` dans `config/sources.yaml` |
 | Bilan et apprentissage de la recherche | le lundi, 7 derniers jours | `watch.SEARCH_REPORT_WEEKDAY`, `SEARCH_REPORT_DAYS` |
 | Mots appris par semaine | 5 au plus, cherchés au moins 2 fois | `search_learning.MAX_WORDS`, `MIN_TIMES` |
@@ -144,13 +193,34 @@ statut : ce ne sont pas des pannes.
 
 Le coût est une estimation : tokens réels pour la lecture des PDF, estimés
 (4 caractères par token) pour les embeddings, dont l'API ne renvoie pas le
-nombre ; tarifs dans `watch.PRICES_USD_PER_MILLION`, à vérifier sur la page
-de Mistral.
+nombre ; tarifs dans `watch.PRICES_USD_PER_MILLION` (par million de tokens,
+entrée / sortie : `mistral-small` 0,10 / 0,30 $, `mistral-medium` 0,40 /
+2,00 $, `mistral-embed` 0,10 $ ; un modèle inconnu est compté au prix
+fort), à vérifier sur la page de Mistral.
 
-Exemple : le 14/10/2026, une pagination perdue a fait tomber DATAtourisme à
-184 séances au lieu de près de 1 000. C'était sa toute première collecte, sans
-historique de comparaison ; la même panne survenant après des nuits normales
-déclencherait l'alerte dès la nuit même, sans vider la base.
+## Paramètres (`.env`)
+
+Deux endroits : le `.env` (secrets et réglages d'exploitation, jamais
+commité, modèle dans `.env.example`) et `config/sources.yaml` (les sources,
+commité, voir `docs/sources.md`). Les seuils du code sont les constantes
+nommées du calibrage ci-dessus.
+
+| Variable | Rôle | Par défaut |
+| --- | --- | --- |
+| `DATABASE_URL` | la base PostgreSQL | — |
+| `MISTRAL_API_KEY`, `OPENAGENDA_API_KEY`, `DATATOURISME_API_KEY` | clés des services ; une clé absente met la source en échec, jamais l'agent | — |
+| `EMBEDDING_MODEL` | vecteurs des événements (1 024 dimensions) | `mistral-embed` |
+| `DOCUMENT_EXTRACTION_MODEL`, `DOCUMENT_CALL_PAUSE_S` | lecture des PDF, pause entre deux appels | `mistral-small-latest`, 3 s |
+| `ENRICHISSEMENT_ACTIF`, `ENRICHMENT_MODEL` | enrichissement des événements | actif, `mistral-small-latest` |
+| `JUGE_ACTIF`, `JUDGE_MODEL`, `QUALITE_MIN` | juge de qualité et seuil d'alerte | actif, `mistral-medium-latest`, 0,80 |
+| `LEARNING_MODEL` | lecture des recherches ratées | `mistral-small-latest` |
+| `MODERATION_MODEL` | modération des commentaires | `mistral-moderation-latest` |
+| `SOURCES_DESACTIVEES` | sources coupées sur ce serveur (`document` sur Azure) | aucune |
+| `SORTIRIA_MAX_EVENEMENTS` | plafond de la base | 10 000 |
+| `COUVERTURE_MIN_SEMAINE` | sorties minimales par case famille / soirée × zone sur 7 jours (0 : désactivé) | 10 |
+| `MISTRAL_BUDGET_NUIT_USD` | budget d'alerte d'une nuit | 0,50 $ |
+| `MLFLOW_ACTIF`, `MLFLOW_TRACKING_URI`, `MLFLOW_EXPERIMENT` | suivi des nuits | actif, SQLite local (`data/mlflow/mlflow.db`) sans serveur, `sortiria-collecte` |
+| `REPORT_EMAIL_TO`, `REPORT_EMAIL_WHEN`, `SMTP_*` | bilan par mail : `toujours` ou `alertes` | pas de mail sans destinataire |
 
 ## Bilan par mail
 
@@ -158,8 +228,8 @@ déclencherait l'alerte dès la nuit même, sans vider la base.
 (`REPORT_EMAIL_TO`, plusieurs adresses possibles, séparées par des virgules).
 Le sujet donne le statut d'un coup d'œil, par exemple
 « [SortirIA] Collecte PARTIEL : 1059 événement(s), 1 alerte(s) ». Le corps
-reprend les chiffres, le détail par source, les sources non lancées et les
-alertes. `REPORT_EMAIL_WHEN=alertes` limite l'envoi aux nuits avec un problème.
+reprend les chiffres, le détail par source, les sources non lancées, les
+alertes, les diagnostics et les propositions à valider, et le coût estimé. `REPORT_EMAIL_WHEN=alertes` limite l'envoi aux nuits avec un problème.
 
 Le mail passe par SMTP (bibliothèque standard de Python, `src/utils/mail_utils.py`) :
 pour Gmail, il faut un mot de passe d'application. Un mail qui ne part pas est
@@ -212,10 +282,33 @@ cours de fitness une fois le synonyme accepté.
 À la demande, sans attendre lundi :
 `uv run python -m agent --bilan-recherche --apprendre`.
 
-## Chiffres de la collecte du 14/10/2026
+## Ce que l'agent a fait pour de vrai
 
-1 059 événements : 780 autour de Montpellier, 279 sur le bassin de Thau
-(986 DATAtourisme, 73 OpenAgenda), 802 embeddings calculés, en 1 min 46 s.
+| Date | Ce qui s'est passé | Ce que l'agent en a tiré |
+| --- | --- | --- |
+| 14/10/2026 | Le PDF de l'Agglopôle passe du dossier `uploads/2026/08/` à `uploads/2026/09/` | Ce cas a motivé le diagnostic : l'agent trouve désormais seul la nouvelle adresse et la propose |
+| 14/10/2026 | Une pagination perdue (le lien « page suivante » perdait ses paramètres) fait tomber DATAtourisme à 184 séances au lieu de près de 1 000 | C'était sa toute première collecte, sans historique de comparaison ; la même panne survenant après des nuits normales déclencherait l'alerte « baisse anormale » dès la nuit même, sans vider la base |
+| 15/10/2026 | Le juge relève « MHSC vs Nantes » dans un résumé, alors que la source annonce Metz | Erreur d'enrichissement repérée par le contrôle croisé ; depuis, un résumé qui cite un nom absent de la source est écarté |
+| 15/10/2026 | Le juge relève « ANNULÉ - Monte-Cristo » et « Aide aux devoirs » | Ces deux cas sont maintenant rejetés à la préparation (titre qui annonce l'annulation, service qui n'est pas une sortie) |
+| 15/10/2026 | 8 enrichissements refusés chaque nuit | Le journal a montré la cause (une catégorie hors liste, « dégustation ») : elle est maintenant rangée en « autre » |
+| 15/10/2026 | Sète agglopôle renvoie une page web au lieu du PDF aux serveurs d'Azure | Nouveau diagnostic « accès bloqué » ; source coupée sur Azure et lue depuis un poste de travail |
+| 15/10/2026 | Première découverte des agendas OpenAgenda | 5 nouveaux agendas proposés, 14 événements de plus dans la zone (102 au lieu de 88) |
+
+Chiffres de la collecte du 14/10/2026 : 1 059 événements, 780 autour de
+Montpellier, 279 sur le bassin de Thau (986 DATAtourisme, 73 OpenAgenda),
+802 embeddings calculés, en 1 min 46 s.
+
+Durée et coût d'une nuit, mesurés le 15/10/2026 (environ 2 500 événements :
+DATAtourisme ~1 950 séances, programme PDF de Sète ~440, OpenAgenda ~90,
+partenaires fictifs 15) :
+
+| Nuit | Durée | Coût Mistral | Ce qui se passe |
+| --- | --- | --- | --- |
+| Après un changement de consigne | ~6 min | ~0,04 $ | environ 700 événements ré-enrichis et vectorisés |
+| Ordinaire | ~2 min 15 | ~0,005 $ | seuls les nouveaux ou les modifiés sont enrichis |
+| Dimanche (découverte) | ~9 min | ~0,005 $ | plus la recherche complète des agendas, sans appel à Mistral |
+
+La première collecte sur une base vide coûte environ 0,14 $ (`docs/couts.md`).
 
 ## À venir
 
@@ -231,6 +324,13 @@ dans `collect_runs` (coût, tokens, couverture, durées, alertes, lien MLflow),
 suivie dans MLflow (`tracking.py`) et visible dans Grafana. Voir
 `monitoring/README.md`.
 
+La base garde l'histoire : `collect_runs` (une ligne par nuit),
+`collect_run_sources` (une ligne par source et par nuit, base de l'alerte
+« baisse anormale »), `deleted_event_stats` (ce qui a été supprimé et
+pourquoi, sans garder les fiches), `agent_proposals`. Le journal détaillé
+est dans `logs/pipeline.log`. Le suivi ne fait jamais échouer la nuit : si
+le serveur MLflow ne répond pas en 3 s, la collecte continue sans lui.
+
 ## Les décisions « LLM » et leurs garde-fous
 
 | Décision | Modèle | Garde-fous |
@@ -239,7 +339,3 @@ suivie dans MLflow (`tracking.py`) et visible dans Grafana. Voir
 | Juge de qualité | `mistral-medium-latest` | Un autre modèle que celui de l'enrichissement ; quatre questions fermées ; un contrôle, jamais une modification |
 | Lecture des recherches ratées (faute, synonyme, sujet, ambiance) | `mistral-small-latest` (`LEARNING_MODEL`) | Réponse JSON contrôlée (mots demandés seulement, natures connues, un mot par équivalent) ; un synonyme n'est proposé que s'il existe dans les titres de la base ; un agenda seulement s'il a des événements du sujet dans la zone ; un humain décide, une proposition refusée n'est jamais reproposée |
 | Diagnostic et réparation | pas de LLM (règles + vérification de l'adresse) | L'agent propose, un humain décide ; rien n'est modifié sans `--accepter` |
-
-Cas réel qui a motivé le diagnostic (14/10/2026) : le PDF de l'Agglopôle est
-passé du dossier `uploads/2026/08/` à `uploads/2026/09/`. L'agent trouve
-désormais seul la nouvelle adresse et la propose.

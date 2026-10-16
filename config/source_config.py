@@ -34,7 +34,6 @@ SECTION_SOURCE_TYPES: dict[str, SourceType] = {
     "document_sources": "document",
 }
 KNOWN_TOP_LEVEL_SECTIONS = {"defaults", *SECTION_SOURCE_TYPES}
-REFERENCE_ROLES = {"labeled_reference", "multimodal_reference", "fact_check_reference"}
 SOURCE_ID_PATTERN = re.compile(r"^[a-z0-9]+(?:_[a-z0-9]+)*$")
 SECRET_NAME_PATTERN = re.compile(r"^[a-z0-9]+(?:_[a-z0-9]+)*$")
 
@@ -92,12 +91,6 @@ def string_tuple(value: Any) -> tuple[str, ...]:
     if not is_sequence(value):
         return ()
     return tuple(cleaned for item in value if (cleaned := clean_string(item)))
-
-
-def string_mapping(value: Any) -> dict[str, str]:
-    if not isinstance(value, Mapping):
-        return {}
-    return {clean_string(key): clean_string(item) for key, item in value.items()}
 
 
 def is_http_url(value: Any) -> bool:
@@ -178,44 +171,40 @@ class FilterConfig:
     require_text: bool = False
     require_image: bool = False
     require_url: bool = True
-    require_label: bool = False
     min_title_length: int = 0
     min_text_length: int = 0
     min_total_text_length: int = 0
     remove_deleted_content: bool = True
     remove_duplicates: bool = True
     validate_urls: bool = True
-    allowed_labels: tuple[str, ...] = ()
     extra: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_mapping(cls, data: Mapping[str, Any] | None) -> "FilterConfig":
         configuration = dict(data or {})
         known = {
-            "require_title", "require_text", "require_image", "require_url", "require_label",
+            "require_title", "require_text", "require_image", "require_url",
             "min_title_length", "min_text_length", "min_total_text_length",
-            "remove_deleted_content", "remove_duplicates", "validate_urls", "allowed_labels"
+            "remove_deleted_content", "remove_duplicates", "validate_urls"
         }
         return cls(
             require_title=configuration.get("require_title", True),
             require_text=configuration.get("require_text", False),
             require_image=configuration.get("require_image", False),
             require_url=configuration.get("require_url", True),
-            require_label=configuration.get("require_label", False),
             min_title_length=configuration.get("min_title_length", 0),
             min_text_length=configuration.get("min_text_length", 0),
             min_total_text_length=configuration.get("min_total_text_length", 0),
             remove_deleted_content=configuration.get("remove_deleted_content", True),
             remove_duplicates=configuration.get("remove_duplicates", True),
             validate_urls=configuration.get("validate_urls", True),
-            allowed_labels=string_tuple(configuration.get("allowed_labels")),
             extra={key: value for key, value in configuration.items() if key not in known}
         )
 
-    def validate(self, source_id: str, role: str) -> list[str]:
+    def validate(self, source_id: str) -> list[str]:
         errors: list[str] = []
         booleans = (
-            "require_title", "require_text", "require_image", "require_url", "require_label",
+            "require_title", "require_text", "require_image", "require_url",
             "remove_deleted_content", "remove_duplicates", "validate_urls"
         )
         integers = ("min_title_length", "min_text_length", "min_total_text_length")
@@ -226,19 +215,11 @@ class FilterConfig:
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, int) or value < 0:
                 errors.append(f"{source_id}.filters.{name} doit être un entier positif ou nul.")
-        if role == "acquisition" and self.require_label:
-            errors.append(f"{source_id}.filters.require_label est incohérent avec le rôle acquisition.")
-        if role in REFERENCE_ROLES:
-            if not self.require_label:
-                errors.append(f"{source_id}.filters.require_label doit être vrai pour le rôle {role}.")
-            if not self.allowed_labels:
-                errors.append(f"{source_id}.filters.allowed_labels est obligatoire pour le rôle {role}.")
         return errors
 
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
         extra = data.pop("extra")
-        data["allowed_labels"] = list(self.allowed_labels)
         return {**data, **extra}
 
 
@@ -322,7 +303,7 @@ class SourceConfig:
             errors.append(f"{identifier}.max_articles doit être un entier.")
         elif self.max_articles <= 0:
             errors.append(f"{identifier}.max_articles doit être strictement positif.")
-        errors.extend(self.filters.validate(identifier, self.role))
+        errors.extend(self.filters.validate(identifier))
         return errors
 
     def to_dict(self) -> dict[str, Any]:
@@ -415,7 +396,6 @@ class DatasetSourceConfig(SourceConfig):
     path: Path
     format: str
     chunksize: int
-    label_mapping: dict[str, str]
     extra: dict[str, Any] = field(default_factory=dict)
 
     def validate(self, expected_type: SourceType = "dataset") -> list[str]:
@@ -428,17 +408,12 @@ class DatasetSourceConfig(SourceConfig):
             errors.append(f"{self.source_id}.chunksize doit être un entier.")
         elif self.chunksize <= 0:
             errors.append(f"{self.source_id}.chunksize doit être strictement positif.")
-        if self.filters.require_label and not self.label_mapping:
-            errors.append(f"{self.source_id}.label_mapping est obligatoire lorsque require_label=true.")
-        invalid_labels = sorted(set(self.label_mapping.values()) - set(self.filters.allowed_labels))
-        if self.filters.allowed_labels and invalid_labels:
-            errors.append(f"{self.source_id}.label_mapping produit des labels non autorisés : {', '.join(invalid_labels)}.")
         return errors
 
     def to_dict(self) -> dict[str, Any]:
         return {
             **SourceConfig.to_dict(self), **self.extra, "path": str(self.path), "format": self.format,
-            "chunksize": self.chunksize, "label_mapping": dict(self.label_mapping)
+            "chunksize": self.chunksize
         }
 
 
@@ -621,10 +596,10 @@ def build_source_config(raw_source: Mapping[str, Any], expected_type: SourceType
             extra=extract_extra(merged, common_fields | {"url"})
         )
     if expected_type == "dataset":
-        specific = {"path", "format", "chunksize", "label_mapping"}
+        specific = {"path", "format", "chunksize"}
         return DatasetSourceConfig(
             **common, path=Path(clean_string(merged.get("path"))), format=clean_string(merged.get("format")).casefold(),
-            chunksize=merged.get("chunksize", 0), label_mapping=string_mapping(merged.get("label_mapping")),
+            chunksize=merged.get("chunksize", 0),
             extra=extract_extra(merged, common_fields | specific)
         )
     if expected_type == "scraper":

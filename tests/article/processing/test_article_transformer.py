@@ -26,8 +26,7 @@ def complete_article() -> dict[str, Any]:
         "text": "Contenu principal",
         "language": " French ",
         "category": " Politique, Économie, politique ",
-        "label": " Fake ",
-        "dataset_role": " labeled_reference ",
+        "dataset_role": " test_role ",
         "url": "https://example.com/article"
     }
 
@@ -139,77 +138,32 @@ def test_normalize_category_accepts_non_string_value() -> None:
     assert module.normalize_category(123) == "123"
 
 
-# Normalisation des labels
-
-@pytest.mark.parametrize(
-    ("value", "expected"),
-    [
-        (None, ""),
-        ("", ""),
-        ("   ", ""),
-        ("fake", "fake"),
-        (" Fake ", "fake"),
-        ("REAL", "real"),
-        ("unknown", "unknown")
-    ]
-)
-def test_normalize_label_returns_expected_value(
-    value: Any,
-    expected: str
-) -> None:
-    assert module.normalize_label(value) == expected
-
-
-def test_normalize_label_uses_label_mapping(
-    monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(
-        module,
-        "LABEL_MAPPING",
-        {
-            "false": "fake",
-            "true": "real"
-        }
-    )
-
-    assert module.normalize_label(" FALSE ") == "fake"
-    assert module.normalize_label("TRUE") == "real"
-
-
-def test_normalize_label_keeps_unknown_normalized_value(
-    monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(module, "LABEL_MAPPING", {})
-
-    assert module.normalize_label(" Custom_Label ") == "custom_label"
-
-
 # Normalisation des rôles
 
 @pytest.mark.parametrize(
     ("value", "supported_roles", "default_role", "expected"),
     [
         (
-            "labeled_reference",
-            {"labeled_reference"},
+            "test_role",
+            {"test_role"},
             "acquisition",
-            "labeled_reference"
+            "test_role"
         ),
         (
-            " LABELED_REFERENCE ",
-            {"labeled_reference"},
+            " TEST_ROLE ",
+            {"test_role"},
             "acquisition",
-            "labeled_reference"
+            "test_role"
         ),
         (
             "unknown",
-            {"labeled_reference"},
+            {"test_role"},
             "acquisition",
             "acquisition"
         ),
         (
             None,
-            {"labeled_reference"},
+            {"test_role"},
             "acquisition",
             "acquisition"
         )
@@ -246,13 +200,8 @@ def test_transform_article_returns_new_dictionary(
     )
     monkeypatch.setattr(
         module,
-        "LABEL_MAPPING",
-        {"fake": "fake"}
-    )
-    monkeypatch.setattr(
-        module,
         "DATASET_ROLES",
-        {"labeled_reference"}
+        {"test_role"}
     )
 
     result = module.transform_article(complete_article)
@@ -265,8 +214,7 @@ def test_transform_article_returns_new_dictionary(
         "text": "Contenu principal",
         "language": "fr",
         "category": "politique, économie",
-        "label": "fake",
-        "role": "labeled_reference",
+        "role": "test_role",
         "url": "https://example.com/article"
     }
 
@@ -287,12 +235,12 @@ def test_transform_article_uses_role_before_dataset_role(
     monkeypatch.setattr(
         module,
         "DATASET_ROLES",
-        {"acquisition", "labeled_reference"}
+        {"acquisition", "test_role"}
     )
 
     article = {
         "role": "acquisition",
-        "dataset_role": "labeled_reference"
+        "dataset_role": "test_role"
     }
 
     result = module.transform_article(article)
@@ -307,16 +255,16 @@ def test_transform_article_uses_dataset_role_when_role_is_missing(
     monkeypatch.setattr(
         module,
         "DATASET_ROLES",
-        {"labeled_reference"}
+        {"test_role"}
     )
 
     article = {
-        "dataset_role": "labeled_reference"
+        "dataset_role": "test_role"
     }
 
     result = module.transform_article(article)
 
-    assert result["role"] == "labeled_reference"
+    assert result["role"] == "test_role"
     assert "dataset_role" not in result
 
 
@@ -326,17 +274,17 @@ def test_transform_article_uses_dataset_role_when_role_is_empty(
     monkeypatch.setattr(
         module,
         "DATASET_ROLES",
-        {"labeled_reference"}
+        {"test_role"}
     )
 
     article = {
         "role": "",
-        "dataset_role": "labeled_reference"
+        "dataset_role": "test_role"
     }
 
     result = module.transform_article(article)
 
-    assert result["role"] == "labeled_reference"
+    assert result["role"] == "test_role"
     assert "dataset_role" not in result
 
 
@@ -358,7 +306,6 @@ def test_transform_article_adds_normalized_fields_when_missing(
         "title": "Titre",
         "language": "",
         "category": "",
-        "label": "",
         "role": "acquisition"
     }
 
@@ -388,8 +335,7 @@ def test_transform_article_accepts_custom_mapping() -> None:
     article: Mapping[str, Any] = CustomMapping(
         {
             "language": "",
-            "category": "",
-            "label": ""
+            "category": ""
         }
     )
 
@@ -408,14 +354,12 @@ def test_transform_articles_returns_transformed_articles(
             "id": "article-001",
             "language": "French",
             "category": "Politique",
-            "label": "Fake",
             "role": "acquisition"
         },
         {
             "id": "article-002",
             "language": "English",
             "category": "Science",
-            "label": "Real",
             "role": "acquisition"
         }
     ]
@@ -446,14 +390,12 @@ def test_transform_articles_returns_transformed_articles(
             "id": "article-001",
             "language": "fr",
             "category": "politique",
-            "label": module.normalize_label("Fake"),
             "role": "acquisition"
         },
         {
             "id": "article-002",
             "language": "en",
             "category": "science",
-            "label": module.normalize_label("Real"),
             "role": "acquisition"
         }
     ]

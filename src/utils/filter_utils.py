@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -16,7 +16,6 @@ from config.settings import (
     MIN_TOTAL_TEXT_LENGTH
 )
 from src.article.processing.article_cleaner import normalize_value
-from src.article.processing.article_transformer import normalize_label
 from src.logger import get_logger
 from src.utils.parsing_utils import (
     parse_boolean,
@@ -38,28 +37,24 @@ FALLBACK_FILTERS: dict[str, dict[str, Any]] = {
         "require_text": False,
         "require_image": False,
         "require_url": True,
-        "require_label": False,
         "min_title_length": MIN_TITLE_LENGTH,
         "min_text_length": MIN_TEXT_LENGTH,
         "min_total_text_length": MIN_TOTAL_TEXT_LENGTH,
         "remove_deleted_content": True,
         "remove_duplicates": True,
-        "validate_urls": True,
-        "allowed_labels": []
+        "validate_urls": True
     },
     DATASET_FILTER_SECTION: {
         "require_title": True,
         "require_text": False,
         "require_image": False,
         "require_url": False,
-        "require_label": True,
         "min_title_length": MIN_TITLE_LENGTH,
         "min_text_length": MIN_TEXT_LENGTH,
         "min_total_text_length": MIN_TOTAL_TEXT_LENGTH,
         "remove_deleted_content": True,
         "remove_duplicates": True,
-        "validate_urls": True,
-        "allowed_labels": []
+        "validate_urls": True
     }
 }
 
@@ -68,7 +63,6 @@ BOOLEAN_FILTER_FIELDS: tuple[str, ...] = (
     "require_text",
     "require_image",
     "require_url",
-    "require_label",
     "remove_deleted_content",
     "remove_duplicates",
     "validate_urls"
@@ -81,11 +75,7 @@ INTEGER_FILTER_FIELDS: dict[str, int] = {
 }
 
 DATASET_FILTER_ROLES: frozenset[str] = frozenset({
-    "dataset",
-    "labeled_reference",
-    "multimodal_reference",
-    "fact_check_reference",
-    "claim_reference"
+    "dataset"
 })
 
 
@@ -161,28 +151,6 @@ def load_default_filters(
 
 # Normalisation
 
-def normalize_allowed_labels(labels: Any) -> list[str]:
-    """Normalise les labels autorisés sans modifier leur ordre."""
-
-    if labels is None:
-        return []
-
-    if isinstance(labels, (str, int, float, bool)):
-        label = normalize_label(labels)
-        return [label] if label else []
-
-    if isinstance(labels, Mapping) or not isinstance(labels, Iterable):
-        logger.warning("La liste des labels autorisés est invalide.")
-        return []
-
-    normalized_labels = [
-        label
-        for value in labels
-        if (label := normalize_label(value))
-    ]
-    return list(dict.fromkeys(normalized_labels))
-
-
 def normalize_filter_configuration(
     filters: Mapping[str, Any],
     fallback_filters: Mapping[str, Any]
@@ -203,9 +171,6 @@ def normalize_filter_configuration(
             default
         )
 
-    normalized_filters["allowed_labels"] = normalize_allowed_labels(
-        normalized_filters.get("allowed_labels")
-    )
     return normalized_filters
 
 

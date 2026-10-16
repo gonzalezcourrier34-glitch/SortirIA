@@ -2546,7 +2546,7 @@ def test_api_extractor_general_properties() -> None:
     extractor = build_extractor()
     extractor._source = {
         **build_source(),
-        "role": "fact_checking",
+        "role": "partenaire",
         "base_url": "https://example.com/base",
         "api_key_secret_name": "test_api_key"
     }
@@ -2555,7 +2555,7 @@ def test_api_extractor_general_properties() -> None:
     assert extractor.name == "Test API"
     assert extractor.configured_source_id == "test_api"
     assert extractor.enabled is True
-    assert extractor.role == "fact_checking"
+    assert extractor.role == "partenaire"
     assert extractor.endpoint == "https://example.com/base"
     assert extractor.base_url == "https://example.com/base"
     assert extractor.max_articles == 10

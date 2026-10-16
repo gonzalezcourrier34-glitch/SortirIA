@@ -11,7 +11,7 @@
 <header class="header">
 <nav class="nav container">
 <a class="logo" href="index.html">Sortir<span>IA</span></a>
-<div class="nav-links"><a href="index.html">Projet</a><a href="architecture.html">Architecture</a><a href="agent.html">Agent</a><a href="recherche.html">Recherche</a><a href="modeles.html">Modèles</a><a href="interface.html">Interface</a><a href="resultats.html">Résultats</a><a href="deploiement.html">Déploiement</a><a class="active" href="procedures.html">Procédures</a><a href="limites.html">Limites</a></div>
+<div class="nav-links"><a href="index.html">Projet</a><a href="parcours.html">Parcours</a><a href="architecture.html">Architecture</a><a href="agent.html">Agent</a><a href="recherche.html">Recherche</a><a href="modeles.html">Modèles</a><a href="interface.html">Interface</a><a href="resultats.html">Résultats</a><a href="deploiement.html">Déploiement</a><a class="active" href="procedures.html">Procédures</a><a href="limites.html">Limites</a></div>
 </nav>
 </header>
 <main>
@@ -670,7 +670,7 @@ Remove-Item Env:DATABASE_URL
 $MYIP = Invoke-RestMethod https://api.ipify.org
 az postgres flexible-server firewall-rule create --resource-group sortiria-rg --server-name sortiria-db-gonza --name mon-pc --start-ip-address $MYIP --end-ip-address $MYIP</code></pre>
 </div>
-<p class="table-note">Attendu : « appliqué : 00_extensions.sql »…, les tables et les vues, puis « Schéma complet. ». Source : <code>perso/deploiement_azure.md</code>, étape 8.</p>
+<p class="table-note">Attendu : « appliqué : 00_extensions.sql »…, les tables et les vues, puis « Schéma complet. ». Source : mon journal de déploiement, étape 8.</p>
 </div>
 
 <div class="experiment-card">
@@ -735,7 +735,7 @@ az monitor log-analytics query --workspace $WS --analytics-query "ContainerAppCo
 <div><span>À SAVOIR</span><p>Le journal se lit aussi dans le portail : <code>sortiria-collecte</code> &gt; Historique des exécutions &gt; Journaux. Toutes les commandes <code>az</code> de cette page filtrent leur sortie (<code>--query … -o tsv</code> ou <code>-o table</code>) : aucun secret ne s'affiche.</p></div>
 </div>
 </div>
-<p class="table-note">Sources : <code>.github/workflows/ci.yml</code> et <code>cd.yml</code>, <code>docs/deploiement.md</code>, <code>perso/deploiement_azure.md</code> (étapes 8, 9d, 9f et 11). <code>az containerapp logs show</code> et <code>az containerapp revision list</code> sont des commandes standard d'Azure CLI que le journal de déploiement n'utilise pas encore. Plus de contexte : <a class="project-link" href="deploiement.html">Déploiement →</a></p>
+<p class="table-note">Sources : <code>.github/workflows/ci.yml</code> et <code>cd.yml</code>, <code>docs/deploiement.md</code>, mon journal de déploiement (étapes 8, 9d, 9f et 11). <code>az containerapp logs show</code> et <code>az containerapp revision list</code> sont des commandes standard d'Azure CLI que le journal de déploiement n'utilise pas encore. Plus de contexte : <a class="project-link" href="deploiement.html">Déploiement →</a></p>
 </div>
 </section>
 
@@ -760,7 +760,7 @@ az monitor log-analytics query --workspace $WS --analytics-query "ContainerAppCo
 <tr><td>9</td><td>Des visiteurs reçoivent 429 de SortirIA</td><td>La limite de débit de l'API (par visiteur, ou 1 000 recherches par heure pour tout le service)</td><td>Voulu : l'en-tête <code>Retry-After</code> dit combien attendre. Si la limite est trop basse pour un usage légitime, la relever (procédure 9.3).</td></tr>
 </tbody>
 </table>
-<p class="table-note">Sources : <code>docs/sources.md</code> (429, quota), <code>scripts/check_mistral.py</code>, <code>perso/deploiement_azure.md</code> (étapes 9f et 11, « À retenir »), <code>agent/README.md</code>, <code>docs/fiabilite.md</code>, <code>.github/workflows/ci.yml</code> et <code>cd.yml</code>, <code>app/rate_limit.py</code>, page <a class="project-link" href="interface.html">Interface →</a> pour <code>npm audit</code>.</p>
+<p class="table-note">Sources : <code>docs/sources.md</code> (429, quota), <code>scripts/check_mistral.py</code>, mon journal de déploiement (étapes 9f et 11, « À retenir »), <code>agent/README.md</code>, <code>docs/fiabilite.md</code>, <code>.github/workflows/ci.yml</code> et <code>cd.yml</code>, <code>app/rate_limit.py</code>, page <a class="project-link" href="interface.html">Interface →</a> pour <code>npm audit</code>.</p>
 
 <figure class="story-figure"><svg class="story-svg" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 700" role="img" aria-label="Arbre de décision quand le mail du matin signale un problème. Première question : la collecte a-t-elle échoué ? Si oui, lire le journal de l'exécution avec az containerapp job logs show, corriger, pousser et relancer avec az containerapp job start. Sinon, une source est-elle en échec ? Si oui, la rejouer sur le poste avec agent --essai --source ; si elle marche sur le poste, elle est bloquée depuis Azure : la couper avec SOURCES_DESACTIVEES et la lire depuis le poste ; si elle échoue aussi, l'adresse a changé : accepter la proposition remplacer_url. Sinon, Mistral répond-il 429 ? Si oui, lancer check_mistral et attendre ; la lecture des PDF reprend depuis le cache et la recherche a un repli. Sinon, y a-t-il une baisse anormale ou une couverture faible ? Si oui, les événements de la veille sont gardés ; vérifier la source, les agendas sont proposés le dimanche. Sinon, la qualité des fiches est-elle sous 80 % ? Si oui, lire les exemples du mail, corriger le mapper ou la consigne et pousser. Sinon, il reste à trancher les propositions en attente avec agent.proposals.">
 <rect width="1080" height="700" rx="18" fill="#111a22"/>
@@ -854,7 +854,7 @@ az monitor log-analytics query --workspace $WS --analytics-query "ContainerAppCo
 <span class="experiment-status selected">Réflexe</span>
 </div>
 <div class="experiment-analysis">
-<div><span>JAMAIS DANS GIT</span><p><code>.env</code>, <code>.env.azure</code> et tout <code>.env.*</code> sauf l'exemple ; <code>perso/</code> (notes privées, fichiers d'identité fédérée) ; <code>secrets/</code> ; <code>logs/</code> ; les données brutes de <code>data/</code>. Seul <code>data/partenaires/</code> est suivi, car il part dans l'image.</p></div>
+<div><span>JAMAIS DANS GIT</span><p><code>.env</code>, <code>.env.azure</code> et tout <code>.env.*</code> sauf l'exemple ; <code>perso/</code> (notes privées) ; <code>secrets/</code> ; <code>logs/</code> ; les données brutes de <code>data/</code>. Seul <code>data/partenaires/</code> est suivi, car il part dans l'image.</p></div>
 <div><span>POUR VÉRIFIER</span><p><code>git status</code> avant chaque commit, et <code>git check-ignore -v .env .env.azure perso</code> : chaque chemin doit sortir avec la règle de <code>.gitignore</code> qui l'exclut. Rien ne doit s'afficher en « Changes to be committed » parmi ces fichiers.</p></div>
 </div>
 </div>
@@ -910,7 +910,7 @@ Invoke-RestMethod https://www.sortiria-montpellier.fr/api/v1/sources</code></pre
 <tr><td><code>LIMITE_LECTURES_MINUTE</code></td><td>120</td><td>Lectures par minute, par visiteur</td></tr>
 </tbody>
 </table>
-<p class="table-note">Sources : <code>app/rate_limit.py</code>, <code>.env.example</code>, <code>docs/deploiement.md</code> (secrets), <code>perso/deploiement_azure.md</code> étape 9c (création des secrets à partir du <code>.env</code>, sans afficher les valeurs).</p>
+<p class="table-note">Sources : <code>app/rate_limit.py</code>, <code>.env.example</code>, <code>docs/deploiement.md</code> (secrets), mon journal de déploiement étape 9c (création des secrets à partir du <code>.env</code>, sans afficher les valeurs).</p>
 </div>
 </div>
 </section>
@@ -929,11 +929,11 @@ Invoke-RestMethod https://www.sortiria-montpellier.fr/api/v1/sources</code></pre
 <tr><td><code>scripts/init_db.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Exécute dans l'ordre les fichiers <code>sql/sortiria/*.sql</code>, réexécutables ; les fichiers SQL de CheckIt.AI sont archivés.</td></tr>
 <tr><td><code>scripts/audit_openagenda.py</code>, <code>scripts/explore_datatourisme.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Audit d'une vraie collecte OpenAgenda ; exploration de l'API DATAtourisme sur le même modèle (<code>field_paths</code> réutilisée).</td></tr>
 <tr><td><code>scripts/creer_modele_partenaire.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Modèle Excel / CSV généré depuis <code>TEMPLATE_COLUMNS</code> : le modèle et le lecteur ne peuvent pas diverger.</td></tr>
-<tr><td><code>src/extractors/datasets/source/partner_extractor.py</code> (<code>--verifier</code>)</td><td>Écrit pour SortirIA, branché sur le moteur datasets de CheckIt.AI (projet 12)</td><td><span class="experiment-status selected">Écrit</span></td><td>Vérification d'un fichier de partenaire reçu ; le moteur repris trouve, contrôle, filtre et dédoublonne les fichiers.</td></tr>
-<tr><td><code>src/extractors/scrapers/source/agenda_scraper.py</code></td><td>Écrit pour SortirIA, branché sur le moteur scraper de CheckIt.AI (projet 12)</td><td><span class="experiment-status selected">Écrit</span></td><td>Lecture d'un agenda en ligne autorisé par ses sélecteurs CSS ; robots.txt et pauses viennent du moteur repris.</td></tr>
+<tr><td><code>src/extractors/datasets/source/partner_extractor.py</code> (<code>--verifier</code>)</td><td>Écrit pour SortirIA, branché sur le moteur datasets de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">CheckIt.AI (projet 12)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Vérification d'un fichier de partenaire reçu ; le moteur repris trouve, contrôle, filtre et dédoublonne les fichiers.</td></tr>
+<tr><td><code>src/extractors/scrapers/source/agenda_scraper.py</code></td><td>Écrit pour SortirIA, branché sur le moteur scraper de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">CheckIt.AI (projet 12)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Lecture d'un agenda en ligne autorisé par ses sélecteurs CSS ; robots.txt et pauses viennent du moteur repris.</td></tr>
 <tr><td><code>scripts/check_mistral.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Diagnostic d'une erreur 429 de Mistral, sans afficher la clé.</td></tr>
 <tr><td><code>scripts/eval_recherche.py</code>, <code>eval_pertinence.py</code>, <code>jeu_test_recherche.py</code>, <code>mesure_cout_latence.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Les mesures de la page Résultats, relançables à la main.</td></tr>
-<tr><td><code>tests/conftest.py</code> (<code>uv run pytest</code>)</td><td>CheckIt.AI (projet 12)</td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Secrets factices, pour que les tests tournent sans clé d'API sur un poste neuf ou dans la CI.</td></tr>
+<tr><td><code>tests/conftest.py</code> (<code>uv run pytest</code>)</td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">CheckIt.AI (projet 12)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Secrets factices, pour que les tests tournent sans clé d'API sur un poste neuf ou dans la CI.</td></tr>
 </tbody>
 </table>
 <p class="table-note">Sources : mentions « Provenance » des docstrings des fichiers cités ; <code>PROVENANCE.md</code> (modifications du 13/10/2026).</p>

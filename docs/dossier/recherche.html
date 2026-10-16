@@ -11,7 +11,7 @@
 <header class="header">
 <nav class="nav container">
 <a class="logo" href="index.html">Sortir<span>IA</span></a>
-<div class="nav-links"><a href="index.html">Projet</a><a href="architecture.html">Architecture</a><a href="agent.html">Agent</a><a class="active" href="recherche.html">Recherche</a><a href="modeles.html">Modèles</a><a href="interface.html">Interface</a><a href="resultats.html">Résultats</a><a href="deploiement.html">Déploiement</a><a href="procedures.html">Procédures</a><a href="limites.html">Limites</a></div>
+<div class="nav-links"><a href="index.html">Projet</a><a href="parcours.html">Parcours</a><a href="architecture.html">Architecture</a><a href="agent.html">Agent</a><a class="active" href="recherche.html">Recherche</a><a href="modeles.html">Modèles</a><a href="interface.html">Interface</a><a href="resultats.html">Résultats</a><a href="deploiement.html">Déploiement</a><a href="procedures.html">Procédures</a><a href="limites.html">Limites</a></div>
 </nav>
 </header>
 <main>
@@ -455,12 +455,12 @@ Réponds uniquement en JSON : {"reponse": "...", "suggestions": ["...", "...", "
 <table class="story-table params-table">
 <thead><tr><th>Fichier ou module</th><th>Origine</th><th>Statut</th><th>Ce qui a été adapté ou écrit</th></tr></thead>
 <tbody>
-<tr><td><code>app/main.py</code></td><td>Assistant RAG OpenAgenda (projet 6)</td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Routes héritées (<code>/ask</code>, <code>/ask/debug</code>, <code>/rebuild</code>) et index FAISS construit au démarrage retirés ; il sert <code>/api/v1</code>, les notes et <code>/health</code>.</td></tr>
-<tr><td><code>app/interface_api.py</code></td><td>Écrit pour SortirIA, sur le modèle de l'API de Chess Agent (projet 13)</td><td><span class="experiment-status selected">Écrit</span></td><td>Préfixe <code>/api/v1</code>, recherche diffusée en Server-Sent Events (<code>event: progress</code>, puis <code>event: completed</code>).</td></tr>
+<tr><td><code>app/main.py</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/rag-openagenda">Assistant RAG OpenAgenda (projet 6)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Routes héritées (<code>/ask</code>, <code>/ask/debug</code>, <code>/rebuild</code>) et index FAISS construit au démarrage retirés ; il sert <code>/api/v1</code>, les notes et <code>/health</code>.</td></tr>
+<tr><td><code>app/interface_api.py</code></td><td>Écrit pour SortirIA, sur le modèle de l'API de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Chess Agent (projet 13)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Préfixe <code>/api/v1</code>, recherche diffusée en Server-Sent Events (<code>event: progress</code>, puis <code>event: completed</code>).</td></tr>
 <tr><td><code>app/search_service.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Recherche en 4 étapes sur PostgreSQL et pgvector, rédaction Mistral avec citations vérifiées, repli sans Mistral, cache, trace dans <code>rag_requests</code>.</td></tr>
 <tr><td><code>app/query_understanding.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Contraintes lues par des règles et des synonymes validés, sans appel à un modèle : la première version ne comparait qu'un seul vecteur.</td></tr>
 <tr><td><code>app/rate_limit.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Limite par visiteur et plafond global de la recherche, réponse 429 avec <code>Retry-After</code>, pour borner le coût Mistral.</td></tr>
-<tr><td><code>src/event/event_embedding.py</code></td><td>Écrit pour SortirIA, idée reprise de Assistant RAG OpenAgenda (projet 6)</td><td><span class="experiment-status selected">Écrit</span></td><td>Texte indexé sur le modèle du « texte enrichi » du RAG : titre, catégorie, lieu et description dans un seul texte.</td></tr>
+<tr><td><code>src/event/event_embedding.py</code></td><td>Écrit pour SortirIA, idée reprise de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/rag-openagenda">Assistant RAG OpenAgenda (projet 6)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Texte indexé sur le modèle du « texte enrichi » du RAG : titre, catégorie, lieu et description dans un seul texte.</td></tr>
 </tbody>
 </table>
 <p class="table-note">Sources : mentions « Provenance » des docstrings de <code>app/</code> et de <code>src/event/event_embedding.py</code> ; <code>PROVENANCE.md</code> (« Remplacer FAISS par pgvector », 14 et 15/10/2026).</p>

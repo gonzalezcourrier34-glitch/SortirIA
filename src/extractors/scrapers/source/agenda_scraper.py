@@ -13,7 +13,7 @@ source reste `enabled: false` et l'agent ne la lance pas.
 
 Essai sur une page enregistrée depuis le navigateur (aucune requête au site) :
 
-    uv run python -m src.extractors.scrapers.source.agenda_scraper --fichier perso/frontignan_agenda.html
+    uv run python -m src.extractors.scrapers.source.agenda_scraper --fichier <page_enregistree>.html
 """
 
 from __future__ import annotations

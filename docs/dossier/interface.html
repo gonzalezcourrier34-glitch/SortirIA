@@ -11,7 +11,7 @@
 <header class="header">
 <nav class="nav container">
 <a class="logo" href="index.html">Sortir<span>IA</span></a>
-<div class="nav-links"><a href="index.html">Projet</a><a href="architecture.html">Architecture</a><a href="agent.html">Agent</a><a href="recherche.html">Recherche</a><a href="modeles.html">Modèles</a><a class="active" href="interface.html">Interface</a><a href="resultats.html">Résultats</a><a href="deploiement.html">Déploiement</a><a href="procedures.html">Procédures</a><a href="limites.html">Limites</a></div>
+<div class="nav-links"><a href="index.html">Projet</a><a href="parcours.html">Parcours</a><a href="architecture.html">Architecture</a><a href="agent.html">Agent</a><a href="recherche.html">Recherche</a><a href="modeles.html">Modèles</a><a class="active" href="interface.html">Interface</a><a href="resultats.html">Résultats</a><a href="deploiement.html">Déploiement</a><a href="procedures.html">Procédures</a><a href="limites.html">Limites</a></div>
 </nav>
 </header>
 <main>
@@ -449,15 +449,15 @@ if (response.status === 429) {
 <thead><tr><th>Fichier ou module</th><th>Origine</th><th>Statut</th><th>Ce qui a été adapté ou écrit</th></tr></thead>
 <tbody>
 <tr><td><code>frontend/src/app/app.component.*</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>L'écran entier, d'après la maquette validée : filtres, question, réponse sourcée, cartes, détail, avis, partenaires, fenêtre des étapes.</td></tr>
-<tr><td><code>frontend/src/app/sse.ts</code>, <code>sse.spec.ts</code></td><td>Chess Agent (projet 13)</td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Découpage et lecture des messages SSE de Chess Agent, branchés sur les types de la recherche de SortirIA ; testés.</td></tr>
-<tr><td><code>frontend/src/app/search.service.ts</code></td><td>Chess Agent (projet 13)</td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Lecture du flux reprise ; appels à <code>/api/v1</code> de SortirIA et réponse 429 (limite de débit, 16/10) ajoutés.</td></tr>
+<tr><td><code>frontend/src/app/sse.ts</code>, <code>sse.spec.ts</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Chess Agent (projet 13)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Découpage et lecture des messages SSE de Chess Agent, branchés sur les types de la recherche de SortirIA ; testés.</td></tr>
+<tr><td><code>frontend/src/app/search.service.ts</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Chess Agent (projet 13)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Lecture du flux reprise ; appels à <code>/api/v1</code> de SortirIA et réponse 429 (limite de débit, 16/10) ajoutés.</td></tr>
 <tr><td><code>frontend/src/app/search.model.ts</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Types échangés avec l'API, mêmes noms d'étapes que <code>app/search_service.py</code>.</td></tr>
-<tr><td><code>frontend/angular.json</code>, <code>package.json</code>, <code>proxy.conf.json</code>, <code>proxy.docker.json</code></td><td>Chess Agent (projet 13)</td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Configuration Angular 21 reprise ; proxy <code>/api</code> vers l'API de SortirIA en local et dans docker compose.</td></tr>
-<tr><td><code>frontend/Dockerfile</code></td><td>Chess Agent (projet 13)</td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Dockerfile de Chess Agent ; dans docker compose, l'API s'appelle « api » et l'interface lit <code>proxy.docker.json</code>.</td></tr>
+<tr><td><code>frontend/angular.json</code>, <code>package.json</code>, <code>proxy.conf.json</code>, <code>proxy.docker.json</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Chess Agent (projet 13)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Configuration Angular 21 reprise ; proxy <code>/api</code> vers l'API de SortirIA en local et dans docker compose.</td></tr>
+<tr><td><code>frontend/Dockerfile</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Chess Agent (projet 13)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Dockerfile de Chess Agent ; dans docker compose, l'API s'appelle « api » et l'interface lit <code>proxy.docker.json</code>.</td></tr>
 <tr><td><code>frontend/public/staticwebapp.config.json</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Nouveau fichier pour Static Web Apps : toute adresse inconnue renvoie <code>index.html</code>, sauf <code>/api/*</code>.</td></tr>
 </tbody>
 </table>
-<p class="table-note">Sources : <code>frontend/README.md</code>, en-têtes de <code>frontend/Dockerfile</code> et <code>frontend/src/app/sse.ts</code>, <code>docs/interface.md</code>, <code>perso/deploiement_azure.md</code> (fichiers nouveaux) ; <code>PROVENANCE.md</code> (« Interface finale », 14/10/2026).</p>
+<p class="table-note">Sources : <code>frontend/README.md</code>, en-têtes de <code>frontend/Dockerfile</code> et <code>frontend/src/app/sse.ts</code>, <code>docs/interface.md</code>, mon journal de déploiement (fichiers nouveaux) ; <code>PROVENANCE.md</code> (« Interface finale », 14/10/2026).</p>
 <p class="table-note">Le détail ligne à ligne : <code>PROVENANCE.md</code> du dépôt.</p>
 </div>
 </section>

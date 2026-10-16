@@ -237,15 +237,6 @@ LANGUAGE_MAPPING: dict[str, str] = {
     "french": "fr"
 }
 
-# Normalisation des labels
-
-LABEL_MAPPING: dict[str, str] = {
-    "0": "real",
-    "1": "fake",
-    "fake": "fake",
-    "real": "real"
-}
-
 EMPTY_CATEGORY_VALUES = frozenset({
     "",
     "none",

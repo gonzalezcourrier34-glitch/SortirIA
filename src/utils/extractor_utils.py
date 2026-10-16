@@ -14,8 +14,7 @@ from src.article.processing.article_cleaner import (
     normalize_value
 )
 from src.article.processing.article_transformer import (
-    normalize_dataset_role,
-    normalize_label
+    normalize_dataset_role
 )
 from src.article.schema.article_schema_normalizer import normalize_article_schema
 from src.article.validation.article_validator import validate_article_with_reason
@@ -104,7 +103,7 @@ def build_standard_article(
         "author": normalize_value(author),
         "language": normalize_value(language).lower(),
         "category": normalize_value(category),
-        "label": normalize_label(label),
+        "label": normalize_value(label),
         "role": normalized_role,
         "extracted_at": get_extraction_date(),
         "metadata": dict(metadata) if isinstance(metadata, Mapping) else {}

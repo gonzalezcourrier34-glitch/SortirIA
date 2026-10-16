@@ -157,8 +157,10 @@ de la zone »).
 | `events` | Ses séances, avec `partner_id`, `is_sponsored` et la source `partenaire` |
 | `partner_imports` | Le bilan de chaque fichier : lignes lues, gardées, refusées, motifs, statut (`importe`, `partiel`) ; un même fichier (même empreinte) n'est compté qu'une fois |
 
-Les fichiers des partenaires restent dans `data/` (exclu de git) : ils ne
-sont pas publiés avec le code.
+Les fichiers des partenaires sont dans `data/partenaires/`, **suivi par git**
+(seule exception au `data/` ignoré) et copié dans l'image Docker : un nouveau
+fichier, ou un document validé, n'arrive en production qu'après un commit et
+un push. Les partenaires d'exemple sont fictifs.
 
 ## Choix techniques
 
@@ -167,9 +169,9 @@ sont pas publiés avec le code.
   comme pour les autres sources : trouver les fichiers, lire les lignes,
   construire les articles ; le moteur fait le reste (filtres, doublons,
   statut).
-- Deux ajustements du moteur, notés dans le code : la validation propre à la
+- Un ajustement du moteur, noté dans le code : la validation propre à la
   source passe avant la construction de l'article (sinon le motif d'une
-  ligne refusée était perdu), et le filtre « label vrai/faux » hérité des
-  jeux de données de fausses informations est désactivé pour cette source
-  (`require_label: false`).
+  ligne refusée était perdu). Le filtre « étiquette vrai/faux » hérité des
+  jeux de données de fausses informations de CheckIt.AI a été retiré du code
+  le 16/10/2026.
 - L'agent ne lance la source que si `data/partenaires/` contient au moins un fichier.

@@ -11,7 +11,7 @@
 <header class="header">
 <nav class="nav container">
 <a class="logo" href="index.html">Sortir<span>IA</span></a>
-<div class="nav-links"><a href="index.html">Projet</a><a href="architecture.html">Architecture</a><a href="agent.html">Agent</a><a href="recherche.html">Recherche</a><a class="active" href="modeles.html">Modèles</a><a href="interface.html">Interface</a><a href="resultats.html">Résultats</a><a href="deploiement.html">Déploiement</a><a href="procedures.html">Procédures</a><a href="limites.html">Limites</a></div>
+<div class="nav-links"><a href="index.html">Projet</a><a href="parcours.html">Parcours</a><a href="architecture.html">Architecture</a><a href="agent.html">Agent</a><a href="recherche.html">Recherche</a><a class="active" href="modeles.html">Modèles</a><a href="interface.html">Interface</a><a href="resultats.html">Résultats</a><a href="deploiement.html">Déploiement</a><a href="procedures.html">Procédures</a><a href="limites.html">Limites</a></div>
 </nav>
 </header>
 <main>
@@ -74,7 +74,7 @@
 <div class="reflection-card"><h3>Un seul fournisseur</h3><p>Une seule clé, un seul suivi de coût (une grille de prix dans <code>agent/watch.py</code>), et des modèles différents selon le rôle : <code>small</code> produit, <code>medium</code> juge la nuit, <code>large</code> juge la pertinence.</p></div>
 <div class="reflection-card"><h3>Une sortie JSON imposée</h3><p>Tous les appels de langage passent <code>response_format={"type": "json_object"}</code> et <code>temperature=0</code> : la réponse se lit et se valide par du code (Pydantic), et deux nuits identiques donnent le même résultat autant que possible.</p></div>
 </div>
-<p class="table-note">Sources : <code>docs/architecture.md</code> (« hébergement européen, coût bas, un seul fournisseur »), <code>perso/collecte_extracteurs_et_agent.md</code> (un seul suivi de coût, des modèles différents selon le rôle), <code>docs/fiabilite.md</code> (purge du journal), <code>src/event/event_enrichment.py</code> (<code>call_mistral_json</code>).</p>
+<p class="table-note">Sources : <code>docs/architecture.md</code> (« hébergement européen, coût bas, un seul fournisseur »), <code>docs/sources.md</code> (un seul suivi de coût, des modèles différents selon le rôle), <code>docs/fiabilite.md</code> (purge du journal), <code>src/event/event_enrichment.py</code> (<code>call_mistral_json</code>).</p>
 
 <figure class="story-figure"><svg class="story-svg" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 712" role="img" aria-label="Où intervient chaque modèle Mistral dans SortirIA, et quelle règle le contrôle. La nuit, l'agent extrait les sources par des règles, mistral-small lit les PDF et les documents Word (contrôle : titre retrouvé dans la page, date dans la période), des règles préparent les événements, mistral-small enrichit par lots de 15 (contrôle : liste fermée, noms vérifiés), mistral-embed calcule les vecteurs de 1 024 dimensions, mistral-medium juge 20 fiches (sous 80 %, alerte). À côté : Mistral Moderation reprend les avis en attente, et le lundi mistral-small lit les mots cherchés sans réponse ; une règle vérifie que le mot proposé existe dans les titres, un humain valide. À la question : compréhension par règles en 1 ms, embedding de la question par mistral-embed, filtres SQL et fusion sens plus mots, rédaction par mistral-small, citations vérifiées par une règle, cartes tirées de la base ; en cas de panne, recherche par mots et date, réponse simple. À la main : grille annotée par un humain, juge mistral-large v7, comparaison par le code ; lecture d'un document partenaire pour vérification ; ministral-8b et l'extraction des contraintes par Ministral non retenus.">
 <rect width="1080" height="712" rx="18" fill="#111a22"/>
@@ -441,7 +441,7 @@
 <div><span>QUOTA</span><p>Le 16/10, erreurs 429 dès les premiers appels avec <code>mistral-large</code> : pause de 3 s entre deux questions, puis 10 s, 20 s, 40 s si Mistral refuse encore. Il partage le quota du site : jamais pendant une démonstration.</p></div>
 </div>
 </div>
-<p class="table-note">Sources : docstrings et commentaires datés des fichiers cités en section 02 ; <code>docs/fiabilite.md</code> (CYRANA), <code>perso/agent_role_pipeline_actions.md</code> (MHSC), <code>docs/sources.md</code> (19 erreurs 429, lecture complète), <code>docs/evaluation.md</code> (grilles et calibrage), <code>docs/couts.md</code>, <code>perso/dossier_soutenance.md</code> (434 événements du PDF).</p>
+<p class="table-note">Sources : docstrings et commentaires datés des fichiers cités en section 02 ; <code>docs/fiabilite.md</code> (CYRANA), <code>agent/README.md</code> (MHSC), <code>docs/sources.md</code> (19 erreurs 429, lecture complète), <code>docs/evaluation.md</code> (grilles et calibrage), <code>docs/couts.md</code>, <code>docs/evaluation.md</code> (434 événements du PDF).</p>
 </div>
 </section>
 
@@ -473,7 +473,7 @@
 <div class="reflection-card"><h3>Quand l'événement n'a pas de vecteur</h3><p>Il reste trouvable : le classement par le sens ignore les fiches sans vecteur, le classement par les mots les voit. Son vecteur sera calculé la nuit suivante.</p></div>
 <div class="reflection-card"><h3>Quand la question n'a pas de vecteur</h3><p>Mistral ne répond pas : la recherche continue par les mots, et sans mots, par date. La réponse est marquée dégradée. La CI rejoue les 50 questions <strong>sans vecteur ni Mistral</strong> et échoue sous 95 % : les contraintes ne dépendent pas du modèle.</p></div>
 </div>
-<p class="table-note">Sources : <code>app/search_service.py</code>, <code>agent/nodes.py</code> (<code>embed_missing</code>), <code>src/event/event_repository.py</code> (vecteur effacé après un nouvel enrichissement), <code>docs/evaluation.md</code> (§ 1, CI), <code>perso/dossier_soutenance.md</code> (FAISS). Détail de la recherche : <a class="project-link" href="recherche.html">Recherche →</a></p>
+<p class="table-note">Sources : <code>app/search_service.py</code>, <code>agent/nodes.py</code> (<code>embed_missing</code>), <code>src/event/event_repository.py</code> (vecteur effacé après un nouvel enrichissement), <code>docs/evaluation.md</code> (§ 1, CI), <code>docs/evaluation.md</code> (FAISS). Détail de la recherche : <a class="project-link" href="recherche.html">Recherche →</a></p>
 </div>
 </section>
 
@@ -605,8 +605,8 @@
 <tr><td><code>src/event/event_enrichment.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Catégorie unifiée, publics, résumé, signalement « pas une sortie » ; fonction <code>call_mistral_json</code> réutilisée par la recherche et l'évaluation.</td></tr>
 <tr><td><code>src/event/quality_judge.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Juge de qualité sur 20 fiches par nuit, avec un autre modèle que l'enrichissement.</td></tr>
 <tr><td><code>src/event/event_ratings.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Modération des commentaires des visiteurs par Mistral Moderation.</td></tr>
-<tr><td><code>src/event/event_embedding.py</code></td><td>Écrit pour SortirIA, idée reprise de Assistant RAG OpenAgenda (projet 6)</td><td><span class="experiment-status selected">Écrit</span></td><td>Texte indexé (titre, catégorie, lieu, description), sur le modèle du « texte enrichi » du RAG.</td></tr>
-<tr><td><code>agent/services.py</code></td><td>Écrit pour SortirIA, sur le modèle de Chess Agent (projet 13)</td><td><span class="experiment-status selected">Écrit</span></td><td>Calcul des embeddings Mistral (<code>embed_with_mistral</code>) dans les services injectés au graphe.</td></tr>
+<tr><td><code>src/event/event_embedding.py</code></td><td>Écrit pour SortirIA, idée reprise de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/rag-openagenda">Assistant RAG OpenAgenda (projet 6)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Texte indexé (titre, catégorie, lieu, description), sur le modèle du « texte enrichi » du RAG.</td></tr>
+<tr><td><code>agent/services.py</code></td><td>Écrit pour SortirIA, sur le modèle de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Chess Agent (projet 13)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Calcul des embeddings Mistral (<code>embed_with_mistral</code>) dans les services injectés au graphe.</td></tr>
 <tr><td><code>agent/search_learning.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Lecture par Mistral des mots cherchés sans réponse (faute, synonyme, sujet, ambiance).</td></tr>
 <tr><td><code>app/search_service.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Vecteur de la question (mistral-embed) et rédaction de la réponse avec citations (<code>write_with_mistral</code>).</td></tr>
 <tr><td><code>scripts/eval_pertinence.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Juge de pertinence Mistral Large, calibré sur le jugement humain.</td></tr>

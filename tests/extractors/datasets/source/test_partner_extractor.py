@@ -26,7 +26,7 @@ def make_source(directory: Path, **changes: Any) -> dict[str, Any]:
     return {
         "name": "Fichiers des partenaires", "source_id": "partenaire", "type": "dataset", "enabled": True,
         "path": str(directory), "format": "tableur", "chunksize": 1000, "max_articles": 100, "role": "acquisition",
-        "filters": {"require_label": False, "require_url": True, "min_title_length": 3, "min_text_length": 0, "min_total_text_length": 3},
+        "filters": {"require_url": True, "min_title_length": 3, "min_text_length": 0, "min_total_text_length": 3},
         "partners": [{"file": "ludo", "name": "Ludothèque du Port", "sector": "enfants",
                       "website": "https://ludo.example", "sponsored_until": "2026-12-31"}],
         **changes,

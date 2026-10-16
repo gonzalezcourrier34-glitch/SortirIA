@@ -96,7 +96,7 @@ def test_get_article_duplicate_keys_prefixes_id_with_role(
     monkeypatch.setattr(
         module,
         "get_article_role",
-        lambda value: "labeled_reference"
+        lambda value: "partenaire"
     )
     monkeypatch.setattr(module, "get_article_url", lambda value: "")
     monkeypatch.setattr(module, "get_article_source", lambda value: "")
@@ -106,7 +106,7 @@ def test_get_article_duplicate_keys_prefixes_id_with_role(
     })
 
     assert result == {
-        "labeled_reference:id:article-1"
+        "partenaire:id:article-1"
     }
 
 
@@ -273,7 +273,7 @@ def test_get_article_duplicate_keys_distinguishes_roles(
     })
     reference_keys = module.get_article_duplicate_keys({
         "id": "article-1",
-        "dataset_role": "labeled_reference"
+        "dataset_role": "partenaire"
     })
 
     assert acquisition_keys != reference_keys
@@ -281,7 +281,7 @@ def test_get_article_duplicate_keys_distinguishes_roles(
         "acquisition:id:article-1"
     }
     assert reference_keys == {
-        "labeled_reference:id:article-1"
+        "partenaire:id:article-1"
     }
 
 
@@ -895,7 +895,7 @@ def test_deduplicate_articles_preserves_role_separation() -> None:
         },
         {
             "id": "article-1",
-            "dataset_role": "labeled_reference",
+            "dataset_role": "partenaire",
             "text": "Article de référence"
         }
     ]

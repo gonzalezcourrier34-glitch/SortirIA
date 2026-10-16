@@ -11,7 +11,7 @@
 <header class="header">
 <nav class="nav container">
 <a class="logo" href="index.html">Sortir<span>IA</span></a>
-<div class="nav-links"><a href="index.html">Projet</a><a href="architecture.html">Architecture</a><a class="active" href="agent.html">Agent</a><a href="recherche.html">Recherche</a><a href="modeles.html">Modèles</a><a href="interface.html">Interface</a><a href="resultats.html">Résultats</a><a href="deploiement.html">Déploiement</a><a href="procedures.html">Procédures</a><a href="limites.html">Limites</a></div>
+<div class="nav-links"><a href="index.html">Projet</a><a href="parcours.html">Parcours</a><a href="architecture.html">Architecture</a><a class="active" href="agent.html">Agent</a><a href="recherche.html">Recherche</a><a href="modeles.html">Modèles</a><a href="interface.html">Interface</a><a href="resultats.html">Résultats</a><a href="deploiement.html">Déploiement</a><a href="procedures.html">Procédures</a><a href="limites.html">Limites</a></div>
 </nav>
 </header>
 <main>
@@ -30,7 +30,7 @@
 <div><strong>≈ 2 min 15</strong><span>une nuit ordinaire</span></div>
 <div><strong>≈ 0,005 $</strong><span>de Mistral par nuit ordinaire</span></div>
 </div>
-<p class="table-note">Sources : <code>perso/dossier_soutenance.md</code> (§ 4, chiffres au 16/10/2026), <code>docs/couts.md</code> (coût mesuré), <code>perso/agent_role_pipeline_actions.md</code> (durée d'une nuit ordinaire ; la première nuit, base vide, dure environ 14 min et coûte 0,14 $).</p>
+<p class="table-note">Sources : <code>docs/evaluation.md</code> (§ 4, chiffres au 16/10/2026), <code>docs/couts.md</code> (coût mesuré), <code>agent/README.md</code> (durée d'une nuit ordinaire ; la première nuit, base vide, dure environ 14 min et coûte 0,14 $).</p>
 <div class="hero-actions">
 <a class="button primary" href="#s01">Lire</a>
 <a class="button secondary" href="#s02">Voir le graphe</a>
@@ -61,7 +61,7 @@
 <tr><td>Un <strong>humain</strong></td><td>Tout ce qui change la configuration</td><td>Nouvelle adresse d'un PDF déplacé, agenda OpenAgenda à ajouter, synonyme, publication d'un document partenaire : <code>uv run python -m agent.proposals --accepter N</code>.</td></tr>
 </tbody>
 </table>
-<p class="table-note">Source : <code>agent/README.md</code>, section « Agent ou ETL ? Ce que LangGraph apporte vraiment » ; <code>perso/dossier_soutenance.md</code>, § 1.2.</p>
+<p class="table-note">Source : <code>agent/README.md</code>, section « Agent ou ETL ? Ce que LangGraph apporte vraiment » ; <code>docs/evaluation.md</code>, § 1.2.</p>
 
 <h3>Ce que LangGraph apporte vraiment</h3>
 <div class="reflection-grid">
@@ -505,7 +505,7 @@ Bilan          status, alerts, run_id, errors</pre>
 <tr><td>15/10/2026</td><td>Première découverte des agendas OpenAgenda.</td><td>5 nouveaux agendas proposés, 14 événements de plus dans la zone (102 au lieu de 88).</td></tr>
 </tbody>
 </table>
-<p class="table-note">Source : <code>agent/README.md</code>, <code>perso/agent_role_pipeline_actions.md</code> (§ 7).</p>
+<p class="table-note">Source : <code>agent/README.md</code>, <code>agent/README.md</code> (§ 7).</p>
 </div>
 </section>
 
@@ -537,7 +537,7 @@ Bilan          status, alerts, run_id, errors</pre>
 <tr><td>Agendas en ligne (scraper)</td><td>Scrapers</td><td><span class="experiment-status rejected">Prêt, désactivé</span></td><td>Jamais sans autorisation écrite de l'éditeur : <code>enabled: false</code>, demande envoyée à la ville de Frontignan, en attente.</td></tr>
 </tbody>
 </table>
-<p class="table-note">Sources : <code>docs/sources.md</code>, <code>docs/partenaires.md</code>, <code>config/sources.yaml</code>, <code>docs/mvp.md</code> (≈ 1 980 par nuit), <code>perso/dossier_soutenance.md</code> (répartition au 16/10/2026).</p>
+<p class="table-note">Sources : <code>docs/sources.md</code>, <code>docs/partenaires.md</code>, <code>config/sources.yaml</code>, <code>docs/mvp.md</code> (≈ 1 980 par nuit), <code>docs/evaluation.md</code> (répartition au 16/10/2026).</p>
 
 <div class="callout">
 <span class="eyebrow">LE CAS QUI PARLE LE MIEUX</span>
@@ -583,7 +583,7 @@ Bilan          status, alerts, run_id, errors</pre>
 <tr><td><code>DATABASE_URL</code>, <code>MISTRAL_API_KEY</code>, <code>OPENAGENDA_API_KEY</code>, <code>DATATOURISME_API_KEY</code></td><td>Accès aux services ; une clé absente met la source en échec, jamais l'agent</td><td>—</td></tr>
 </tbody>
 </table>
-<p class="table-note">Noms seulement, d'après <code>.env.example</code>, <code>agent/services.py</code>, <code>agent/watch.py</code>, <code>agent/tracking.py</code> et <code>perso/collecte_extracteurs_et_agent.md</code>. Les valeurs réelles vivent dans le <code>.env</code> local et dans les secrets d'Azure.</p>
+<p class="table-note">Noms seulement, d'après <code>.env.example</code>, <code>agent/services.py</code>, <code>agent/watch.py</code>, <code>agent/tracking.py</code> et <code>docs/sources.md</code>. Les valeurs réelles vivent dans le <code>.env</code> local et dans les secrets d'Azure.</p>
 
 <h3>Les réglages du code</h3>
 <table class="story-table params-table">
@@ -650,7 +650,7 @@ Bilan          status, alerts, run_id, errors</pre>
 <tr><td>Recherches ratées</td><td><code>mistral-small-latest</code></td><td>Réponse JSON contrôlée ; synonyme proposé seulement s'il existe dans les titres ; agenda seulement s'il a des événements du sujet dans la zone ; un humain décide.</td></tr>
 </tbody>
 </table>
-<p class="table-note">Sources : <code>agent/README.md</code> (« Les décisions LLM et leurs garde-fous »), <code>docs/fiabilite.md</code>, <code>perso/dossier_soutenance.md</code>.</p>
+<p class="table-note">Sources : <code>agent/README.md</code> (« Les décisions LLM et leurs garde-fous »), <code>docs/fiabilite.md</code>, <code>docs/evaluation.md</code>.</p>
 
 <h3>Le suivi</h3>
 <div class="projects-grid">
@@ -689,27 +689,27 @@ Bilan          status, alerts, run_id, errors</pre>
 <table class="story-table params-table">
 <thead><tr><th>Fichier ou module</th><th>Origine</th><th>Statut</th><th>Ce qui a été adapté ou écrit</th></tr></thead>
 <tbody>
-<tr><td><code>agent/state.py</code>, <code>agent/graph.py</code>, <code>agent/routing.py</code></td><td>Écrit pour SortirIA, sur le modèle de Chess Agent (projet 13)</td><td><span class="experiment-status selected">Écrit</span></td><td>Même découpage que <code>state.py</code>, <code>graph.py</code> et <code>routing.py</code> de Chess Agent : le graphe ne contient aucune logique métier, le routage est séparé et testé à part.</td></tr>
-<tr><td><code>agent/nodes.py</code>, <code>agent/services.py</code></td><td>Écrit pour SortirIA, sur le modèle de Chess Agent (projet 13)</td><td><span class="experiment-status selected">Écrit</span></td><td>Un nœud = une étape, comme les nœuds <code>A_*</code> à <code>H_*</code> de Chess Agent ; services regroupés dans un objet injecté, pour tester les nœuds sans réseau ni base.</td></tr>
+<tr><td><code>agent/state.py</code>, <code>agent/graph.py</code>, <code>agent/routing.py</code></td><td>Écrit pour SortirIA, sur le modèle de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Chess Agent (projet 13)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Même découpage que <code>state.py</code>, <code>graph.py</code> et <code>routing.py</code> de Chess Agent : le graphe ne contient aucune logique métier, le routage est séparé et testé à part.</td></tr>
+<tr><td><code>agent/nodes.py</code>, <code>agent/services.py</code></td><td>Écrit pour SortirIA, sur le modèle de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Chess Agent (projet 13)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Un nœud = une étape, comme les nœuds <code>A_*</code> à <code>H_*</code> de Chess Agent ; services regroupés dans un objet injecté, pour tester les nœuds sans réseau ni base.</td></tr>
 <tr><td><code>agent/watch.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Programme PDF à renouveler, partenaire à relancer, couverture famille / soirée par zone, coût Mistral de la nuit : fonctions pures, alertes en français.</td></tr>
 <tr><td><code>agent/diagnosis.py</code>, <code>agent/proposals.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Diagnostic des pannes, parti du cas réel du PDF de l'Agglopôle déplacé ; réparations proposées, appliquées seulement après décision humaine.</td></tr>
 <tr><td><code>agent/search_learning.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Le lundi, lecture par Mistral des mots cherchés absents de la base ; proposition d'un synonyme ou d'un agenda OpenAgenda.</td></tr>
 <tr><td><code>agent/report.py</code>, <code>src/utils/mail_utils.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Bilan de la nuit par mail (SMTP, bibliothèque standard) : aucun des projets repris n'envoyait de mail.</td></tr>
 <tr><td><code>agent/tracking.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>MLflow avait servi au projet RAG pour suivre des expériences ; ici, une nuit = une exécution MLflow.</td></tr>
 <tr><td><code>agent/__main__.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Lancement à la main : collecte complète, <code>--essai</code> sans écriture en base, <code>--decouverte</code>, <code>--bilan-recherche</code>.</td></tr>
-<tr><td><code>dags/sortiria_nightly_dag.py</code></td><td>Écrit pour SortirIA, sur le modèle des DAG de CheckIt.AI (projet 12)</td><td><span class="experiment-status selected">Écrit</span></td><td>Lance l'agent chaque nuit à 2 h (heure de Paris) ; les DAG <code>checkit_*</code> ont été retirés le 15/10.</td></tr>
-<tr><td><code>src/extractor_execution_service.py</code></td><td>CheckIt.AI (projet 12)</td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Registre réduit à RSS, OpenAgenda, DATAtourisme, iCal, programmes PDF et fichiers des partenaires ; extracteurs de presse et de fake news retirés.</td></tr>
-<tr><td><code>src/extractors/apis/</code> (moteur API)</td><td>CheckIt.AI (projet 12)</td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Moteur conservé ; pagination réparée le 14/10 (<code>fetch_json_object</code> effaçait la partie « ?… » du lien « page suivante »).</td></tr>
-<tr><td><code>src/extractors/datasets/</code> (moteur datasets)</td><td>CheckIt.AI (projet 12)</td><td><span class="experiment-status promising">Repris et adapté</span></td><td>La validation propre à la source passe avant la construction de l'article (<code>process_dataset_item</code>) ; 3 tests de CheckIt.AI adaptés.</td></tr>
-<tr><td><code>src/extractors/rss/</code> (moteur RSS)</td><td>CheckIt.AI (projet 12)</td><td><span class="experiment-status rejected">Repris tel quel</span></td><td>Moteur, téléchargement et lecture des flux conservés ; seul l'adaptateur d'événements (<code>event_rss_extractor.py</code>) est écrit.</td></tr>
-<tr><td><code>src/extractors/scrapers/</code> (moteur scraper)</td><td>CheckIt.AI (projet 12)</td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Moteur, robots.txt et pauses conservés ; <code>scraper_article_utils.py</code> lit la catégorie de l'événement au lieu d'un verdict de fact-checking.</td></tr>
-<tr><td><code>src/extractors/apis/source/openagenda_extractor.py</code></td><td>Assistant RAG OpenAgenda (projet 6) et CheckIt.AI (projet 12)</td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Appels portés depuis <code>app/document_service.py</code> du RAG ; structure adaptateur + <code>ApiExtractor</code> de CheckIt.AI ; zones et filtre géographique ajoutés.</td></tr>
+<tr><td><code>dags/sortiria_nightly_dag.py</code></td><td>Écrit pour SortirIA, sur le modèle des DAG de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">CheckIt.AI (projet 12)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Lance l'agent chaque nuit à 2 h (heure de Paris) ; les DAG <code>checkit_*</code> ont été retirés le 15/10.</td></tr>
+<tr><td><code>src/extractor_execution_service.py</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">CheckIt.AI (projet 12)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Registre réduit à RSS, OpenAgenda, DATAtourisme, iCal, programmes PDF et fichiers des partenaires ; extracteurs de presse et de fake news retirés.</td></tr>
+<tr><td><code>src/extractors/apis/</code> (moteur API)</td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">CheckIt.AI (projet 12)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Moteur conservé ; pagination réparée le 14/10 (<code>fetch_json_object</code> effaçait la partie « ?… » du lien « page suivante »).</td></tr>
+<tr><td><code>src/extractors/datasets/</code> (moteur datasets)</td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">CheckIt.AI (projet 12)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>La validation propre à la source passe avant la construction de l'article (<code>process_dataset_item</code>) ; 3 tests de CheckIt.AI adaptés.</td></tr>
+<tr><td><code>src/extractors/rss/</code> (moteur RSS)</td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">CheckIt.AI (projet 12)</a></td><td><span class="experiment-status rejected">Repris tel quel</span></td><td>Moteur, téléchargement et lecture des flux conservés ; seul l'adaptateur d'événements (<code>event_rss_extractor.py</code>) est écrit.</td></tr>
+<tr><td><code>src/extractors/scrapers/</code> (moteur scraper)</td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">CheckIt.AI (projet 12)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Moteur, robots.txt et pauses conservés ; <code>scraper_article_utils.py</code> lit la catégorie de l'événement au lieu d'un verdict de fact-checking.</td></tr>
+<tr><td><code>src/extractors/apis/source/openagenda_extractor.py</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/rag-openagenda">Assistant RAG OpenAgenda (projet 6)</a> et <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">CheckIt.AI (projet 12)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Appels portés depuis <code>app/document_service.py</code> du RAG ; structure adaptateur + <code>ApiExtractor</code> de CheckIt.AI ; zones et filtre géographique ajoutés.</td></tr>
 <tr><td><code>datatourisme_extractor.py</code>, <code>event_rss_extractor.py</code>, <code>agenda_scraper.py</code>, <code>partner_extractor.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Adaptateurs d'événements branchés sur les moteurs API, RSS, scraper et datasets de CheckIt.AI.</td></tr>
-<tr><td><code>src/extractors/files/</code>, <code>ical/</code>, <code>documents/</code></td><td>Écrit pour SortirIA, calqué sur le moteur RSS de CheckIt.AI (projet 12)</td><td><span class="experiment-status selected">Écrit</span></td><td>Moteur commun « un fichier par source » : calendriers iCal et programmes PDF lus par Mistral ; seul le lecteur change.</td></tr>
-<tr><td><code>src/event/</code></td><td>Écrit pour SortirIA, découpé comme <code>src/article/</code> de CheckIt.AI (projet 12)</td><td><span class="experiment-status selected">Écrit</span></td><td>Schéma <code>Event</code>, normalisation, validation avec motifs, déduplication, enrichissement, juge de qualité, écriture PostgreSQL.</td></tr>
-<tr><td><code>src/event/openagenda_mapper.py</code></td><td>Assistant RAG OpenAgenda (projet 6)</td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Porté depuis <code>build_event_document</code> : produit un <code>Event</code> neutre au lieu d'un document LangChain.</td></tr>
-<tr><td><code>src/article/</code></td><td>CheckIt.AI (projet 12)</td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Étiquettes « vrai / faux » et filtres associés retirés le 16/10 ; l'article reste le format intermédiaire des moteurs, converti en événement.</td></tr>
-<tr><td><code>config/</code>, <code>config/sources.yaml</code></td><td>CheckIt.AI (projet 12)</td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Logger « sortiria », User-Agent « SortirIA/0.1 », secret lu dans une variable d'environnement ; sources de presse remplacées par les sources d'événements.</td></tr>
+<tr><td><code>src/extractors/files/</code>, <code>ical/</code>, <code>documents/</code></td><td>Écrit pour SortirIA, calqué sur le moteur RSS de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">CheckIt.AI (projet 12)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Moteur commun « un fichier par source » : calendriers iCal et programmes PDF lus par Mistral ; seul le lecteur change.</td></tr>
+<tr><td><code>src/event/</code></td><td>Écrit pour SortirIA, découpé comme <code>src/article/</code> de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">CheckIt.AI (projet 12)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Schéma <code>Event</code>, normalisation, validation avec motifs, déduplication, enrichissement, juge de qualité, écriture PostgreSQL.</td></tr>
+<tr><td><code>src/event/openagenda_mapper.py</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/rag-openagenda">Assistant RAG OpenAgenda (projet 6)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Porté depuis <code>build_event_document</code> : produit un <code>Event</code> neutre au lieu d'un document LangChain.</td></tr>
+<tr><td><code>src/article/</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">CheckIt.AI (projet 12)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Étiquettes « vrai / faux » et filtres associés retirés le 16/10 ; l'article reste le format intermédiaire des moteurs, converti en événement.</td></tr>
+<tr><td><code>config/</code>, <code>config/sources.yaml</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">CheckIt.AI (projet 12)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Logger « sortiria », User-Agent « SortirIA/0.1 », secret lu dans une variable d'environnement ; sources de presse remplacées par les sources d'événements.</td></tr>
 <tr><td><code>src/utils/geo_utils.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Fonctions de zone écrites le 13/10 dans l'extracteur OpenAgenda, déplacées le 14/10 dans un module commun.</td></tr>
 </tbody>
 </table>

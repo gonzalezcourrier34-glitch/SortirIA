@@ -165,29 +165,6 @@ def test_supported_languages_are_lowercase() -> None:
     )
 
 
-# Labels
-
-def test_binary_labels_contains_expected_values() -> None:
-    assert module.BINARY_LABELS == {
-        "fake",
-        "real"
-    }
-
-
-def test_numeric_binary_labels_contains_expected_values() -> None:
-    assert module.NUMERIC_BINARY_LABELS == {
-        "0",
-        "1"
-    }
-
-
-def test_liar_labels_are_lowercase() -> None:
-    assert all(
-        label == label.lower()
-        for label in module.LIAR_LABELS
-    )
-
-
 # Dataset roles
 
 def test_dataset_roles_are_lowercase() -> None:
@@ -205,9 +182,5 @@ def test_dataset_roles_are_unique() -> None:
 
 def test_dataset_roles_contains_expected_values() -> None:
     assert module.DATASET_ROLES == {
-        "acquisition",
-        "labeled_reference",
-        "multimodal_reference",
-        "fact_check_reference",
-        "social_reference"
+        "acquisition"
     }

@@ -39,7 +39,7 @@ def build_article(**overrides: Any) -> dict[str, Any]:
             "category": "general",
             "language": "fr",
             "country": "fr",
-            "label": "real",
+            "label": "",
             "published_at": "2026-07-28T08:00:00+00:00",
             "extracted_at": "2026-07-28T09:00:00+00:00",
             "role": "acquisition",
@@ -58,13 +58,11 @@ def build_policy(**overrides: Any) -> dict[str, Any]:
         "require_title": True,
         "require_text": False,
         "require_image": False,
-        "require_label": False,
         "remove_deleted_content": True,
         "validate_urls": True,
         "min_title_length": 10,
         "min_text_length": 10,
-        "min_total_text_length": 30,
-        "allowed_labels": set()
+        "min_total_text_length": 30
     }
     policy.update(overrides)
     return policy
@@ -788,145 +786,6 @@ def test_validate_article_with_reason_skips_image_check_when_optional(
     result = module.validate_article_with_reason(
         article,
         build_policy(require_image=False),
-        policy_is_built=True
-    )
-
-    assert result == (True, "")
-
-
-# Label
-
-def test_validate_article_with_reason_rejects_missing_required_label(
-    monkeypatch: pytest.MonkeyPatch
-) -> None:
-    article = build_article(label=None)
-
-    monkeypatch.setattr(
-        module,
-        "normalize_label",
-        lambda value: ""
-    )
-
-    result = module.validate_article_with_reason(
-        article,
-        build_policy(require_label=True),
-        policy_is_built=True
-    )
-
-    assert result == (False, "label_absent")
-
-
-def test_validate_article_with_reason_accepts_missing_optional_label(
-    monkeypatch: pytest.MonkeyPatch
-) -> None:
-    article = build_article(label=None)
-
-    monkeypatch.setattr(
-        module,
-        "normalize_label",
-        lambda value: ""
-    )
-
-    result = module.validate_article_with_reason(
-        article,
-        build_policy(require_label=False),
-        policy_is_built=True
-    )
-
-    assert result == (True, "")
-
-
-def test_validate_article_with_reason_rejects_disallowed_label(
-    monkeypatch: pytest.MonkeyPatch
-) -> None:
-    article = build_article(label="real")
-
-    monkeypatch.setattr(
-        module,
-        "normalize_label",
-        lambda value: "real"
-    )
-
-    result = module.validate_article_with_reason(
-        article,
-        build_policy(allowed_labels={"fake"}),
-        policy_is_built=True
-    )
-
-    assert result == (False, "label_non_autorise")
-
-
-def test_validate_article_with_reason_logs_disallowed_label(
-    monkeypatch: pytest.MonkeyPatch
-) -> None:
-    article = build_article(
-        source="example",
-        label="real"
-    )
-    logged_messages: list[tuple[Any, ...]] = []
-
-    monkeypatch.setattr(
-        module,
-        "normalize_label",
-        lambda value: "real"
-    )
-    monkeypatch.setattr(
-        module.logger,
-        "debug",
-        lambda *args: logged_messages.append(args)
-    )
-
-    result = module.validate_article_with_reason(
-        article,
-        build_policy(allowed_labels={"fake"}),
-        policy_is_built=True
-    )
-
-    assert result == (False, "label_non_autorise")
-    assert logged_messages == [
-        (
-            "Label refusé | source=%s | label=%r | autorisés=%s",
-            "example",
-            "real",
-            {"fake"}
-        )
-    ]
-
-
-def test_validate_article_with_reason_accepts_allowed_label(
-    monkeypatch: pytest.MonkeyPatch
-) -> None:
-    article = build_article(label="fake")
-
-    monkeypatch.setattr(
-        module,
-        "normalize_label",
-        lambda value: "fake"
-    )
-
-    result = module.validate_article_with_reason(
-        article,
-        build_policy(allowed_labels={"fake", "real"}),
-        policy_is_built=True
-    )
-
-    assert result == (True, "")
-
-
-def test_validate_article_with_reason_accepts_any_label_when_allowed_set_empty(
-    monkeypatch: pytest.MonkeyPatch
-) -> None:
-    article = build_article(label="custom")
-
-    monkeypatch.setattr(
-        module,
-        "normalize_label",
-        lambda value: "custom"
-    )
-
-    result = module.validate_article_with_reason(
-        article,
-        build_policy(allowed_labels=set()),
         policy_is_built=True
     )
 

@@ -10,7 +10,6 @@ from collections.abc import Mapping
 from typing import Any
 
 from src.article.schema.article_schema import STANDARD_ARTICLE_FIELDS
-from src.article.processing.article_transformer import normalize_label
 from src.article.article_utils import (
     get_article_identifier,
     get_article_text,
@@ -124,24 +123,6 @@ def validate_article_with_reason(
         and not has_validated_local_image(article)
     ):
         return False, "image_absente_ou_invalide"
-
-    label = normalize_label(article.get("label"))
-
-    if validation_policy["require_label"] and not label:
-        return False, "label_absent"
-
-    allowed_labels = validation_policy["allowed_labels"]
-
-    if label and allowed_labels and label not in allowed_labels:
-
-        logger.debug(
-            "Label refusé | source=%s | label=%r | autorisés=%s",
-            article.get("source"),
-            label,
-            allowed_labels
-        )
-                
-        return False, "label_non_autorise"
 
     return True, ""
 
