@@ -65,7 +65,7 @@ le transforment en pipeline d'**événements**.
 
 ## Semaine 2 (20-26 oct.) : RAG, API, déploiement
 
-- [ ] Attribution des sources (Licence Ouverte 2.0) : chaque recommandation affiche « Source : OpenAgenda / DATAtourisme » et le lien de l'événement
+- [x] Attribution des sources (Licence Ouverte 2.0) : chaque carte et chaque détail affichent la source (« Source : DATAtourisme (producteur), mise à jour le… ») et le lien de l'organisateur ; l'en-tête liste les sources actives (`/api/v1/sources`)
 
 - [x] Tout Mistral (fait le 13/10) : branche OpenAI retirée de `app/rag_service.py` et de `pyproject.toml`, modèles configurés dans `.env` (`EMBEDDING_MODEL`, `LLM_MODEL`, `EXTRACTION_MODEL`, `MODERATION_MODEL`)
 
@@ -73,25 +73,27 @@ le transforment en pipeline d'**événements**.
 - [x] Nettoyage du code hérité de CheckIt.AI (15/10) : retrait des modules qui ne servaient plus à rien (aucun import depuis l'agent, l'API, les scripts ou le DAG nocturne) : les DAG `checkit_*` et `test_checkit_postgres.py` (remplacés par `dags/sortiria_nightly_dag.py` et l'agent), `src/main.py`, `src/pipelines/`, `src/storage/`, `src/transformers/`, `src/images/`, `src/article/preparation/`, `src/extractors/datasets/dataset_text_utils.py`, et leurs seuls tests ; constantes et réglages morts de `config/` (images, verrous de fichiers, Reddit…) ; dépendances `pillow`, `pillow-avif-plugin`, `trafilatura`, `requests`, `numpy` ; fichiers parasites retirés (sauvegarde du `.env`, sorties d'audit). L'ancien code reste dans l'historique git
 - [x] Recherche qui apprend de la base (15/10) : sujets reconnus d'après les titres des événements (`sql/sortiria/07_vocabulary.sql`, table `title_vocabulary`, recalculée par l'agent), sujet introuvable cherché en relâchant les contraintes au lieu d'idées sans rapport, mots cherchés par préfixe, offres partenaires qui répondent en tête des cartes ; ce qui a manqué est gardé dans `rag_requests` et l'agent en fait un bilan chaque lundi (`uv run python -m agent --bilan-recherche`)
 - [x] L'agent apprend des recherches ratées (15/10) : `agent/search_learning.py` ; le lundi, Mistral lit les mots cherchés absents de la base (faute, synonyme, sujet, ambiance), l'agent propose un synonyme connu de la base (`config/synonymes.yaml`, relu par la recherche) ou un agenda OpenAgenda de la zone qui traite le sujet ; tout passe par `agent.proposals`. À la demande : `--bilan-recherche --apprendre`
-- [ ] Brancher `app/filter_service.py` sur un filtre SQL plutôt que sur le corpus en mémoire
-- [ ] Remplacer le chargement OpenAgenda direct de `app/document_service.py` par une lecture de la table `events`
-- [ ] Extraction des contraintes par Ministral 3 8B (`EXTRACTION_MODEL`) en sortie JSON validée par Pydantic, avec règles de secours pour les dates relatives ; mesurer sa précision sur le jeu de test (cible ≥ 95 %)
-- [ ] Cache exact des réponses : clé = question normalisée + date du jour + version de l'index, vidé après chaque collecte nocturne
-- [ ] Mesurer coût et latence P95 pour 1 000 requêtes avec et sans cache / petit modèle (chiffres pour l'axe 5)
-- [ ] Pouce haut / pouce bas : table `feedback` (créée le 14/10), route `POST /feedback`, boutons Streamlit, taux de satisfaction dans Grafana
-- [ ] Journaliser chaque requête (latence, tokens, événements renvoyés) à la place de `trace_service.py` (fichier JSONL)
-- [ ] Dockerfile, CI/CD GitHub Actions, déploiement Azure Container Apps
-- [ ] Jeu d'évaluation de 50 questions annotées, rejoué en CI
+- [x] ~~Brancher `app/filter_service.py` sur un filtre SQL~~ : sans objet, module retiré le 15/10 (filtres SQL dans `app/search_service.py`)
+- [x] ~~Remplacer le chargement OpenAgenda de `app/document_service.py`~~ : sans objet, module retiré le 15/10 (la recherche lit la table `events`)
+- [x] ~~Extraction des contraintes par Ministral 3 8B~~ : **choix inverse** (15/10) : des règles (`app/query_understanding.py`) et des synonymes validés, 99 % de compréhension sur le jeu de 50 questions, sans coût ni latence d'un appel de plus. Un modèle reste une piste quand il y aura des questions réelles en nombre (`docs/evolutions.md`)
+- [x] Cache exact des réponses (15/10) : clé = question normalisée + filtres + jour + version de l'index + version de la consigne + synonymes appris ; une nouvelle collecte change la version de l'index (`query_cache`)
+- [ ] Mesurer coût et latence P95 pour 1 000 requêtes avec et sans cache / petit modèle (chiffres pour l'axe 5) : **outil prêt** (16/10, `scripts/mesure_cout_latence.py`, historique dans `benchmarks/cout_latence/`), reste à le lancer
+- [x] Pouce haut / pouce bas (16/10) : table `feedback`, route `POST /api/v1/reponses/{request_id}/avis` (réponse de moins d'un jour, « ce qui manquait » facultatif, jamais publié), boutons sous la réponse dans l'interface, satisfaction dans Grafana
+- [x] Journaliser chaque requête (14-15/10) : `rag_requests` (question, contraintes comprises, ce qui a manqué, événements renvoyés, latence, tokens, coût, réponse, cache, mode dégradé)
+- [x] Dockerfile, CI/CD GitHub Actions, déploiement Azure (15-16/10) : interface sur Static Web Apps (www.sortiria-montpellier.fr), API et collecte de la nuit sur Container Apps, PostgreSQL Flexible Server ; la CD déploie à chaque push sur `main` (OpenID Connect, sans mot de passe) ; voir `docs/deploiement.md`
+- [x] Limite de débit des routes publiques (16/10) : par visiteur et, pour la recherche, pour tout le service (borne le coût Mistral) ; 429 avec `Retry-After` (`app/rate_limit.py`)
+- [ ] Jeu d'évaluation de 50 questions annotées (fait le 15/10, 99 %, et 125 recherches courtes, 98 %), **à rejouer en CI**
 
 ## Semaine 3 (27 oct.-2 nov.) : production
 
 - [x] Agent de collecte nocturne (fait le 13/10) : graphe LangGraph dans `agent/`, DAG `dags/sortiria_nightly_dag.py` (2 h chaque nuit), lancement manuel `uv run python -m agent --essai`
 - [ ] Nœud d'extraction par Mistral des pages d'agenda sans données structurées (quand une source « scraper » sera branchée)
-- [ ] Tâche planifiée Azure Container Apps Job (`python -m agent`)
-- [ ] Écrire dans `rag_requests` depuis l'API (tables créées le 14/10), métriques Prometheus (voir `monitoring/README.md`)
-- [ ] Tableau de bord : latence, coût, fraîcheur, échecs par source
+- [x] Tâche planifiée Azure Container Apps Job (15/10) : `sortiria-collecte`, chaque nuit ; la source PDF de Sète agglopôle, bloquée depuis Azure, est coupée sur le serveur (`SOURCES_DESACTIVEES`) et lue depuis un poste de travail
+- [x] Écrire dans `rag_requests` depuis l'API (14/10)
+- [ ] Métriques Prometheus de l'API (voir `monitoring/README.md`) : le tableau Grafana de la recherche lit déjà `rag_requests`
+- [x] Tableaux de bord Grafana : « Collecte nocturne » (fraîcheur, échecs par source, coût, 14/10) et « Recherche » (questions, satisfaction, latence P95, coût, réponses exactes ou élargies, ce qui manque, 16/10)
 - [ ] Météo (Open-Meteo) pour les sorties en extérieur
-- [ ] Mise à jour de `dashboard/streamlit_app.py`
+- [x] ~~Mise à jour de `dashboard/streamlit_app.py`~~ : sans objet, Streamlit retiré le 15/10 (interface Angular et Grafana)
 
 ## Non repris
 

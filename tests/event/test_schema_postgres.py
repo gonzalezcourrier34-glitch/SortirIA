@@ -311,6 +311,46 @@ def test_grafana_dashboard_queries_run(db: Any) -> None:
             cursor.fetchall()
 
 
+def test_search_dashboard_queries_run_and_count(db: Any) -> None:
+    """Tableau « SortirIA - Recherche » (16/10/2026) : chaque requête s'exécute,
+    et les comptes exactes / élargies / satisfaction sont justes."""
+
+    import json
+    import re
+    from pathlib import Path
+
+    def ask(question: str, recherche: dict, latency: int, cost: float | None, cache: bool = False) -> int:
+        with db.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO sortiria.rag_requests (question, constraints, latency_ms, cost_usd, from_cache) "
+                "VALUES (%s, %s, %s, %s, %s) RETURNING request_id",
+                (question, json.dumps({"recherche": recherche}), latency, cost, cache))
+            return cursor.fetchone()[0]
+
+    exact = ask("concert jazz", {"exact": True, "elargi": [], "mots_inconnus": []}, 3000, 0.0004)
+    widened = ask("karaoké", {"exact": False, "elargi": ["pour le public « famille »"], "mots_inconnus": []}, 5000, 0.0005)
+    ask("zumba", {"exact": False, "elargi": [], "mots_inconnus": ["zumba"], "sujet_introuvable": True}, 2000, None)
+    ask("concert jazz", {"exact": True}, 40, None, cache=True)
+    with db.cursor() as cursor:
+        cursor.execute("INSERT INTO sortiria.feedback (request_id, rating) VALUES (%s, 1), (%s, -1)", (exact, widened))
+
+    dashboard = json.loads(Path("monitoring/grafana/provisioning/dashboards/sortiria-recherche.json").read_text("utf-8"))
+    results = {}
+    with db.cursor() as cursor:
+        for panel in dashboard["panels"]:
+            for target in panel.get("targets", []):
+                cursor.execute(re.sub(r"\$__timeFilter\(([^)]*)\)", "TRUE", target["rawSql"]))
+                results[panel["title"]] = cursor.fetchall()
+    assert len(results) >= 12
+    assert results["Questions posées"] == [(4,)]
+    assert float(results["Satisfaction (pouces haut)"][0][0]) == 0.5
+    [(_, exactes, elargies, voisines, introuvables)] = results[
+        "Réponses par jour : exactes, élargies, idées voisines, sujet introuvable"]
+    assert (exactes, elargies, voisines, introuvables) == (2, 1, 0, 1)
+    assert results["Mots cherchés absents de la base"] == [("zumba", 1)]
+    assert [row[1] for row in results["Derniers pouces bas"]] == ["karaoké"]
+
+
 def test_mistral_audiences_survive_the_next_night(db: Any) -> None:
     """L'enrichissement ajoute ses publics ; la collecte suivante ne les efface pas."""
 
@@ -701,6 +741,29 @@ def test_search_and_feedback_write_their_tables(db: Any) -> None:
     with db.cursor() as cursor:
         cursor.execute("INSERT INTO sortiria.feedback (request_id, event_id, rating) VALUES (%s, 'e1', 1)", (request_id,))
     assert scalar(db, "SELECT requests || ':' || ratings || ':' || degraded_rate FROM sortiria.v_daily_quality") == "1:1:0.000"
+
+
+def test_answer_feedback_is_recorded_replaced_and_limited_to_a_day(db: Any) -> None:
+    """Pouce haut / pouce bas (16/10/2026) : un avis par réponse, le second
+    remplace le premier, rien pour une réponse inconnue ou de plus d'un jour."""
+
+    from app import search_service as service
+
+    with db.cursor() as cursor:
+        cursor.execute("INSERT INTO sortiria.rag_requests (question, status) VALUES ('un concert', 'ok') "
+                       "RETURNING request_id")
+        request_id = cursor.fetchone()[0]
+        cursor.execute("INSERT INTO sortiria.rag_requests (question, status, asked_at) "
+                       "VALUES ('vieille', 'ok', now() - interval '2 days') RETURNING request_id")
+        old_id = cursor.fetchone()[0]
+    assert service.record_feedback(db, request_id, 1) is True
+    assert service.record_feedback(db, request_id, -1, "  Rien près de Sète.  ") is True
+    assert scalar(db, "SELECT count(*) || ':' || min(rating) || ':' || min(comment) FROM sortiria.feedback") == \
+        "1:-1:Rien près de Sète."
+    assert service.record_feedback(db, old_id, 1) is False
+    assert service.record_feedback(db, 999999, 1) is False
+    with pytest.raises(ValueError):
+        service.record_feedback(db, request_id, 0)
 
 
 def test_refused_proposal_is_not_proposed_again(db: Any) -> None:

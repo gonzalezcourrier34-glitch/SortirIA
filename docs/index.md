@@ -26,8 +26,10 @@ le 6 novembre 2026. Plutôt que de repartir de zéro, il **industrialise deux pr
       humain.
     - **En production** sur Azure depuis le 15/10/2026 : https://www.sortiria-montpellier.fr,
       déployé à chaque push sur `main` ([Déploiement Azure](deploiement.md)).
-    - **À venir** : CI complète, suivi Grafana de la recherche, limite de débit des
-      routes publiques. Après la soutenance : une base de lieux
+    - **Suivi** : pouce haut / pouce bas sur chaque réponse, tableau Grafana de la
+      recherche, limite de débit des routes publiques.
+    - **À venir** : rejeu de l'évaluation en CI, mesure du coût et de la latence
+      sur 1 000 questions. Après la soutenance : une base de lieux
       (bowling, padel, restaurants…) et le fine-tuning d'un modèle
       ([Évolutions possibles](evolutions.md)).
 

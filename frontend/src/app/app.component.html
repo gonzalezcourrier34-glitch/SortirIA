@@ -130,6 +130,49 @@
                             @if (answer.degraded) {
                                 <p class="notice">Réponse simplifiée : l’assistant Mistral n’a pas répondu, les événements restent exacts.</p>
                             }
+
+                            <!-- Pouce haut / pouce bas (16/10/2026), sur une réponse enregistrée. -->
+                            @if (answer.request_id != null) {
+                                <div class="answer-feedback">
+                                    @if (answerFeedbackState() === 'sent') {
+                                        <p class="feedback-thanks" role="status">
+                                            Merci, votre avis aide SortirIA à mieux répondre.
+                                        </p>
+                                    } @else {
+                                        <span class="feedback-label" id="feedback-label">Cette réponse vous aide-t-elle ?</span>
+                                        <div class="feedback-buttons" role="group" aria-labelledby="feedback-label">
+                                            <button type="button" class="feedback-button"
+                                                [class.chosen]="answerVote() === 1"
+                                                [attr.aria-pressed]="answerVote() === 1"
+                                                [disabled]="answerFeedbackState() === 'sending'"
+                                                (click)="voteAnswer(1)">
+                                                <span aria-hidden="true">👍</span> Oui
+                                            </button>
+                                            <button type="button" class="feedback-button"
+                                                [class.chosen]="answerVote() === -1"
+                                                [attr.aria-pressed]="answerVote() === -1"
+                                                [disabled]="answerFeedbackState() === 'sending'"
+                                                (click)="voteAnswer(-1)">
+                                                <span aria-hidden="true">👎</span> Non
+                                            </button>
+                                        </div>
+                                        @if (answerVote() === -1) {
+                                            <div class="feedback-comment">
+                                                <label for="feedback-comment">Qu’est-ce qui manquait ? (facultatif)</label>
+                                                <textarea id="feedback-comment" rows="2" maxlength="300"
+                                                    [value]="answerComment()"
+                                                    (input)="onAnswerCommentInput($event)"></textarea>
+                                                <button type="button" class="primary-small"
+                                                    [disabled]="answerFeedbackState() === 'sending'"
+                                                    (click)="sendAnswerFeedback()">Envoyer</button>
+                                            </div>
+                                        }
+                                        @if (answerFeedbackState() === 'error') {
+                                            <p class="feedback-error" role="alert">L’avis n’a pas pu être envoyé. Réessayez.</p>
+                                        }
+                                    }
+                                </div>
+                            }
                         </div>
 
                         @if (answer.events.length > 0) {

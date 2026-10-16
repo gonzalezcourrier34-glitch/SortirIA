@@ -32,6 +32,24 @@ Exemples d'usage « ingénieur IA » :
 Chaque requête du tableau de bord est rejouée par les tests sur un vrai
 PostgreSQL (`tests/event/test_schema_postgres.py`).
 
+## Suivi de la recherche (fait le 16/10/2026)
+
+Tableau Grafana **« SortirIA - Recherche »**
+(`monitoring/grafana/provisioning/dashboards/sortiria-recherche.json`, chargé
+avec le premier), lu dans `rag_requests` (une ligne par question) et
+`feedback` (pouce haut / pouce bas) :
+
+| Partie | Panneaux |
+| --- | --- |
+| Usage et satisfaction | questions posées, part des pouces haut, latence P95 hors cache, coût Mistral moyen par question |
+| Qualité des réponses | par jour : réponses exactes, élargies (une contrainte relâchée), idées voisines, sujet introuvable ; pouces haut et bas ; latence médiane et P95 ; part du cache, des réponses dégradées et des erreurs ; coût ; questions par heure |
+| Ce qui manque | mots cherchés absents de la base, questions sans réponse exacte les plus fréquentes, derniers pouces bas avec « ce qui manquait » |
+
+Les comptes sont vérifiés par un test sur un vrai PostgreSQL
+(`test_search_dashboard_queries_run_and_count`). En local, Grafana lit la base
+Docker ; pour suivre la production, il suffit de pointer sa source de données
+(`monitoring/grafana/provisioning/datasources/postgres.yml`) vers la base Azure.
+
 | Indicateur | Outil | Code d'origine |
 | --- | --- | --- |
 | Requêtes, latence P50 / P95, erreurs de l'API | Middleware Prometheus + Grafana | `reference/p14_observabilite/main.py`, `monitoring/` |
@@ -53,6 +71,6 @@ PostgreSQL (`tests/event/test_schema_postgres.py`).
 ## CI/CD
 
 - `.github/workflows/ci.yml` (repris de Chess Agent) : ruff, pyright, pytest avec seuil de couverture. À adapter : chemins `backend/` → racine, ajout du rejeu de l'évaluation.
-- `.github/workflows/cd.yml` (repris du triage médical) : image Docker publiée sur GHCR. À adapter : nom de l'image, puis déploiement Azure Container Apps.
-- `docker/Dockerfile.api` (repris du triage médical) : à adapter au point d'entrée `app.main:app`.
+- `.github/workflows/cd.yml` : image Docker publiée sur GHCR, puis déploiement sur Azure à chaque push sur `main` (API, collecte de la nuit, interface ; connexion OpenID Connect sans mot de passe), voir `docs/deploiement.md`.
+- `docker/Dockerfile.api` : point d'entrée `app.main:app` ; la même image sert à la collecte de la nuit (`python agent`).
 - Tableau de bord du triage médical : archivé dans `reference/p14_observabilite/grafana-medical-triage.json` (modèle pour le futur tableau de l'API).

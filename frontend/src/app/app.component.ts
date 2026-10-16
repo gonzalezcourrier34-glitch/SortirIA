@@ -226,6 +226,11 @@ export class AppComponent implements OnInit {
     readonly ratingMessage = signal<string | null>(null);
 
     readonly ratingError = signal<string | null>(null);
+
+    // Pouce haut / pouce bas sur la réponse (16/10/2026).
+    readonly answerVote = signal<1 | -1 | null>(null);
+    readonly answerComment = signal('');
+    readonly answerFeedbackState = signal<'idle' | 'sending' | 'sent' | 'error'>('idle');
     /** Le visiteur a déjà noté et veut changer son avis. */
     readonly editingRating = signal(false);
 
@@ -375,6 +380,7 @@ export class AppComponent implements OnInit {
 
         this.result.set(event.result);
         this.loading.set(false);
+        this.resetAnswerFeedback();
 
         // L'API n'était peut-être pas prête au chargement de la page : on réessaie.
         if (this.highlights().length === 0) {
@@ -510,6 +516,40 @@ export class AppComponent implements OnInit {
                     : 'L’avis n’a pas pu être envoyé. Réessayez dans un instant.');
             }
         });
+    }
+
+    /** Pouce haut : envoyé tout de suite. Pouce bas : le visiteur peut dire
+     *  ce qui manquait avant d'envoyer (facultatif). */
+    voteAnswer(vote: 1 | -1): void {
+        this.answerVote.set(vote);
+        if (vote === 1) {
+            this.sendAnswerFeedback();
+        } else {
+            this.answerFeedbackState.set('idle');
+        }
+    }
+
+    onAnswerCommentInput(event: Event): void {
+        this.answerComment.set((event.target as HTMLTextAreaElement).value);
+    }
+
+    sendAnswerFeedback(): void {
+        const requestId = this.result()?.request_id;
+        const vote = this.answerVote();
+        if (requestId == null || vote === null || this.answerFeedbackState() === 'sending') {
+            return;
+        }
+        this.answerFeedbackState.set('sending');
+        this.searchService.sendAnswerFeedback(requestId, vote, this.answerComment().trim()).subscribe({
+            next: () => this.answerFeedbackState.set('sent'),
+            error: () => this.answerFeedbackState.set('error')
+        });
+    }
+
+    private resetAnswerFeedback(): void {
+        this.answerVote.set(null);
+        this.answerComment.set('');
+        this.answerFeedbackState.set('idle');
     }
 
     /** Recharge le détail après un avis : le visiteur voit tout de suite son

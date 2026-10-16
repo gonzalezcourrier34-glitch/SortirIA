@@ -1,0 +1,751 @@
+{
+  "uid": "sortiria-recherche",
+  "title": "SortirIA - Recherche",
+  "tags": [
+    "sortiria",
+    "recherche"
+  ],
+  "timezone": "Europe/Paris",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "refresh": "5m",
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "description": "Ce que les visiteurs cherchent, ce qu'ils trouvent et ce qu'ils en pensent (tables rag_requests et feedback, 16/10/2026).",
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "01 / Usage et satisfaction",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Questions posées",
+      "description": "Recherches de l'interface sur la période (table rag_requests).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT count(*) FROM sortiria.rag_requests WHERE $__timeFilter(asked_at)"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Satisfaction (pouces haut)",
+      "description": "Part des avis « Oui, cette réponse m'aide » parmi les avis donnés sur la période (table feedback, 16/10/2026).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT avg((f.rating = 1)::INT) FROM sortiria.feedback f WHERE f.event_id = '' AND $__timeFilter(f.created_at)"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.6
+              },
+              {
+                "color": "green",
+                "value": 0.8
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Latence P95 (hors cache)",
+      "description": "95 % des réponses rédigées arrivent en moins de ce temps (question reçue -> réponse complète).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT percentile_cont(0.95) WITHIN GROUP (ORDER BY latency_ms) FROM sortiria.rag_requests WHERE NOT from_cache AND latency_ms IS NOT NULL AND $__timeFilter(asked_at)"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 8000
+              },
+              {
+                "color": "red",
+                "value": 15000
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Coût Mistral moyen par question",
+      "description": "Rédaction de la réponse (tarifs de agent/watch.py) ; une réponse servie par le cache ne coûte rien.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT avg(COALESCE(cost_usd, 0)) FROM sortiria.rag_requests WHERE $__timeFilter(asked_at)"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 5
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "type": "row",
+      "title": "02 / Qualité des réponses",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Réponses par jour : exactes, élargies, idées voisines, sujet introuvable",
+      "description": "Exacte : la carte montre le sujet. Élargie : trouvé en relâchant une contrainte (public, gratuit, date, lieu). Idées voisines : rien d'exact. Sujet introuvable : le sujet n'existe nulle part dans la base.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT date_trunc('day', asked_at) AS time,\n       count(*) FILTER (WHERE ((constraints -> 'recherche') ->> 'exact') = 'true') AS \"exactes\",\n       count(*) FILTER (WHERE jsonb_array_length(COALESCE((constraints -> 'recherche') -> 'elargi', '[]'::jsonb)) > 0) AS \"élargies\",\n       count(*) FILTER (WHERE ((constraints -> 'recherche') ->> 'exact') = 'false' AND jsonb_array_length(COALESCE((constraints -> 'recherche') -> 'elargi', '[]'::jsonb)) = 0\n                          AND COALESCE((constraints -> 'recherche') ->> 'sujet_introuvable', 'false') = 'false') AS \"idées voisines\",\n       count(*) FILTER (WHERE ((constraints -> 'recherche') ->> 'sujet_introuvable') = 'true' OR status = 'aucun_resultat') AS \"sujet introuvable\"\nFROM sortiria.rag_requests\nWHERE $__timeFilter(asked_at)\nGROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "pointSize": 5,
+            "showPoints": "always",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Avis des visiteurs par jour",
+      "description": "Pouces haut et bas sur les réponses.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 6,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT date_trunc('day', created_at) AS time,\n       count(*) FILTER (WHERE rating = 1) AS \"pouce haut\",\n       count(*) FILTER (WHERE rating = -1) AS \"pouce bas\"\nFROM sortiria.feedback\nWHERE event_id = '' AND $__timeFilter(created_at)\nGROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "pointSize": 5,
+            "showPoints": "always",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Latence par jour (médiane et P95, hors cache)",
+      "description": "Temps de la question à la réponse complète, en millisecondes.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT date_trunc('day', asked_at) AS time,\n       percentile_cont(0.5) WITHIN GROUP (ORDER BY latency_ms) AS \"médiane\",\n       percentile_cont(0.95) WITHIN GROUP (ORDER BY latency_ms) AS \"P95\"\nFROM sortiria.rag_requests\nWHERE NOT from_cache AND latency_ms IS NOT NULL AND $__timeFilter(asked_at)\nGROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "pointSize": 5,
+            "showPoints": "always",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Cache, réponses dégradées et erreurs",
+      "description": "Part des réponses servies par le cache, rédigées sans Mistral (service indisponible) ou en erreur.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 14,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT date_trunc('day', asked_at) AS time,\n       avg(from_cache::INT) AS \"cache\",\n       avg(degraded::INT) AS \"dégradées\",\n       avg((status = 'erreur')::INT) AS \"erreurs\"\nFROM sortiria.rag_requests\nWHERE $__timeFilter(asked_at)\nGROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "pointSize": 5,
+            "showPoints": "always",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Coût Mistral par jour",
+      "description": "Somme des coûts de rédaction des réponses.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 22,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT date_trunc('day', asked_at) AS time, sum(COALESCE(cost_usd, 0)) AS \"coût\"\nFROM sortiria.rag_requests\nWHERE $__timeFilter(asked_at)\nGROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "pointSize": 5,
+            "showPoints": "always",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "Questions par heure de la journée",
+      "description": "Quand les visiteurs cherchent (heure de Paris), sur la période.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 22,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT date_trunc('hour', asked_at) AS time, count(*) AS \"questions\"\nFROM sortiria.rag_requests\nWHERE $__timeFilter(asked_at)\nGROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "pointSize": 5,
+            "showPoints": "always",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 13,
+      "type": "row",
+      "title": "03 / Ce qui manque",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 30,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 14,
+      "type": "table",
+      "title": "Mots cherchés absents de la base",
+      "description": "Écrits dans aucun titre (« zumba ») : une source, un partenaire ou un synonyme à envisager. L'agent en tire ses propositions du lundi.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 31,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT word AS \"mot\", count(*) AS \"fois\"\nFROM sortiria.rag_requests, jsonb_array_elements_text(COALESCE((constraints -> 'recherche') -> 'mots_inconnus', '[]'::jsonb)) AS word\nWHERE $__timeFilter(asked_at)\nGROUP BY word ORDER BY 2 DESC, 1 LIMIT 20"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 15,
+      "type": "table",
+      "title": "Questions sans réponse exacte",
+      "description": "Les plus fréquentes sur la période.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 31,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT question AS \"question\", count(*) AS \"fois\", max(asked_at) AS \"dernière fois\"\nFROM sortiria.rag_requests\nWHERE (status = 'aucun_resultat' OR ((constraints -> 'recherche') ->> 'exact') = 'false') AND $__timeFilter(asked_at)\nGROUP BY question ORDER BY 2 DESC, 3 DESC LIMIT 20"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 16,
+      "type": "table",
+      "title": "Derniers pouces bas",
+      "description": "Réponses jugées inutiles, avec ce qui manquait selon le visiteur (jamais publié).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sortiria-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 40,
+        "w": 24,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sortiria-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT f.created_at AS \"quand\", r.question AS \"question\", f.comment AS \"ce qui manquait\", left(r.answer, 200) AS \"réponse\"\nFROM sortiria.feedback f JOIN sortiria.rag_requests r USING (request_id)\nWHERE f.rating = -1 AND f.event_id = '' AND $__timeFilter(f.created_at)\nORDER BY f.created_at DESC LIMIT 20"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  }
+}

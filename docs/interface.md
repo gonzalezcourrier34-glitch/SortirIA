@@ -251,13 +251,29 @@ Garde-fous :
 | GET | `/api/v1/sources` | sources qui ont des événements proposables (en-tête) |
 | POST | `/api/v1/evenements/{event_id}/avis` | avis d'un visiteur : 1 à 5 étoiles, commentaire modéré (409 hors de la fenêtre d'avis) |
 | POST | `/api/v1/avis/a-donner` | « Vos sorties à noter » : parmi les événements consultés, ceux notables maintenant et pas encore notés |
+| POST | `/api/v1/reponses/{request_id}/avis` | pouce haut (`rating: 1`) ou bas (`-1`) sur une réponse de moins d'un jour, avec « ce qui manquait » facultatif (300 caractères, jamais publié) ; un second clic remplace le premier ; 404 si la réponse est inconnue ou trop ancienne (table `feedback`, 16/10/2026) |
 
 Ces routes sont publiques (pas de clé API : c'est le navigateur qui les
 appelle). Les deux routes d'avis écrivent : une note par visiteur et par
 événement (il peut la modifier), commentaire modéré par Mistral avant
-publication. La protection contre les abus (limite de débit) est à faire
-avant l'ouverture au public. La route `/events/{event_id}/notes`
+publication. La route `/events/{event_id}/notes`
 (notes envoyées par un autre service) reste protégée par la clé API.
+
+**Limite de débit** (`app/rate_limit.py`, 16/10/2026). Sans clé, un script
+pourrait poser des milliers de questions, chacune payée à Mistral. Au-delà
+des seuils, l'API répond **429** avec `Retry-After`, et l'interface affiche
+le message à la place de la réponse :
+
+| Routes | Par visiteur (adresse IP) | Pour tout le service |
+| --- | --- | --- |
+| Recherche | 12 par minute, 120 par heure | 1 000 par heure (borne le coût Mistral, même pour un robot qui change d'adresse) |
+| Avis et pouces | 30 par minute | |
+| Lectures (détail, sources, partenaires, sorties à noter) | 120 par minute | |
+
+Les seuils se règlent dans le `.env` (`LIMITE_*`, 0 = sans limite). Les
+compteurs sont en mémoire : l'API tourne en une seule copie
+(`--max-replicas 1`) ; avec plusieurs copies, il faudrait un compteur
+partagé (Redis, ou la base).
 
 ## Donner son avis
 

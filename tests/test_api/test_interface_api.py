@@ -15,6 +15,10 @@ from app import interface_api, search_service
 
 @pytest.fixture
 def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
+    from app import rate_limit
+
+    for limiter in rate_limit.ALL_LIMITERS:        # chaque test part de zéro
+        limiter.reset()
     def fake_search(connection, question, filters, services=None, context=""):
         yield search_service.progress("comprendre", "completed", filters.describe())
         if context:
@@ -37,6 +41,9 @@ def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
             return {"status": "hors_delai", "event_id": event_id}
         return {"status": "enregistree", "event_id": event_id, "rating_id": 1,
                 "comment_status": "publie" if comment else "aucun"}
+
+    monkeypatch.setattr(search_service, "record_feedback",
+                        lambda connection, request_id, rating, comment="": request_id == 7)
 
     import src.event.event_ratings as ratings
     monkeypatch.setattr(ratings, "submit_rating", fake_rating)
@@ -113,3 +120,12 @@ def test_rating_routes(client: TestClient) -> None:
     assert client.post("/api/v1/evenements/hier/avis", json={"session_id": "court", "stars": 3}).status_code == 422
     to_rate = client.post("/api/v1/avis/a-donner", json={"session_id": session, "event_ids": ["futur", "hier"]})
     assert to_rate.json() == [{"event_id": "hier"}]
+
+
+def test_answer_feedback_route(client: TestClient) -> None:
+    assert client.post("/api/v1/reponses/7/avis", json={"rating": 1}).status_code == 201
+    assert client.post("/api/v1/reponses/7/avis", json={"rating": -1, "comment": "Rien à Sète"}).json() == {
+        "status": "enregistre"}
+    assert client.post("/api/v1/reponses/8/avis", json={"rating": 1}).status_code == 404
+    assert client.post("/api/v1/reponses/7/avis", json={"rating": 0}).status_code == 422
+    assert client.post("/api/v1/reponses/7/avis", json={"rating": 1, "comment": "x" * 301}).status_code == 422

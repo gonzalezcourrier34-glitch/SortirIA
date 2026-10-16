@@ -85,6 +85,19 @@ export class SearchService {
     }
 
 
+    /** Pouce haut (1) ou bas (-1) sur une réponse de SortirIA. */
+    sendAnswerFeedback(
+        requestId: number,
+        rating: 1 | -1,
+        comment = ''
+    ): Observable<{ status: string }> {
+        return this.http.post<{ status: string }>(
+            `${API}/reponses/${requestId}/avis`,
+            { rating, comment }
+        );
+    }
+
+
     getEventsToRate(
         sessionId: string,
         eventIds: string[]
@@ -149,6 +162,17 @@ export class SearchService {
                     signal
                 }
             );
+
+            // Limite de débit (16/10/2026) : le message de l'API est montré tel quel.
+            if (response.status === 429) {
+                const body = await response.json().catch(() => null) as { detail?: string } | null;
+                subscriber.next({
+                    event: 'error',
+                    message: body?.detail ?? 'Trop de recherches d’affilée : réessayez dans un instant.'
+                } as SearchStreamEvent);
+                subscriber.complete();
+                return;
+            }
 
             if (!response.ok) {
                 throw new Error(

@@ -1548,6 +1548,36 @@ def log_request(connection: Any, question: str, filters: SearchFilters, result: 
         return None
 
 
+# Pouce haut / pouce bas sur une réponse (16/10/2026). Seulement pour une
+# réponse de moins d'un jour : au-delà, le visiteur ne l'a plus sous les yeux.
+# Un second clic remplace le premier (contrainte feedback_once). Le
+# commentaire n'est jamais publié : il sert au bilan et, plus tard, de donnée
+# d'entraînement (docs/evolutions.md).
+FEEDBACK_WINDOW = timedelta(days=1)
+RECORD_FEEDBACK_SQL = """
+INSERT INTO sortiria.feedback (request_id, event_id, rating, comment)
+SELECT r.request_id, '', %(rating)s, %(comment)s
+FROM sortiria.rag_requests AS r
+WHERE r.request_id = %(request_id)s AND r.asked_at >= %(since)s
+ON CONFLICT (request_id, event_id) DO UPDATE
+SET rating = EXCLUDED.rating, comment = EXCLUDED.comment, created_at = now()
+RETURNING feedback_id"""
+
+
+def record_feedback(connection: Any, request_id: int, rating: int, comment: str = "",
+                    now: datetime | None = None) -> bool:
+    """Enregistre l'avis sur une réponse (1 : utile, -1 : pas utile).
+    Faux si la réponse n'existe pas ou date de plus d'un jour."""
+
+    if rating not in (-1, 1):
+        raise ValueError("rating vaut 1 ou -1")
+    since = (now or datetime.now(PARIS)) - FEEDBACK_WINDOW
+    rows = fetch_rows(connection, RECORD_FEEDBACK_SQL, {
+        "request_id": request_id, "rating": rating, "comment": comment.strip()[:300], "since": since})
+    connection.commit()
+    return bool(rows)
+
+
 def sse(event: Mapping[str, Any]) -> str:
     """Un message Server-Sent Events (même format que Chess Agent)."""
 

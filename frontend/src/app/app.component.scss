@@ -1145,3 +1145,99 @@ $pastille: 999px;
         padding-top: 60px;
     }
 }
+
+
+/* Pouce haut / pouce bas sur la réponse (16/10/2026). */
+.answer-feedback {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--bordure-legere);
+    font-size: 14px;
+    color: var(--texte-doux);
+}
+
+.feedback-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.feedback-button {
+    padding: 4px 12px;
+    border: 1px solid var(--bordure);
+    border-radius: 999px;
+    background: var(--blanc);
+    color: var(--texte);
+    font: inherit;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+        border-color: var(--vert);
+    }
+
+    &.chosen {
+        border-color: var(--vert);
+        background: #e5f0ea;
+        color: var(--vert);
+        font-weight: 700;
+    }
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: default;
+    }
+}
+
+.feedback-comment {
+    display: flex;
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 8px;
+
+    label {
+        flex: 1 1 100%;
+    }
+
+    textarea {
+        flex: 1 1 240px;
+        min-width: 0;
+        padding: 8px 12px;
+        border: 1px solid #cfc3b6;
+        border-radius: 10px;
+        background: var(--blanc);
+        color: var(--texte);
+        font: inherit;
+        resize: vertical;
+    }
+}
+
+.primary-small {
+    padding: 8px 16px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--vert);
+    color: var(--blanc);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: default;
+    }
+}
+
+.feedback-thanks {
+    margin: 0;
+    color: var(--vert);
+}
+
+.feedback-error {
+    flex: 1 1 100%;
+    margin: 0;
+    color: #a3361f;
+}

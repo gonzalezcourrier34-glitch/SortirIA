@@ -9,9 +9,12 @@ La logique est dans `app/search_service.py`.
     GET  /api/v1/evenements/{event_id}     détail d'un événement et avis sur son lieu
     GET  /api/v1/partenaires/a-ne-pas-manquer
     GET  /api/v1/sources                   sources qui ont des événements proposables
+    POST /api/v1/reponses/{request_id}/avis  pouce haut / pouce bas sur une réponse
 
-Ces routes sont publiques (lecture seule, pas de clé API) : l'interface est
-ouverte à tous. La notation, elle, reste derrière la clé (`app/ratings_api.py`).
+Ces routes sont publiques (pas de clé API) : l'interface est ouverte à tous.
+Elles sont limitées par visiteur, et la recherche aussi pour tout le service
+(`app/rate_limit.py`, 16/10/2026) : réponse 429 au-delà. La notation des
+clients, elle, reste derrière la clé (`app/ratings_api.py`).
 """
 
 from __future__ import annotations
@@ -24,7 +27,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from app import search_service
+from app import rate_limit, search_service
 from app.search_service import SearchFilters
 
 router = APIRouter(prefix="/api/v1", tags=["interface"])
@@ -67,7 +70,7 @@ def get_search_services() -> search_service.SearchServices:
     return search_service.SearchServices()
 
 
-@router.post("/recherche/stream")
+@router.post("/recherche/stream", dependencies=[Depends(rate_limit.limit_search)])
 def search_stream(
     payload: SearchRequest,
     connect: Callable[[], AbstractContextManager[Any]] = Depends(get_connection_factory),  # noqa: B008
@@ -92,7 +95,7 @@ def search_stream(
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
-@router.get("/evenements/{event_id}")
+@router.get("/evenements/{event_id}", dependencies=[Depends(rate_limit.limit_reads)])
 def event_detail(event_id: str, visiteur: str | None = Query(default=None, min_length=16, max_length=100),
                  connection: Any = Depends(get_connection)) -> dict[str, Any]:  # noqa: B008
     """Détail d'un événement encore proposable, ou passé depuis moins de
@@ -127,7 +130,7 @@ class ToRateRequest(BaseModel):
     event_ids: list[str] = Field(default_factory=list, max_length=50)
 
 
-@router.post("/evenements/{event_id}/avis", status_code=201)
+@router.post("/evenements/{event_id}/avis", status_code=201, dependencies=[Depends(rate_limit.limit_writes)])
 def rate_event(event_id: str, payload: RatingRequest,
                connection: Any = Depends(get_connection)) -> dict[str, Any]:  # noqa: B008
     """Enregistre (ou remplace) l'avis du visiteur. Le commentaire est modéré
@@ -143,14 +146,32 @@ def rate_event(event_id: str, payload: RatingRequest,
     return {"status": result["status"], "comment_status": result.get("comment_status", "aucun")}
 
 
-@router.post("/avis/a-donner")
+@router.post("/avis/a-donner", dependencies=[Depends(rate_limit.limit_reads)])
 def to_rate(payload: ToRateRequest, connection: Any = Depends(get_connection)) -> list[dict[str, Any]]:  # noqa: B008
     """« Vos sorties à noter » : parmi les événements consultés, ceux notables maintenant."""
 
     return search_service.events_to_rate(connection, payload.event_ids, payload.session_id)
 
 
-@router.get("/partenaires/a-ne-pas-manquer")
+class AnswerFeedback(BaseModel):
+    """Avis sur une réponse : utile (1) ou pas (-1), avec un mot facultatif."""
+
+    rating: Literal[-1, 1]
+    comment: str = Field(default="", max_length=300)
+
+
+@router.post("/reponses/{request_id}/avis", status_code=201,
+             dependencies=[Depends(rate_limit.limit_writes)])
+def answer_feedback(request_id: int, payload: AnswerFeedback,
+                    connection: Any = Depends(get_connection)) -> dict[str, str]:  # noqa: B008
+    """Pouce haut / pouce bas sur une réponse de SortirIA (16/10/2026)."""
+
+    if not search_service.record_feedback(connection, request_id, payload.rating, payload.comment):
+        raise HTTPException(status_code=404, detail="Réponse introuvable ou trop ancienne.")
+    return {"status": "enregistre"}
+
+
+@router.get("/partenaires/a-ne-pas-manquer", dependencies=[Depends(rate_limit.limit_reads)])
 def highlights(limit: int = Query(default=3, ge=1, le=10),
                connection: Any = Depends(get_connection)) -> list[dict[str, Any]]:  # noqa: B008
     """Prochains événements des partenaires (mis en avant d'abord)."""
@@ -158,7 +179,7 @@ def highlights(limit: int = Query(default=3, ge=1, le=10),
     return search_service.partner_highlights(connection, limit)
 
 
-@router.get("/sources")
+@router.get("/sources", dependencies=[Depends(rate_limit.limit_reads)])
 def sources(connection: Any = Depends(get_connection)) -> list[dict[str, Any]]:  # noqa: B008
     """Sources qui ont au moins un événement proposable."""
 

@@ -4,8 +4,8 @@ Ce qui pourrait prolonger SortirIA après la soutenance. Rien de tout cela n'est
 dans le périmètre du MVP (gel du code le 4/11/2026) : chaque piste dit ce
 qu'elle apporterait, ce qu'elle demande, et pourquoi elle attend.
 
-Les travaux déjà prévus pour le MVP (CI complète, suivi Grafana de la
-recherche, limite de débit des routes publiques) sont suivis
+Les travaux déjà prévus pour le MVP (rejeu de l'évaluation en CI, mesure
+du coût et de la latence) sont suivis
 dans [Provenance du code](provenance.md), pas ici.
 
 ## 1. Une base de lieux, à côté des événements
