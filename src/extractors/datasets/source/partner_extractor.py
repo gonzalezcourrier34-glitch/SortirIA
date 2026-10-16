@@ -1,4 +1,4 @@
-"""Fichiers des partenaires (tableur Excel ou CSV), importés chaque nuit.
+"""Fichiers des partenaires (tableur Excel ou CSV, PDF ou Word), importés chaque nuit.
 
 **Provenance** : nouvel adaptateur écrit pour SortirIA (14/10/2026), branché
 sur le moteur datasets de CheckIt.AI (`src/extractors/datasets/`) : le moteur
@@ -19,6 +19,16 @@ commencent par « _ », « . » ou « ~$ », fichier ouvert dans Excel). Le nom
 du partenaire vient du nom du fichier ; une entrée facultative dans
 `config/sources.yaml` (`partners`, clé `file`) précise son vrai nom, son
 secteur, son site et la fin d'une mise en avant, ou le désactive.
+
+**PDF et Word** (16/10/2026) : une plaquette ou un programme mis en page
+librement est lu par Mistral (`partner_documents.py`), qui range chaque
+séance dans les colonnes du modèle ; les lignes passent ensuite par les mêmes
+contrôles qu'un tableur. Un tel document n'est importé **qu'après validation
+humaine** : tant qu'il n'est pas validé, il est lu, compté (motif
+`document_a_valider`) et l'agent propose de l'importer, avec un aperçu. Le
+lieu et la commune, souvent implicites sur la plaquette d'un lieu, peuvent
+être déclarés pour le partenaire dans `config/sources.yaml` (`venue`,
+`city`).
 
 Vérifier un fichier reçu avant de le déposer (aucune écriture en base) :
 
@@ -42,6 +52,7 @@ from src.event.event_pipeline import occurrence_article_url
 from src.event.partner_mapper import (
     REASON_MISSING_COLUMNS,
     REASON_UNREADABLE_FILE,
+    TEMPLATE_COLUMNS,
     is_empty_row,
     map_partner_row,
     missing_columns,
@@ -50,6 +61,13 @@ from src.event.partner_mapper import (
 from src.extractors.datasets.dataset_adapter import DatasetAdapter
 from src.extractors.datasets.dataset_engine import DatasetExtractor
 from src.extractors.datasets.dataset_file_utils import resolve_dataset_directory
+from src.extractors.datasets.source.partner_documents import (
+    DOCUMENT_EXTENSIONS,
+    REASON_TO_APPROVE,
+    is_approved,
+    is_document,
+    read_document_rows,
+)
 from src.logger import get_logger
 from src.utils.extractor_utils import build_standard_article
 from src.utils.value_utils import normalize_value
@@ -58,7 +76,7 @@ logger = get_logger(__name__)
 
 SOURCE_ID = "partenaire"
 # .xls (ancien format Excel) : lu par la bibliothèque xlrd.
-SUPPORTED_EXTENSIONS = frozenset({".xlsx", ".xls", ".csv", ".json"})
+SUPPORTED_EXTENSIONS = frozenset({".xlsx", ".xls", ".csv", ".json"}) | DOCUMENT_EXTENSIONS
 IGNORED_PREFIXES = ("_", ".", "~$")
 # Secteurs acceptés par la table `partners` (contrainte partners_sector_check).
 SECTORS = ("animation", "soiree", "enfants", "culture", "sport", "autre")
@@ -156,6 +174,10 @@ def read_table(path: Path) -> tuple[list[str], list[dict[str, Any]]]:
 
     import pandas as pd
 
+    if is_document(path):
+        # PDF ou Word : Mistral range chaque séance dans les colonnes du modèle.
+        rows = [{normalize_header(key): value for key, value in row.items()} for row in read_document_rows(path)]
+        return [name for name, _, _ in TEMPLATE_COLUMNS], rows
     if path.suffix.lower() == ".json":
         rows = [{normalize_header(key): value for key, value in row.items()} for row in read_json_rows(path)]
         headers = list(dict.fromkeys(key for row in rows for key in row))
@@ -183,7 +205,8 @@ def file_sha256(path: Path) -> str:
 # Lecture des lignes
 # ---------------------------------------------------------------------------
 
-def read_partner_file(path: Path, partner: Mapping[str, Any], today: Any = None) -> list[dict[str, Any]]:
+def read_partner_file(path: Path, partner: Mapping[str, Any], today: Any = None,
+                      require_approval: bool = True) -> list[dict[str, Any]]:
     """Lit un fichier : un élément par ligne utile, événement ou rejet motivé.
 
     Le fichier est lu en entier avant de rendre ses lignes, pour joindre à
@@ -200,8 +223,18 @@ def read_partner_file(path: Path, partner: Mapping[str, Any], today: Any = None)
         logger.error("%s : colonnes obligatoires absentes : %s.", path.name, ", ".join(absent))
         return [{"rejected": REASON_MISSING_COLUMNS, "line": 1, "detail": ", ".join(absent)}]
 
+    document = is_document(path)
     items, reasons, past = [], Counter(), 0
-    for number, row in enumerate(rows, start=2):   # ligne 1 = en-têtes
+    for number, row in enumerate(rows, start=1 if document else 2):   # tableur : ligne 1 = en-têtes
+        if document:
+            # Lieu et commune implicites sur la plaquette d'un lieu : ceux du partenaire.
+            row = {**row, "lieu": row.get("lieu") or partner.get("venue", ""),
+                   "commune": row.get("commune") or partner.get("city", "")}
+            if row.get("rejet_llm"):
+                reasons[str(row["rejet_llm"])] += 1
+                items.append({"rejected": str(row["rejet_llm"]), "line": number,
+                              "detail": f"page {row.get('page_llm', '?')} : {row.get('titre', '')}".strip()})
+                continue
         if is_empty_row(row):
             continue
         event, reason = map_partner_row(row, partner, today=today, updated_at=updated_at, extracted_at=now.isoformat())
@@ -214,6 +247,14 @@ def read_partner_file(path: Path, partner: Mapping[str, Any], today: Any = None)
             past += 1
 
     kept = sum(1 for item in items if "event" in item)
+    if document and require_approval and not is_approved(path):
+        # Lu par Mistral mais pas encore validé : rien n'est publié ; l'agent
+        # propose l'import avec un aperçu (agent/nodes.py, watch).
+        logger.info("%s / %s : %s séance(s) lue(s) par Mistral, en attente de validation.",
+                    partner.get("name"), path.name, kept)
+        return [{"rejected": REASON_TO_APPROVE, "line": 0,
+                 "detail": f"{kept} séance(s) lue(s) par Mistral, à valider (uv run python -m agent.proposals)",
+                 "preview": [item["event"] for item in items if "event" in item]}]
     summary = {
         "name": partner.get("name"), "file": partner.get("file"), "sector": partner.get("sector"),
         "website": partner.get("website", ""), "sponsored_until": partner.get("sponsored_until"),
@@ -319,14 +360,17 @@ def check_file(path: Path, partner: Mapping[str, Any] | None = None) -> str:
     """
 
     partner = partner or configured_partner(path)
-    items = read_partner_file(path, partner)
+    items = read_partner_file(path, partner, require_approval=False)
     kept = [item for item in items if "event" in item]
     rejected = [item for item in items if "rejected" in item]
     lines = [f"{path.name} : {len(kept)} séance(s) à venir prête(s), {len(rejected)} ligne(s) à corriger."]
+    if is_document(path):
+        state = "déjà validé" if is_approved(path) else "à valider avant import (proposition de l'agent)"
+        lines[0] += f" Document lu par Mistral, {state}."
     for item in rejected:
         detail = f" ({item['detail']})" if item.get("detail") else ""
         lines.append(f"  ligne {item['line']} : {item['rejected']}{detail}")
-    for item in kept[:5]:
+    for item in kept[:5 if not is_document(path) else 50]:
         event = item["event"]
         lines.append(f"  ok ligne {item['line']} : {event.start_at[:16]} {event.title} - {event.venue_name}, {event.city}")
     return "\n".join(lines)

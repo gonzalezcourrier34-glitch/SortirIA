@@ -59,9 +59,43 @@ flowchart LR
 | `watch` | Surveillance et diagnostic (voir plus bas) ; calculée à partir de l'état et de la configuration, elle fonctionne aussi en mode essai et après un échec total. Le lundi : bilan de la recherche et apprentissage |
 | `write_report` | Statut, alertes, bilan dans `collect_runs` et détail par source dans `collect_run_sources`, envoi du bilan par mail |
 
+## Agent ou ETL ? Ce que LangGraph apporte vraiment
+
+Un ETL bien écrit (un DAG Airflow, par exemple) sait aussi **réessayer**,
+**traiter les erreurs** et **brancher selon une condition**. Ce n'est donc
+pas là que se fait la différence, et SortirIA ne le prétend pas : les
+décisions de routage du tableau ci-dessous (réessayer une source, garder les
+événements de la veille, ne pas balayer une source partielle) sont des
+**règles écrites dans le code**, qu'un ETL pourrait porter.
+
+Ce qu'un ETL ne fait pas, ce sont les étapes qui demandent de **comprendre
+un texte** et de **juger** :
+
+| Étape | Pourquoi il faut un modèle de langage | Garde-fou |
+| --- | --- | --- |
+| Lire un **programme PDF** (source non structurée) et en tirer des événements | la mise en page varie d'une page à l'autre, il n'y a pas de schéma à extraire | titre présent dans la page, date dans la période ; sinon rejeté |
+| Lire le **PDF ou le document Word d'un partenaire**, mis en page à sa façon (16/10/2026) | une plaquette n'a pas de colonnes ; Mistral range chaque séance dans celles du modèle | mêmes contrôles qu'un tableur, titre présent dans le texte ; **import proposé, publié après validation humaine** |
+| **Enrichir** chaque événement (catégorie, publics, résumé) | « Atelier jeux en famille » n'a pas de champ « public » dans la source | liste fermée, résumé sans nom ni nombre inventé |
+| **Juger** la qualité d'un échantillon chaque nuit | vérifier la cohérence titre / catégorie / résumé demande de lire | un autre modèle que celui qui enrichit ; alerte sous 80 % |
+| **Lire les recherches ratées** (« zumba », « cirqe ») | distinguer une faute, un synonyme, un sujet, une ambiance | synonyme vérifié dans la base ; **proposé**, appliqué après validation humaine |
+| **Diagnostiquer** une panne | comprendre un message d'erreur, chercher la nouvelle adresse d'un PDF | réparation **proposée**, jamais appliquée seule |
+
+Ce que **LangGraph** apporte pour les orchestrer : un **état partagé**
+(sources, événements, coût, alertes) que chaque nœud lit et complète ; un
+**routage** après chaque étape selon ce qui s'est passé ; des **services
+injectés**, donc un graphe entier testable sans réseau ni Mistral ; une
+**trace** de chaque nœud et de chaque appel au modèle (MLflow). Et une
+porte ouverte : une nouvelle source non structurée (pages HTML des lieux) est
+un nœud de plus du même type que la lecture des PDF.
+
+Dit simplement : **sans les étapes qui lisent et jugent, un ETL suffirait.**
+SortirIA est un *pipeline agentique* (des règles pour le routage, un modèle
+pour les jugements, un humain pour les changements de configuration), pas un
+agent qui planifie seul ; sur des données publiques, c'est un choix.
+
 ## Les décisions de l'agent
 
-C'est ce qui le distingue d'un ETL, qui exécuterait toujours la même suite :
+Les décisions de routage et de surveillance, nuit après nuit :
 
 | Situation | Décision |
 | --- | --- |
@@ -75,6 +109,7 @@ C'est ce qui le distingue d'un ETL, qui exécuterait toujours la même suite :
 | Plus de 20 % des événements sont rejetés | Alerte |
 | Un programme PDF se termine dans moins de 21 jours (ou est terminé) | Rappel « chercher le prochain programme » |
 | Un fichier partenaire n'a plus de séance à venir, ou n'a pas changé depuis 30 jours | Rappel « relancer le partenaire » |
+| Un partenaire a déposé un PDF ou un document Word, pas encore validé | Lu par Mistral (une fois, mis en cache), séances comptées, **proposition** « importer » avec un aperçu ; rien n'est publié avant l'accord (`uv run python -m agent.proposals --accepter N`) |
 | Moins de 10 sorties « famille » ou « soirée » à Montpellier ou sur le bassin de Thau dans les 7 jours (compté dans la base, toutes sources confondues) | Rappel « couverture faible » (la promesse du service) |
 | Le coût Mistral estimé de la nuit dépasse le budget | Alerte |
 | Nouvel événement, ou texte modifié | Enrichi par Mistral : catégorie unifiée, publics (famille, soirée, ados, seniors), résumé d'une phrase ; signalé s'il ne s'agit pas d'une sortie. Contrôles (15/10) : un titre explicite (« Pause jeux », « Visite guidée ») fixe la catégorie ; un résumé qui cite un nom ou un nombre absent de la source est écarté (16/10 : les siècles en chiffres romains, « DJ », les âges et les prix ne comptent plus comme inventés) |

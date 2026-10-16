@@ -1,0 +1,10 @@
+date,grille,questions,cartes_jugees,pertinence_at_3,questions_satisfaites,juge_pertinence_at_3,accord_juge,kappa_juge,prompt_version,note
+2026-10-16T10:25:43+02:00,grille_2026-10-16_09h50.csv,50,139,0.986,1.0,0.669,0.683,0.057,2026-10-16.1,
+2026-10-16T10:38:57+02:00,grille_2026-10-16_09h50.csv,50,139,0.986,1.0,0.532,0.547,0.033,2026-10-16.1,juge v2 : date du jour
+2026-10-16T10:45:27+02:00,grille_2026-10-16_09h50.csv,50,139,0.986,1.0,0.655,0.669,0.054,2026-10-16.1,"juge v3 : une question par appel, avec raison"
+2026-10-16T10:58:09+02:00,grille_2026-10-16_09h50.csv,50,139,0.986,1.0,0.763,0.777,0.09,2026-10-16.1,juge v4 : periode et lieu non precises
+2026-10-16T11:07:20+02:00,grille_2026-10-16_09h50.csv,50,139,0.986,1.0,0.813,0.827,0.119,2026-10-16.1,juge v5 : dates calculees par le code
+2026-10-16T11:09:50+02:00,grille_2026-10-16_09h50.csv,50,139,0.986,1.0,0.871,0.885,0.179,2026-10-16.1,"juge v5 fige : dates calculees, regle du public"
+2026-10-16T11:14:55+02:00,grille_2026-10-16_09h50.csv,50,139,0.942,0.96,0.842,0.899,0.49,2026-10-16.1,"juge v5 fige : dates calculees, regle du public"
+2026-10-16T11:33:13+02:00,grille_2026-10-16_09h50.csv,50,139,0.935,0.96,0.848,0.884,0.413,2026-10-16.1,"juge v6 : sujet public lieu, mistral-large"
+2026-10-16T11:43:56+02:00,grille_2026-10-16_09h50.csv,50,139,0.978,1.0,0.964,0.986,0.743,2026-10-16.1,juge v7 fige : sujet et public

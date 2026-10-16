@@ -60,6 +60,63 @@ en `https://`.
 marquées « (exemple) », liens `example.org` ; à désactiver avant d'ouvrir le
 service au public.
 
+## Un PDF ou un document Word, mis en page librement (16/10/2026)
+
+Tous les partenaires ne rempliront pas le modèle : une plaquette PDF, un
+programme Word, chacun mis en page à sa façon. Ces fichiers se déposent au
+même endroit (`data/partenaires/bar_du_port.pdf`) ; **Mistral les lit**, et
+c'est un humain qui décide de leur publication.
+
+```mermaid
+flowchart LR
+    A[bar_du_port.pdf<br/>programme.docx] -- collecte de nuit --> B[Mistral lit le texte<br/>et remplit les colonnes du modèle]
+    B --> C[Mêmes contrôles qu'un tableur<br/>+ titre présent dans le texte]
+    C --> D{Déjà validé ?}
+    D -- non --> E[Proposition de l'agent :<br/>N séances, aperçu, dans le mail]
+    E -- accord humain --> F[_documents_valides.json]
+    D -- oui --> G[(events, offre partenaire)]
+    F --> G
+```
+
+1. **Lecture** (`src/extractors/datasets/source/partner_documents.py`) : le
+   texte est extrait (PDF par pypdf ; Word directement depuis le fichier,
+   tableaux compris), puis Mistral range chaque séance dans **les colonnes du
+   modèle** (titre, date, heure, lieu, commune, prix, public…), sans rien
+   inventer : ce qui n'est pas écrit reste vide.
+2. **Contrôles** : chaque ligne passe par les mêmes règles qu'un tableur
+   (date, lieu, commune, lien…), plus une : **le titre doit figurer dans le
+   texte** lu, sinon la ligne est écartée (`titre_absent_du_texte`). Le lieu
+   et la commune, souvent implicites sur la plaquette d'un lieu, peuvent être
+   déclarés pour le partenaire dans `config/sources.yaml` (`venue`, `city`).
+3. **Validation humaine** : tant que le document n'est pas validé, **rien
+   n'est publié**. L'agent compte les séances lues et **propose** l'import,
+   avec un aperçu, dans le mail du matin ; on vérifie, puis on accepte :
+
+       uv run python -m src.extractors.datasets.source.partner_extractor --verifier data/partenaires/bar_du_port.pdf
+       uv run python -m agent.proposals                  # la proposition et son numéro
+       uv run python -m agent.proposals --accepter N     # inscrit le fichier et son empreinte
+
+   Le fichier et son empreinte sont inscrits dans
+   `data/partenaires/_documents_valides.json` ; il est importé à la collecte
+   suivante. Un document modifié (autre empreinte) redemande un accord.
+4. **Coût** : le document est lu une fois (cache par empreinte), de l'ordre
+   d'un centime pour un programme de quelques pages.
+
+Pourquoi c'est un travail d'agent et pas d'ETL : un ETL lit des colonnes
+connues ; une plaquette n'a pas de colonnes. Il faut comprendre le texte
+(Mistral), contrôler ce qui en sort (règles), et laisser un humain décider
+de ce qui est publié.
+
+Pour essayer : `docs/modeles/exemple_plaquette_partenaire.docx`, plaquette
+**fictive** d'un bar sétois (quatre séances en novembre, dont une dans un
+tableau) :
+
+    uv run python -m src.extractors.datasets.source.partner_extractor --verifier docs/modeles/exemple_plaquette_partenaire.docx
+
+Non couvert : un tableur Excel très éloigné du modèle (un onglet par mois,
+cellules fusionnées) est refusé (« colonnes manquantes ») ; le plus simple
+reste de le reprendre dans le modèle, ou de l'enregistrer en PDF.
+
 ## Le modèle
 
 Une ligne (ou un objet JSON) par séance. Colonnes obligatoires : `titre`,

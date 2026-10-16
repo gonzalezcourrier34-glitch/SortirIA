@@ -197,4 +197,8 @@ def describe_action(proposal: Mapping[str, Any]) -> str:
         wanted = f" ; cherché : « {action['word']} »" if action.get("word") else ""
         return (f"{source} : ajouter l'agenda {action.get('new')} ({action.get('events')} événement(s) "
                 f"dans la zone{wanted}) - {action.get('url')}")
+    if action.get("type") == "valider_document_partenaire":
+        preview = "".join(f"\n      - {line}" for line in action.get("preview") or [])
+        return (f"partenaire {action.get('partner')} : importer {action.get('file')} "
+                f"({action.get('events')} séance(s) lue(s) par Mistral){preview}")
     return f"{source} : remplacer {action.get('old')} par {action.get('new')}"

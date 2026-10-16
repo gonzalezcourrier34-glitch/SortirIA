@@ -77,7 +77,8 @@ le transforment en pipeline d'**événements**.
 - [x] ~~Remplacer le chargement OpenAgenda de `app/document_service.py`~~ : sans objet, module retiré le 15/10 (la recherche lit la table `events`)
 - [x] ~~Extraction des contraintes par Ministral 3 8B~~ : **choix inverse** (15/10) : des règles (`app/query_understanding.py`) et des synonymes validés, 99 % de compréhension sur le jeu de 50 questions, sans coût ni latence d'un appel de plus. Un modèle reste une piste quand il y aura des questions réelles en nombre (`docs/evolutions.md`)
 - [x] Cache exact des réponses (15/10) : clé = question normalisée + filtres + jour + version de l'index + version de la consigne + synonymes appris ; une nouvelle collecte change la version de l'index (`query_cache`)
-- [ ] Mesurer coût et latence P95 pour 1 000 requêtes avec et sans cache / petit modèle (chiffres pour l'axe 5) : **outil prêt** (16/10, `scripts/mesure_cout_latence.py`, historique dans `benchmarks/cout_latence/`), reste à le lancer
+- [x] Mesurer coût et latence P95 avec et sans cache / petit modèle (16/10, `scripts/mesure_cout_latence.py`, `benchmarks/cout_latence/`) : médiane 3,0 à 3,3 s, P95 6,0 à 6,4 s, 0,12 $ pour 1 000 questions ; cache : P95 0,11 s, 0 $ ; `ministral-8b` : − 17 % de coût mais rédaction plus lente, non retenu (voir `docs/evaluation.md`, `docs/couts.md`)
+- [x] Pertinence des 3 premières propositions (objectif 70 %) : **97,8 %** (16/10, 136 cartes pertinentes sur 139 pour le sujet et le public, jugement humain, `scripts/eval_pertinence.py`) ; les 3 « non » sont des offres partenaires mises en tête à tort. Juge Mistral Large calibré sur cette grille (v7, figé) : 98,6 % d'accord, AC1 0,985, 3 rejets sur 3 retrouvés
 - [x] Pouce haut / pouce bas (16/10) : table `feedback`, route `POST /api/v1/reponses/{request_id}/avis` (réponse de moins d'un jour, « ce qui manquait » facultatif, jamais publié), boutons sous la réponse dans l'interface, satisfaction dans Grafana
 - [x] Journaliser chaque requête (14-15/10) : `rag_requests` (question, contraintes comprises, ce qui a manqué, événements renvoyés, latence, tokens, coût, réponse, cache, mode dégradé)
 - [x] Dockerfile, CI/CD GitHub Actions, déploiement Azure (15-16/10) : interface sur Static Web Apps (www.sortiria-montpellier.fr), API et collecte de la nuit sur Container Apps, PostgreSQL Flexible Server ; la CD déploie à chaque push sur `main` (OpenID Connect, sans mot de passe) ; voir `docs/deploiement.md`
@@ -87,6 +88,7 @@ le transforment en pipeline d'**événements**.
 ## Semaine 3 (27 oct.-2 nov.) : production
 
 - [x] Agent de collecte nocturne (fait le 13/10) : graphe LangGraph dans `agent/`, DAG `dags/sortiria_nightly_dag.py` (2 h chaque nuit), lancement manuel `uv run python -m agent --essai`
+- [x] Documents des partenaires (16/10) : PDF et Word mis en page librement, lus par Mistral (`partner_documents.py`), rangés dans les colonnes du modèle, mêmes contrôles qu'un tableur plus « titre présent dans le texte » ; import **proposé** par l'agent avec un aperçu, publié après validation humaine (`_documents_valides.json`, empreinte du fichier)
 - [ ] Nœud d'extraction par Mistral des pages d'agenda sans données structurées (quand une source « scraper » sera branchée)
 - [x] Tâche planifiée Azure Container Apps Job (15/10) : `sortiria-collecte`, chaque nuit ; la source PDF de Sète agglopôle, bloquée depuis Azure, est coupée sur le serveur (`SOURCES_DESACTIVEES`) et lue depuis un poste de travail
 - [x] Écrire dans `rag_requests` depuis l'API (14/10)

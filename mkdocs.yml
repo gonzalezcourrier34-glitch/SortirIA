@@ -65,8 +65,14 @@ plugins:
 
 nav:
   - Accueil: index.md
+  - Dossier du projet:
+      - MVP et arbitrages: mvp.md
+      - Feuille de route: feuille_de_route.md
+      - Architecture: architecture.md
+      - Évaluation: evaluation.md
+      - Fiabilité des données: fiabilite.md
+      - Coûts et projection: couts.md
   - Démarrage: demarrage.md
-  - Architecture: architecture.md
   - Sources d'événements: sources.md
   - Fichiers des partenaires: partenaires.md
   - Agent de collecte: agent.md

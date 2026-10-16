@@ -1,0 +1,1931 @@
+{
+  "date": "2026-10-16T09:39:45+02:00",
+  "questions": 100,
+  "cache": false,
+  "redaction": true,
+  "modele": "ministral-8b-latest",
+  "prompt_version": "2026-10-16.1",
+  "resultats": {
+    "premier_passage": {
+      "questions": 100,
+      "mediane_ms": 3764.1,
+      "p95_ms": 6389.2,
+      "max_ms": 13759.0,
+      "etapes_moyennes_ms": {
+        "comprendre": 0.6,
+        "rechercher": 1442.4,
+        "filtrer": 586.4,
+        "rediger": 1946.5
+      },
+      "cout_moyen_usd": 9.67e-05,
+      "cout_1000_usd": 0.0967,
+      "part_cache": 0.0,
+      "degradees": 0,
+      "sans_carte": 0
+    }
+  },
+  "detail": {
+    "premier_passage": [
+      {
+        "question": "électro",
+        "ms": 5524.2,
+        "etapes_ms": {
+          "comprendre": 2.1,
+          "rechercher": 3311.8,
+          "filtrer": 314.3,
+          "rediger": 1895.6
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 935,
+          "output": 134
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000107
+      },
+      {
+        "question": "un atelier pour les seniors",
+        "ms": 4006.9,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 343.6,
+          "filtrer": 77.2,
+          "rediger": 3585.3
+        },
+        "cache": false,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 520,
+          "output": 142
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 6.7e-05
+      },
+      {
+        "question": "une sortie gratuite avec les enfants",
+        "ms": 3380.1,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 419.9,
+          "filtrer": 670.9,
+          "rediger": 2288.6
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1009,
+          "output": 147
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000117
+      },
+      {
+        "question": "marché nocturne",
+        "ms": 4608.3,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 1674.7,
+          "filtrer": 633.0,
+          "rediger": 2299.5
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 992,
+          "output": 128
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000112
+      },
+      {
+        "question": "loto",
+        "ms": 3466.3,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 1902.8,
+          "filtrer": 143.9,
+          "rediger": 1418.9
+        },
+        "cache": false,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 483,
+          "output": 103
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 5.9e-05
+      },
+      {
+        "question": "un bar à concerts pour une soirée entre amis",
+        "ms": 2761.0,
+        "etapes_ms": {
+          "comprendre": 0.8,
+          "rechercher": 735.1,
+          "filtrer": 326.9,
+          "rediger": 1697.7
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 880,
+          "output": 119
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000101
+      },
+      {
+        "question": "peinture",
+        "ms": 4081.9,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 1654.1,
+          "filtrer": 302.5,
+          "rediger": 2124.7
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 864,
+          "output": 164
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000103
+      },
+      {
+        "question": "magie",
+        "ms": 4305.0,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 1670.3,
+          "filtrer": 458.9,
+          "rediger": 2175.3
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1024,
+          "output": 147
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000117
+      },
+      {
+        "question": "j'aimerais aller au théâtre",
+        "ms": 3853.0,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 1574.0,
+          "filtrer": 622.9,
+          "rediger": 1655.3
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 993,
+          "output": 121
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000112
+      },
+      {
+        "question": "carnaval",
+        "ms": 3378.0,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 1756.8,
+          "filtrer": 67.4,
+          "rediger": 1553.3
+        },
+        "cache": false,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 439,
+          "output": 93
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 5.3e-05
+      },
+      {
+        "question": "couture",
+        "ms": 4066.4,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 1662.2,
+          "filtrer": 196.8,
+          "rediger": 2206.8
+        },
+        "cache": false,
+        "cartes": 5,
+        "degradee": false,
+        "tokens": {
+          "input": 694,
+          "output": 117
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 8.1e-05
+      },
+      {
+        "question": "vélo",
+        "ms": 3783.6,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 1638.1,
+          "filtrer": 149.4,
+          "rediger": 1995.4
+        },
+        "cache": false,
+        "cartes": 4,
+        "degradee": false,
+        "tokens": {
+          "input": 603,
+          "output": 143
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 7.5e-05
+      },
+      {
+        "question": "escape game",
+        "ms": 3356.9,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 1870.1,
+          "filtrer": 238.9,
+          "rediger": 1247.2
+        },
+        "cache": false,
+        "cartes": 6,
+        "degradee": false,
+        "tokens": {
+          "input": 821,
+          "output": 124
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 9.5e-05
+      },
+      {
+        "question": "une exposition gratuite à Montpellier",
+        "ms": 2598.0,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 263.3,
+          "filtrer": 372.4,
+          "rediger": 1961.5
+        },
+        "cache": false,
+        "cartes": 7,
+        "degradee": false,
+        "tokens": {
+          "input": 845,
+          "output": 160
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000101
+      },
+      {
+        "question": "brunch",
+        "ms": 3433.0,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 2199.1,
+          "filtrer": 37.7,
+          "rediger": 1195.5
+        },
+        "cache": false,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 426,
+          "output": 92
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 5.2e-05
+      },
+      {
+        "question": "tapas",
+        "ms": 3460.7,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 2153.5,
+          "filtrer": 36.3,
+          "rediger": 1270.3
+        },
+        "cache": false,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 429,
+          "output": 92
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 5.2e-05
+      },
+      {
+        "question": "atelier enfants",
+        "ms": 2981.0,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 785.2,
+          "filtrer": 307.2,
+          "rediger": 1888.3
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 985,
+          "output": 153
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000114
+      },
+      {
+        "question": "kayak",
+        "ms": 13759.0,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 1623.0,
+          "filtrer": 3204.0,
+          "rediger": 8931.2
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 945,
+          "output": 118
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000106
+      },
+      {
+        "question": "château",
+        "ms": 4830.3,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 2666.3,
+          "filtrer": 328.0,
+          "rediger": 1835.3
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 987,
+          "output": 136
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000112
+      },
+      {
+        "question": "patrimoine",
+        "ms": 3801.8,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 1723.6,
+          "filtrer": 325.8,
+          "rediger": 1751.4
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 985,
+          "output": 139
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000112
+      },
+      {
+        "question": "tango",
+        "ms": 3094.2,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 1661.4,
+          "filtrer": 266.8,
+          "rediger": 1165.1
+        },
+        "cache": false,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 495,
+          "output": 89
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 5.8e-05
+      },
+      {
+        "question": "demain",
+        "ms": 1757.4,
+        "etapes_ms": {
+          "comprendre": 0.8,
+          "rechercher": 396.0,
+          "filtrer": 312.2,
+          "rediger": 1048.0
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 977,
+          "output": 93
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000107
+      },
+      {
+        "question": "pour seniors",
+        "ms": 2270.3,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 300.0,
+          "filtrer": 321.8,
+          "rediger": 1647.8
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 895,
+          "output": 123
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000102
+      },
+      {
+        "question": "fête",
+        "ms": 4221.7,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 1902.1,
+          "filtrer": 338.1,
+          "rediger": 1980.5
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 888,
+          "output": 138
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000103
+      },
+      {
+        "question": "une lecture de contes",
+        "ms": 4448.1,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 1839.9,
+          "filtrer": 461.5,
+          "rediger": 2145.8
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 942,
+          "output": 126
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000107
+      },
+      {
+        "question": "balade",
+        "ms": 3679.3,
+        "etapes_ms": {
+          "comprendre": 0.9,
+          "rechercher": 1604.4,
+          "filtrer": 321.5,
+          "rediger": 1751.9
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 847,
+          "output": 143
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 9.9e-05
+      },
+      {
+        "question": "une conférence la semaine prochaine",
+        "ms": 2086.6,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 532.0,
+          "filtrer": 157.1,
+          "rediger": 1396.7
+        },
+        "cache": false,
+        "cartes": 4,
+        "degradee": false,
+        "tokens": {
+          "input": 646,
+          "output": 112
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 7.7e-05
+      },
+      {
+        "question": "que faire s'il pleut ce week-end ?",
+        "ms": 2412.9,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 441.0,
+          "filtrer": 327.3,
+          "rediger": 1643.2
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 915,
+          "output": 124
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000105
+      },
+      {
+        "question": "en famille",
+        "ms": 3466.5,
+        "etapes_ms": {
+          "comprendre": 1.1,
+          "rechercher": 871.6,
+          "filtrer": 728.7,
+          "rediger": 1864.3
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1029,
+          "output": 148
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000118
+      },
+      {
+        "question": "karting",
+        "ms": 6370.2,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 1804.5,
+          "filtrer": 3286.4,
+          "rediger": 1277.6
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 934,
+          "output": 103
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000104
+      },
+      {
+        "question": "marionnettes",
+        "ms": 5195.6,
+        "etapes_ms": {
+          "comprendre": 0.8,
+          "rechercher": 2824.2,
+          "filtrer": 346.8,
+          "rediger": 2023.5
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 964,
+          "output": 145
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000111
+      },
+      {
+        "question": "une balade en plein air",
+        "ms": 3535.5,
+        "etapes_ms": {
+          "comprendre": 0.8,
+          "rechercher": 1099.2,
+          "filtrer": 313.1,
+          "rediger": 2122.2
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 882,
+          "output": 132
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000101
+      },
+      {
+        "question": "film",
+        "ms": 4350.3,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 1656.3,
+          "filtrer": 757.5,
+          "rediger": 1935.5
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 910,
+          "output": 132
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000104
+      },
+      {
+        "question": "que faire à moins de 15 km de Frontignan ?",
+        "ms": 4693.5,
+        "etapes_ms": {
+          "comprendre": 1.2,
+          "rechercher": 803.7,
+          "filtrer": 781.6,
+          "rediger": 3106.5
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 968,
+          "output": 154
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000113
+      },
+      {
+        "question": "rock",
+        "ms": 3540.4,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 1738.2,
+          "filtrer": 279.7,
+          "rediger": 1521.5
+        },
+        "cache": false,
+        "cartes": 7,
+        "degradee": false,
+        "tokens": {
+          "input": 816,
+          "output": 126
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 9.4e-05
+      },
+      {
+        "question": "opéra",
+        "ms": 5813.9,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 1672.0,
+          "filtrer": 311.3,
+          "rediger": 3829.6
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 972,
+          "output": 157
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000113
+      },
+      {
+        "question": "des idées pour la semaine prochaine",
+        "ms": 3744.7,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 676.8,
+          "filtrer": 713.6,
+          "rediger": 2353.0
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1019,
+          "output": 134
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000116
+      },
+      {
+        "question": "vin",
+        "ms": 4256.3,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 1746.0,
+          "filtrer": 718.2,
+          "rediger": 1791.1
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 950,
+          "output": 144
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000109
+      },
+      {
+        "question": "rap",
+        "ms": 3849.8,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 1695.4,
+          "filtrer": 503.3,
+          "rediger": 1650.1
+        },
+        "cache": false,
+        "cartes": 5,
+        "degradee": false,
+        "tokens": {
+          "input": 626,
+          "output": 153
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 7.8e-05
+      },
+      {
+        "question": "cirque",
+        "ms": 3943.1,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 1822.1,
+          "filtrer": 361.3,
+          "rediger": 1758.6
+        },
+        "cache": false,
+        "cartes": 7,
+        "degradee": false,
+        "tokens": {
+          "input": 868,
+          "output": 161
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000103
+      },
+      {
+        "question": "une projection de film pour les enfants",
+        "ms": 2889.5,
+        "etapes_ms": {
+          "comprendre": 0.8,
+          "rechercher": 906.2,
+          "filtrer": 374.8,
+          "rediger": 1607.4
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 935,
+          "output": 149
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000109
+      },
+      {
+        "question": "une expo au musée Fabre",
+        "ms": 4165.5,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 1962.6,
+          "filtrer": 210.7,
+          "rediger": 1991.4
+        },
+        "cache": false,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 500,
+          "output": 121
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 6.2e-05
+      },
+      {
+        "question": "avec des ados",
+        "ms": 2868.5,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 847.1,
+          "filtrer": 312.9,
+          "rediger": 1707.6
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1123,
+          "output": 120
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000124
+      },
+      {
+        "question": "laser game",
+        "ms": 5582.1,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 2600.4,
+          "filtrer": 831.7,
+          "rediger": 2149.0
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 945,
+          "output": 127
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000107
+      },
+      {
+        "question": "du cinéma en plein air ou une projection",
+        "ms": 6380.2,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 1225.0,
+          "filtrer": 505.7,
+          "rediger": 4648.6
+        },
+        "cache": false,
+        "cartes": 7,
+        "degradee": false,
+        "tokens": {
+          "input": 793,
+          "output": 135
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 9.4e-05
+      },
+      {
+        "question": "jazz",
+        "ms": 4579.5,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 1996.8,
+          "filtrer": 772.6,
+          "rediger": 1809.6
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 805,
+          "output": 162
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 9.7e-05
+      },
+      {
+        "question": "une balade nature autour de l'étang de Thau",
+        "ms": 4500.7,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 1838.9,
+          "filtrer": 586.5,
+          "rediger": 2074.2
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 918,
+          "output": 156
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000108
+      },
+      {
+        "question": "un marché de Noël en décembre",
+        "ms": 2827.4,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 822.7,
+          "filtrer": 299.8,
+          "rediger": 1703.9
+        },
+        "cache": false,
+        "cartes": 4,
+        "degradee": false,
+        "tokens": {
+          "input": 615,
+          "output": 152
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 7.8e-05
+      },
+      {
+        "question": "visite guidée",
+        "ms": 3887.2,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 1655.4,
+          "filtrer": 326.3,
+          "rediger": 1904.1
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1139,
+          "output": 136
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000128
+      },
+      {
+        "question": "un festival près de Montpellier",
+        "ms": 3664.6,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 1193.8,
+          "filtrer": 309.5,
+          "rediger": 2160.3
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 832,
+          "output": 170
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000101
+      },
+      {
+        "question": "apéro",
+        "ms": 4362.4,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 2401.1,
+          "filtrer": 191.5,
+          "rediger": 1768.7
+        },
+        "cache": false,
+        "cartes": 5,
+        "degradee": false,
+        "tokens": {
+          "input": 693,
+          "output": 147
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 8.4e-05
+      },
+      {
+        "question": "des jeux d'échecs",
+        "ms": 3486.7,
+        "etapes_ms": {
+          "comprendre": 0.9,
+          "rechercher": 1947.8,
+          "filtrer": 208.1,
+          "rediger": 1329.4
+        },
+        "cache": false,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 632,
+          "output": 107
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 7.4e-05
+      },
+      {
+        "question": "science",
+        "ms": 3902.5,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 1815.4,
+          "filtrer": 234.6,
+          "rediger": 1851.6
+        },
+        "cache": false,
+        "cartes": 6,
+        "degradee": false,
+        "tokens": {
+          "input": 816,
+          "output": 135
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 9.5e-05
+      },
+      {
+        "question": "du jazz",
+        "ms": 4406.3,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 1717.1,
+          "filtrer": 306.7,
+          "rediger": 2381.6
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 817,
+          "output": 160
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 9.8e-05
+      },
+      {
+        "question": "des spectacles gratuits à Montpellier",
+        "ms": 6341.4,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 289.6,
+          "filtrer": 1637.1,
+          "rediger": 4413.1
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1007,
+          "output": 282
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.00013
+      },
+      {
+        "question": "sortir à Frontignan",
+        "ms": 4131.1,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 606.3,
+          "filtrer": 813.9,
+          "rediger": 2709.6
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 917,
+          "output": 128
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000105
+      },
+      {
+        "question": "bar",
+        "ms": 2685.8,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 398.4,
+          "filtrer": 589.4,
+          "rediger": 1696.7
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 894,
+          "output": 143
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000104
+      },
+      {
+        "question": "que faire avec des ados ce week-end à Montpellier ?",
+        "ms": 2249.6,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 261.8,
+          "filtrer": 303.7,
+          "rediger": 1683.0
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 960,
+          "output": 118
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000109
+      },
+      {
+        "question": "ballet",
+        "ms": 3657.0,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 1746.6,
+          "filtrer": 36.1,
+          "rediger": 1873.6
+        },
+        "cache": false,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 428,
+          "output": 107
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 5.4e-05
+      },
+      {
+        "question": "s'il pleut",
+        "ms": 2959.3,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 1225.3,
+          "filtrer": 322.0,
+          "rediger": 1411.3
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1041,
+          "output": 117
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000116
+      },
+      {
+        "question": "stage",
+        "ms": 4850.0,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 1650.2,
+          "filtrer": 306.6,
+          "rediger": 2891.7
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 949,
+          "output": 162
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000111
+      },
+      {
+        "question": "blind test",
+        "ms": 3918.1,
+        "etapes_ms": {
+          "comprendre": 0.9,
+          "rechercher": 1820.8,
+          "filtrer": 160.0,
+          "rediger": 1936.2
+        },
+        "cache": false,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 479,
+          "output": 99
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 5.8e-05
+      },
+      {
+        "question": "une sortie pas chère avec les enfants",
+        "ms": 2624.8,
+        "etapes_ms": {
+          "comprendre": 0.8,
+          "rechercher": 415.4,
+          "filtrer": 617.2,
+          "rediger": 1590.9
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1002,
+          "output": 120
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000113
+      },
+      {
+        "question": "pas cher",
+        "ms": 3039.6,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 601.7,
+          "filtrer": 330.0,
+          "rediger": 2107.0
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 924,
+          "output": 121
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000105
+      },
+      {
+        "question": "ce soir",
+        "ms": 2849.8,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 635.9,
+          "filtrer": 362.8,
+          "rediger": 1849.9
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 960,
+          "output": 117
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000108
+      },
+      {
+        "question": "escalade",
+        "ms": 4012.9,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 1739.4,
+          "filtrer": 39.7,
+          "rediger": 2233.0
+        },
+        "cache": false,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 432,
+          "output": 105
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 5.4e-05
+      },
+      {
+        "question": "du théâtre",
+        "ms": 5984.8,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 417.4,
+          "filtrer": 1821.0,
+          "rediger": 3745.4
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1001,
+          "output": 302
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.00013
+      },
+      {
+        "question": "un concert à moins de 15 €",
+        "ms": 3138.9,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 853.0,
+          "filtrer": 612.3,
+          "rediger": 1672.7
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 917,
+          "output": 137
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000106
+      },
+      {
+        "question": "yoga",
+        "ms": 4929.0,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 1706.5,
+          "filtrer": 203.8,
+          "rediger": 3018.0
+        },
+        "cache": false,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 486,
+          "output": 131
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 6.2e-05
+      },
+      {
+        "question": "soirée",
+        "ms": 3234.2,
+        "etapes_ms": {
+          "comprendre": 1.9,
+          "rechercher": 391.4,
+          "filtrer": 670.4,
+          "rediger": 2169.8
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 949,
+          "output": 164
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000111
+      },
+      {
+        "question": "un atelier créatif pour les enfants",
+        "ms": 2907.7,
+        "etapes_ms": {
+          "comprendre": 0.9,
+          "rechercher": 942.2,
+          "filtrer": 302.8,
+          "rediger": 1661.2
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 991,
+          "output": 122
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000112
+      },
+      {
+        "question": "le 31 octobre pour Halloween",
+        "ms": 2697.8,
+        "etapes_ms": {
+          "comprendre": 1.3,
+          "rechercher": 377.5,
+          "filtrer": 762.3,
+          "rediger": 1556.4
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 849,
+          "output": 125
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 9.8e-05
+      },
+      {
+        "question": "ciné plein air",
+        "ms": 2822.5,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 1171.8,
+          "filtrer": 275.6,
+          "rediger": 1374.0
+        },
+        "cache": false,
+        "cartes": 7,
+        "degradee": false,
+        "tokens": {
+          "input": 789,
+          "output": 114
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 9e-05
+      },
+      {
+        "question": "concert",
+        "ms": 4439.2,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 1951.4,
+          "filtrer": 698.6,
+          "rediger": 1788.3
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 830,
+          "output": 138
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 9.7e-05
+      },
+      {
+        "question": "jeux",
+        "ms": 3921.3,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 1922.8,
+          "filtrer": 768.3,
+          "rediger": 1229.2
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1109,
+          "output": 115
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000122
+      },
+      {
+        "question": "un concert",
+        "ms": 1642.0,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 341.0,
+          "filtrer": 76.3,
+          "rediger": 1224.1
+        },
+        "cache": false,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 492,
+          "output": 82
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 5.7e-05
+      },
+      {
+        "question": "pub",
+        "ms": 2252.3,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 607.8,
+          "filtrer": 715.3,
+          "rediger": 928.0
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 997,
+          "output": 92
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000109
+      },
+      {
+        "question": "lecture",
+        "ms": 4583.6,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 2361.2,
+          "filtrer": 807.6,
+          "rediger": 1413.8
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 943,
+          "output": 162
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000111
+      },
+      {
+        "question": "randonnée",
+        "ms": 3347.0,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 1986.7,
+          "filtrer": 38.5,
+          "rediger": 1321.0
+        },
+        "cache": false,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 420,
+          "output": 125
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 5.4e-05
+      },
+      {
+        "question": "quoi faire samedi soir à Montpellier",
+        "ms": 2527.5,
+        "etapes_ms": {
+          "comprendre": 0.9,
+          "rechercher": 495.7,
+          "filtrer": 318.6,
+          "rediger": 1711.8
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 956,
+          "output": 150
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000112
+      },
+      {
+        "question": "accrobranche",
+        "ms": 6560.1,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 1727.7,
+          "filtrer": 3173.2,
+          "rediger": 1658.5
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 973,
+          "output": 130
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.00011
+      },
+      {
+        "question": "salon",
+        "ms": 4407.1,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 1790.3,
+          "filtrer": 305.8,
+          "rediger": 2310.4
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 817,
+          "output": 168
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 9.9e-05
+      },
+      {
+        "question": "un festival en octobre",
+        "ms": 3568.5,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 1141.8,
+          "filtrer": 774.5,
+          "rediger": 1651.3
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 876,
+          "output": 141
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000102
+      },
+      {
+        "question": "stand-up",
+        "ms": 3865.9,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 1731.9,
+          "filtrer": 703.3,
+          "rediger": 1430.1
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 858,
+          "output": 124
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 9.8e-05
+      },
+      {
+        "question": "huîtres",
+        "ms": 3641.9,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 1615.1,
+          "filtrer": 77.1,
+          "rediger": 1949.2
+        },
+        "cache": false,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 513,
+          "output": 127
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 6.4e-05
+      },
+      {
+        "question": "foire",
+        "ms": 3230.8,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 2106.0,
+          "filtrer": 38.5,
+          "rediger": 1085.7
+        },
+        "cache": false,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 426,
+          "output": 99
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 5.3e-05
+      },
+      {
+        "question": "paintball",
+        "ms": 6662.2,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 1763.8,
+          "filtrer": 3193.2,
+          "rediger": 1704.2
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 906,
+          "output": 157
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000106
+      },
+      {
+        "question": "BD",
+        "ms": 4176.4,
+        "etapes_ms": {
+          "comprendre": 0.8,
+          "rechercher": 2605.7,
+          "filtrer": 150.6,
+          "rediger": 1419.3
+        },
+        "cache": false,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 467,
+          "output": 122
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 5.9e-05
+      },
+      {
+        "question": "astronomie",
+        "ms": 2875.3,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 1621.2,
+          "filtrer": 117.7,
+          "rediger": 1136.3
+        },
+        "cache": false,
+        "cartes": 3,
+        "degradee": false,
+        "tokens": {
+          "input": 562,
+          "output": 95
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 6.6e-05
+      },
+      {
+        "question": "expo photo",
+        "ms": 4296.3,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 2110.4,
+          "filtrer": 1163.5,
+          "rediger": 1021.9
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 963,
+          "output": 96
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000106
+      },
+      {
+        "question": "bowling",
+        "ms": 6668.8,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 1830.8,
+          "filtrer": 3455.9,
+          "rediger": 1381.3
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1027,
+          "output": 145
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000117
+      },
+      {
+        "question": "danse",
+        "ms": 3994.8,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 1746.4,
+          "filtrer": 316.1,
+          "rediger": 1931.2
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1017,
+          "output": 158
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000118
+      },
+      {
+        "question": "un spectacle de danse",
+        "ms": 3575.0,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 1785.3,
+          "filtrer": 330.6,
+          "rediger": 1457.9
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 877,
+          "output": 144
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000102
+      },
+      {
+        "question": "une visite guidée demain",
+        "ms": 2345.5,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 471.7,
+          "filtrer": 362.9,
+          "rediger": 1510.2
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 981,
+          "output": 117
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000111
+      },
+      {
+        "question": "concert gratuit",
+        "ms": 3210.4,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 393.6,
+          "filtrer": 315.5,
+          "rediger": 2500.5
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 872,
+          "output": 129
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.0001
+      },
+      {
+        "question": "une dégustation de vins ou d'huîtres",
+        "ms": 3991.0,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 2018.7,
+          "filtrer": 72.8,
+          "rediger": 1898.4
+        },
+        "cache": false,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 441,
+          "output": 109
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 5.6e-05
+      },
+      {
+        "question": "conférence",
+        "ms": 3701.7,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 1828.7,
+          "filtrer": 611.9,
+          "rediger": 1260.0
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 962,
+          "output": 105
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000107
+      },
+      {
+        "question": "des activités à Lattes ou à Pérols",
+        "ms": 2197.0,
+        "etapes_ms": {
+          "comprendre": 0.8,
+          "rechercher": 364.9,
+          "filtrer": 353.1,
+          "rediger": 1477.6
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 930,
+          "output": 151
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000109
+      },
+      {
+        "question": "VTT",
+        "ms": 9761.9,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 5280.7,
+          "filtrer": 3267.0,
+          "rediger": 1212.7
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1012,
+          "output": 117
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000113
+      },
+      {
+        "question": "exposition",
+        "ms": 3476.8,
+        "etapes_ms": {
+          "comprendre": 0.8,
+          "rechercher": 1741.8,
+          "filtrer": 371.5,
+          "rediger": 1362.1
+        },
+        "cache": false,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 937,
+          "output": 118
+        },
+        "modele": "ministral-8b-latest",
+        "cout_usd": 0.000106
+      }
+    ]
+  }
+}

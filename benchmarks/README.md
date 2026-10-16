@@ -26,7 +26,7 @@ du terminal : valeurs arrondies, sans rapport JSON.
 Rempli par `uv run python -m scripts.mesure_cout_latence` : les questions des
 deux jeux d'évaluation (175), répétées jusqu'à `--n`, passent par la vraie
 recherche, **sans être tracées** dans `rag_requests`. Options : `--n 1000 --oui`
-(au-delà de 100, il faut confirmer : environ 0,0006 $ par question),
+(au-delà de 100, il faut confirmer ; mesuré le 16/10/2026 : 0,000118 $ par question, 0,12 $ pour 1 000),
 `--cache` (second passage servi par le cache), `--modele ministral-8b-latest`
 (autre modèle de rédaction), `--sans-redaction` (recherche seule).
 
@@ -41,3 +41,18 @@ rechercher, filtrer, rédiger) et, avec `--cache`, le coût pour 1 000
 questions selon la part de questions déjà posées le même jour. Mesuré depuis
 un poste de travail, le temps inclut l'aller-retour vers la base ; en
 production, l'API est à côté de la base.
+
+## `pertinence/` : pertinence des propositions (16/10/2026)
+
+Rempli par `uv run python -m scripts.eval_pertinence` : `--preparer` écrit la
+grille (3 premières cartes des 50 questions, à ouvrir dans Excel) ;
+l'annotation humaine se fait dans la colonne `pertinent` (`o` / `n`) ;
+`--calculer grille.csv` donne la pertinence@3 (objectif 70 %) et la part de
+questions satisfaites, par famille de question ; `--juge` fait juger les
+mêmes cartes par Mistral Large (une question par appel, une raison par
+verdict, colonne `raison_juge` dans `…_juge.csv`) et mesure l'accord avec
+l'humain (accord brut, AC1 de Gwet, kappa de Cohen, rejets retrouvés).
+`historique.csv` garde chaque passage : du juge v1 (68 % d'accord) au v7
+figé (98,6 %, AC1 0,985). `grille_2026-10-16_09h50.avant_alignement.csv` est
+la grille avant son alignement sur la définition « sujet et public ».
+Protocole détaillé : `docs/evaluation.md`.

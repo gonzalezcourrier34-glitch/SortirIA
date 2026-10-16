@@ -13,12 +13,16 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 from agent.diagnosis import probe_pdf
 from agent.report import send_report_by_email
 from agent.tracking import NullTracker, build_tracker
 from src.event.event_normalizer import PARIS
+from src.logger import get_logger
+
+logger = get_logger(__name__)
 
 # Modèle d'embeddings Mistral (même valeur par défaut que app/config.py).
 DEFAULT_EMBEDDING_MODEL = "mistral-embed"
@@ -193,13 +197,35 @@ def source_is_configured(name: str) -> bool:
     return any(source.enabled and source.source_id == name for source in registry.sources)
 
 
+def pending_partner_document(path: Path, partner: Mapping[str, Any]) -> dict[str, Any] | None:
+    """Document partenaire (PDF, Word) lu par Mistral cette nuit et pas encore validé :
+    de quoi proposer son import (nombre de séances, aperçu). None si déjà validé ou
+    pas encore lu (le cache évite tout nouvel appel à Mistral)."""
+
+    from src.extractors.datasets.source.partner_documents import cached_rows, file_sha256, is_approved
+    from src.extractors.datasets.source.partner_extractor import read_partner_file
+
+    if is_approved(path) or cached_rows(path) is None:
+        return None
+    items = read_partner_file(path, partner, require_approval=False)
+    events = [item["event"] for item in items if "event" in item]
+    return {
+        "name": partner["name"], "file_name": path.name, "sha256": file_sha256(path),
+        "events": len(events), "rejected": sum(1 for item in items if "rejected" in item),
+        "preview": [f"{event.start_at[:16].replace('T', ' ')} {event.title} ({event.venue_name}, {event.city})"
+                    for event in events[:5]],
+    }
+
+
 def read_watch_inputs() -> dict[str, Any]:
-    """Programmes PDF actifs (nom, fin de période) et fichiers des partenaires (date de mise à jour)."""
+    """Programmes PDF actifs (nom, fin de période), fichiers des partenaires (date de mise à jour)
+    et documents des partenaires lus par Mistral en attente de validation."""
 
     from config.paths import SOURCES_FILE
     from config.source_config import load_source_registry
     from src.event.document_mapper import parse_period
     from src.extractors.datasets.dataset_file_utils import resolve_dataset_directory
+    from src.extractors.datasets.source.partner_documents import is_document
     from src.extractors.datasets.source.partner_extractor import (
         find_partner_files,
         partner_for_file,
@@ -214,6 +240,7 @@ def read_watch_inputs() -> dict[str, Any]:
             documents.append({"name": data.get("name"), "end": period[1] if period else None,
                               "source_id": data.get("source_id"), "url": data.get("url")})
     partner_files = []
+    partner_documents = []
     discovery_weekday = None
     for source in registry.sources:
         data = source.to_dict()
@@ -226,12 +253,23 @@ def read_watch_inputs() -> dict[str, Any]:
             except (OSError, ValueError):
                 continue
             for path in find_partner_files(directory, data):
+                if is_document(path):
+                    try:
+                        pending = pending_partner_document(path, partner_for_file(path, data))
+                    except Exception:  # un document illisible ne prive pas la nuit de sa surveillance
+                        logger.exception("Document partenaire %s illisible.", path.name)
+                        continue
+                    if pending is not None:
+                        # Pas encore validé : ni publié, ni surveillé (« plus aucune séance »).
+                        partner_documents.append(pending)
+                        continue
                 partner_files.append({
                     "name": partner_for_file(path, data)["name"],
                     "file_name": path.name,
                     "updated": datetime.fromtimestamp(path.stat().st_mtime, PARIS).date(),
                 })
-    return {"documents": documents, "partner_files": partner_files, "discovery_weekday": discovery_weekday}
+    return {"documents": documents, "partner_files": partner_files, "partner_documents": partner_documents,
+            "discovery_weekday": discovery_weekday}
 
 
 DEFAULT_DISCOVERY_WEEKDAY = 6   # dimanche

@@ -12,6 +12,12 @@ Appliquer « remplacer_url » remplace l'ancienne adresse par la nouvelle dans
 `config/sources.yaml`, seulement si l'ancienne y figure exactement une fois
 (sinon : rien n'est touché, la proposition reste à traiter à la main).
 
+Appliquer « valider_document_partenaire » (16/10/2026) inscrit le document
+(PDF, Word) et son empreinte dans `_documents_valides.json`, dans le dossier
+des partenaires : il est importé à la collecte suivante. Voir d'abord ce que
+Mistral y a lu :
+`uv run python -m src.extractors.datasets.source.partner_extractor --verifier data/partenaires/<fichier>`.
+
 Appliquer « ajouter_agenda » (découverte du dimanche, 15/10/2026) ajoute
 l'agenda à la fin de la liste `agenda_uids` d'OpenAgenda, avec un commentaire
 (nombre d'événements, date de la découverte). Le fichier garde ses
@@ -84,6 +90,13 @@ def apply_proposal(proposal: Mapping[str, Any], path: Path = SOURCES_FILE) -> tu
     if action.get("type") == "ajouter_agenda" and action.get("new"):
         return add_agenda_to_config(str(action["new"]), action.get("events", "?"),
                                     str(action.get("found_on") or "?"), path)
+    if action.get("type") == "valider_document_partenaire" and action.get("file") and action.get("sha256"):
+        from src.extractors.datasets.source.partner_documents import approve_document
+
+        directory = partner_directory()
+        if directory is None:
+            return False, "dossier des partenaires introuvable dans la configuration : à valider à la main."
+        return approve_document(directory, str(action["file"]), str(action["sha256"]))
     if action.get("type") == "ajouter_synonyme" and action.get("word") and action.get("target"):
         return add_synonym_to_config(str(action["word"]), str(action["target"]), action.get("times", "?"),
                                      str(action.get("found_on") or "?"))
@@ -114,6 +127,22 @@ def add_synonym_to_config(word: str, target: str, times: Any, found_on: str,
     raw = raw.rstrip("\r\n") + newline + f"{entry:<30} # cherché {times} fois (proposé le {found_on})" + newline
     path.write_bytes(raw.encode("utf-8"))
     return True, f"{path.name} mis à jour : « {word} » cherche aussi « {target} »."
+
+
+def partner_directory() -> Path | None:
+    """Dossier des fichiers des partenaires, d'après `config/sources.yaml`."""
+
+    from config.source_config import load_source_registry
+    from src.extractors.datasets.dataset_file_utils import resolve_dataset_directory
+
+    for source in load_source_registry(SOURCES_FILE, require_secrets=False).sources:
+        if source.source_id == "partenaire":
+            data = source.to_dict()
+            try:
+                return resolve_dataset_directory(data, str(data.get("name")))
+            except (OSError, ValueError):
+                return None
+    return None
 
 
 def describe(proposal: Mapping[str, Any]) -> str:

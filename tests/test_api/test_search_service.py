@@ -320,6 +320,52 @@ def test_cards_open_with_the_partner_offer_that_answers() -> None:
     assert [card["event_id"] for card in cards] == ["p1", "e1"] and cards[0]["partner"] is True
 
 
+def test_partner_offer_must_aim_at_the_precise_type_and_the_public() -> None:
+    """Grille de pertinence du 16/10/2026 : les 3 cartes non pertinentes étaient
+    des offres partenaires mises en tête à tort (marionnettes pour « théâtre »
+    et pour « danse », escalade pour enfants pour des ados)."""
+
+    puppets = row("p1", title="Spectacle de marionnettes", category_norm="spectacle", category_match=True,
+                  partner_id=1, score=0.03)
+    play = row("e1", title="Une comédie", category_norm="theatre", category_match=True, score=0.02)
+    ordered = service.partners_first([play, puppets], plan_for("j'aimerais aller au théâtre"), exact=True,
+                                     question="j'aimerais aller au théâtre")
+    assert [r["event_id"] for r in ordered] == ["e1", "p1"] and not ordered[1].get("partner_ahead")
+    ordered = service.partners_first([puppets], plan_for("un spectacle de danse"), exact=False,
+                                     question="un spectacle de danse")
+    assert ordered == []                                   # idées voisines : l'offre sort des cartes
+    staged = row("p2", title="Pièce de théâtre au jardin", category_norm="spectacle", category_match=True,
+                 partner_id=2, score=0.01)
+    ordered = service.partners_first([play, staged], plan_for("j'aimerais aller au théâtre"), exact=True,
+                                     question="j'aimerais aller au théâtre")
+    assert ordered[0]["event_id"] == "p2" and ordered[0]["partner_ahead"] is True
+    climbing = row("p3", title="Initiation escalade enfants", category_norm="atelier", partner_id=3,
+                   audiences=["ados", "famille"], score=0.02)
+    ados = plan_for("un truc à faire avec des ados")
+    ordered = service.partners_first([row("e2", score=0.03), climbing], ados, exact=True,
+                                      question="un truc à faire avec des ados")
+    assert [r["event_id"] for r in ordered] == ["e2", "p3"]
+
+
+def test_main_type_is_the_precise_one() -> None:
+    from app.query_understanding import main_categories
+
+    assert main_categories("j'aimerais aller au théâtre") == ("theatre",)
+    assert main_categories("un spectacle de danse") == ("danse",)
+    assert main_categories("un spectacle") == ("spectacle",)
+    assert main_categories("une sortie demain") == ()
+
+
+def test_partner_kept_in_place_is_not_moved_first_by_card_order() -> None:
+    cards = [{"ref": 1, "event_id": "e1", "partner": False}, {"ref": 2, "event_id": "p1", "partner": True,
+                                                              "partner_ahead": False}]
+    ordered, _ = service.order_cards(cards, "Voici [1].")
+    assert [card["event_id"] for card in ordered] == ["e1", "p1"]
+    assert "offre partenaire" not in service.events_for_prompt([{**cards[1], "ref": 2, "title": "T", "date": "",
+                                                                 "place": "", "category": "", "price": "",
+                                                                 "audiences": [], "summary": ""}])
+
+
 def test_cards_order_partners_then_cited_then_the_rest() -> None:
     cards = [{"ref": i, "event_id": f"e{i}", "partner": i == 6} for i in range(1, 9)]
     ordered, answer = service.order_cards(cards, "Idées : [5] FABRIQUE, [7] LUDI ou [8] BRIQUES, et [5].")

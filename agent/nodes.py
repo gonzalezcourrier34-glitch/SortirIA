@@ -12,7 +12,7 @@ Les services (extraction, base, embeddings) arrivent par
 from __future__ import annotations
 
 import os
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from datetime import date
 from typing import Any
 
@@ -487,6 +487,9 @@ def watch_collection(state: CollectionState, config: RunnableConfig) -> dict[str
     agendas, discovery_alerts = discover_new_agendas(state, services, inputs, today)
     alerts += discovery_alerts
     proposals += agenda_proposals(agendas, today)
+    # Documents des partenaires (PDF, Word) lus par Mistral : importés seulement
+    # après validation humaine (16/10/2026).
+    proposals += partner_document_proposals(inputs.get("partner_documents", []), today)
     logger.info("Surveillance : couverture %s, coût estimé %.4f $, %s alerte(s).", counts, cost, len(alerts))
     # Le lundi : ce que les utilisateurs ont cherché sans trouver (bilan par
     # mail), et ce que l'agent en tire : synonymes, agendas à lire, pistes.
@@ -545,6 +548,26 @@ def agenda_proposals(agendas: Mapping[str, int], today: date) -> list[dict[str, 
          "action": {"type": "ajouter_agenda", "new": uid, "events": count,
                     "found_on": today.isoformat(), "url": f"https://openagenda.com/agendas/{uid}"}}
         for uid, count in sorted(agendas.items(), key=lambda item: -item[1])
+    ]
+
+
+def partner_document_proposals(documents: Sequence[Mapping[str, Any]], today: date) -> list[dict[str, Any]]:
+    """Une proposition « valider_document_partenaire » par document lu et pas encore validé.
+
+    Rien n'est publié avant l'accord : la proposition donne le nombre de
+    séances lues et un aperçu, pour juger sans ouvrir le fichier. Un document
+    modifié (autre empreinte) est une nouvelle proposition.
+    """
+
+    return [
+        {"source_id": "partenaire", "kind": "document_partenaire",
+         "diagnosis": (f"Document de {doc['name']} ({doc['file_name']}) lu par Mistral : {doc['events']} séance(s), "
+                       f"{doc.get('rejected', 0)} ligne(s) écartée(s). À valider avant publication."),
+         "action": {"type": "valider_document_partenaire", "new": f"{doc['file_name']}@{str(doc['sha256'])[:12]}",
+                    "file": doc["file_name"], "sha256": doc["sha256"], "partner": doc["name"],
+                    "events": doc["events"], "preview": list(doc.get("preview") or [])[:5],
+                    "found_on": today.isoformat()}}
+        for doc in documents if doc.get("events")
     ]
 
 

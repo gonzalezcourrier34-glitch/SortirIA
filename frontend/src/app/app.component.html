@@ -5,7 +5,10 @@
     <header class="header">
         <div class="header-title">
             <div class="brand">SortirIA</div>
-            <h1>Que faire autour de Montpellier et de l’étang de Thau ?</h1>
+            <div class="header-heading">
+                <h1>Que faire autour de Montpellier et de l’étang de Thau ?</h1>
+                <p class="header-subtitle">Événements des 3 prochains mois, sources citées</p>
+            </div>
         </div>
 
         <div class="header-sources">
@@ -25,19 +28,8 @@
 
         <section class="chat" aria-label="Échange avec SortirIA">
 
-            <div class="chat-header">
-                <div>
-                    <div class="eyebrow">Échange avec SortirIA</div>
-                    <div class="chat-subtitle">Événements des 3 prochains mois, sources citées</div>
-                </div>
-
-                <button type="button" class="button-secondary" (click)="newConversation()">
-                    Nouvelle conversation
-                </button>
-            </div>
-
-
-            <!-- ## Filtres, question et bouton -->
+            <!-- ## Filtres, question et boutons (16/10/2026 : critères en haut du
+                 cadre, saisie sur 2 lignes, « Nouvelle conversation » au-dessus de « Chercher ») -->
 
             <form class="search" (submit)="$event.preventDefault(); search()">
                 <div class="filters">
@@ -79,15 +71,20 @@
 
                 <div class="ask">
                     <label for="question" class="visually-hidden">Votre envie de sortie</label>
-                    <textarea id="question" rows="1" maxlength="500"
+                    <textarea id="question" rows="2" maxlength="500"
                         placeholder="Décrivez votre envie de sortie…"
                         [value]="question()"
                         (input)="onQuestionInput($event)"
                         (keydown)="onQuestionKeydown($event)"></textarea>
 
-                    <button type="submit" class="button-primary" [disabled]="loading()">
-                        {{ loading() ? 'Recherche…' : 'Chercher' }}
-                    </button>
+                    <div class="ask-actions">
+                        <button type="button" class="button-secondary" (click)="newConversation()">
+                            Nouvelle conversation
+                        </button>
+                        <button type="submit" class="button-primary" [disabled]="loading()">
+                            {{ loading() ? 'Recherche…' : 'Chercher' }}
+                        </button>
+                    </div>
                 </div>
             </form>
 

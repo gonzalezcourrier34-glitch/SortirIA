@@ -42,7 +42,7 @@ Server-Sent Events, comme l'analyse d'une position dans Chess Agent.
 
 | Étape | Ce qui se passe | Code |
 |---|---|---|
-| Comprendre | la question est lue comme un humain la lirait : **quand** (ce soir, samedi, ce week-end, le 24/10, en novembre), **où** (une commune, « l'étang », « près de Sète »), **pour qui** (enfants, ados, seniors, soirée), **gratuit** ou **budget**, **intérieur / plein air**, le **type** (théâtre, concert…) et les **mots-clés** qui restent ; le tout précise les cases cochées. Par règles, sans appel à un modèle | `app/query_understanding.py` |
+| Comprendre | la question est lue comme un humain la lirait : **quand** (ce soir, samedi, ce week-end, le 24/10, en novembre), **où** (une commune, « l'étang », « près de Sète » ; « à Montpellier » = la ville, « Montpellier » seul ou « près de Montpellier » = la métropole et 20 km autour), **pour qui** (enfants, ados, seniors, soirée), **gratuit** ou **budget**, **intérieur / plein air**, le **type** (théâtre, concert…) et les **mots-clés** qui restent ; le tout précise les cases cochées. Par règles, sans appel à un modèle | `app/query_understanding.py` |
 | Rechercher | **recherche hybride** : par le sens (vecteur mistral-embed, pgvector) et par les mots (plein texte français, sans accents, par préfixe) ; les deux classements sont fusionnés (RRF) ; ce qui a les mots précis et le type demandé passe devant | `build_search_query` |
 | Filtrer | ce qui répond exactement, sinon élargissement au sujet (voir plus bas) ; séances regroupées par événement ; 2 cartes au plus par lieu ; 8 cartes ; offres partenaires qui répondent en tête | `keep_exact_matches`, `widen_for_subject`, `group_occurrences`, `partners_first` |
 | Rédiger | Mistral écrit 2 à 4 phrases qui citent les événements [n], en respectant les contraintes comprises, et propose 3 relances ; les cartes suivent ensuite l'ordre de la réponse | `write_with_mistral`, `parse_answer`, `order_cards` |
@@ -99,7 +99,8 @@ liste à tenir à la main.
 **Quand rien ne parle du sujet** (`widen_for_subject`). Plutôt que 8 idées
 sans rapport (« cirque » → ateliers et jeux), le sujet est cherché en
 relâchant une étape à la fois : public, gratuit, budget, soirée et cadre ;
-puis les 3 prochains mois ; puis toute la zone. Mistral dit d'abord ce qui
+puis les 3 prochains mois ; puis, pour « à Montpellier », toute la
+métropole ; puis toute la zone. Mistral dit d'abord ce qui
 diffère (« pas gratuit », « dans 3 semaines »). Un genre absent (des
 concerts, mais pas de jazz) est aussi cherché ainsi avant de se rabattre sur
 le type. Puis :
@@ -145,6 +146,13 @@ n'est appliqué sans validation humaine (voir [Agent de collecte](agent.md)).
   Mistral les cite en premier, simplement. C'est vrai aussi quand le sujet a
   dû être élargi : un stage de cirque partenaire payant passe en tête pour
   « cirque » avec « Gratuit » coché, la réponse disant qu'il est payant.
+- **Le type précis et le bon public** (16/10/2026, `partner_fits`) : une offre
+  rangée seulement dans un type voisin accepté en plus (« spectacle » pour
+  « théâtre » ; « spectacle » s'efface devant « danse » dans « un spectacle
+  de danse ») ne passe pas en tête, sauf si son titre nomme le type demandé ;
+  un titre qui nomme un autre public (« escalade enfants » pour des ados) non
+  plus. Elle garde alors sa place parmi les autres cartes. Trouvé par la
+  grille de pertinence : c'étaient les 3 cartes non pertinentes.
 - **Sinon, seulement à droite** : une offre qui ne répond pas n'est jamais
   mêlée aux cartes.
 - **Encadré « Pas exactement ce que vous cherchiez ? Nos partenaires proposent

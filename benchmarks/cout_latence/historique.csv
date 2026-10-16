@@ -1,0 +1,5 @@
+date,questions,cache,redaction,modele,prompt_version,mediane_ms,p95_ms,cout_1000_usd,p95_ms_cache,cout_1000_usd_cache,note
+2026-10-16T09:10:33+02:00,100,False,True,mistral-small-latest,2026-10-16.1,3039.4,6401.3,0.1177,,,
+2026-10-16T09:28:31+02:00,175,True,True,mistral-small-latest,2026-10-16.1,3348.3,6036.8,0.1165,105.0,0.0,
+2026-10-16T09:33:07+02:00,175,True,True,mistral-small-latest,2026-10-16.1,95.3,113.5,0.0,107.2,0.0,
+2026-10-16T09:39:45+02:00,100,False,True,ministral-8b-latest,2026-10-16.1,3764.1,6389.2,0.0967,,,

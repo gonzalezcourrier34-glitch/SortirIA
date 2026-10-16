@@ -50,7 +50,7 @@ questions:
   - question: "une sortie demain"
     compris: {quand: "demain"}
   - question: "quoi faire samedi soir à Montpellier"
-    compris: {quand: jour, zone: montpellier, soir: true}
+    compris: {quand: jour, zone: montpellier, communes: [montpellier], soir: true}
   - question: "des idées pour la semaine prochaine"
     compris: {quand: "la semaine prochaine"}
   - question: "le 31 octobre pour Halloween"
@@ -79,7 +79,7 @@ questions:
   - question: "un bar à concerts pour une soirée entre amis"
     compris: {public: soiree, types: [concert]}
   - question: "des spectacles gratuits à Montpellier"
-    compris: {gratuit: true, zone: montpellier, types: [spectacle]}
+    compris: {gratuit: true, zone: montpellier, communes: [montpellier], types: [spectacle]}
 
   # --- Noms et sujets précis (la recherche par mots-clés) ---
   - question: "des jeux d'échecs"
@@ -127,7 +127,7 @@ questions:
   - question: "un concert gratuit à Sète"
     compris: {communes: [sete], gratuit: true, types: [concert]}
   - question: "que faire avec des ados ce week-end à Montpellier ?"
-    compris: {quand: "ce week-end", public: ados, zone: montpellier}
+    compris: {quand: "ce week-end", public: ados, zone: montpellier, communes: [montpellier]}
   - question: "une conférence la semaine prochaine"
     compris: {quand: "la semaine prochaine", types: [conference]}
   - question: "un atelier pour les seniors"
@@ -135,7 +135,7 @@ questions:
   - question: "des jeux de société à Frontignan"
     compris: {communes: [frontignan], types: [jeux]}
   - question: "une exposition gratuite à Montpellier"
-    compris: {gratuit: true, zone: montpellier, types: [exposition]}
+    compris: {gratuit: true, zone: montpellier, communes: [montpellier], types: [exposition]}
   - question: "un festival près de Montpellier"
     compris: {zone: montpellier, types: [festival]}
   - question: "une visite guidée demain"

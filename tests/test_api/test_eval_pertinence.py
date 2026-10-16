@@ -1,0 +1,109 @@
+"""Tests de la mesure de pertinence (sans base ni Mistral)."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from scripts import eval_pertinence as pertinence
+
+
+def test_questions_keep_their_family() -> None:
+    items = pertinence.load_questions()
+    assert len(items) == 50
+    assert items[0]["famille"] == "Le type de sortie"
+    assert all(item["famille"] for item in items)
+
+
+def test_grid_round_trip_and_score(tmp_path: Path) -> None:
+    item = {"question": "un concert", "filtres": {"public": "famille"}, "famille": "Le type"}
+    cards = [{"title": f"Concert {n}", "date": "sam. 17 oct.", "place": "Sète", "category": "concert",
+              "summary": "Jazz."} for n in range(5)]
+    rows = pertinence.grid_rows(1, item, cards) + pertinence.grid_rows(2, {**item, "filtres": {}}, [])
+    assert [row["rang"] for row in rows] == [1, 2, 3, 0]
+    path = tmp_path / "grille.csv"
+    pertinence.write_grid(rows, path)
+    read = pertinence.read_grid(path)
+    assert json.loads(read[0]["filtres"]) == {"public": "famille"}
+    read[0]["pertinent"], read[1]["pertinent"], read[2]["pertinent"] = "o", "Non", ""
+    report = pertinence.score(read)
+    # Question 1 : 1 pertinente sur 2 jugées ; question 2 : aucune proposition = 0 sur 3.
+    assert report["cartes_jugees"] == 2 and report["cartes_non_annotees"] == 1
+    assert report["pertinence_at_3"] == round(1 / 5, 3)
+    assert report["questions_satisfaites"] == 0.5
+
+
+def test_agreement_and_kappa() -> None:
+    rows = [{"pertinent": h, "juge": j} for h, j in
+            [("o", "o"), ("o", "o"), ("n", "n"), ("n", "o"), ("o", "o"), ("n", "n")]]
+    result = pertinence.agreement(rows)
+    assert result["cartes"] == 6 and result["accord"] == round(5 / 6, 3)
+    assert 0.6 < result["kappa"] < 0.7
+
+
+def test_judge_fills_its_column_and_survives_a_bad_answer() -> None:
+    rows = [{"num": "1", "rang": "1", "question": "q", "filtres": "", "titre": "A", "date": "", "lieu": "",
+             "categorie": "", "resume": ""},
+            {"num": "1", "rang": "2", "question": "q", "filtres": "", "titre": "B", "date": "", "lieu": "",
+             "categorie": "", "resume": ""}]
+    answer = ('{"verdicts": [{"id": "c0", "raison": "bon sujet", "pertinent": true},'
+              ' {"id": "c1", "pertinent": "non"}]}')
+    answers = iter([answer])
+    judged = pertinence.judge_rows(rows, call=lambda prompt, text: next(answers))
+    assert judged[0]["juge"] == "o" and judged[0]["raison_juge"] == "bon sujet"
+    assert "juge" not in judged[1]  # verdict mal formé : la carte reste sans avis
+
+
+def test_judge_sees_one_question_per_call() -> None:
+    """v2 jugeait par lots de 15 cartes mêlant 5 questions : 55 % d'accord."""
+
+    texts: list[str] = []
+
+    def call(prompt: str, text: str) -> str:
+        texts.append(text)
+        return "pas du JSON"
+
+    rows = [{"num": str(num), "rang": str(rank), "question": f"q{num}", "filtres": "", "titre": "T", "date": "",
+             "lieu": "", "categorie": "", "resume": ""} for num in (1, 2) for rank in (1, 2, 3)]
+    pertinence.judge_rows(rows, call=call)
+    assert len(texts) == 2 and texts[0].count("id: c") == 3 and "q2" not in texts[0]
+
+
+def test_grid_saved_by_openoffice_in_windows_1252(tmp_path: Path) -> None:
+    path = tmp_path / "grille.csv"
+    path.write_bytes("num;famille;question;rang;titre;pertinent\n1;Où;théâtre à Sète;1;Pièce;o\n".encode("cp1252"))
+    rows = pertinence.read_grid(path)
+    assert rows[0]["question"] == "théâtre à Sète" and pertinence.verdict(rows[0]["pertinent"]) is True
+
+
+def test_judge_sees_neither_date_nor_place_nor_price() -> None:
+    """Moment, lieu et budget sont vérifiés par le code : le juge v5 inventait un
+    « délai implicite », v6 un lieu « Montpellier » non demandé (16/10/2026)."""
+
+    seen: dict[str, str] = {}
+
+    def call(prompt: str, text: str) -> str:
+        seen["prompt"], seen["text"] = prompt, text
+        return '{"verdicts": [{"id": "c0", "pertinent": true}]}'
+
+    rows = [{"num": "1", "rang": "1", "question": "un concert à moins de 15 €",
+             "filtres": '{"free_only": true, "period": "weekend", "zone": "thau", "public": "famille"}',
+             "titre": "Jazz",
+             "date": "sam. 17 oct.", "lieu": "Sète", "categorie": "concert", "prix": "8 €", "public": "Soirée",
+             "resume": "Trio de jazz"}]
+    pertinence.judge_rows(rows, call=call)
+    assert "sam. 17 oct." not in seen["text"] and "8 €" not in seen["text"] and "Sète" not in seen["text"]
+    assert "public : Soirée" in seen["text"] and "Trio de jazz" in seen["text"]
+    assert "cases cochées : public : famille" in seen["text"]
+    assert "gratuit" not in seen["text"] and "thau" not in seen["text"]
+    assert "déjà été vérifiés" in seen["prompt"]
+
+
+def test_agreement_gives_ac1_when_almost_everything_is_relevant() -> None:
+    """16/10/2026 : 137 cartes pertinentes sur 139, le kappa ne dit plus rien."""
+
+    rows = ([{"pertinent": "o", "juge": "o"}] * 95 + [{"pertinent": "o", "juge": "n"}] * 3
+            + [{"pertinent": "n", "juge": "n"}, {"pertinent": "n", "juge": "o"}])
+    result = pertinence.agreement(rows)
+    assert result["accord"] == 0.96 and result["ac1"] > 0.9
+    assert result["kappa"] < 0.4 and (result["rejets_humains"], result["rejets_retrouves"]) == (2, 1)

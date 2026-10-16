@@ -13,14 +13,19 @@ le 6 novembre 2026. Plutôt que de repartir de zéro, il **industrialise deux pr
 | Suivi en production | Scoring crédit (projet 5), triage médical (projet 14) | Journalisation des requêtes, Evidently, Prometheus, Grafana, CI/CD |
 | Agent de collecte | Chess Agent (projet 13) | Graphe LangGraph : collecte nocturne, surveillance, propositions de réparation, apprentissage des recherches ratées |
 
-!!! info "État du projet au 15/10/2026"
+**Le dossier du projet** : [MVP et arbitrages](mvp.md) ·
+[Feuille de route](feuille_de_route.md) · [Architecture](architecture.md) ·
+[Évaluation](evaluation.md) · [Fiabilité des données](fiabilite.md) ·
+[Coûts et projection](couts.md) · [Déploiement](deploiement.md).
+
+!!! info "État du projet au 16/10/2026"
     - **Collecte** : 7 types de sources (OpenAgenda, DATAtourisme, RSS, iCal, PDF lus
       par Mistral, fichiers des partenaires, agendas en ligne), pilotées chaque nuit par
       l'[agent](agent.md), qui enrichit, contrôle, surveille et propose ses réparations.
     - **Recherche** : compréhension de la question, recherche hybride, offres partenaires
       en tête quand elles répondent, élargissement au sujet plutôt que des idées sans
-      rapport ; 99 % de propositions correctes sur le jeu de 50 questions
-      ([Interface](interface.md)).
+      rapport ; 98,7 % de propositions qui respectent les contraintes sur le jeu de
+      50 questions ([Évaluation](evaluation.md)).
     - **Boucle d'apprentissage** : ce que les gens cherchent sans trouver est gardé ;
       chaque lundi, l'agent en tire des synonymes et des agendas à lire, validés par un
       humain.
@@ -28,8 +33,12 @@ le 6 novembre 2026. Plutôt que de repartir de zéro, il **industrialise deux pr
       déployé à chaque push sur `main` ([Déploiement Azure](deploiement.md)).
     - **Suivi** : pouce haut / pouce bas sur chaque réponse, tableau Grafana de la
       recherche, limite de débit des routes publiques.
-    - **À venir** : rejeu de l'évaluation en CI, mesure du coût et de la latence
-      sur 1 000 questions. Après la soutenance : une base de lieux
+    - **Mesuré** : 0,12 $ de Mistral pour 1 000 questions, réponse en 3 s (médiane),
+      0,1 s depuis le cache ([Coûts et projection](couts.md)).
+    - **Pertinence** : 97,8 % des 3 premières propositions jugées pertinentes
+      (139 cartes, jugement humain) ; un juge Mistral d'accord à 98,6 % avec
+      l'humain la rejoue sans annotation ([Évaluation](evaluation.md)).
+    - **À venir** : rejeu de l'évaluation en CI. Après la soutenance : une base de lieux
       (bowling, padel, restaurants…) et le fine-tuning d'un modèle
       ([Évolutions possibles](evolutions.md)).
 

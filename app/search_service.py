@@ -44,6 +44,7 @@ from app.query_understanding import (
     category_label,
     combine,
     is_follow_up,
+    main_categories,
     merge_with_filters,
     plain,
     understand,
@@ -51,7 +52,7 @@ from app.query_understanding import (
 )
 
 PARIS = ZoneInfo("Europe/Paris")
-PROMPT_VERSION = "2026-10-16.1"  # sujet mieux montré sans les contraintes : il passe devant (karaoké)
+PROMPT_VERSION = "2026-10-16.2"  # offres partenaires : type précis et public ; « à Montpellier » = la ville
 DEFAULT_SEARCH_MODEL = "mistral-small-latest"
 CANDIDATES = 80          # séances comparées à la question (regroupées ensuite par événement)
 MAX_PROPOSALS = 8        # événements montrés et donnés à Mistral (2 rangées de 4 cartes, 15/10)
@@ -363,9 +364,10 @@ def widen_for_subject(connection: Any, plan: QueryPlan, vector: str | None,
 
     Plutôt que 8 idées sans rapport (« cirque » → ateliers et jeux), on cherche
     le sujet lui-même en relâchant les contraintes, une étape à la fois :
+    0. « à Montpellier » : la métropole, toutes contraintes gardées (16/10/2026) ;
     1. public, gratuit, budget, soirée, intérieur/plein air ;
     2. puis la période, étendue aux 3 prochains mois ;
-    3. puis le lieu.
+    3. puis le lieu (la métropole, puis partout).
     Renvoie (lignes sur le sujet, plan élargi, contraintes relâchées) ; aucune
     ligne si le sujet n'existe nulle part : mieux vaut le dire que proposer
     n'importe quoi.
@@ -380,10 +382,18 @@ def widen_for_subject(connection: Any, plan: QueryPlan, vector: str | None,
         dropped.append("le soir")
     if plan.setting:
         dropped.append({"interieur": "en intérieur", "exterieur": "en plein air"}[plan.setting])
-    steps = [(replace(plan, public=None, free_only=False, max_price=None, evening=False, setting=None,
-                      from_question=set()), list(dropped))]
-    longer = replace(steps[0][0], end=max(plan.end, plan.start + WIDER_PERIOD), period_label="3 prochains mois")
+    steps: list[tuple[QueryPlan, list[str]]] = []
+    if plan.cities and plan.zone and not plan.near:
+        # « à Montpellier » : d'abord la métropole, avec toutes les autres
+        # contraintes (un spectacle gratuit à Castelnau plutôt qu'un payant).
+        steps.append((replace(plan, cities=(), from_question=set()), ["dans la commune même"]))
+    steps.append((replace(plan, public=None, free_only=False, max_price=None, evening=False, setting=None,
+                          from_question=set()), list(dropped)))
+    longer = replace(steps[-1][0], end=max(plan.end, plan.start + WIDER_PERIOD), period_label="3 prochains mois")
     steps.append((longer, [*dropped, f"pour « {plan.period_label} »"]))
+    if plan.cities and plan.zone and not plan.near:
+        # « à Montpellier » : d'abord toute la métropole, avant de lâcher le lieu.
+        steps.append((replace(longer, cities=()), [*steps[-1][1], "dans la commune même"]))
     if plan.zone or plan.cities or plan.near:
         steps.append((replace(longer, zone=None, cities=(), near=None), [*steps[-1][1], "à cet endroit"]))
     for wider, relaxed in steps:
@@ -725,7 +735,42 @@ MAX_PER_VENUE = 2          # diversité : pas plus de 2 propositions au même li
 PARTNER_TOP_RANK = 40      # sans type ni mot précis : une offre partenaire doit être parmi les 40 plus proches
 
 
-def partners_first(rows: list[dict[str, Any]], plan: QueryPlan, exact: bool) -> list[dict[str, Any]]:
+# Un titre qui nomme un public en exclut d'autres : « Initiation escalade
+# enfants » ne passe pas en tête pour « un truc à faire avec des ados »
+# (grille de pertinence du 16/10/2026).
+YOUNG_WORDS = ("enfant", "enfants", "tout petit", "tout petits", "bebe", "bebes", "maternelle", "3 6 ans")
+TITLE_PUBLIC_CLASH = {
+    "ados": YOUNG_WORDS,
+    "adultes": YOUNG_WORDS,
+    "seniors": (*YOUNG_WORDS, "ado", "ados", "adolescent", "adolescents"),
+    "soiree": YOUNG_WORDS,
+}
+
+
+def partner_fits(row: Mapping[str, Any], plan: QueryPlan, main: Sequence[str]) -> bool:
+    """Une offre partenaire vise-t-elle le type précis et le public demandés ?
+
+    Le type : celui que la question vise (`main_categories`), pas un type
+    voisin accepté en plus (« spectacle » pour « théâtre »), sauf si le mot
+    demandé est dans l'offre. Le public : le titre ne doit pas en nommer un
+    autre. Sans ces deux conditions, l'offre reste à sa place parmi les autres.
+    """
+
+    title = f" {plain(str(row.get('title') or ''))} "
+    clash = TITLE_PUBLIC_CLASH.get(plan.public or "", ())
+    if any(f" {word} " in title for word in clash):
+        return False
+    if row.get("keyword_match") or not main:
+        return True
+    # Seul cas refusé : l'offre n'a que le type voisin accepté en plus
+    # (« spectacle » pour « théâtre ») et ne nomme pas le type visé.
+    category = str(row.get("category_norm") or row.get("category") or "").strip().lower()
+    secondary = category in plan.categories and category not in main
+    return not secondary or any(f" {plain(CATEGORY_LABELS.get(item, item))} " in title for item in main)
+
+
+def partners_first(rows: list[dict[str, Any]], plan: QueryPlan, exact: bool,
+                   question: str = "") -> list[dict[str, Any]]:
     """Place en tête les offres partenaires qui répondent à la demande (15/10/2026).
 
     - Réponse exacte : une séance de partenaire déjà retenue respecte toutes
@@ -739,20 +784,28 @@ def partners_first(rows: list[dict[str, Any]], plan: QueryPlan, exact: bool) -> 
       d'idées voisines, les plus proches sont proposées à part, dans
       l'encadré « offres partenaires » (`partner_offers`), et restent dans la
       colonne de droite.
+    - Dans les deux cas (16/10/2026), l'offre doit viser le type précis et le
+      public demandés (`partner_fits`). Les offres passées en tête sont
+      marquées `partner_ahead` : l'ordre des cartes et la rédaction s'en
+      servent ; une offre partenaire qui n'y est pas garde sa place.
     """
 
+    main = main_categories(question) if question else ()
     if not exact:
         # Idées voisines : une offre partenaire qui parle du sujet (mot ou type
         # demandé) reste dans les cartes, en tête ; les autres en sortent.
-        on_topic = [row for row in rows if row.get("partner_id") is not None
-                    and (row.get("keyword_match") or row.get("category_match"))]
+        on_topic = [{**row, "partner_ahead": True} for row in rows if row.get("partner_id") is not None
+                    and (row.get("keyword_match") or row.get("category_match")) and partner_fits(row, plan, main)]
         return on_topic + [row for row in rows if row.get("partner_id") is None]
     precise = bool(plan.categories) or bool(distinctive_keywords(plan.keywords))
     ranked_by_meaning = any(row.get("score") for row in rows)
     ahead, rest = [], []
     for rank, row in enumerate(rows):
         answers = precise or not ranked_by_meaning or rank < PARTNER_TOP_RANK
-        (ahead if row.get("partner_id") is not None and answers else rest).append(row)
+        if row.get("partner_id") is not None and answers and partner_fits(row, plan, main):
+            ahead.append({**row, "partner_ahead": True})
+        else:
+            rest.append(row)
     return ahead + rest
 
 
@@ -871,6 +924,8 @@ def to_card(row: Mapping[str, Any], ref: int | None = None) -> dict[str, Any]:
         "source": str(row.get("source_name") or ""),
         "source_attribution": str(row.get("source_attribution") or ""),
         "partner": row.get("partner_id") is not None,
+        # Passée en tête parce qu'elle répond au type et au public demandés.
+        "partner_ahead": bool(row.get("partner_ahead")),
         "partner_name": str(row.get("partner_name") or ""),
         "venue_rating": float(rating) if rating is not None else None,
         "venue_rating_count": int(row.get("venue_rating_count") or 0),
@@ -1041,7 +1096,7 @@ def events_for_prompt(cards: Sequence[Mapping[str, Any]]) -> str:
     lines = []
     for card in cards:
         details = [card["date"], card["place"], card["category"], card["price"]]
-        if card.get("partner"):
+        if card.get("partner_ahead", card.get("partner")):
             details.append("offre partenaire")
         if card["audiences"]:
             details.append("public : " + ", ".join(card["audiences"]))
@@ -1081,7 +1136,8 @@ def order_cards(cards: list[dict[str, Any]], answer: str) -> tuple[list[dict[str
         ref = int(match.group(1))
         if 1 <= ref <= len(cards) and ref not in cited:
             cited.append(ref)
-    partners = [ref for ref in range(1, len(cards) + 1) if cards[ref - 1].get("partner")]
+    partners = [ref for ref in range(1, len(cards) + 1)
+                if cards[ref - 1].get("partner_ahead", cards[ref - 1].get("partner"))]
     order = partners + [ref for ref in cited if ref not in partners]
     order += [ref for ref in range(1, len(cards) + 1) if ref not in order]
     new_ref = {old: new for new, old in enumerate(order, start=1)}
@@ -1405,7 +1461,7 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
         and not partial and (type_found or words_found or not plan.categories)
     # Offres partenaires qui répondent (au sujet, même élargi) : en tête des
     # cartes ; sinon, hors des cartes.
-    candidates = partners_first(candidates, plan, exact or bool(widened))
+    candidates = partners_first(candidates, plan, exact or bool(widened), question)
     # Un événement à plusieurs dates ne prend qu'une carte (sa prochaine date),
     # les autres dates y sont rattachées.
     cards = []

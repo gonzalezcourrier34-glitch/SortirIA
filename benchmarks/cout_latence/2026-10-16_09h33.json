@@ -1,0 +1,6706 @@
+{
+  "date": "2026-10-16T09:33:07+02:00",
+  "questions": 175,
+  "cache": true,
+  "redaction": true,
+  "modele": "mistral-small-latest",
+  "prompt_version": "2026-10-16.1",
+  "resultats": {
+    "premier_passage": {
+      "questions": 175,
+      "mediane_ms": 95.3,
+      "p95_ms": 113.5,
+      "max_ms": 410.3,
+      "etapes_moyennes_ms": {
+        "comprendre": 0.3,
+        "rechercher": 104.0,
+        "filtrer": 0.0,
+        "rediger": 0.0
+      },
+      "cout_moyen_usd": 0.0,
+      "cout_1000_usd": 0.0,
+      "part_cache": 1.0,
+      "degradees": 0,
+      "sans_carte": 0
+    },
+    "second_passage": {
+      "questions": 175,
+      "mediane_ms": 96.0,
+      "p95_ms": 107.2,
+      "max_ms": 121.0,
+      "etapes_moyennes_ms": {
+        "comprendre": 0.5,
+        "rechercher": 96.7,
+        "filtrer": 0.0,
+        "rediger": 0.0
+      },
+      "cout_moyen_usd": 0.0,
+      "cout_1000_usd": 0.0,
+      "part_cache": 1.0,
+      "degradees": 0,
+      "sans_carte": 0
+    }
+  },
+  "detail": {
+    "premier_passage": [
+      {
+        "question": "électro",
+        "ms": 116.7,
+        "etapes_ms": {
+          "comprendre": 2.0,
+          "rechercher": 114.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 935,
+          "output": 131
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un atelier pour les seniors",
+        "ms": 226.7,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 226.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 520,
+          "output": 103
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une sortie gratuite avec les enfants",
+        "ms": 307.9,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 307.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1009,
+          "output": 118
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "marché nocturne",
+        "ms": 409.5,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 409.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 992,
+          "output": 100
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "loto",
+        "ms": 338.1,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 337.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 483,
+          "output": 95
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un bar à concerts pour une soirée entre amis",
+        "ms": 276.3,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 276.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 880,
+          "output": 108
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "peinture",
+        "ms": 410.3,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 409.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 864,
+          "output": 145
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "magie",
+        "ms": 166.9,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 166.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1024,
+          "output": 113
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "j'aimerais aller au théâtre",
+        "ms": 92.1,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 91.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 993,
+          "output": 118
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "carnaval",
+        "ms": 90.5,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 90.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 439,
+          "output": 81
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "couture",
+        "ms": 101.2,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 101.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 5,
+        "degradee": false,
+        "tokens": {
+          "input": 694,
+          "output": 114
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "vélo",
+        "ms": 92.1,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 91.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 4,
+        "degradee": false,
+        "tokens": {
+          "input": 603,
+          "output": 97
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "escape game",
+        "ms": 92.4,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 92.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 6,
+        "degradee": false,
+        "tokens": {
+          "input": 821,
+          "output": 122
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une exposition gratuite à Montpellier",
+        "ms": 95.2,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 94.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 7,
+        "degradee": false,
+        "tokens": {
+          "input": 845,
+          "output": 140
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "brunch",
+        "ms": 94.5,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 94.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 426,
+          "output": 108
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "tapas",
+        "ms": 90.6,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 90.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 429,
+          "output": 89
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "atelier enfants",
+        "ms": 93.2,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 92.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 985,
+          "output": 133
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "kayak",
+        "ms": 97.1,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 96.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 945,
+          "output": 128
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "château",
+        "ms": 96.0,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 95.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 987,
+          "output": 114
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "patrimoine",
+        "ms": 93.0,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 92.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 985,
+          "output": 130
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "tango",
+        "ms": 94.3,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 93.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 495,
+          "output": 81
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "demain",
+        "ms": 96.6,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 96.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 977,
+          "output": 81
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "pour seniors",
+        "ms": 111.6,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 111.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 895,
+          "output": 135
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "fête",
+        "ms": 94.5,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 94.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 888,
+          "output": 119
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une lecture de contes",
+        "ms": 96.0,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 95.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 942,
+          "output": 110
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "balade",
+        "ms": 106.1,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 105.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 847,
+          "output": 91
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une conférence la semaine prochaine",
+        "ms": 106.9,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 106.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 4,
+        "degradee": false,
+        "tokens": {
+          "input": 646,
+          "output": 93
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "que faire s'il pleut ce week-end ?",
+        "ms": 101.5,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 101.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 915,
+          "output": 124
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "en famille",
+        "ms": 90.7,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 90.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1029,
+          "output": 128
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "karting",
+        "ms": 97.0,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 96.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 934,
+          "output": 83
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "marionnettes",
+        "ms": 94.5,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 94.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 964,
+          "output": 114
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une balade en plein air",
+        "ms": 95.9,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 95.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 882,
+          "output": 115
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "film",
+        "ms": 97.8,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 97.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 910,
+          "output": 149
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "que faire à moins de 15 km de Frontignan ?",
+        "ms": 96.9,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 96.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 968,
+          "output": 122
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "rock",
+        "ms": 96.5,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 96.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 7,
+        "degradee": false,
+        "tokens": {
+          "input": 816,
+          "output": 107
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "opéra",
+        "ms": 98.7,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 98.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 972,
+          "output": 145
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "des idées pour la semaine prochaine",
+        "ms": 101.6,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 101.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1019,
+          "output": 107
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "vin",
+        "ms": 96.9,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 96.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 950,
+          "output": 111
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "rap",
+        "ms": 94.7,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 94.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 5,
+        "degradee": false,
+        "tokens": {
+          "input": 626,
+          "output": 84
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "cirque",
+        "ms": 94.0,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 93.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 7,
+        "degradee": false,
+        "tokens": {
+          "input": 868,
+          "output": 122
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une projection de film pour les enfants",
+        "ms": 95.6,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 95.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 935,
+          "output": 147
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une expo au musée Fabre",
+        "ms": 91.3,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 90.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 500,
+          "output": 121
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "avec des ados",
+        "ms": 95.1,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 94.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1123,
+          "output": 127
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "laser game",
+        "ms": 98.2,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 97.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 945,
+          "output": 128
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "du cinéma en plein air ou une projection",
+        "ms": 93.4,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 93.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 7,
+        "degradee": false,
+        "tokens": {
+          "input": 793,
+          "output": 135
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "jazz",
+        "ms": 97.5,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 97.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 805,
+          "output": 124
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une balade nature autour de l'étang de Thau",
+        "ms": 95.9,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 95.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 918,
+          "output": 108
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un marché de Noël en décembre",
+        "ms": 94.5,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 94.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 4,
+        "degradee": false,
+        "tokens": {
+          "input": 615,
+          "output": 90
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "visite guidée",
+        "ms": 96.8,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 96.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1139,
+          "output": 132
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un festival près de Montpellier",
+        "ms": 98.5,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 98.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 832,
+          "output": 123
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "apéro",
+        "ms": 96.7,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 96.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 5,
+        "degradee": false,
+        "tokens": {
+          "input": 693,
+          "output": 142
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "des jeux d'échecs",
+        "ms": 94.3,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 93.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 632,
+          "output": 110
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "science",
+        "ms": 96.7,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 96.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 6,
+        "degradee": false,
+        "tokens": {
+          "input": 816,
+          "output": 114
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "du jazz",
+        "ms": 98.3,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 97.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 817,
+          "output": 110
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "des spectacles gratuits à Montpellier",
+        "ms": 93.9,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 93.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1007,
+          "output": 208
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "sortir à Frontignan",
+        "ms": 94.8,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 94.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 917,
+          "output": 125
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "bar",
+        "ms": 96.2,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 95.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 894,
+          "output": 109
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "que faire avec des ados ce week-end à Montpellier ?",
+        "ms": 99.0,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 98.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 960,
+          "output": 117
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "ballet",
+        "ms": 94.6,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 94.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 428,
+          "output": 74
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "s'il pleut",
+        "ms": 98.0,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 97.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1041,
+          "output": 155
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "stage",
+        "ms": 95.4,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 95.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 949,
+          "output": 135
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "blind test",
+        "ms": 95.3,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 94.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 479,
+          "output": 119
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une sortie pas chère avec les enfants",
+        "ms": 97.2,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 96.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1002,
+          "output": 113
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "pas cher",
+        "ms": 92.9,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 92.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 924,
+          "output": 127
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "ce soir",
+        "ms": 96.5,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 96.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 960,
+          "output": 108
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "escalade",
+        "ms": 92.7,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 92.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 432,
+          "output": 77
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "du théâtre",
+        "ms": 97.9,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 97.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1001,
+          "output": 212
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un concert à moins de 15 €",
+        "ms": 94.1,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 93.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 917,
+          "output": 138
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "yoga",
+        "ms": 95.3,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 95.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 486,
+          "output": 108
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "soirée",
+        "ms": 94.3,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 94.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 949,
+          "output": 118
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un atelier créatif pour les enfants",
+        "ms": 98.0,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 97.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 991,
+          "output": 114
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "le 31 octobre pour Halloween",
+        "ms": 98.4,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 97.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 849,
+          "output": 134
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "ciné plein air",
+        "ms": 102.3,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 101.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 7,
+        "degradee": false,
+        "tokens": {
+          "input": 789,
+          "output": 121
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "concert",
+        "ms": 92.6,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 92.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 830,
+          "output": 118
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "jeux",
+        "ms": 93.7,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 93.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1109,
+          "output": 107
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un concert",
+        "ms": 90.4,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 90.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 492,
+          "output": 97
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "pub",
+        "ms": 92.6,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 92.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1024,
+          "output": 109
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "lecture",
+        "ms": 96.9,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 96.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 943,
+          "output": 121
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "randonnée",
+        "ms": 91.5,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 91.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 420,
+          "output": 87
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "quoi faire samedi soir à Montpellier",
+        "ms": 93.9,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 93.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 956,
+          "output": 151
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "accrobranche",
+        "ms": 96.3,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 95.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 973,
+          "output": 90
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "salon",
+        "ms": 95.2,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 94.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 817,
+          "output": 104
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un festival en octobre",
+        "ms": 94.3,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 94.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 876,
+          "output": 124
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "stand-up",
+        "ms": 95.3,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 95.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 858,
+          "output": 126
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "huîtres",
+        "ms": 96.0,
+        "etapes_ms": {
+          "comprendre": 0.8,
+          "rechercher": 95.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 513,
+          "output": 154
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "foire",
+        "ms": 97.2,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 96.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 426,
+          "output": 88
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "paintball",
+        "ms": 94.4,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 94.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 906,
+          "output": 110
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "BD",
+        "ms": 92.8,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 92.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 467,
+          "output": 92
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "astronomie",
+        "ms": 90.7,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 90.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 3,
+        "degradee": false,
+        "tokens": {
+          "input": 562,
+          "output": 96
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "expo photo",
+        "ms": 96.5,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 96.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 963,
+          "output": 105
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "bowling",
+        "ms": 93.1,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 92.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1027,
+          "output": 86
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "danse",
+        "ms": 91.5,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 91.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1017,
+          "output": 129
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un spectacle de danse",
+        "ms": 93.1,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 92.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 877,
+          "output": 119
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une visite guidée demain",
+        "ms": 99.8,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 99.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 981,
+          "output": 100
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "concert gratuit",
+        "ms": 93.1,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 92.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 872,
+          "output": 136
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une dégustation de vins ou d'huîtres",
+        "ms": 96.2,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 95.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 441,
+          "output": 93
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "conférence",
+        "ms": 95.0,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 94.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 962,
+          "output": 127
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "des activités à Lattes ou à Pérols",
+        "ms": 93.3,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 92.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 930,
+          "output": 118
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "VTT",
+        "ms": 94.3,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 93.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1012,
+          "output": 93
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "exposition",
+        "ms": 93.8,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 93.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 937,
+          "output": 152
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "spectacle enfants",
+        "ms": 94.8,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 94.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 932,
+          "output": 139
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "que faire ce soir ?",
+        "ms": 94.0,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 93.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 942,
+          "output": 123
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "bal",
+        "ms": 92.6,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 92.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 886,
+          "output": 129
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "brocante",
+        "ms": 96.3,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 96.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 4,
+        "degradee": false,
+        "tokens": {
+          "input": 668,
+          "output": 131
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "que faire à Sète ce week-end ?",
+        "ms": 89.6,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 89.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 946,
+          "output": 119
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "atelier",
+        "ms": 91.0,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 90.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 937,
+          "output": 88
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "en plein air",
+        "ms": 92.0,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 91.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 932,
+          "output": 122
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "joutes",
+        "ms": 93.2,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 93.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 431,
+          "output": 85
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "échecs",
+        "ms": 93.8,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 93.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 627,
+          "output": 88
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "afterwork",
+        "ms": 92.7,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 92.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 939,
+          "output": 114
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "spectacle",
+        "ms": 91.9,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 91.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 988,
+          "output": 96
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "jeux de société",
+        "ms": 94.0,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 93.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1151,
+          "output": 123
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "gratuit",
+        "ms": 97.1,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 96.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 972,
+          "output": 126
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "trampoline park",
+        "ms": 96.3,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 96.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 510,
+          "output": 85
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "sport",
+        "ms": 95.7,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 95.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 938,
+          "output": 103
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "plage",
+        "ms": 91.1,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 90.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 3,
+        "degradee": false,
+        "tokens": {
+          "input": 590,
+          "output": 112
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "livre",
+        "ms": 94.1,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 93.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 916,
+          "output": 98
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "théâtre",
+        "ms": 92.5,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 92.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 936,
+          "output": 118
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "bien-être",
+        "ms": 111.9,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 111.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 4,
+        "degradee": false,
+        "tokens": {
+          "input": 632,
+          "output": 120
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "match",
+        "ms": 98.3,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 97.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 838,
+          "output": 135
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une conférence sur l'histoire",
+        "ms": 96.2,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 95.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 3,
+        "degradee": false,
+        "tokens": {
+          "input": 573,
+          "output": 125
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "vide-grenier",
+        "ms": 101.6,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 101.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 7,
+        "degradee": false,
+        "tokens": {
+          "input": 968,
+          "output": 119
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "comedy club",
+        "ms": 93.8,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 93.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 3,
+        "degradee": false,
+        "tokens": {
+          "input": 527,
+          "output": 117
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un concert gratuit à Sète",
+        "ms": 94.8,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 94.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 939,
+          "output": 122
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un spectacle pour les enfants dimanche",
+        "ms": 94.6,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 94.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 5,
+        "degradee": false,
+        "tokens": {
+          "input": 766,
+          "output": 101
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "activités en intérieur",
+        "ms": 96.4,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 95.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1137,
+          "output": 112
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un concert à Mèze",
+        "ms": 93.3,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 92.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 527,
+          "output": 105
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "Halloween",
+        "ms": 93.8,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 93.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 908,
+          "output": 120
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "restaurant",
+        "ms": 92.6,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 92.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 6,
+        "degradee": false,
+        "tokens": {
+          "input": 839,
+          "output": 108
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "cinéma",
+        "ms": 94.7,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 94.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 846,
+          "output": 106
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "boîte de nuit",
+        "ms": 98.3,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 98.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 968,
+          "output": 127
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un truc à faire avec des ados",
+        "ms": 95.1,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 94.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1109,
+          "output": 125
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "club",
+        "ms": 94.4,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 94.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 914,
+          "output": 111
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une sortie demain",
+        "ms": 97.1,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 96.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1004,
+          "output": 114
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "ce week-end",
+        "ms": 93.6,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 93.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 852,
+          "output": 117
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "des jeux de société à Frontignan",
+        "ms": 94.7,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 94.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 503,
+          "output": 103
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "course à pied",
+        "ms": 91.6,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 91.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 419,
+          "output": 96
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "jeux vidéo",
+        "ms": 99.5,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 99.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 6,
+        "degradee": false,
+        "tokens": {
+          "input": 873,
+          "output": 107
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "feu d'artifice",
+        "ms": 93.6,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 93.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 419,
+          "output": 81
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "histoire",
+        "ms": 107.7,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 107.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 922,
+          "output": 123
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une activité pour seniors",
+        "ms": 96.4,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 95.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 917,
+          "output": 125
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "jardinage",
+        "ms": 96.0,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 95.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 502,
+          "output": 90
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "rooftop",
+        "ms": 106.0,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 105.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 438,
+          "output": 71
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "quiz room",
+        "ms": 95.5,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 95.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 7,
+        "degradee": false,
+        "tokens": {
+          "input": 850,
+          "output": 110
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "réalité virtuelle",
+        "ms": 94.7,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 94.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 4,
+        "degradee": false,
+        "tokens": {
+          "input": 721,
+          "output": 105
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "musique classique",
+        "ms": 94.3,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 94.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 903,
+          "output": 146
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "piscine",
+        "ms": 96.9,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 96.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 952,
+          "output": 122
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "bière",
+        "ms": 102.6,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 102.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 4,
+        "degradee": false,
+        "tokens": {
+          "input": 702,
+          "output": 105
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "food truck",
+        "ms": 92.2,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 91.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 441,
+          "output": 83
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une visite guidée de Sète",
+        "ms": 96.4,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 96.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 951,
+          "output": 110
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une sortie en amoureux samedi soir",
+        "ms": 95.1,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 94.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 993,
+          "output": 109
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "padel",
+        "ms": 94.8,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 94.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 972,
+          "output": 90
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "humour",
+        "ms": 99.1,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 98.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 926,
+          "output": 121
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "bar à cocktails",
+        "ms": 90.8,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 90.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 482,
+          "output": 117
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un marché ou une brocante dimanche",
+        "ms": 93.4,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 93.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 435,
+          "output": 79
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "salsa",
+        "ms": 91.0,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 90.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 484,
+          "output": 102
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "billard",
+        "ms": 98.1,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 97.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1172,
+          "output": 104
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un atelier près de Sète",
+        "ms": 95.5,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 95.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 998,
+          "output": 95
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "musée",
+        "ms": 99.6,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 99.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1106,
+          "output": 117
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "quiz",
+        "ms": 98.0,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 97.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 6,
+        "degradee": false,
+        "tokens": {
+          "input": 782,
+          "output": 121
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "karaoké",
+        "ms": 96.2,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 95.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 482,
+          "output": 81
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une exposition à voir en novembre",
+        "ms": 99.5,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 99.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 975,
+          "output": 104
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "DJ",
+        "ms": 119.4,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 119.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 903,
+          "output": 118
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "patinoire",
+        "ms": 92.3,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 91.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 483,
+          "output": 83
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "festival",
+        "ms": 92.5,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 92.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 822,
+          "output": 98
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "impro",
+        "ms": 94.2,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 94.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 7,
+        "degradee": false,
+        "tokens": {
+          "input": 899,
+          "output": 170
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "poterie",
+        "ms": 97.2,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 97.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 455,
+          "output": 110
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un concert ce week-end",
+        "ms": 94.7,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 94.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 916,
+          "output": 122
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "dégustation",
+        "ms": 99.9,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 99.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 950,
+          "output": 118
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "chorale",
+        "ms": 112.2,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 111.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 5,
+        "degradee": false,
+        "tokens": {
+          "input": 642,
+          "output": 133
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "cuisine",
+        "ms": 95.0,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 94.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 922,
+          "output": 129
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "cabaret",
+        "ms": 93.1,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 92.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 6,
+        "degradee": false,
+        "tokens": {
+          "input": 773,
+          "output": 153
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "marché de Noël",
+        "ms": 97.5,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 97.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 4,
+        "degradee": false,
+        "tokens": {
+          "input": 618,
+          "output": 123
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "marché",
+        "ms": 96.1,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 95.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1010,
+          "output": 115
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "contes",
+        "ms": 96.5,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 96.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 945,
+          "output": 147
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      }
+    ],
+    "second_passage": [
+      {
+        "question": "électro",
+        "ms": 93.6,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 93.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 935,
+          "output": 131
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un atelier pour les seniors",
+        "ms": 92.6,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 92.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 520,
+          "output": 103
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une sortie gratuite avec les enfants",
+        "ms": 107.1,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 106.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1009,
+          "output": 118
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "marché nocturne",
+        "ms": 94.7,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 94.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 992,
+          "output": 100
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "loto",
+        "ms": 94.2,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 93.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 483,
+          "output": 95
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un bar à concerts pour une soirée entre amis",
+        "ms": 94.8,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 94.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 880,
+          "output": 108
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "peinture",
+        "ms": 98.4,
+        "etapes_ms": {
+          "comprendre": 0.8,
+          "rechercher": 97.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 864,
+          "output": 145
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "magie",
+        "ms": 93.0,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 92.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1024,
+          "output": 113
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "j'aimerais aller au théâtre",
+        "ms": 98.9,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 98.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 993,
+          "output": 118
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "carnaval",
+        "ms": 92.1,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 91.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 439,
+          "output": 81
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "couture",
+        "ms": 96.3,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 95.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 5,
+        "degradee": false,
+        "tokens": {
+          "input": 694,
+          "output": 114
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "vélo",
+        "ms": 93.9,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 93.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 4,
+        "degradee": false,
+        "tokens": {
+          "input": 603,
+          "output": 97
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "escape game",
+        "ms": 97.7,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 97.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 6,
+        "degradee": false,
+        "tokens": {
+          "input": 821,
+          "output": 122
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une exposition gratuite à Montpellier",
+        "ms": 109.3,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 108.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 7,
+        "degradee": false,
+        "tokens": {
+          "input": 845,
+          "output": 140
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "brunch",
+        "ms": 99.9,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 99.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 426,
+          "output": 108
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "tapas",
+        "ms": 92.3,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 92.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 429,
+          "output": 89
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "atelier enfants",
+        "ms": 94.5,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 94.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 985,
+          "output": 133
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "kayak",
+        "ms": 95.7,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 95.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 945,
+          "output": 128
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "château",
+        "ms": 98.1,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 97.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 987,
+          "output": 114
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "patrimoine",
+        "ms": 97.3,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 96.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 985,
+          "output": 130
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "tango",
+        "ms": 95.1,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 94.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 495,
+          "output": 81
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "demain",
+        "ms": 96.0,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 95.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 977,
+          "output": 81
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "pour seniors",
+        "ms": 94.9,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 94.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 895,
+          "output": 135
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "fête",
+        "ms": 97.2,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 96.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 888,
+          "output": 119
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une lecture de contes",
+        "ms": 95.3,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 94.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 942,
+          "output": 110
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "balade",
+        "ms": 96.5,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 96.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 847,
+          "output": 91
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une conférence la semaine prochaine",
+        "ms": 93.4,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 93.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 4,
+        "degradee": false,
+        "tokens": {
+          "input": 646,
+          "output": 93
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "que faire s'il pleut ce week-end ?",
+        "ms": 96.7,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 96.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 915,
+          "output": 124
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "en famille",
+        "ms": 93.4,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 92.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1029,
+          "output": 128
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "karting",
+        "ms": 95.8,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 95.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 934,
+          "output": 83
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "marionnettes",
+        "ms": 96.7,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 96.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 964,
+          "output": 114
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une balade en plein air",
+        "ms": 95.0,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 94.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 882,
+          "output": 115
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "film",
+        "ms": 98.0,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 97.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 910,
+          "output": 149
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "que faire à moins de 15 km de Frontignan ?",
+        "ms": 96.4,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 95.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 968,
+          "output": 122
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "rock",
+        "ms": 93.4,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 92.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 7,
+        "degradee": false,
+        "tokens": {
+          "input": 816,
+          "output": 107
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "opéra",
+        "ms": 106.0,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 105.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 972,
+          "output": 145
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "des idées pour la semaine prochaine",
+        "ms": 98.0,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 97.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1019,
+          "output": 107
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "vin",
+        "ms": 98.2,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 97.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 950,
+          "output": 111
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "rap",
+        "ms": 95.1,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 94.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 5,
+        "degradee": false,
+        "tokens": {
+          "input": 626,
+          "output": 84
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "cirque",
+        "ms": 97.2,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 96.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 7,
+        "degradee": false,
+        "tokens": {
+          "input": 868,
+          "output": 122
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une projection de film pour les enfants",
+        "ms": 94.7,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 94.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 935,
+          "output": 147
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une expo au musée Fabre",
+        "ms": 94.1,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 93.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 500,
+          "output": 121
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "avec des ados",
+        "ms": 106.2,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 105.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1123,
+          "output": 127
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "laser game",
+        "ms": 105.2,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 105.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 945,
+          "output": 128
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "du cinéma en plein air ou une projection",
+        "ms": 95.0,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 94.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 7,
+        "degradee": false,
+        "tokens": {
+          "input": 793,
+          "output": 135
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "jazz",
+        "ms": 98.2,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 97.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 805,
+          "output": 124
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une balade nature autour de l'étang de Thau",
+        "ms": 96.0,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 95.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 918,
+          "output": 108
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un marché de Noël en décembre",
+        "ms": 98.2,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 97.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 4,
+        "degradee": false,
+        "tokens": {
+          "input": 615,
+          "output": 90
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "visite guidée",
+        "ms": 96.3,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 95.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1139,
+          "output": 132
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un festival près de Montpellier",
+        "ms": 94.6,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 93.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 832,
+          "output": 123
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "apéro",
+        "ms": 94.3,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 93.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 5,
+        "degradee": false,
+        "tokens": {
+          "input": 693,
+          "output": 142
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "des jeux d'échecs",
+        "ms": 95.2,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 94.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 632,
+          "output": 110
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "science",
+        "ms": 93.9,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 93.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 6,
+        "degradee": false,
+        "tokens": {
+          "input": 816,
+          "output": 114
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "du jazz",
+        "ms": 94.4,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 94.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 817,
+          "output": 110
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "des spectacles gratuits à Montpellier",
+        "ms": 107.3,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 106.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1007,
+          "output": 208
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "sortir à Frontignan",
+        "ms": 97.7,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 97.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 917,
+          "output": 125
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "bar",
+        "ms": 93.5,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 93.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 894,
+          "output": 109
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "que faire avec des ados ce week-end à Montpellier ?",
+        "ms": 97.5,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 96.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 960,
+          "output": 117
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "ballet",
+        "ms": 94.2,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 93.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 428,
+          "output": 74
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "s'il pleut",
+        "ms": 96.7,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 96.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1041,
+          "output": 155
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "stage",
+        "ms": 108.2,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 107.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 949,
+          "output": 135
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "blind test",
+        "ms": 93.4,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 92.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 479,
+          "output": 119
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une sortie pas chère avec les enfants",
+        "ms": 93.0,
+        "etapes_ms": {
+          "comprendre": 0.9,
+          "rechercher": 92.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1002,
+          "output": 113
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "pas cher",
+        "ms": 93.8,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 93.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 924,
+          "output": 127
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "ce soir",
+        "ms": 96.2,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 95.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 960,
+          "output": 108
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "escalade",
+        "ms": 93.5,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 93.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 432,
+          "output": 77
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "du théâtre",
+        "ms": 97.3,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 96.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1001,
+          "output": 212
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un concert à moins de 15 €",
+        "ms": 94.8,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 94.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 917,
+          "output": 138
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "yoga",
+        "ms": 93.7,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 93.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 486,
+          "output": 108
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "soirée",
+        "ms": 97.6,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 97.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 949,
+          "output": 118
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un atelier créatif pour les enfants",
+        "ms": 94.4,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 93.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 991,
+          "output": 114
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "le 31 octobre pour Halloween",
+        "ms": 99.0,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 98.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 849,
+          "output": 134
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "ciné plein air",
+        "ms": 108.4,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 107.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 7,
+        "degradee": false,
+        "tokens": {
+          "input": 789,
+          "output": 121
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "concert",
+        "ms": 96.2,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 95.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 830,
+          "output": 118
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "jeux",
+        "ms": 98.1,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 97.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1109,
+          "output": 107
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un concert",
+        "ms": 107.6,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 107.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 492,
+          "output": 97
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "pub",
+        "ms": 99.0,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 98.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1024,
+          "output": 109
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "lecture",
+        "ms": 97.8,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 97.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 943,
+          "output": 121
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "randonnée",
+        "ms": 91.0,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 90.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 420,
+          "output": 87
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "quoi faire samedi soir à Montpellier",
+        "ms": 95.2,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 94.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 956,
+          "output": 151
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "accrobranche",
+        "ms": 93.0,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 92.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 973,
+          "output": 90
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "salon",
+        "ms": 95.5,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 95.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 817,
+          "output": 104
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un festival en octobre",
+        "ms": 95.5,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 94.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 876,
+          "output": 124
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "stand-up",
+        "ms": 96.2,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 95.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 858,
+          "output": 126
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "huîtres",
+        "ms": 101.6,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 100.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 513,
+          "output": 154
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "foire",
+        "ms": 121.0,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 120.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 426,
+          "output": 88
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "paintball",
+        "ms": 94.3,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 93.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 906,
+          "output": 110
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "BD",
+        "ms": 91.9,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 91.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 467,
+          "output": 92
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "astronomie",
+        "ms": 102.8,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 102.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 3,
+        "degradee": false,
+        "tokens": {
+          "input": 562,
+          "output": 96
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "expo photo",
+        "ms": 95.8,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 95.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 963,
+          "output": 105
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "bowling",
+        "ms": 102.2,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 101.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1027,
+          "output": 86
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "danse",
+        "ms": 96.0,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 95.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1017,
+          "output": 129
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un spectacle de danse",
+        "ms": 95.1,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 94.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 877,
+          "output": 119
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une visite guidée demain",
+        "ms": 116.7,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 116.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 981,
+          "output": 100
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "concert gratuit",
+        "ms": 103.9,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 103.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 872,
+          "output": 136
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une dégustation de vins ou d'huîtres",
+        "ms": 95.9,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 95.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 441,
+          "output": 93
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "conférence",
+        "ms": 96.8,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 96.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 962,
+          "output": 127
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "des activités à Lattes ou à Pérols",
+        "ms": 114.4,
+        "etapes_ms": {
+          "comprendre": 0.9,
+          "rechercher": 113.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 930,
+          "output": 118
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "VTT",
+        "ms": 99.3,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 98.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1012,
+          "output": 93
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "exposition",
+        "ms": 95.0,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 94.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 937,
+          "output": 152
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "spectacle enfants",
+        "ms": 97.7,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 97.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 932,
+          "output": 139
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "que faire ce soir ?",
+        "ms": 93.0,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 92.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 942,
+          "output": 123
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "bal",
+        "ms": 92.5,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 92.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 886,
+          "output": 129
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "brocante",
+        "ms": 93.5,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 92.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 4,
+        "degradee": false,
+        "tokens": {
+          "input": 668,
+          "output": 131
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "que faire à Sète ce week-end ?",
+        "ms": 95.5,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 94.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 946,
+          "output": 119
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "atelier",
+        "ms": 103.5,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 102.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 937,
+          "output": 88
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "en plein air",
+        "ms": 97.0,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 96.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 932,
+          "output": 122
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "joutes",
+        "ms": 96.2,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 95.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 431,
+          "output": 85
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "échecs",
+        "ms": 93.4,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 92.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 627,
+          "output": 88
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "afterwork",
+        "ms": 94.9,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 94.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 939,
+          "output": 114
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "spectacle",
+        "ms": 95.5,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 95.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 988,
+          "output": 96
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "jeux de société",
+        "ms": 97.2,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 96.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1151,
+          "output": 123
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "gratuit",
+        "ms": 101.3,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 100.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 972,
+          "output": 126
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "trampoline park",
+        "ms": 100.6,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 100.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 510,
+          "output": 85
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "sport",
+        "ms": 99.1,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 98.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 938,
+          "output": 103
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "plage",
+        "ms": 92.7,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 92.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 3,
+        "degradee": false,
+        "tokens": {
+          "input": 590,
+          "output": 112
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "livre",
+        "ms": 91.5,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 91.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 916,
+          "output": 98
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "théâtre",
+        "ms": 106.7,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 106.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 936,
+          "output": 118
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "bien-être",
+        "ms": 99.6,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 99.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 4,
+        "degradee": false,
+        "tokens": {
+          "input": 632,
+          "output": 120
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "match",
+        "ms": 93.4,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 92.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 838,
+          "output": 135
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une conférence sur l'histoire",
+        "ms": 89.6,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 89.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 3,
+        "degradee": false,
+        "tokens": {
+          "input": 573,
+          "output": 125
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "vide-grenier",
+        "ms": 96.9,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 96.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 7,
+        "degradee": false,
+        "tokens": {
+          "input": 968,
+          "output": 119
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "comedy club",
+        "ms": 93.3,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 92.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 3,
+        "degradee": false,
+        "tokens": {
+          "input": 527,
+          "output": 117
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un concert gratuit à Sète",
+        "ms": 95.5,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 95.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 939,
+          "output": 122
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un spectacle pour les enfants dimanche",
+        "ms": 98.3,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 97.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 5,
+        "degradee": false,
+        "tokens": {
+          "input": 766,
+          "output": 101
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "activités en intérieur",
+        "ms": 97.8,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 97.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1137,
+          "output": 112
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un concert à Mèze",
+        "ms": 92.1,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 91.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 527,
+          "output": 105
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "Halloween",
+        "ms": 96.0,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 95.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 908,
+          "output": 120
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "restaurant",
+        "ms": 95.9,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 95.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 6,
+        "degradee": false,
+        "tokens": {
+          "input": 839,
+          "output": 108
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "cinéma",
+        "ms": 95.9,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 95.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 846,
+          "output": 106
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "boîte de nuit",
+        "ms": 104.2,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 103.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 968,
+          "output": 127
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un truc à faire avec des ados",
+        "ms": 97.8,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 97.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1109,
+          "output": 125
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "club",
+        "ms": 97.1,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 96.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 914,
+          "output": 111
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une sortie demain",
+        "ms": 94.4,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 94.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1004,
+          "output": 114
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "ce week-end",
+        "ms": 93.5,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 93.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 852,
+          "output": 117
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "des jeux de société à Frontignan",
+        "ms": 92.7,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 92.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 503,
+          "output": 103
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "course à pied",
+        "ms": 92.7,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 92.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 419,
+          "output": 96
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "jeux vidéo",
+        "ms": 95.1,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 94.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 6,
+        "degradee": false,
+        "tokens": {
+          "input": 873,
+          "output": 107
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "feu d'artifice",
+        "ms": 90.8,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 90.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 419,
+          "output": 81
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "histoire",
+        "ms": 96.7,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 96.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 922,
+          "output": 123
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une activité pour seniors",
+        "ms": 96.8,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 96.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 917,
+          "output": 125
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "jardinage",
+        "ms": 93.1,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 92.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 502,
+          "output": 90
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "rooftop",
+        "ms": 98.5,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 97.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 438,
+          "output": 71
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "quiz room",
+        "ms": 97.8,
+        "etapes_ms": {
+          "comprendre": 0.7,
+          "rechercher": 97.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 7,
+        "degradee": false,
+        "tokens": {
+          "input": 850,
+          "output": 110
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "réalité virtuelle",
+        "ms": 94.0,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 93.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 4,
+        "degradee": false,
+        "tokens": {
+          "input": 721,
+          "output": 105
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "musique classique",
+        "ms": 94.9,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 94.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 903,
+          "output": 146
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "piscine",
+        "ms": 98.8,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 98.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 952,
+          "output": 122
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "bière",
+        "ms": 93.6,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 93.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 4,
+        "degradee": false,
+        "tokens": {
+          "input": 702,
+          "output": 105
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "food truck",
+        "ms": 92.3,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 91.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 441,
+          "output": 83
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une visite guidée de Sète",
+        "ms": 98.6,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 98.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 951,
+          "output": 110
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une sortie en amoureux samedi soir",
+        "ms": 95.8,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 95.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 993,
+          "output": 109
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "padel",
+        "ms": 99.4,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 99.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 972,
+          "output": 90
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "humour",
+        "ms": 95.1,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 94.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 926,
+          "output": 121
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "bar à cocktails",
+        "ms": 98.1,
+        "etapes_ms": {
+          "comprendre": 0.8,
+          "rechercher": 97.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 482,
+          "output": 117
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un marché ou une brocante dimanche",
+        "ms": 94.2,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 94.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 435,
+          "output": 79
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "salsa",
+        "ms": 89.1,
+        "etapes_ms": {
+          "comprendre": 0.2,
+          "rechercher": 88.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 484,
+          "output": 102
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "billard",
+        "ms": 95.5,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 95.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1172,
+          "output": 104
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un atelier près de Sète",
+        "ms": 95.8,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 95.3,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 998,
+          "output": 95
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "musée",
+        "ms": 105.1,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 104.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1106,
+          "output": 117
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "quiz",
+        "ms": 96.7,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 96.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 6,
+        "degradee": false,
+        "tokens": {
+          "input": 782,
+          "output": 121
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "karaoké",
+        "ms": 91.7,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 91.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 482,
+          "output": 81
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "une exposition à voir en novembre",
+        "ms": 103.0,
+        "etapes_ms": {
+          "comprendre": 0.6,
+          "rechercher": 102.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 975,
+          "output": 104
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "DJ",
+        "ms": 106.9,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 106.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 903,
+          "output": 118
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "patinoire",
+        "ms": 94.1,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 93.7,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 2,
+        "degradee": false,
+        "tokens": {
+          "input": 483,
+          "output": 83
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "festival",
+        "ms": 115.8,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 115.5,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 822,
+          "output": 98
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "impro",
+        "ms": 96.9,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 96.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 7,
+        "degradee": false,
+        "tokens": {
+          "input": 899,
+          "output": 170
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "poterie",
+        "ms": 96.6,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 96.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 1,
+        "degradee": false,
+        "tokens": {
+          "input": 455,
+          "output": 110
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "un concert ce week-end",
+        "ms": 99.7,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 99.1,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 916,
+          "output": 122
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "dégustation",
+        "ms": 96.1,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 95.6,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 950,
+          "output": 118
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "chorale",
+        "ms": 94.3,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 93.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 5,
+        "degradee": false,
+        "tokens": {
+          "input": 642,
+          "output": 133
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "cuisine",
+        "ms": 101.7,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 101.2,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 922,
+          "output": 129
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "cabaret",
+        "ms": 96.8,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 96.4,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 6,
+        "degradee": false,
+        "tokens": {
+          "input": 773,
+          "output": 153
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "marché de Noël",
+        "ms": 94.4,
+        "etapes_ms": {
+          "comprendre": 0.4,
+          "rechercher": 94.0,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 4,
+        "degradee": false,
+        "tokens": {
+          "input": 618,
+          "output": 123
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "marché",
+        "ms": 100.4,
+        "etapes_ms": {
+          "comprendre": 0.5,
+          "rechercher": 99.9,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 1010,
+          "output": 115
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      },
+      {
+        "question": "contes",
+        "ms": 93.1,
+        "etapes_ms": {
+          "comprendre": 0.3,
+          "rechercher": 92.8,
+          "filtrer": 0.0,
+          "rediger": 0.0
+        },
+        "cache": true,
+        "cartes": 8,
+        "degradee": false,
+        "tokens": {
+          "input": 945,
+          "output": 147
+        },
+        "modele": "",
+        "cout_usd": 0.0
+      }
+    ]
+  },
+  "cout_1000_selon_repetition": {
+    "0 %": 0.0,
+    "30 %": 0.0,
+    "50 %": 0.0,
+    "70 %": 0.0
+  }
+}

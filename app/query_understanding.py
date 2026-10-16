@@ -103,6 +103,32 @@ def wanted_categories(question: str) -> tuple[str, ...]:
     return tuple(found)
 
 
+# Types trop larges pour désigner seuls ce qu'on cherche quand la question en
+# nomme un plus précis : dans « un spectacle de danse », c'est la danse.
+GENERIC_CATEGORIES = frozenset({"spectacle"})
+
+
+def main_categories(question: str) -> tuple[str, ...]:
+    """Le type que la question vise vraiment (16/10/2026) : le premier type de
+    chaque mot qui en désigne un (« théâtre » -> théâtre, pas « spectacle »,
+    accepté seulement en plus). « Spectacle » s'efface devant un type plus
+    précis (« un spectacle de danse » -> danse).
+
+    Sert aux offres partenaires : un spectacle de marionnettes est rangé en
+    « spectacle » et sortait en tête pour « j'aimerais aller au théâtre » et
+    pour « un spectacle de danse » (grille de pertinence du 16/10/2026).
+    """
+
+    found: dict[str, None] = {}
+    for word in plain(question).split():
+        for key in (word, word.rstrip("sx")):
+            if key in QUESTION_CATEGORIES:
+                found[QUESTION_CATEGORIES[key][0]] = None
+                break
+    precise = [category for category in found if category not in GENERIC_CATEGORIES]
+    return tuple(precise or found)
+
+
 def category_label(categories: Sequence[str]) -> str:
     """« théâtre ou spectacle » pour l'affichage des étapes."""
 
@@ -143,11 +169,21 @@ def city_label(city: str) -> str:
     return CITY_LABELS.get(city, city.title().replace(" Le ", "-le-").replace(" Les ", "-les-"))
 
 
+# « à Montpellier », « dans Montpellier » : la ville elle-même (16/10/2026).
+# Sans préposition, ou « près de / autour de Montpellier », c'est la métropole.
+# Grille de pertinence : « des spectacles gratuits à Montpellier » proposait
+# Mauguio et Palavas-les-Flots (zone de 20 km).
+MONTPELLIER_ITSELF = (" a montpellier ", " dans montpellier ", " en ville a montpellier ",
+                      " montpellier centre ", " centre de montpellier ", " centre ville de montpellier ")
+
+
 def find_places(text: str) -> tuple[tuple[str, ...], str | None]:
     """Communes et zone nommées dans la question (texte déjà passé par `plain`)."""
 
     padded = f" {text} "
     cities: list[str] = []
+    if any(marker in padded for marker in MONTPELLIER_ITSELF):
+        cities.append("montpellier")
     for city in (*MONTPELLIER_CITIES, *THAU_CITIES):
         if f" {city} " in padded:
             cities.append(city)
@@ -622,8 +658,12 @@ def merge_with_filters(understanding: Understanding, *, public: str | None, zone
         plan_zone, cities = None, ()
         from_question.add("near")
     elif cities:
-        plan_zone = None
+        # « à Montpellier » garde aussi sa zone (la métropole), pour élargir à
+        # la métropole avant de lâcher le lieu ; « à Sète » n'en a pas.
+        plan_zone = understanding.zone
         from_question.add("cities")
+        if plan_zone:
+            from_question.add("zone")
     elif understanding.zone and not zone:
         plan_zone = understanding.zone
         from_question.add("zone")

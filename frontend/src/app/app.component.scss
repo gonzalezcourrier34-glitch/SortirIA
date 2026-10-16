@@ -67,6 +67,19 @@ $pastille: 999px;
     }
 }
 
+// Titre et, dessous en petit, ce que couvre SortirIA (16/10/2026).
+.header-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.header-subtitle {
+    margin: 0;
+    font-size: 13px;
+    color: var(--texte-leger);
+}
+
 .brand {
     font-family: var(--serif);
     font-size: 26px;
@@ -122,28 +135,12 @@ $pastille: 999px;
     background: var(--blanc);
 }
 
-.chat-header {
-    flex: 0 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    padding: 9px 24px;
-    border-bottom: 1px solid var(--bordure-legere);
-    background: var(--panneau);
-}
-
-.chat-subtitle {
-    font-size: 13px;
-    color: var(--texte-leger);
-}
-
 .search {
     flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    padding: 10px 24px 12px;
+    padding: 14px 24px 14px;
     border-bottom: 1px solid var(--bordure-legere);
     background: var(--panneau);
 }
@@ -199,10 +196,11 @@ $pastille: 999px;
     align-items: stretch;
     gap: 10px;
 
+    // Deux lignes de saisie (16/10/2026), à la hauteur des deux boutons.
     textarea {
         flex: 1 1 300px;
         min-width: 0;
-        min-height: 44px;
+        min-height: 88px;
         padding: 10px 16px;
         border: 1px solid #cfc3b6;
         border-radius: 14px;
@@ -210,6 +208,23 @@ $pastille: 999px;
         color: var(--texte);
         font-size: 16px;
         resize: none;
+    }
+}
+
+// « Nouvelle conversation » au-dessus de « Chercher », même largeur.
+.ask-actions {
+    display: flex;
+    flex: 0 0 200px;
+    flex-direction: column;
+    gap: 8px;
+
+    .button-primary,
+    .button-secondary {
+        width: 100%;
+    }
+
+    .button-primary {
+        flex: 1 1 auto;
     }
 }
 
@@ -1132,9 +1147,19 @@ $pastille: 999px;
         padding: 16px;
     }
 
-    .search,
-    .chat-header {
+    .search {
         padding-inline: 16px;
+    }
+
+    // Téléphone : les deux boutons côte à côte sous la saisie.
+    .ask-actions {
+        flex: 1 1 100%;
+        flex-direction: row;
+
+        .button-primary,
+        .button-secondary {
+            flex: 1 1 0;
+        }
     }
 
     .side {

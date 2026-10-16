@@ -172,6 +172,16 @@ ouvert, page de liste très lisible (dates au format schema.org). Une demande
 d'autorisation a été envoyée le 14/10/2026 ; la source reste `enabled: false`
 jusqu'à la réponse.
 
+Office de tourisme Archipel de Thau (`archipel-thau.com`, agenda le plus
+complet du bassin) : ses mentions légales limitent les contenus à un usage
+personnel. Demande envoyée le 16/10/2026 à `partenariats@archipel-thau.com` :
+un flux réservé aux partenaires, ou l'autorisation de lire la page de liste une
+fois par nuit (titre, date, lieu, prix, lien), ou la confirmation que ses
+événements passent déjà par DATAtourisme (sa saisie se fait dans le Tourinsoft
+de l'Hérault, qui alimente DATAtourisme). Hérault Tourisme, Tourisme Occitanie,
+Petit Futé et Envie de Thau ont été écartés le même jour : reproduction
+interdite et pas de flux, ou données déjà reçues par DATAtourisme.
+
 Fonctionnement (`src/extractors/scrapers/source/agenda_scraper.py`) :
 
 - le téléchargement est celui de CheckIt.AI (`get_html`) : robots.txt vérifié

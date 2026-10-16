@@ -69,7 +69,7 @@ ROOT = Path(__file__).resolve().parents[1]
 QUESTION_FILES = (ROOT / "config" / "eval_recherche.yaml", ROOT / "config" / "eval_mots.yaml")
 BENCH_DIR = ROOT / "benchmarks" / "cout_latence"
 STEPS = (STEP_UNDERSTAND, STEP_SEARCH, STEP_FILTER, STEP_WRITE)
-COST_PER_QUESTION_GUESS = 0.0006          # pour l'annonce avant de lancer (rédaction + embedding)
+COST_PER_QUESTION_GUESS = 0.00015         # annonce avant de lancer ; mesuré le 16/10/2026 : 0,000118 $
 CONFIRM_ABOVE = 100
 
 

@@ -148,3 +148,23 @@ def test_setting_and_distance() -> None:
     relaxed = plan.relaxed()
     assert (relaxed.near, relaxed.max_price, relaxed.setting) == (None, None, None)
     assert understand("plutôt pas cher", NOW).keywords == ()           # « cher » n'est pas un mot-clé
+
+
+def test_a_montpellier_means_the_city_itself() -> None:
+    """Grille de pertinence du 16/10/2026 : « des spectacles gratuits à
+    Montpellier » proposait Mauguio et Palavas (zone de 20 km)."""
+
+    from app.query_understanding import find_places, plain
+
+    assert find_places(plain("des spectacles gratuits à Montpellier")) == (("montpellier",), "montpellier")
+    assert find_places(plain("un festival près de Montpellier")) == ((), "montpellier")
+    assert find_places(plain("que faire dans la métropole de Montpellier")) == ((), "montpellier")
+
+
+def test_a_montpellier_keeps_the_metropolis_for_widening() -> None:
+    from app.search_service import SearchFilters, plan_search
+
+    plan = plan_search("des spectacles gratuits à Montpellier", SearchFilters(), NOW)[0]
+    assert plan.cities == ("montpellier",) and plan.zone == "montpellier"
+    plan = plan_search("un concert à Mèze", SearchFilters(), NOW)[0]
+    assert plan.cities == ("meze",) and plan.zone is None
