@@ -256,7 +256,8 @@ def with_pull_request_link(panel: dict[str, Any]) -> dict[str, Any]:
 def build() -> dict[str, Any]:
     layout = Layout()
     layout.row("01 / Coûts Mistral (collecte de la nuit + recherche)")
-    budget = [{"color": "green", "value": None}, {"color": "orange", "value": 5}, {"color": "red", "value": 10}]
+    budget: list[dict[str, Any]] = [{"color": "green", "value": None}, {"color": "orange", "value": 5},
+                                    {"color": "red", "value": 10}]
     layout.add(stat("Coût Mistral du mois", "Depuis le 1er du mois : collect_runs.cost_usd + rag_requests.cost_usd "
                     "(tarifs de agent/watch.py, estimation).", MONTH_COST, "currencyUSD", 2, budget), 6, 4)
     layout.add(stat("Projection fin de mois", "Coût du mois ramené aux jours écoulés, étendu au mois entier.",

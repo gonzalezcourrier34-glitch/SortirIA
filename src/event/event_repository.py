@@ -622,6 +622,7 @@ SELECT
         WHERE updated_at > now() - interval '30 days'
         GROUP BY event_id
         HAVING count(*) >= 3 AND avg(stars) <= 2 AND max(updated_at) > now() - interval '1 day'
+        ORDER BY avg(stars), count(*) DESC
         LIMIT 5) AS low),
     -- Commentaires refusés par la modération ces 7 derniers jours (16/10/2026) :
     -- listés dans le mail du lundi, contestables (python -m agent.commentaires).
@@ -629,6 +630,7 @@ SELECT
         SELECT rating_id, title, stars, comment, moderation -> 'flagged' AS flagged
         FROM sortiria.event_ratings
         WHERE comment_status = 'refuse' AND updated_at > now() - interval '7 days'
+          AND NOT moderation ? 'revue_humaine'     -- masqué par un humain : déjà décidé
         ORDER BY rating_id DESC
         LIMIT 10) AS refused)
 """

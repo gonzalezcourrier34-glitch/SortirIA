@@ -37,13 +37,13 @@ def files(path: str) -> str | None:
 # --- Le changement proposé ---------------------------------------------------
 
 def test_synonym_change_is_what_the_command_line_would_write() -> None:
-    path, content = prs.proposed_change(proposal(1, SYNONYM), files, lambda path: True)
+    path, content = prs.proposed_change(proposal(1, SYNONYM), files, lambda path: "abc")
     assert path == "config/synonymes.yaml"
     assert content.startswith(SYNONYMS) and "zumba: danse" in content and "cherché 4 fois" in content
 
 
 def test_agenda_change_keeps_the_file_and_adds_one_line() -> None:
-    path, content = prs.proposed_change(proposal(2, AGENDA), files, lambda path: True)
+    path, content = prs.proposed_change(proposal(2, AGENDA), files, lambda path: "abc")
     assert path == "config/sources.yaml"
     added = [line for line in content.splitlines() if line not in SOURCES.splitlines()]
     assert len(added) == 1 and '"123456"' in added[0] and "découverte du 2026-10-18" in added[0]
@@ -54,19 +54,23 @@ def test_partner_document_needs_the_file_in_the_repository() -> None:
     action = {"type": "valider_document_partenaire", "file": "plaquette.pdf", "sha256": "abc", "partner": "Le Bar",
               "events": 3, "new": "plaquette.pdf@abc"}
     path, content = prs.proposed_change(proposal(3, action), lambda path: '{\n  "a.pdf": "1"\n}\n',
-                                        lambda path: True)
+                                        lambda path: "abc")
     assert path == "data/partenaires/_documents_valides.json"
     assert json.loads(content) == {"a.pdf": "1", "plaquette.pdf": "abc"} and content.endswith("}\n")
-    reason = prs.proposed_change(proposal(3, action), lambda path: None, lambda path: False)
+    reason = prs.proposed_change(proposal(3, action), lambda path: None, lambda path: None)
     assert isinstance(reason, str) and "commiter" in reason
+    changed = prs.proposed_change(proposal(3, action), lambda path: None, lambda path: "autre")
+    assert "empreinte différente" in changed
+    done = prs.proposed_change(proposal(3, action), lambda path: '{"plaquette.pdf": "abc"}', lambda path: "abc")
+    assert "déjà validé" in done
 
 
 def test_what_cannot_become_a_pull_request_says_why() -> None:
-    assert "à la main" in prs.proposed_change(proposal(4, {"type": "autre"}), files, lambda path: True)
+    assert "à la main" in prs.proposed_change(proposal(4, {"type": "autre"}), files, lambda path: "abc")
     url = {"type": "remplacer_url", "old": "https://absente.pdf", "new": "https://nouvelle.pdf"}
-    assert "à corriger à la main" in prs.proposed_change(proposal(5, url), files, lambda path: True)
+    assert "à corriger à la main" in prs.proposed_change(proposal(5, url), files, lambda path: "abc")
     known = {**SYNONYM, "word": "cirqe", "target": "cirque", "new": "cirqe -> cirque"}
-    assert "déjà" in prs.proposed_change(proposal(6, known), files, lambda path: True)
+    assert "déjà" in prs.proposed_change(proposal(6, known), files, lambda path: "abc")
 
 
 def test_title_and_body_explain_how_to_decide() -> None:
@@ -87,8 +91,8 @@ class FakeGitHub:
 
     read_file = staticmethod(files)
 
-    def file_exists(self, path: str) -> bool:
-        return True
+    def file_sha256(self, path: str) -> str:
+        return "abc"
 
     def commit_on_branch(self, branch: str, path: str, content: str, message: str, *, exists: bool) -> str:
         if self.fail_on and branch.endswith(str(self.fail_on)):

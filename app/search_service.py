@@ -701,19 +701,26 @@ def event_date_label(row: Mapping[str, Any], now: datetime | None = None) -> str
     return date_label(start, bool(row.get("time_known", True)))
 
 
-EURO_AMOUNT = re.compile(r"(?<![\d.,])(\d+)[.,](\d{1,2})(?![\d.,])(?=\s*(?:€|euros?\b))")
+# Un montant décimal dans un texte de prix : « 25.5 », « 7,5 » ; pas une durée
+# ni une distance (« 1.5 h », « 2.5 km »), pas un nombre à séparateurs (« 1.500 »).
+DECIMAL_AMOUNT = re.compile(r"(?<![\d.,])(\d+)[.,](\d{1,2})(?![\d.,])(?!\s*(?:h\b|min\b|km\b|kg\b|m\b|ans?\b|%))")
+MONEY = re.compile(r"€|\beur(?:os?)?\b", re.IGNORECASE)
 
 
 def french_amount(value: float) -> str:
     """12.5 -> « 12,50 » ; 12.0 -> « 12 » (16/10/2026 : « 25.5 € » s'affichait tel quel)."""
 
-    return f"{value:g}" if float(value).is_integer() else f"{value:.2f}".replace(".", ",")
+    value = float(value)
+    return str(int(value)) if value.is_integer() else f"{value:.2f}".replace(".", ",")
 
 
 def french_prices(text: str) -> str:
-    """Montants d'un texte de source au format français : « 25.5 € » -> « 25,50 € »."""
+    """Montants d'un texte de prix au format français : « De 5.5 à 8.5 € » ->
+    « De 5,50 à 8,50 € ». Seulement dans un texte qui parle d'euros."""
 
-    return EURO_AMOUNT.sub(lambda m: f"{m.group(1)},{m.group(2):0<2}", text)
+    if not MONEY.search(text):
+        return text
+    return DECIMAL_AMOUNT.sub(lambda m: f"{m.group(1)},{m.group(2):0<2}", text)
 
 
 def price_label(row: Mapping[str, Any]) -> str:
@@ -1173,7 +1180,9 @@ def parse_answer(raw: str, count: int) -> tuple[str, list[str]]:
 
 # Typographie française (16/10/2026) : espace insécable avant « : ; ! ? »
 # (« idées proches: » s'affichait collé). Pas dans une heure (« 20:30 »).
-HIGH_PUNCTUATION = re.compile(r"(?:(?<=[^\s\d\u00a0])| +)([:;!?])(?=\s|$|[»)\]])")
+# Le signe doit être suivi d'une espace, d'une fin ou d'un guillemet : « 20:30 »
+# et « https:// » ne bougent pas, mais « le 31: » devient « le 31 : ».
+HIGH_PUNCTUATION = re.compile(r"(?:(?<=[^\s\u00a0])| +)([:;!?])(?=\s|$|[»)\]])")
 
 
 def french_spacing(text: str) -> str:
@@ -1194,10 +1203,10 @@ def clean_suggestions(items: Sequence[Any]) -> list[str]:
 
     kept = []
     for item in items:
-        text = " ".join(str(item).split())
+        text = french_spacing(" ".join(str(item).split()))
         if (text.endswith("?") and len(text.split()) <= MAX_SUGGESTION_WORDS
                 and not CITATION.search(text) and text not in kept):
-            kept.append(french_spacing(text))
+            kept.append(text)
     return kept[:3]
 
 

@@ -1339,3 +1339,6 @@ def test_low_rated_events_refused_comments_and_human_review(db: Any) -> None:
     assert published["moderation"]["flagged"] == ["violence"]
     with pytest.raises(ValueError):
         repository.review_comment(db, refused_id, "supprime")
+    # Masqué par un humain : pas relisté comme « refusé par la modération ».
+    assert repository.review_comment(db, refused_id, "refuse") == 1
+    assert repository.ratings_summary(db)["refused_comments"] == []

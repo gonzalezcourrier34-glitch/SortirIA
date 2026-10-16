@@ -35,6 +35,7 @@ bilan et la proposition reste en attente.
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import logging
 import os
@@ -44,6 +45,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 logger = logging.getLogger(__name__)
 
@@ -81,14 +83,23 @@ class GitHub:
     def read_file(self, path: str) -> str | None:
         """Contenu d'un fichier texte sur la branche principale (None s'il n'existe pas)."""
 
-        data = self.call("GET", f"/contents/{path}", (200, 404), params={"ref": self.base})
+        data = self.call("GET", f"/contents/{quote(path)}", (200, 404), params={"ref": self.base})
         if not data or "content" not in data:
             return None
         return base64.b64decode(data["content"]).decode("utf-8")
 
-    def file_exists(self, path: str) -> bool:
-        data = self.call("GET", f"/contents/{path}", (200, 404), params={"ref": self.base})
-        return bool(data and data.get("type") == "file")
+    def file_sha256(self, path: str) -> str | None:
+        """Empreinte SHA-256 d'un fichier de la branche principale (None s'il n'existe pas) :
+        un document partenaire n'est validé que s'il est celui que Mistral a lu."""
+
+        response = self.client.request("GET", f"/repos/{self.repo}/contents/{quote(path)}",
+                                       params={"ref": self.base},
+                                       headers={"Accept": "application/vnd.github.raw"})
+        if response.status_code == 404:
+            return None
+        if response.status_code != 200:
+            raise GitHubError(f"GitHub GET /contents/{path} : {response.status_code}")
+        return hashlib.sha256(response.content).hexdigest()
 
     def head(self) -> str:
         return self.call("GET", f"/git/ref/heads/{self.base}")["object"]["sha"]
@@ -177,7 +188,7 @@ def approvals_text(current: str | None, file_name: str, sha256: str) -> str:
     return json.dumps(dict(sorted(approvals.items())), ensure_ascii=False, indent=2) + "\n"
 
 
-def proposed_change(proposal: Mapping[str, Any], read_file: Any, file_exists: Any) -> tuple[str, str] | str:
+def proposed_change(proposal: Mapping[str, Any], read_file: Any, file_sha256: Any) -> tuple[str, str] | str:
     """(chemin, nouveau contenu) du fichier modifié, ou la raison pour laquelle
     la proposition ne peut pas devenir une PR (elle se décide alors à la main).
 
@@ -196,12 +207,21 @@ def proposed_change(proposal: Mapping[str, Any], read_file: Any, file_exists: An
     if action["type"] == "valider_document_partenaire":
         if not action.get("file") or not action.get("sha256"):
             return "document sans nom ou sans empreinte : à décider à la main."
-        if not file_exists(f"{PARTNERS_DIR}/{action['file']}"):
+        found = file_sha256(f"{PARTNERS_DIR}/{action['file']}")
+        if found is None:
             return f"{action['file']} n'est pas dans {PARTNERS_DIR} sur le dépôt : le commiter d'abord."
+        if found != action["sha256"]:
+            return (f"{action['file']} sur le dépôt n'est pas celui que Mistral a lu (empreinte différente) : "
+                    "il sera relu et reproposé.")
         try:
-            return path, approvals_text(current, str(action["file"]), str(action["sha256"]))
+            content = approvals_text(current, str(action["file"]), str(action["sha256"]))
         except (ValueError, TypeError) as error:
             return f"{APPROVALS_FILE} illisible ({error}) : à corriger à la main."
+        if json.loads(content).get(str(action["file"])) == (json.loads(current) if current and current.strip()
+                                                              else {}).get(str(action["file"])):
+            # Déjà sur main (pas encore déployé) : une PR vide serait refusée par GitHub.
+            return f"{action['file']} est déjà validé sur le dépôt : rien à proposer."
+        return path, content
     if current is None and action["type"] != "ajouter_synonyme":
         return f"{path} introuvable sur le dépôt."
     with tempfile.TemporaryDirectory() as folder:
@@ -296,6 +316,9 @@ def sync_pull_requests(connection: Any, github: GitHub, max_new: int = MAX_NEW_P
         number = proposal.get("pr_number")
         line = {"proposal_id": proposal["proposal_id"], "title": short_title(proposal),
                 "description": describe_action(proposal)}
+        # Un point de sauvegarde par proposition : une écriture ratée en base
+        # n'annule pas les décisions déjà notées pour les autres.
+        savepoint(connection, "SAVEPOINT agent_pr")
         try:
             if number:
                 pull = github.pull_request(int(number))
@@ -314,7 +337,7 @@ def sync_pull_requests(connection: Any, github: GitHub, max_new: int = MAX_NEW_P
                         refresh_branch(github, proposal)
                     report.waiting.append({**line, "url": pull.get("html_url", "")})
                 continue
-            change = proposed_change(proposal, github.read_file, github.file_exists)
+            change = proposed_change(proposal, github.read_file, github.file_sha256)
             if isinstance(change, str):
                 report.manual.append({**line, "reason": change})
                 continue
@@ -330,15 +353,26 @@ def sync_pull_requests(connection: Any, github: GitHub, max_new: int = MAX_NEW_P
             report.opened.append(entry)
             report.waiting.append(entry)
         except Exception as error:  # noqa: BLE001 (une PR ratée ne fait jamais échouer la nuit)
+            savepoint(connection, "ROLLBACK TO SAVEPOINT agent_pr")
             logger.warning("Proposition n° %s : PR impossible (%s).", proposal["proposal_id"], error)
             report.errors.append(f"proposition n° {proposal['proposal_id']} : {type(error).__name__}")
+        else:
+            savepoint(connection, "RELEASE SAVEPOINT agent_pr")
     return report
+
+
+def savepoint(connection: Any, statement: str) -> None:
+    """Point de sauvegarde PostgreSQL (rien sans vraie connexion, dans les tests)."""
+
+    if connection is not None and hasattr(connection, "cursor"):
+        with connection.cursor() as cursor:
+            cursor.execute(statement)
 
 
 def refresh_branch(github: GitHub, proposal: Mapping[str, Any]) -> None:
     """PR en conflit : le changement est refait sur la branche principale à jour."""
 
-    change = proposed_change(proposal, github.read_file, github.file_exists)
+    change = proposed_change(proposal, github.read_file, github.file_sha256)
     if isinstance(change, str):
         logger.warning("Proposition n° %s en conflit, non refaite : %s", proposal["proposal_id"], change)
         return

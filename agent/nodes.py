@@ -432,12 +432,17 @@ def refresh_search_vocabulary(services: CollectionServices) -> tuple[int, dict[s
         with services.connect() as connection:
             size = repository.refresh_title_vocabulary(connection)
             gaps = repository.fetch_search_gaps(connection, watch.SEARCH_REPORT_DAYS)
-            # Pouces bas de la semaine (16/10/2026), lus le lundi avec le reste.
-            gaps["thumbs_down"] = repository.fetch_thumbs_down(connection, watch.SEARCH_REPORT_DAYS)
     except Exception:
         logger.warning("Vocabulaire des titres ou bilan de la recherche indisponible "
                        "(lancer scripts/init_db.py ?).", exc_info=True)
         return 0, {}
+    # Pouces bas de la semaine (16/10/2026) : transaction à part, une erreur ici
+    # ne fait perdre ni le vocabulaire ni le bilan de la recherche.
+    try:
+        with services.connect() as connection:
+            gaps["thumbs_down"] = repository.fetch_thumbs_down(connection, watch.SEARCH_REPORT_DAYS)
+    except Exception:
+        logger.warning("Pouces bas de la semaine illisibles.", exc_info=True)
     logger.info("Vocabulaire des titres : %s racine(s) ; recherche (7 j) : %s question(s), %s sans réponse exacte.",
                 size, gaps.get("questions", 0), gaps.get("not_exact", 0))
     return size, gaps

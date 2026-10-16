@@ -20,8 +20,12 @@ change le mot de passe et remet les droits, sans rien casser.
 
 from __future__ import annotations
 
+import base64
 import getpass
+import hashlib
+import hmac
 import os
+import secrets
 from typing import Any
 
 ROLE = "grafana_lecture"
@@ -43,6 +47,26 @@ def grant_statements(database: str) -> list[str]:
     ]
 
 
+def scram_sha256(password: str, iterations: int = 4096, salt: bytes | None = None) -> str:
+    """Empreinte SCRAM-SHA-256 du mot de passe, au format de PostgreSQL.
+
+    Le mot de passe en clair n'est jamais envoyé au serveur : seule cette
+    empreinte part dans `ALTER ROLE … PASSWORD`, et c'est elle qui apparaîtrait
+    dans un journal des requêtes (calcul de la RFC 5802, comme `psql \\password`).
+    """
+
+    salt = salt if salt is not None else secrets.token_bytes(16)
+    salted = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iterations)
+    client_key = hmac.new(salted, b"Client Key", hashlib.sha256).digest()
+    stored_key = hashlib.sha256(client_key).digest()
+    server_key = hmac.new(salted, b"Server Key", hashlib.sha256).digest()
+
+    def b64(data: bytes) -> str:
+        return base64.b64encode(data).decode("ascii")
+
+    return f"SCRAM-SHA-256${iterations}:{b64(salt)}${b64(stored_key)}:{b64(server_key)}"
+
+
 def create_reader(connection: Any, password: str) -> None:
     """Crée le compte s'il manque, fixe son mot de passe et ses droits."""
 
@@ -50,7 +74,7 @@ def create_reader(connection: Any, password: str) -> None:
         cursor.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", (ROLE,))
         if cursor.fetchone() is None:
             cursor.execute(f"CREATE ROLE {ROLE} LOGIN")
-        cursor.execute(f"ALTER ROLE {ROLE} WITH LOGIN PASSWORD %s", (password,))
+        cursor.execute(f"ALTER ROLE {ROLE} WITH LOGIN PASSWORD %s", (scram_sha256(password),))
         cursor.execute("SELECT current_database()")
         database = cursor.fetchone()[0]
         for statement in grant_statements(database):

@@ -192,13 +192,15 @@ def proposal_lines(report: Mapping[str, Any]) -> list[str]:
 
     pulls = report.get("pull_requests") or {}
     proposals = report.get("proposals") or []
+    command_line = ["", "Propositions de l'agent (à valider)",
+                    *[f"- {describe_action(proposal)}" for proposal in proposals],
+                    "  Pour décider : uv run python -m agent.proposals (puis --accepter N ou --refuser N)"]
     if not pulls:
-        if not proposals:
-            return []
-        return ["", "Propositions de l'agent (à valider)",
-                *[f"- {describe_action(proposal)}" for proposal in proposals],
-                "  Pour décider : uv run python -m agent.proposals (puis --accepter N ou --refuser N)"]
+        return command_line if proposals else []
     lines: list[str] = []
+    # GitHub injoignable cette nuit : les propositions restent listées, avec la commande.
+    if proposals and not (pulls.get("en_attente") or pulls.get("a_la_main")):
+        lines += command_line
     waiting = pulls.get("en_attente") or []
     opened = {item["proposal_id"] for item in pulls.get("ouvertes") or []}
     if waiting:

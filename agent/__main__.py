@@ -69,6 +69,7 @@ def print_search_report(days: int = 7, learn: bool = False) -> None:
     with connect_postgres() as connection:
         size = repository.refresh_title_vocabulary(connection)
         gaps = repository.fetch_search_gaps(connection, days)
+        gaps["thumbs_down"] = repository.fetch_thumbs_down(connection, days)
     print(f"Vocabulaire des titres : {size} mot(s) reconnus par la recherche.")
     print("\n".join(search_report_lines(gaps)).strip() or f"Aucune question ces {days} derniers jours.")
     if not learn:
@@ -81,6 +82,8 @@ def print_search_report(days: int = 7, learn: bool = False) -> None:
         print(f"- proposition : {describe_action(proposal)}")
     for note in learning.notes:
         print(f"- {note}")
+    for note in getattr(learning, "feedback_notes", []) or []:
+        print(f"- pouces bas : {note}")
     if not learning.proposals and not learning.notes:
         print("- rien à proposer (aucun mot cherché au moins 2 fois et absent de la base).")
     if learning.proposals:

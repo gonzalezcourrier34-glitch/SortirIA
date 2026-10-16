@@ -80,6 +80,10 @@ def test_grafana_reader_can_read_but_not_write(db: Any) -> None:
     create_reader(db, "un-mot-de-passe-de-test-assez-long")
     create_reader(db, "un-mot-de-passe-de-test-assez-long")       # relancer ne casse rien
     with db.cursor() as cursor:
+        # Le serveur ne reçoit que l'empreinte SCRAM, jamais le mot de passe en clair.
+        cursor.execute("SELECT rolpassword FROM pg_authid WHERE rolname = %s", (ROLE,))
+        stored = cursor.fetchone()[0]
+        assert stored.startswith("SCRAM-SHA-256$4096:") and "un-mot-de-passe" not in stored
         cursor.execute(f"SET ROLE {ROLE}")
         try:
             cursor.execute("SELECT count(*) FROM sortiria.rag_requests")
@@ -144,3 +148,33 @@ def test_proposals_with_pull_requests_on_postgresql(db: Any) -> None:
     assert rows["PROPOSALS_COUNTS"] == [(1, 0, 1)]
     assert rows["PROPOSALS_PENDING"][0][-1].endswith("/pull/7")
     assert rows["PROPOSALS_DECIDED"][0][3:5] == ("refusee", "github")
+
+
+def test_scram_verifier_has_the_postgresql_format() -> None:
+    from scripts.creer_lecteur_grafana import scram_sha256
+
+    verifier = scram_sha256("secret", salt=bytes(16))
+    assert verifier == scram_sha256("secret", salt=bytes(16))          # déterministe à sel égal
+    assert verifier != scram_sha256("autre", salt=bytes(16))
+    method, rest = verifier.split("$", 1)
+    params, keys = rest.split("$")
+    assert method == "SCRAM-SHA-256" and params == "4096:AAAAAAAAAAAAAAAAAAAAAA=="
+    assert all(len(key) == 44 for key in keys.split(":"))               # 32 octets en base64
+
+
+def test_scram_verifier_matches_postgresql(db: Any) -> None:
+    """Même empreinte que celle que PostgreSQL calcule lui-même, à sel égal."""
+
+    import base64
+
+    from scripts.creer_lecteur_grafana import scram_sha256
+
+    with db.cursor() as cursor:
+        cursor.execute("SET password_encryption = 'scram-sha-256'")
+        cursor.execute("DROP ROLE IF EXISTS essai_scram")
+        cursor.execute("CREATE ROLE essai_scram PASSWORD 'mot-de-passe-123'")
+        cursor.execute("SELECT rolpassword FROM pg_authid WHERE rolname = 'essai_scram'")
+        computed_by_postgresql = cursor.fetchone()[0]
+        cursor.execute("DROP ROLE essai_scram")
+    salt = base64.b64decode(computed_by_postgresql.split("$")[1].split(":")[1])
+    assert scram_sha256("mot-de-passe-123", salt=salt) == computed_by_postgresql

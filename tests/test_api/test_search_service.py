@@ -120,6 +120,9 @@ def test_prices_and_places_read_the_french_way() -> None:
     assert service.french_prices("De 12.33 € à 20.55 €") == "De 12,33 € à 20,55 €"
     assert service.french_prices("10 euros, 2 adultes, 1.5 h") == "10 euros, 2 adultes, 1.5 h"
     assert service.french_prices("Tarif 7,5 €") == "Tarif 7,50 €"
+    assert service.french_prices("De 5.5 à 8.5 €") == "De 5,50 à 8,50 €"
+    assert service.french_prices("Durée 1.5 h") == "Durée 1.5 h"          # pas un prix
+    assert service.french_amount(1_000_000.0) == "1000000"
     assert service.place_label({"venue_name": "Montpellier", "city": "Montpellier"}) == "Montpellier"
     assert service.place_label({"venue_name": "Jam", "city": "Montpellier"}) == "Jam · Montpellier"
     assert service.place_label({"venue_name": "", "city": "Sète"}) == "Sète"
@@ -137,6 +140,12 @@ def test_suggestions_must_be_short_questions() -> None:
     none = json.dumps({"reponse": "Ok.", "suggestions": ["Une phrase sans question.", "Voir la carte [1] ?"]})
     assert service.parse_answer(none, 1)[1] == []          # aucune : relances par défaut
     assert service.french_spacing("Rendez-vous à 20:30 : entrée libre !") == "Rendez-vous à 20:30\u00a0: entrée libre\u00a0!"
+    # Après un nombre aussi (« le 31: »), une fois les espaces retirées par parse_answer.
+    raw = json.dumps({"reponse": "Rendez-vous le 31 : concert [1]. Libre le 25 ? Oui à 20:30 !",
+                      "suggestions": ["Plutôt en soirée ?", "Plutôt en soirée?"]})
+    answer, suggestions = service.parse_answer(raw, 1)
+    assert answer == "Rendez-vous le 31\u00a0: concert [1]. Libre le 25\u00a0? Oui à 20:30\u00a0!"
+    assert suggestions == ["Plutôt en soirée\u00a0?"]                  # doublon retiré
 
 
 def test_summary_falls_back_to_description() -> None:
