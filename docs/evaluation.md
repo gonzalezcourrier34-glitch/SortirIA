@@ -60,6 +60,18 @@ d'événements ([Évolutions](evolutions.md)).
 | Recherches courtes, première mesure | 100 recherches | 80,8 % |
 | Type lu dans le titre, élargissement au sujet | 125 recherches | **97,6 %** |
 
+**Rejouée à chaque push (CI, 16/10/2026).** Le job « Évaluation de la
+recherche » de `.github/workflows/ci.yml` charge une base **figée**
+(`tests/data/jeu_recherche.json.gz` : les sorties à venir, leurs sources et
+les partenaires d'exemple, exportés par `scripts/jeu_test_recherche.py`) dans
+un PostgreSQL avec pgvector, place l'horloge à l'instant de l'export et lance
+les 50 questions **sans vecteur ni Mistral** (aucune clé, aucun coût). Il
+échoue sous **95 %** de précision ou de compréhension, et le déploiement
+attend la CI. Le jeu exclut le programme PDF de Sète agglopôle (publié avec
+le code, il ne garde que des données sous licence ouverte) ; on le
+réexporte quand la base a beaucoup changé :
+`uv run python -m scripts.jeu_test_recherche --exporter`.
+
 **Limite, dite franchement** : ce score dit si la recherche **se trompe de
 cible**. Il ne dit pas si les propositions sont **les meilleures** : c'est la
 pertinence, mesurée à part.
@@ -235,12 +247,14 @@ pour 1 000 questions passe de 0,12 $ à 0,08 $.
 
 ## Ce qui reste à faire
 
-- **fait le 16/10, à mesurer** : offres partenaires en tête seulement si leur
-  type précis et leur public correspondent (les 3 cartes non pertinentes) ;
-  « à Montpellier » = la ville elle-même, la métropole n'étant prise qu'en
-  élargissement ;
-- rejouer `eval_recherche` (4 questions attendent désormais la commune
-  Montpellier), puis préparer une **seconde grille** et confirmer
-  l'accord du juge sur des cartes qu'il n'a jamais vues ;
-- rejouer `eval_recherche` en CI (aujourd'hui lancé à la main avant chaque
-  changement de la recherche).
+- **fait le 16/10** : offres partenaires en tête seulement si leur type
+  précis et leur public correspondent ; « à Montpellier » = la ville
+  elle-même ; `eval_recherche` rejoué : compréhension 100 %, précision
+  98,7 % ; évaluation rejouée en CI (§ 1) ;
+- **seconde grille de pertinence**, en deux parties :
+  - 50 recherches courtes tirées au hasard dans `config/eval_mots.yaml`
+    (`--preparer --questions config/eval_mots.yaml --echantillon 50`) : des
+    cartes que le juge n'a jamais vues, pour confirmer son accord ;
+  - les 50 questions de départ avec les notes reprises
+    (`--preparer --reprendre grille_….csv`) : seules les cartes nouvelles sont
+    à annoter, pour vérifier que les 3 « non » ont disparu.

@@ -88,8 +88,8 @@ fonction ; seulement ce qui mesure, fiabilise ou explique.
 | --- | --- | --- |
 | 16/10 ✅ | Grille de pertinence annotée (50 questions × 3 cartes), juge calibré (v7, figé) ; mesure avec `ministral-8b` (non retenu) | pertinence@3 97,8 %, accord juge / humain 98,6 % |
 | 16/10 ✅ | Offres partenaires en tête seulement si type et public correspondent ; « à Montpellier » = la ville | corrections testées (3 631 tests) |
-| 17-19/10 | `eval_recherche` rejoué ; seconde grille de pertinence pour confirmer le juge | contraintes ≥ 95 %, accord du juge sur des cartes nouvelles |
-| 19-21/10 | Évaluation des contraintes rejouée en CI (sans rédaction, une base de test peuplée) | job CI qui échoue sous 95 % |
+| 16/10 ✅ | `eval_recherche` rejoué (100 % / 98,7 %) ; évaluation rejouée en CI sur une base figée, sans vecteur ni Mistral | job CI qui échoue sous 95 % |
+| 17-19/10 | Seconde grille de pertinence : 50 recherches courtes nouvelles, et les 50 questions avec les notes reprises | accord du juge sur des cartes nouvelles, plus de « non » partenaires |
 | 20-26/10 | Lecture des premiers pouces bas et des recherches ratées ; corrections ciblées ; restes du modèle « article » de CheckIt.AI | bilan d'usage, corrections testées |
 | 24-30/10 | Relecture de la documentation, schémas, captures | documentation à jour |
 | 27/10-3/11 | Diapositives, scénario de démonstration, vidéo de secours, répétitions ; décision sur les partenaires d'exemple (présentés comme fictifs) | support de soutenance |

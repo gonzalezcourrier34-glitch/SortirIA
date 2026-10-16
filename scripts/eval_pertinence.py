@@ -35,6 +35,14 @@ rend rejouable :
 
        uv run python -m scripts.eval_pertinence --calculer grille.csv --juge
 
+5. **Seconde grille** (16/10/2026), pour vérifier le juge sur des cartes qu'il
+   n'a jamais vues, et une correction sans tout réannoter :
+
+       # 50 recherches courtes tirées au hasard (graine fixe) dans eval_mots.yaml
+       uv run python -m scripts.eval_pertinence --preparer --questions config/eval_mots.yaml --echantillon 50
+       # les 50 questions de départ, notes reprises pour les cartes déjà annotées
+       uv run python -m scripts.eval_pertinence --preparer --reprendre benchmarks/pertinence/grille_….csv
+
 Les résultats sont gardés dans `benchmarks/pertinence/` (grilles annotées et
 `historique.csv`).
 """
@@ -167,6 +175,37 @@ def prepare(connection: Any, questions: Sequence[Mapping[str, Any]], services: S
                 result = event["result"]
         rows += grid_rows(num, item, result.get("events") or [])
     return rows
+
+
+SAMPLE_SEED = 2026
+
+
+def sample_questions(questions: Sequence[Mapping[str, Any]], count: int | None,
+                     seed: int = SAMPLE_SEED) -> list[Mapping[str, Any]]:
+    """Échantillon tiré au hasard, toujours le même (graine fixe), dans l'ordre du fichier."""
+
+    if not count or count >= len(questions):
+        return list(questions)
+    import random
+
+    chosen = set(random.Random(seed).sample(range(len(questions)), count))
+    return [item for index, item in enumerate(questions) if index in chosen]
+
+
+def carry_over(rows: Sequence[dict[str, Any]], previous: Sequence[Mapping[str, str]]) -> int:
+    """Reprend la note et le commentaire des cartes déjà annotées (même question,
+    même titre) ; les cartes nouvelles restent à annoter. Renvoie le nombre de
+    notes reprises."""
+
+    known = {(str(row.get("question")), str(row.get("titre"))): row for row in previous
+             if verdict(str(row.get("pertinent", ""))) is not None}
+    carried = 0
+    for row in rows:
+        old = known.get((str(row.get("question")), str(row.get("titre"))))
+        if old and str(row.get("rang")) != "0":
+            row["pertinent"], row["commentaire"] = old.get("pertinent", ""), old.get("commentaire", "")
+            carried += 1
+    return carried
 
 
 def write_grid(rows: Sequence[Mapping[str, Any]], path: Path) -> None:
@@ -385,6 +424,12 @@ def main() -> None:
     action.add_argument("--calculer", type=Path, help="Calcule le score d'une grille annotée.")
     parser.add_argument("--juge", action="store_true", help="Avec --calculer : fait aussi juger par Mistral.")
     parser.add_argument("--note", default="", help="Note gardée dans l'historique.")
+    parser.add_argument("--questions", type=Path, default=QUESTIONS_FILE,
+                        help="Avec --preparer : jeu de questions (YAML), par défaut config/eval_recherche.yaml.")
+    parser.add_argument("--echantillon", type=int, default=None,
+                        help="Avec --preparer : nombre de questions tirées au hasard (graine fixe).")
+    parser.add_argument("--reprendre", type=Path, default=None,
+                        help="Avec --preparer : grille déjà annotée dont on reprend les notes (même question et titre).")
     args = parser.parse_args()
 
     load_environment()
@@ -392,11 +437,16 @@ def main() -> None:
         from agent.services import connect_postgres
 
         services = SearchServices(embed=embed_question, write=write_with_mistral, log=False, cache=False)
+        questions = sample_questions(load_questions(args.questions), args.echantillon)
         with connect_postgres() as connection:
-            rows = prepare(connection, load_questions(), services)
-        path = BENCH_DIR / f"grille_{datetime.now(PARIS).strftime('%Y-%m-%d_%Hh%M')}.csv"
+            rows = prepare(connection, questions, services)
+        carried = carry_over(rows, read_grid(args.reprendre)) if args.reprendre else 0
+        suffix = "" if args.questions == QUESTIONS_FILE else f"_{args.questions.stem.removeprefix('eval_')}"
+        path = BENCH_DIR / f"grille_{datetime.now(PARIS).strftime('%Y-%m-%d_%Hh%M')}{suffix}.csv"
         write_grid(rows, path)
-        print(f"Grille à annoter : {path.relative_to(ROOT)} ({len(rows)} lignes). "
+        todo = sum(1 for row in rows if str(row.get("rang")) != "0" and not row.get("pertinent"))
+        print(f"Grille à annoter : {path.relative_to(ROOT)} ({len(questions)} questions, {len(rows)} lignes"
+              + (f", {carried} notes reprises" if args.reprendre else "") + f", {todo} cartes à annoter). "
               "Colonne « pertinent » : o ou n. Puis --calculer avec ce fichier.")
         return
 

@@ -83,7 +83,7 @@ le transforment en pipeline d'**événements**.
 - [x] Journaliser chaque requête (14-15/10) : `rag_requests` (question, contraintes comprises, ce qui a manqué, événements renvoyés, latence, tokens, coût, réponse, cache, mode dégradé)
 - [x] Dockerfile, CI/CD GitHub Actions, déploiement Azure (15-16/10) : interface sur Static Web Apps (www.sortiria-montpellier.fr), API et collecte de la nuit sur Container Apps, PostgreSQL Flexible Server ; la CD déploie à chaque push sur `main` (OpenID Connect, sans mot de passe) ; voir `docs/deploiement.md`
 - [x] Limite de débit des routes publiques (16/10) : par visiteur et, pour la recherche, pour tout le service (borne le coût Mistral) ; 429 avec `Retry-After` (`app/rate_limit.py`)
-- [ ] Jeu d'évaluation de 50 questions annotées (fait le 15/10, 99 %, et 125 recherches courtes, 98 %), **à rejouer en CI**
+- [x] Jeu d'évaluation de 50 questions annotées (fait le 15/10, 99 %, et 125 recherches courtes, 98 %), **rejoué en CI** depuis le 16/10 sur une base figée (`scripts/jeu_test_recherche.py`, job « Évaluation de la recherche », échec sous 95 %)
 
 ## Semaine 3 (27 oct.-2 nov.) : production
 

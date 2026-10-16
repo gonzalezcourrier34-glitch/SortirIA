@@ -5,6 +5,13 @@
     uv run python -m scripts.eval_recherche                    # recherche seule (embeddings : ~0,0001 $)
     uv run python -m scripts.eval_recherche --avec-redaction   # + réponse de Mistral (~0,01 $)
     uv run python -m scripts.eval_recherche --note "recherche hybride"   # note gardée dans l'historique
+    uv run python -m scripts.eval_recherche --jeu-test --seuil 0.95       # en CI (16/10/2026)
+
+En CI (`.github/workflows/ci.yml`, job « Évaluation de la recherche ») : la
+base de test est chargée depuis `tests/data/jeu_recherche.json.gz`
+(`scripts/jeu_test_recherche.py`), l'horloge est placée à l'instant de
+l'export, la recherche se fait sans vecteur ni Mistral, rien n'est gardé dans
+`benchmarks/`, et le job échoue si la précision passe sous le seuil.
 
 Pour chaque question de `config/eval_recherche.yaml`, la vraie recherche est
 lancée sur la vraie base (sans être tracée dans `rag_requests`). Trois mesures :
@@ -308,6 +315,10 @@ def main() -> None:
     parser.add_argument("--json", type=Path, help="Copie aussi le rapport complet dans ce fichier.")
     parser.add_argument("--note", default="", help="Ce qui a changé depuis le dernier lancement (historique).")
     parser.add_argument("--fichier", type=Path, default=QUESTIONS_FILE, help="Jeu de questions (YAML).")
+    parser.add_argument("--jeu-test", action="store_true",
+                        help="Base de test figée (CI) : horloge à l'instant de l'export, sans vecteur ni historique.")
+    parser.add_argument("--seuil", type=float, default=None,
+                        help="Échoue (code 1) si la précision ou la compréhension passe sous ce seuil (ex. 0.95).")
     args = parser.parse_args()
 
     load_environment()
@@ -316,9 +327,22 @@ def main() -> None:
     questions = yaml.safe_load(args.fichier.read_text(encoding="utf-8"))["questions"]
     services = SearchServices(embed=embed_question, write=write_with_mistral if args.avec_redaction else None,
                               log=False, cache=False)
+    if args.jeu_test:
+        from scripts.jeu_test_recherche import snapshot_time
+
+        frozen = snapshot_time().astimezone(PARIS)
+        services = SearchServices(embed=None, write=None, now=lambda: frozen, log=False, cache=False)
+        print(f"Base de test figée au {frozen:%d/%m/%Y %H:%M}, recherche sans vecteur ni Mistral.\n")
     with connect_postgres() as connection:
         report = evaluate(connection, questions, services)
     print_report(report)
+    failed = below_threshold(report, args.seuil)
+    if args.jeu_test:
+        if args.json:
+            args.json.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+        if failed:
+            raise SystemExit(f"\nÉchec : {failed}")
+        return
     mode = "avec_redaction" if args.avec_redaction else "recherche"
     saved = save_run(report, mode=mode, question_file=args.fichier, note=args.note)
     print(f"\nLancement gardé : {saved.relative_to(ROOT)} et {BENCH_DIR.relative_to(ROOT)}/historique.csv")
@@ -326,6 +350,19 @@ def main() -> None:
     if args.json:
         args.json.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"\nRapport enregistré dans {args.json}")
+    if failed:
+        raise SystemExit(f"\nÉchec : {failed}")
+
+
+def below_threshold(report: Mapping[str, Any], threshold: float | None) -> str:
+    """Ce qui passe sous le seuil (vide si tout va bien, ou sans seuil)."""
+
+    if threshold is None:
+        return ""
+    misses = [f"{label} {report[key]:.1%} < {threshold:.0%}"
+              for key, label in (("precision", "précision"), ("comprehension", "compréhension"))
+              if report[key] < threshold]
+    return " ; ".join(misses)
 
 
 if __name__ == "__main__":

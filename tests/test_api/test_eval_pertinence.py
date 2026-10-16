@@ -107,3 +107,20 @@ def test_agreement_gives_ac1_when_almost_everything_is_relevant() -> None:
     result = pertinence.agreement(rows)
     assert result["accord"] == 0.96 and result["ac1"] > 0.9
     assert result["kappa"] < 0.4 and (result["rejets_humains"], result["rejets_retrouves"]) == (2, 1)
+
+
+def test_second_grid_sample_is_stable_and_annotations_carry_over() -> None:
+    """16/10/2026 : seconde grille sur des recherches nouvelles, ou sur les mêmes
+    questions sans réannoter les cartes déjà vues."""
+
+    questions = [{"question": f"q{index}"} for index in range(125)]
+    first = pertinence.sample_questions(questions, 50)
+    assert len(first) == 50 and first == pertinence.sample_questions(questions, 50)
+    assert pertinence.sample_questions(questions, None) == questions
+    rows = [{"question": "q1", "rang": "1", "titre": "A", "pertinent": "", "commentaire": ""},
+            {"question": "q1", "rang": "2", "titre": "B", "pertinent": "", "commentaire": ""}]
+    previous = [{"question": "q1", "titre": "A", "pertinent": "n", "commentaire": "pas de la danse"},
+                {"question": "q1", "titre": "C", "pertinent": "o", "commentaire": ""}]
+    assert pertinence.carry_over(rows, previous) == 1
+    assert rows[0]["pertinent"] == "n" and rows[0]["commentaire"] == "pas de la danse"
+    assert rows[1]["pertinent"] == ""

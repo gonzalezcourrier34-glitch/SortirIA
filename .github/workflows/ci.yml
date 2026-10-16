@@ -9,7 +9,9 @@
 #   1. le code respecte les règles de qualité (Ruff) ;
 #   2. les tests unitaires passent ;
 #   3. l'image Docker de l'API se construit ;
-#   4. la documentation MkDocs se construit sans erreur.
+#   4. la documentation MkDocs se construit sans erreur ;
+#   5. la recherche respecte toujours les contraintes (≥ 95 %) sur une base
+#      de test figée (16/10/2026).
 #
 # Si une étape échoue, la CI est rouge et la CD ne publie rien.
 #
@@ -56,9 +58,25 @@ jobs:
   # ---------------------------------------------------------------------------
   # tests/conftest.py crée des secrets factices : aucune vraie clé d'API
   # n'est nécessaire, et aucun appel réseau réel n'est fait (tout est simulé).
+  # Un vrai PostgreSQL avec pgvector (16/10/2026) : les tests du schéma
+  # (tests/event/test_schema_postgres.py) et de la base de test tournent
+  # aussi en CI, au lieu d'être ignorés faute de base.
   tests:
     name: Tests (pytest)
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: sortiria
+          POSTGRES_PASSWORD: sortiria
+          POSTGRES_DB: sortiria_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U sortiria -d sortiria_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      SORTIRIA_TEST_DATABASE_URL: postgresql://sortiria:sortiria@localhost:5432/sortiria_test
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v7
@@ -104,3 +122,46 @@ jobs:
       - run: uv python install 3.12
       - run: uv sync --group docs
       - run: uv run mkdocs build --strict
+
+  # ---------------------------------------------------------------------------
+  # 5. Évaluation de la recherche (16/10/2026)
+  # ---------------------------------------------------------------------------
+  # Les 50 questions de config/eval_recherche.yaml sur une base figée
+  # (tests/data/jeu_recherche.json.gz, exportée par
+  # scripts/jeu_test_recherche.py --exporter), à l'instant de l'export, sans
+  # vecteur ni Mistral : aucune clé, aucun coût. Le job échoue si la précision
+  # ou la compréhension passe sous 95 %. Le rapport est gardé en artefact.
+  eval-recherche:
+    name: Évaluation de la recherche (≥ 95 %)
+    runs-on: ubuntu-latest
+    if: hashFiles('tests/data/jeu_recherche.json.gz') != ''
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: sortiria
+          POSTGRES_PASSWORD: sortiria
+          POSTGRES_DB: sortiria_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U sortiria -d sortiria_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://sortiria:sortiria@localhost:5432/sortiria_test
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - run: uv python install 3.12
+      - run: uv sync
+      - name: Chargement de la base de test
+        run: uv run python -m scripts.jeu_test_recherche --charger
+      - name: Évaluation (échoue sous 95 %)
+        run: uv run python -m scripts.eval_recherche --jeu-test --seuil 0.95 --json eval_recherche.json
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: eval-recherche
+          path: eval_recherche.json
+          if-no-files-found: ignore
