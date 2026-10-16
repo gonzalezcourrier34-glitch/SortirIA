@@ -16,8 +16,9 @@ le 6 novembre 2026. Plutôt que de repartir de zéro, il **industrialise deux pr
 !!! tip "Le dossier du projet, en site"
     Une présentation complète, page par page, pour le jury : le besoin, l'architecture,
     l'agent, la recherche, l'interface, les résultats, le déploiement, les limites et
-    les évolutions. Site HTML autonome, à ouvrir dans un navigateur :
-    [`docs/dossier/index.html`](dossier/index.html).
+    les évolutions. Site HTML autonome, publié avec cette documentation :
+    [ouvrir le dossier du projet](dossier/index.html) (dans le dépôt :
+    `docs/dossier/`).
 
 **Le dossier du projet** : [MVP et arbitrages](mvp.md) ·
 [Feuille de route](feuille_de_route.md) · [Architecture](architecture.md) ·

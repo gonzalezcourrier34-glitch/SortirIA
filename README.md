@@ -1,5 +1,9 @@
 # SortirIA
 
+[Site en ligne](https://www.sortiria-montpellier.fr) ·
+[Dossier du projet](https://gonzalezcourrier34-glitch.github.io/SortirIA/dossier/) ·
+[Documentation technique](https://gonzalezcourrier34-glitch.github.io/SortirIA/)
+
 Assistant qui recommande des sorties à Montpellier, dans ses alentours et sur le bassin de Thau (Sète, Frontignan, Mèze, Marseillan...) à partir d'une demande en langage naturel
 (« un concert pas trop cher samedi soir, en extérieur »).
 

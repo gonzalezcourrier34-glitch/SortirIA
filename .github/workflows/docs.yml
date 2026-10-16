@@ -1,0 +1,63 @@
+# Publication de la documentation sur GitHub Pages (16/10/2026).
+#
+# https://gonzalezcourrier34-glitch.github.io/SortirIA/          documentation technique (MkDocs)
+# https://gonzalezcourrier34-glitch.github.io/SortirIA/dossier/  dossier du projet (site HTML de docs/dossier/)
+#
+# MkDocs copie tel quel ce qui n'est pas du Markdown : le dossier HTML est donc
+# publié avec la documentation, sans étape à part. Les pages « Référence du
+# code » sont tirées des docstrings (mkdocstrings) : la doc suit le code.
+#
+# Réglage du dépôt, une fois : Settings > Pages > Source : « GitHub Actions ».
+name: Documentation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - "monitoring/README.md"
+      - "agent/**"
+      - "app/**"
+      - "src/**"
+      - "scripts/**"
+      - "dags/**"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Une seule publication à la fois ; la plus récente gagne.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - run: uv python install 3.12
+      - run: uv sync --group docs
+      - name: Construction (échoue au moindre lien cassé)
+        run: uv run mkdocs build --strict --site-dir site
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
