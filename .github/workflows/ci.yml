@@ -134,7 +134,6 @@ jobs:
   eval-recherche:
     name: Évaluation de la recherche (≥ 95 %)
     runs-on: ubuntu-latest
-    if: hashFiles('tests/data/jeu_recherche.json.gz') != ''
     services:
       postgres:
         image: pgvector/pgvector:pg16
