@@ -106,6 +106,7 @@ erDiagram
     agent_proposals {
         bigint proposal_id PK
         bigint run_id FK
+        int pr_number "pull request"
     }
     deleted_event_stats {
         date day PK
@@ -420,7 +421,9 @@ qui montre les décisions de l'agent.
 
 Les réparations que l'agent **propose sans les appliquer** (document déplacé :
 nouvelle adresse trouvée et vérifiée ; nouvel agenda OpenAgenda trouvé). Un
-humain les accepte ou les refuse : `uv run python -m agent.proposals`.
+humain les accepte ou les refuse : sur GitHub, par la pull request que l'agent
+ouvre pour chacune (16/10/2026, `agent/pull_requests.py`), ou en ligne de
+commande (`uv run python -m agent.proposals`).
 
 | Colonne | Type | Rôle, contrainte |
 | --- | --- | --- |
@@ -432,7 +435,9 @@ humain les accepte ou les refuse : `uv run python -m agent.proposals`.
 | `diagnosis` | `TEXT` | l'explication lisible |
 | `action` | `JSONB` | ce qu'il faudrait faire : `{"type": "remplacer_url", "old": …, "new": …}` ou `{"type": "ajouter_agenda", "new": …, "events": …}` |
 | `status` | `TEXT`, `CHECK` | `en_attente` (par défaut), `acceptee`, `refusee`, `appliquee` |
-| `decided_at` | `TIMESTAMPTZ` | la décision humaine |
+| `decided_at` | `TIMESTAMPTZ` | la décision humaine (pour une PR : l'heure du merge ou de la fermeture) |
+| `pr_number`, `pr_url` | `INTEGER`, `TEXT` | la pull request ouverte par l'agent (16/10/2026) ; vide sans jeton GitHub |
+| `decided_by` | `TEXT` | `github` (merge ou fermeture de la PR) ou `ligne de commande` |
 
 Index unique partiel `agent_proposals_pending_once` sur
 `(source_id, action ->> 'new') WHERE status = 'en_attente'` : la même
@@ -597,7 +602,7 @@ ce dont elle aura besoin plus tard.
 | `stars` | `SMALLINT`, `CHECK` | de 1 à 5 |
 | `comment` | `TEXT`, `CHECK` | 300 caractères au plus |
 | `comment_status` | `TEXT`, `CHECK` | `aucun` (par défaut), `en_attente` (Mistral Moderation n'a pas répondu, l'agent reprend la nuit suivante), `publie`, `refuse` |
-| `moderation` | `JSONB` | les catégories signalées par la modération |
+| `moderation` | `JSONB` | les catégories signalées par la modération (`flagged`) ; après une revue humaine (16/10/2026, `agent.commentaires`) : `revue_humaine` (décision, statut d'avant, date) |
 | `source`, `title`, `venue_name`, `city`, `zone`, `category`, `event_start` | copies | ce qui donne du sens à la note après la suppression de l'événement : l'interface affiche « Super ambiance · Concert jazz, sam. 10 oct. » |
 | `partner_id` | `BIGINT` → `partners`, `ON DELETE SET NULL` | la note survit aussi au partenaire |
 

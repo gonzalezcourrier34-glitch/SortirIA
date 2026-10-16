@@ -115,3 +115,32 @@ def test_collect_health_on_postgresql(db: Any) -> None:
                        "('success', now() - interval '30 hours'), ('failed', now() - interval '2 hours')")
     health = collect_health(db)
     assert health["statut"] == "failed" and health["heures_depuis_reussite"] == pytest.approx(30, abs=0.1)
+
+
+def test_proposals_with_pull_requests_on_postgresql(db: Any) -> None:
+    """Colonnes de la PR, décision notée « github », panneaux Grafana des propositions."""
+
+    from src.event import event_repository as repository
+
+    repository.record_proposals(db, None, [
+        {"source_id": "recherche", "kind": "synonyme", "diagnosis": "zumba cherché 4 fois",
+         "action": {"type": "ajouter_synonyme", "word": "zumba", "target": "danse", "new": "zumba -> danse"}},
+        {"source_id": "openagenda", "kind": "agenda", "diagnosis": "agenda utile",
+         "action": {"type": "ajouter_agenda", "new": "123"}}])
+    first, second = repository.fetch_proposals(db)
+    assert first["pr_number"] is None and first["pr_url"] == ""
+    repository.set_proposal_pull_request(db, first["proposal_id"], 7, "https://github.com/x/pull/7")
+    repository.set_proposal_status(db, second["proposal_id"], "refusee", decided_by="github")
+    [pending] = repository.fetch_proposals(db)
+    assert pending["pr_number"] == 7 and pending["pr_url"].endswith("/7")
+    with db.cursor() as cursor:
+        cursor.execute("SELECT decided_by FROM sortiria.agent_proposals WHERE proposal_id = %s",
+                       (second["proposal_id"],))
+        assert cursor.fetchone()[0] == "github"
+        rows = {}
+        for name in ("PROPOSALS_COUNTS", "PROPOSALS_PENDING", "PROPOSALS_DECIDED"):
+            cursor.execute(re.sub(r"\$__timeFilter\(([^)]+)\)", r"(\1 IS NOT NULL)", tableau.QUERIES[name]))
+            rows[name] = cursor.fetchall()
+    assert rows["PROPOSALS_COUNTS"] == [(1, 0, 1)]
+    assert rows["PROPOSALS_PENDING"][0][-1].endswith("/pull/7")
+    assert rows["PROPOSALS_DECIDED"][0][3:5] == ("refusee", "github")

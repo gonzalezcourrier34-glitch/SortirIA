@@ -123,6 +123,14 @@ CREATE UNIQUE INDEX IF NOT EXISTS agent_proposals_pending_once
     ON sortiria.agent_proposals (source_id, (action ->> 'new'))
     WHERE status = 'en_attente';
 
+-- Validation par pull request (16/10/2026, agent/pull_requests.py) : l'agent
+-- ouvre une PR par proposition ; Merge = appliquée, Close = refusée.
+-- decided_by : « github » ou « ligne de commande » (agent.proposals).
+ALTER TABLE sortiria.agent_proposals
+    ADD COLUMN IF NOT EXISTS pr_number  INTEGER,
+    ADD COLUMN IF NOT EXISTS pr_url     TEXT NOT NULL DEFAULT '',
+    ADD COLUMN IF NOT EXISTS decided_by TEXT NOT NULL DEFAULT '';
+
 
 -- ----------------------------------------------------------------------------
 -- 4. Statistiques des événements supprimés (14/10/2026)

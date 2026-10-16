@@ -73,6 +73,8 @@ class LearningResult:
     proposals: list[dict[str, Any]] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
     usage: dict[str, dict[str, int]] = field(default_factory=dict)
+    # Pouces bas de la semaine rangés par cause (agent/feedback_learning.py).
+    feedback_notes: list[str] = field(default_factory=list)
 
 
 def words_to_learn(gaps: Mapping[str, Any], minimum: int = MIN_TIMES, limit: int = MAX_WORDS) -> list[tuple[str, int]]:

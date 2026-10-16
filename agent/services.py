@@ -86,6 +86,10 @@ class CollectionServices:
     # Le lundi : apprend des recherches ratées de la semaine (agent/search_learning.py) ;
     # reçoit (bilan de la recherche, date) et renvoie un LearningResult. None : jamais.
     learn_searches: Callable[[Mapping[str, Any], Any], Any] | None = None
+    # Validation par pull request (16/10/2026, agent/pull_requests.py) : reçoit
+    # une connexion, relit les décisions et ouvre les PR manquantes ; renvoie le
+    # bilan pour le mail. None : pas de jeton GitHub, on décide en ligne de commande.
+    pull_requests: Callable[[Any], Mapping[str, Any]] | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -375,14 +379,19 @@ def known_title_words(words: Sequence[str]) -> set[str]:
 
 
 def learn_from_week(gaps: Mapping[str, Any], today: Any) -> Any:
-    """Apprentissage réel : Mistral lit les mots, la base vérifie, OpenAgenda cherche."""
+    """Apprentissage réel : Mistral lit les pouces bas et les mots, la base
+    vérifie, OpenAgenda cherche (16/10/2026 : les pouces bas en plus)."""
 
+    from agent.feedback_learning import learn_with_feedback, read_feedback_with_mistral
     from agent.search_learning import learn_from_searches, read_words_with_mistral
 
-    return learn_from_searches(
-        gaps, today, read_words=read_words_with_mistral, known_words=known_title_words,
-        find_agendas=find_agendas_for_words if source_is_configured("openagenda") else None,
-    )
+    def learn(gaps: Mapping[str, Any], today: Any) -> Any:
+        return learn_from_searches(
+            gaps, today, read_words=read_words_with_mistral, known_words=known_title_words,
+            find_agendas=find_agendas_for_words if source_is_configured("openagenda") else None,
+        )
+
+    return learn_with_feedback(gaps, today, learn=learn, read_feedback=read_feedback_with_mistral)
 
 
 def build_default_services() -> CollectionServices:
@@ -404,4 +413,16 @@ def build_default_services() -> CollectionServices:
         judge=judge_events if os.getenv("JUGE_ACTIF", "true").lower() not in ("false", "0", "non") else None,
         enrich=enrich_events if os.getenv("ENRICHISSEMENT_ACTIF", "true").lower() not in ("false", "0", "non") else None,
         learn_searches=learn_from_week,
+        pull_requests=pull_requests_from_env(),
     )
+
+
+def pull_requests_from_env() -> Callable[[Any], Mapping[str, Any]] | None:
+    """Les PR de l'agent si `GITHUB_TOKEN_AGENT` est réglé (agent/pull_requests.py)."""
+
+    from agent.pull_requests import github_from_env, sync_pull_requests
+
+    github = github_from_env()
+    if github is None:
+        return None
+    return lambda connection: sync_pull_requests(connection, github).as_dict()

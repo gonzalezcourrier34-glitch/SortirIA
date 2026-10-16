@@ -55,6 +55,9 @@ def build_report_email(report: Mapping[str, Any]) -> tuple[str, str]:
     subject = f"[SortirIA] Collecte {label} : {upserted} événement(s)"
     if alerts:
         subject += f", {len(alerts)} alerte(s)"
+    new_pulls = len((report.get("pull_requests") or {}).get("ouvertes") or [])
+    if new_pulls:
+        subject += f", {new_pulls} proposition(s) à relire"
 
     preparation = report.get("preparation") or {}
     lines = [
@@ -88,12 +91,7 @@ def build_report_email(report: Mapping[str, Any]) -> tuple[str, str]:
     lines += ["", "Alertes"]
     lines += [f"- {alert}" for alert in alerts] or ["- aucune"]
 
-    proposals = report.get("proposals") or []
-    if proposals:
-        lines += ["", "Propositions de l'agent (à valider)"]
-        for proposal in proposals:
-            lines.append(f"- {describe_action(proposal)}")
-        lines.append("  Pour décider : uv run python -m agent.proposals (puis --accepter N ou --refuser N)")
+    lines += proposal_lines(report)
 
     ratings = report.get("ratings") or {}
     if ratings.get("total"):
@@ -114,6 +112,7 @@ def build_report_email(report: Mapping[str, Any]) -> tuple[str, str]:
     if learning:
         lines += ["", "Ce que l'agent en tire (les propositions sont plus haut)"]
         lines += [f"- {note}" for note in learning]
+    lines += feedback_lines(report)
 
     coverage = report.get("coverage") or {}
     if coverage:
@@ -181,6 +180,68 @@ def send_report_by_email(report: Mapping[str, Any]) -> bool:
         logger.exception("Impossible d'envoyer le bilan par mail à %s.", ", ".join(settings.recipients))
         return False
     return True
+
+
+def proposal_lines(report: Mapping[str, Any]) -> list[str]:
+    """Les propositions de l'agent dans le mail.
+
+    Avec les pull requests (16/10/2026, agent/pull_requests.py) : le lien de
+    chaque PR à relire, et les décisions prises depuis la veille. Sans jeton
+    GitHub : la commande à lancer, comme avant.
+    """
+
+    pulls = report.get("pull_requests") or {}
+    proposals = report.get("proposals") or []
+    if not pulls:
+        if not proposals:
+            return []
+        return ["", "Propositions de l'agent (à valider)",
+                *[f"- {describe_action(proposal)}" for proposal in proposals],
+                "  Pour décider : uv run python -m agent.proposals (puis --accepter N ou --refuser N)"]
+    lines: list[str] = []
+    waiting = pulls.get("en_attente") or []
+    opened = {item["proposal_id"] for item in pulls.get("ouvertes") or []}
+    if waiting:
+        lines += ["", f"Propositions de l'agent : {len(waiting)} pull request(s) à relire"]
+        for item in waiting:
+            new = " (nouvelle)" if item["proposal_id"] in opened else ""
+            lines += [f"- {item['title']}{new}", f"  {item['url']}"]
+        lines.append("  Merge pour accepter, Close pour refuser : la décision est notée la nuit suivante.")
+    decided = pulls.get("decisions") or []
+    if decided:
+        lines += ["", "Décisions prises sur GitHub depuis la dernière nuit"]
+        lines += [f"- {item['title']} : {'appliquée' if item['status'] == 'appliquee' else 'refusée'}"
+                  for item in decided]
+    manual = pulls.get("a_la_main") or []
+    if manual:
+        lines += ["", "Propositions à décider à la main (pas de pull request possible)"]
+        lines += [f"- {item['title']} : {item['reason']}" for item in manual]
+        lines.append("  uv run python -m agent.proposals (puis --accepter N ou --refuser N)")
+    errors = pulls.get("erreurs") or []
+    if errors:
+        lines += ["", "Pull requests de l'agent : erreurs", *[f"- {error}" for error in errors]]
+    return lines
+
+
+def feedback_lines(report: Mapping[str, Any]) -> list[str]:
+    """Le lundi : pouces bas rangés par cause, commentaires refusés à revoir (16/10/2026)."""
+
+    lines: list[str] = []
+    thumbs = report.get("feedback_learning") or []
+    if thumbs:
+        lines += ["", "Pouces bas de la semaine (cause lue par Mistral)", f"- {thumbs[0]}"]
+        lines += [f"  {note}" for note in thumbs[1:]]
+    refused = report.get("refused_comments") or []
+    if refused:
+        lines += ["", f"Commentaires refusés par la modération (7 jours) : {len(refused)}"]
+        for item in refused:
+            flagged = ", ".join(item.get("flagged") or []) or "?"
+            comment = str(item.get("comment") or "")
+            comment = comment if len(comment) <= 120 else comment[:117] + "..."
+            lines.append(f"- n° {item['rating_id']} « {item.get('title')} », {item.get('stars')}/5 : "
+                         f"« {comment} » (signalé : {flagged})")
+        lines.append("  Refusé à tort ? uv run python -m agent.commentaires --publier N")
+    return lines
 
 
 def describe_action(proposal: Mapping[str, Any]) -> str:

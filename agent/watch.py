@@ -308,13 +308,22 @@ def check_capacity(total: int | None, capped: int, maximum: int | None = None) -
 # ---------------------------------------------------------------------------
 
 def check_ratings(ratings: Mapping[str, Any]) -> list[str]:
-    """Alerte commerciale : partenaires mal notés (2,5/5 ou moins sur 5 notes au moins)."""
+    """Alertes sur les notes : partenaires mal notés (2,5/5 ou moins sur 5 notes
+    au moins) ; sorties mal notées (2/5 ou moins sur 3 notes, 16/10/2026),
+    signalées le jour d'une nouvelle note : fiche fausse ou source peu fiable ?"""
 
-    return [
+    alerts = [
         f"Partenaire « {item['partner']} » mal noté par les clients : {float(item['average']):.1f}/5 "
         f"sur {item['ratings']} notes, à contacter."
         for item in ratings.get("low_rated_partners") or []
     ]
+    for item in ratings.get("low_rated_events") or []:
+        place = ", ".join(str(part) for part in (item.get("venue"), item.get("city")) if part)
+        alerts.append(
+            f"Sortie mal notée : « {item.get('title')} »" + (f" ({place})" if place else "")
+            + f", source {item.get('source') or '?'} : {float(item['average']):.1f}/5 sur {item['ratings']} notes. "
+            "Vérifier la fiche (date, lieu, description) et la fiabilité de la source.")
+    return alerts
 
 
 # Bilan de la recherche (15/10/2026) : le lundi, ce que les utilisateurs ont

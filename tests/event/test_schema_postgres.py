@@ -1294,3 +1294,48 @@ def test_the_card_shows_the_session_that_answers(db: Any) -> None:
     assert [card["event_id"] for card in beer["events"]] == ["bar"] and beer["exact"] is False
     fireworks = search("un feu d'artifice")
     assert fireworks["exact"] is False
+
+
+# --- Avis des visiteurs lus par l'agent (16/10/2026) ---------------------------
+
+def test_thumbs_down_come_with_question_cards_and_comment(db: Any) -> None:
+    insert_event(db, event_id="a", title="Concert jazz")
+    insert_event(db, event_id="b", title="Atelier poterie")
+    request = scalar(db, "INSERT INTO sortiria.rag_requests (question, event_ids, answer) "
+                         "VALUES ('cours de zumba', ARRAY['b', 'a', 'absent'], 'Voici') RETURNING request_id")
+    other = scalar(db, "INSERT INTO sortiria.rag_requests (question) VALUES ('ok') RETURNING request_id")
+    with db.cursor() as cursor:
+        cursor.execute("INSERT INTO sortiria.feedback (request_id, event_id, rating, comment) VALUES "
+                       "(%s, '', -1, 'rien sur la zumba'), (%s, 'a', -1, ''), (%s, '', 1, '')",
+                       (request, request, other))
+    rows = repository.fetch_thumbs_down(db)
+    assert len(rows) == 2
+    whole = next(row for row in rows if row["event_id"] == "")
+    assert whole["question"] == "cours de zumba" and whole["comment"] == "rien sur la zumba"
+    assert whole["titles"] == ["Atelier poterie", "Concert jazz"] and whole["card_title"] is None
+    assert next(row for row in rows if row["event_id"] == "a")["card_title"] == "Concert jazz"
+
+
+def test_low_rated_events_refused_comments_and_human_review(db: Any) -> None:
+    with db.cursor() as cursor:
+        for number, stars in enumerate((1, 2, 2)):
+            cursor.execute("INSERT INTO sortiria.event_ratings (event_id, user_key, stars, title, city, source) "
+                           "VALUES ('mal', %s, %s, 'Soirée ratée', 'Sète', 'openagenda')", (f"u{number}", stars))
+        cursor.execute("INSERT INTO sortiria.event_ratings (event_id, user_key, stars, comment, comment_status, "
+                       "moderation, title) VALUES ('x', 'u9', 4, 'super soirée de dingue', 'refuse', "
+                       "'{\"flagged\": [\"violence\"]}', 'Concert') RETURNING rating_id")
+        refused_id = cursor.fetchone()[0]
+    summary = repository.ratings_summary(db)
+    [low] = summary["low_rated_events"]
+    assert low["title"] == "Soirée ratée" and float(low["average"]) == pytest.approx(1.7) and low["ratings"] == 3
+    assert [item["rating_id"] for item in summary["refused_comments"]] == [refused_id]
+    assert summary["refused_comments"][0]["flagged"] == ["violence"]
+    assert [row["rating_id"] for row in repository.fetch_comments(db, "refuse")] == [refused_id]
+    assert repository.review_comment(db, refused_id, "publie") == 1
+    assert repository.review_comment(db, 999, "publie") == 0
+    [published] = repository.fetch_comments(db, "publie")
+    assert published["moderation"]["revue_humaine"]["decision"] == "publie"
+    assert published["moderation"]["revue_humaine"]["avant"] == "refuse"
+    assert published["moderation"]["flagged"] == ["violence"]
+    with pytest.raises(ValueError):
+        repository.review_comment(db, refused_id, "supprime")

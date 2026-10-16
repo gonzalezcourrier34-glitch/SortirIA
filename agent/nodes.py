@@ -432,6 +432,8 @@ def refresh_search_vocabulary(services: CollectionServices) -> tuple[int, dict[s
         with services.connect() as connection:
             size = repository.refresh_title_vocabulary(connection)
             gaps = repository.fetch_search_gaps(connection, watch.SEARCH_REPORT_DAYS)
+            # Pouces bas de la semaine (16/10/2026), lus le lundi avec le reste.
+            gaps["thumbs_down"] = repository.fetch_thumbs_down(connection, watch.SEARCH_REPORT_DAYS)
     except Exception:
         logger.warning("Vocabulaire des titres ou bilan de la recherche indisponible "
                        "(lancer scripts/init_db.py ?).", exc_info=True)
@@ -495,6 +497,9 @@ def watch_collection(state: CollectionState, config: RunnableConfig) -> dict[str
     # mail), et ce que l'agent en tire : synonymes, agendas à lire, pistes.
     search_report = (state.get("search_gaps") or {}) if watch.search_report_due(today) else {}
     learning_notes: list[str] = []
+    feedback_notes: list[str] = []
+    # Le lundi aussi : commentaires refusés par la modération, contestables.
+    refused_comments = (state.get("ratings") or {}).get("refused_comments", []) if search_report else []
     usage = state.get("llm_usage", {})
     if search_report and services.learn_searches is not None and not state.get("dry_run"):
         try:
@@ -505,12 +510,14 @@ def watch_collection(state: CollectionState, config: RunnableConfig) -> dict[str
         else:
             proposals += learning.proposals
             learning_notes = learning.notes
+            feedback_notes = list(getattr(learning, "feedback_notes", []) or [])
             usage = watch.merge_usage(usage, learning.usage)
             cost = watch.nightly_cost(usage)
             logger.info("Apprentissage de la recherche : %s proposition(s), %s piste(s).",
                         len(learning.proposals), len(learning.notes))
     return {"coverage": counts, "cost_usd": cost, "watch_alerts": alerts, "proposals": proposals,
-            "search_report": search_report, "search_learning": learning_notes, "llm_usage": usage}
+            "search_report": search_report, "search_learning": learning_notes, "llm_usage": usage,
+            "feedback_learning": feedback_notes, "refused_comments": refused_comments}
 
 
 def discover_new_agendas(state: CollectionState, services: CollectionServices, inputs: Mapping[str, Any],
@@ -659,6 +666,7 @@ def write_report(state: CollectionState, config: RunnableConfig) -> dict[str, An
         "events_total": state.get("events_total"),
     }
     run_id = None
+    pull_requests: dict[str, Any] = {}
     if not state.get("dry_run"):
         try:
             with services.connect() as connection:
@@ -668,6 +676,15 @@ def write_report(state: CollectionState, config: RunnableConfig) -> dict[str, An
                 repository.record_proposals(connection, run_id, state.get("proposals", []))
         except Exception:
             logger.exception("Impossible d'enregistrer le bilan de la collecte.")
+        # Propositions en pull request (16/10/2026) : dans une transaction à
+        # part, après le bilan ; GitHub injoignable ne coûte que les PR de la nuit.
+        if services.pull_requests is not None:
+            try:
+                with services.connect() as connection:
+                    pull_requests = dict(services.pull_requests(connection))
+            except Exception:
+                logger.exception("Pull requests de l'agent impossibles cette nuit.")
+                pull_requests = {"erreurs": ["GitHub ou la base injoignable : PR reportées à la nuit suivante"]}
         # Le bilan par mail (REPORT_EMAIL_TO dans .env). Un mail qui ne part
         # pas ne doit jamais faire échouer la collecte.
         try:
@@ -681,6 +698,7 @@ def write_report(state: CollectionState, config: RunnableConfig) -> dict[str, An
                 "ratings": state.get("ratings", {}),
                 "quality": state.get("quality", {}),
                 "proposals": state.get("proposals", []),
+                "pull_requests": pull_requests,
                 "enrichment": state.get("enrichment", {}),
                 "source_rows": source_rows,
                 "skipped_sources": state.get("skipped_sources", []),
@@ -694,6 +712,8 @@ def write_report(state: CollectionState, config: RunnableConfig) -> dict[str, An
                 "vocabulary_size": state.get("vocabulary_size"),
                 "search_report": state.get("search_report") or {},
                 "search_learning": state.get("search_learning") or [],
+                "feedback_learning": state.get("feedback_learning") or [],
+                "refused_comments": state.get("refused_comments") or [],
             })
         except Exception:
             logger.exception("Impossible d'envoyer le bilan.")

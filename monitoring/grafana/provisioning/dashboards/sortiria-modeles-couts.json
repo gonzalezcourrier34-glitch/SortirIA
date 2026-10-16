@@ -15,7 +15,7 @@
     "from": "now-30d",
     "to": "now"
   },
-  "description": "Ce que coûte chaque modèle, qui le consomme, quelle version de consigne est en service et ce qu'en pensent les visiteurs (collect_runs, rag_requests, feedback, event_ratings).",
+  "description": "Ce que coûte chaque modèle, qui le consomme, quelle version de consigne est en service et ce qu'en pensent les visiteurs ; ce que l'agent propose et ce qui en a été décidé (collect_runs, rag_requests, feedback, event_ratings, agent_proposals).",
   "templating": {
     "list": [
       {
@@ -932,6 +932,188 @@
         "y": 50,
         "w": 24,
         "h": 8
+      }
+    },
+    {
+      "id": 20,
+      "type": "row",
+      "title": "05 / Propositions de l'agent (validation par pull request)",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 58,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "title": "Propositions",
+      "description": "En attente (toutes) ; appliquées et refusées sur la période. L'agent ouvre une pull request par proposition : Merge = appliquée, Close = refusée.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${source}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${source}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  count(*) FILTER (WHERE status = 'en_attente') AS \"en attente\",\n  count(*) FILTER (WHERE status = 'appliquee' AND $__timeFilter(decided_at)) AS \"appliquées\",\n  count(*) FILTER (WHERE status = 'refusee' AND $__timeFilter(decided_at)) AS \"refusées\"\nFROM sortiria.agent_proposals"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "id": 21,
+      "gridPos": {
+        "x": 0,
+        "y": 59,
+        "w": 24,
+        "h": 4
+      }
+    },
+    {
+      "type": "table",
+      "title": "En attente de décision",
+      "description": "Ce que l'agent propose et attend ; cliquer sur la pull request pour décider.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${source}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${source}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT proposal_id AS \"n°\", created_at AS \"proposée le\",\n       action ->> 'type' AS \"type\", diagnosis AS \"ce que l'agent a vu\",\n       round((EXTRACT(EPOCH FROM now() - created_at) / 86400)::NUMERIC, 1) AS \"attente (jours)\",\n       NULLIF(pr_url, '') AS \"pull request\"\nFROM sortiria.agent_proposals\nWHERE status = 'en_attente'\nORDER BY proposal_id DESC"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "pull request"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Ouvrir la pull request",
+                    "url": "${__value.raw}",
+                    "targetBlank": true
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "id": 22,
+      "gridPos": {
+        "x": 0,
+        "y": 63,
+        "w": 24,
+        "h": 7
+      }
+    },
+    {
+      "type": "table",
+      "title": "Décisions prises",
+      "description": "Qui a décidé (github ou ligne de commande) et en combien de temps.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${source}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${source}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT decided_at AS \"décidée le\", proposal_id AS \"n°\", action ->> 'type' AS \"type\",\n       status AS \"décision\", NULLIF(decided_by, '') AS \"par\",\n       round((EXTRACT(EPOCH FROM decided_at - created_at) / 3600)::NUMERIC, 1) AS \"délai (heures)\",\n       NULLIF(pr_url, '') AS \"pull request\"\nFROM sortiria.agent_proposals\nWHERE status <> 'en_attente' AND decided_at IS NOT NULL AND $__timeFilter(decided_at)\nORDER BY decided_at DESC\nLIMIT 50"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "pull request"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Ouvrir la pull request",
+                    "url": "${__value.raw}",
+                    "targetBlank": true
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "id": 23,
+      "gridPos": {
+        "x": 0,
+        "y": 70,
+        "w": 24,
+        "h": 7
       }
     }
   ]

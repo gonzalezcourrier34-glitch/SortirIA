@@ -61,6 +61,7 @@ lisibles et testées sur un vrai PostgreSQL, `tests/test_api/test_monitoring.py`
 | Modèles | tokens par modèle et par jour la nuit (enrichissement, embeddings, juge, PDF) et à la question (rédaction), tableau des modèles utilisés | `collect_runs.llm_usage`, `rag_requests.llm_model` et tokens |
 | Versions et fiabilité | versions de la consigne de rédaction en service, avec latence, part sans Mistral et satisfaction de chacune ; réponses sans Mistral et erreurs ; score du juge de qualité | `rag_requests.prompt_version`, `degraded`, `status`, `feedback`, `collect_runs.quality_score` |
 | Avis des visiteurs | avis sur les réponses et part des pouces haut, notes des sorties, commentaires à modérer, pouces par jour | `feedback`, `event_ratings` |
+| Propositions de l'agent | en attente, appliquées, refusées ; liste à décider avec le lien de la pull request ; décisions prises (par qui, en combien de temps) | `agent_proposals` |
 
 Le tableau se régénère avec
 `uv run python -m monitoring.grafana.construire_tableau_modeles` (le test
@@ -118,7 +119,9 @@ est d'environ 10 $ par mois ([Coûts](couts.md)).
 | Site ou API en panne, base injoignable, pas de collecte réussie depuis 26 h | **workflow « Surveillance »** de GitHub toutes les 3 h (`.github/workflows/surveillance.yml`, route `/api/v1/sante`) : en échec, GitHub envoie un mail |
 | Pas de mail le matin | la nuit n'a pas abouti : lire l'exécution du job (`docs/dossier/procedures.html`, incidents) |
 | Facture Azure | budget Azure ci-dessus |
-| Recherche : latence, réponses sans Mistral, erreurs, pouces bas | tableaux Grafana (consultés, pas d'alerte envoyée) |
+| Recherche : latence, réponses sans Mistral, erreurs | tableaux Grafana (consultés, pas d'alerte envoyée) |
+| Pouces bas, commentaires refusés | **mail du lundi** : pouces bas rangés par cause par Mistral (leurs mots nourrissent les propositions de l'agent), commentaires refusés à revoir (`agent.commentaires`) |
+| Sortie ou partenaire mal noté | alerte dans le mail de la nuit (2/5 ou moins sur 3 notes pour une sortie, 2,5/5 sur 5 pour un partenaire) |
 | Régression de la recherche | la CI échoue sous 95 % et bloque le déploiement |
 
 **Pas fait, assumé** : alertes Azure Monitor sur l'API (latence, erreurs),

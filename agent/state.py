@@ -72,6 +72,8 @@ class CollectionState(TypedDict, total=False):
     proposals: list[dict[str, Any]]       # réparations proposées (à valider par un humain)
     search_report: dict[str, Any]         # le lundi : recherches sans réponse exacte (bilan par mail)
     search_learning: list[str]            # le lundi : pistes tirées des recherches ratées (mail)
+    feedback_learning: list[str]          # le lundi : pouces bas rangés par cause (mail, 16/10/2026)
+    refused_comments: list[dict[str, Any]]  # le lundi : commentaires refusés, contestables (mail)
 
     # Suivi (MLflow, collect_runs)
     node_durations: dict[str, float]      # secondes passées dans chaque nœud

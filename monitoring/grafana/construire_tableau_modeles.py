@@ -12,7 +12,8 @@ exécute sur un vrai PostgreSQL). Pour régénérer le fichier :
 Toutes les données viennent de la base : `collect_runs` (coût et tokens par
 modèle, chaque nuit), `rag_requests` (modèle, tokens, coût, version de la
 consigne, mode dégradé, à chaque question), `feedback` et `event_ratings`
-(avis). Le coût Azure n'est pas dans la base : il se suit dans Azure (budget
+(avis), `agent_proposals` (propositions de l'agent et leurs pull requests).
+Le coût Azure n'est pas dans la base : il se suit dans Azure (budget
 avec alerte par mail, voir `monitoring/README.md`).
 """
 
@@ -130,6 +131,31 @@ FROM sortiria.feedback
 WHERE event_id = '' AND $__timeFilter(created_at)
 GROUP BY 1 ORDER BY 1"""
 
+# Propositions de l'agent (16/10/2026) : en attente de décision, avec le lien
+# de la pull request ouverte par l'agent (agent/pull_requests.py).
+PROPOSALS_COUNTS = """SELECT
+  count(*) FILTER (WHERE status = 'en_attente') AS "en attente",
+  count(*) FILTER (WHERE status = 'appliquee' AND $__timeFilter(decided_at)) AS "appliquées",
+  count(*) FILTER (WHERE status = 'refusee' AND $__timeFilter(decided_at)) AS "refusées"
+FROM sortiria.agent_proposals"""
+
+PROPOSALS_PENDING = """SELECT proposal_id AS "n°", created_at AS "proposée le",
+       action ->> 'type' AS "type", diagnosis AS "ce que l'agent a vu",
+       round((EXTRACT(EPOCH FROM now() - created_at) / 86400)::NUMERIC, 1) AS "attente (jours)",
+       NULLIF(pr_url, '') AS "pull request"
+FROM sortiria.agent_proposals
+WHERE status = 'en_attente'
+ORDER BY proposal_id DESC"""
+
+PROPOSALS_DECIDED = """SELECT decided_at AS "décidée le", proposal_id AS "n°", action ->> 'type' AS "type",
+       status AS "décision", NULLIF(decided_by, '') AS "par",
+       round((EXTRACT(EPOCH FROM decided_at - created_at) / 3600)::NUMERIC, 1) AS "délai (heures)",
+       NULLIF(pr_url, '') AS "pull request"
+FROM sortiria.agent_proposals
+WHERE status <> 'en_attente' AND decided_at IS NOT NULL AND $__timeFilter(decided_at)
+ORDER BY decided_at DESC
+LIMIT 50"""
+
 #: Toutes les requêtes du tableau (les tests les exécutent sur PostgreSQL).
 QUERIES: dict[str, str] = {
     "MONTH_COST": MONTH_COST, "MONTH_PROJECTION": MONTH_PROJECTION, "NIGHT_COST": NIGHT_COST,
@@ -137,6 +163,8 @@ QUERIES: dict[str, str] = {
     "QUESTION_TOKENS": QUESTION_TOKENS, "MODELS_TABLE": MODELS_TABLE, "PROMPT_VERSIONS": PROMPT_VERSIONS,
     "DEGRADED": DEGRADED, "JUDGE": JUDGE, "ANSWER_FEEDBACK": ANSWER_FEEDBACK, "EVENT_RATINGS": EVENT_RATINGS,
     "PENDING_COMMENTS": PENDING_COMMENTS, "FEEDBACK_DAILY": FEEDBACK_DAILY,
+    "PROPOSALS_COUNTS": PROPOSALS_COUNTS, "PROPOSALS_PENDING": PROPOSALS_PENDING,
+    "PROPOSALS_DECIDED": PROPOSALS_DECIDED,
 }
 
 SOURCE_VARIABLE = {
@@ -215,6 +243,16 @@ def table(title: str, description: str, sql: str) -> dict[str, Any]:
             "fieldConfig": {"defaults": {}, "overrides": []}}
 
 
+def with_pull_request_link(panel: dict[str, Any]) -> dict[str, Any]:
+    """La colonne « pull request » devient un lien cliquable vers GitHub."""
+
+    panel["fieldConfig"]["overrides"].append({
+        "matcher": {"id": "byName", "options": "pull request"},
+        "properties": [{"id": "links", "value": [
+            {"title": "Ouvrir la pull request", "url": "${__value.raw}", "targetBlank": True}]}]})
+    return panel
+
+
 def build() -> dict[str, Any]:
     layout = Layout()
     layout.row("01 / Coûts Mistral (collecte de la nuit + recherche)")
@@ -257,12 +295,24 @@ def build() -> dict[str, Any]:
     layout.add(series("Pouces haut et bas par jour", "Avis sur la réponse entière (feedback.event_id vide).",
                       FEEDBACK_DAILY, "short", bars=True, stacked=True), 24, 8)
 
+    layout.row("05 / Propositions de l'agent (validation par pull request)")
+    layout.add(stat("Propositions", "En attente (toutes) ; appliquées et refusées sur la période. L'agent ouvre "
+                    "une pull request par proposition : Merge = appliquée, Close = refusée.", PROPOSALS_COUNTS,
+                    "short", 0), 24, 4)
+    layout.add(with_pull_request_link(table(
+        "En attente de décision", "Ce que l'agent propose et attend ; cliquer sur la pull request pour décider.",
+        PROPOSALS_PENDING)), 24, 7)
+    layout.add(with_pull_request_link(table(
+        "Décisions prises", "Qui a décidé (github ou ligne de commande) et en combien de temps.",
+        PROPOSALS_DECIDED)), 24, 7)
+
     return {
         "uid": "sortiria-modeles-couts", "title": "SortirIA - Modèles et coûts", "tags": ["sortiria", "modeles", "couts"],
         "timezone": "Europe/Paris", "schemaVersion": 39, "version": 1, "editable": True, "refresh": "15m",
         "time": {"from": "now-30d", "to": "now"},
         "description": "Ce que coûte chaque modèle, qui le consomme, quelle version de consigne est en service et "
-                       "ce qu'en pensent les visiteurs (collect_runs, rag_requests, feedback, event_ratings).",
+                       "ce qu'en pensent les visiteurs ; ce que l'agent propose et ce qui en a été décidé (collect_runs, "
+                       "rag_requests, feedback, event_ratings, agent_proposals).",
         "templating": {"list": [SOURCE_VARIABLE]}, "annotations": {"list": []}, "panels": layout.panels,
     }
 

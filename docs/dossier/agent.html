@@ -58,7 +58,7 @@
 <tbody>
 <tr><td>Des <strong>règles</strong> (code testé)</td><td>Le routage, la prudence, les seuils</td><td>Réessayer seulement les sources en échec (<code>agent/routing.py</code>) ; garder les événements de la veille d'une source en panne ou en baisse anormale ; ne lancer que les sources configurées ; statut <em>succès</em>, <em>partiel</em> ou <em>échec</em>.</td></tr>
 <tr><td>Un <strong>modèle de langage</strong> (Mistral), sous contrôle</td><td>Ce qui demande de lire et de juger</td><td>Lire le PDF de Sète agglopôle ; lire le PDF ou le Word d'un partenaire ; enrichir (catégorie, publics, résumé) ; juger 20 fiches par nuit ; lire les recherches ratées (« zumba », « cirqe »).</td></tr>
-<tr><td>Un <strong>humain</strong></td><td>Tout ce qui change la configuration</td><td>Nouvelle adresse d'un PDF déplacé, agenda OpenAgenda à ajouter, synonyme, publication d'un document partenaire : <code>uv run python -m agent.proposals --accepter N</code>.</td></tr>
+<tr><td>Un <strong>humain</strong></td><td>Tout ce qui change la configuration</td><td>Nouvelle adresse d'un PDF déplacé, agenda OpenAgenda à ajouter, synonyme, publication d'un document partenaire : l'agent ouvre une <strong>pull request</strong> par proposition, la CI la teste, je la merge ou la ferme (16/10/2026) ; en ligne de commande sans jeton GitHub : <code>uv run python -m agent.proposals --accepter N</code>.</td></tr>
 </tbody>
 </table>
 <p class="table-note">Source : <code>agent/README.md</code>, section « Agent ou ETL ? Ce que LangGraph apporte vraiment » ; <code>docs/evaluation.md</code>, § 1.2.</p>

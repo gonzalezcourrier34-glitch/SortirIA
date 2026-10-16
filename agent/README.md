@@ -9,7 +9,10 @@
   quoi y répondre : un synonyme, une correction, un agenda à lire.
 
 Il propose, un humain décide : aucune configuration n'est modifiée sans
-`uv run python -m agent.proposals --accepter N`.
+accord. Depuis le 16/10/2026, l'agent ouvre **une pull request par
+proposition** (`pull_requests.py`) : la CI la teste, je la relis, **Merge**
+l'applique (la CD déploie), **Close** la refuse. Sans jeton GitHub, on décide
+en ligne de commande : `uv run python -m agent.proposals --accepter N`.
 
 Chaque nuit à 2 h (heure de Paris), l'agent met à jour la base d'événements de
 Montpellier et du bassin de Thau. Il est déclenché par le DAG Airflow
@@ -31,7 +34,10 @@ injectés, nœuds, routage séparé, tout testable sans réseau.
 | `tracking.py` | Le suivi MLflow : une nuit = une exécution (paramètres, métriques, trace des appels Mistral) |
 | `diagnosis.py` | Le diagnostic des pannes et la recherche d'une réparation (document déplacé) |
 | `search_learning.py` | L'apprentissage des recherches ratées : lecture des mots par Mistral, synonymes vérifiés dans la base, agendas qui traitent un sujet absent |
-| `proposals.py` | La validation humaine : `uv run python -m agent.proposals` (`--accepter N`, `--refuser N`) ; applique un agenda (`config/sources.yaml`), une adresse de PDF ou un synonyme (`config/synonymes.yaml`) |
+| `pull_requests.py` | La validation par pull request : une PR par proposition (le changement exact et le diagnostic), relue la nuit suivante (Merge = appliquée, Close = refusée, PR en conflit refaite sur `main` à jour), liens dans le mail. Jeton `GITHUB_TOKEN_AGENT` |
+| `feedback_learning.py` | Le lundi : les pouces bas rangés par cause par Mistral ; leurs mots rejoignent l'apprentissage de la recherche |
+| `commentaires.py` | La revue humaine des commentaires : `uv run python -m agent.commentaires` (refusés), `--publier N`, `--masquer N` |
+| `proposals.py` | La validation humaine en ligne de commande : `uv run python -m agent.proposals` (`--accepter N`, `--refuser N`) ; applique un agenda (`config/sources.yaml`), une adresse de PDF ou un synonyme (`config/synonymes.yaml`) |
 | `report.py` | Le bilan envoyé par mail |
 | `__main__.py` | Lancement manuel : `uv run python -m agent` (`--essai` : sans écrire en base, `--source` : une source précise, `--decouverte` : avec la découverte des agendas OpenAgenda, `--bilan-recherche` : seulement le bilan de la recherche, `--apprendre` : avec les propositions qui en découlent) |
 
@@ -123,14 +129,15 @@ Les décisions de routage et de surveillance, nuit après nuit :
 | Nouvel événement, ou texte modifié | Enrichi par Mistral (lots de 15, 3 000 par nuit au plus) : catégorie unifiée parmi 18 (chaque source a son propre vocabulaire), publics (famille, soirée, ados, seniors), résumé d'une phrase ; signalé s'il ne s'agit pas d'une sortie (`is_outing` faux : gardé en base, mais plus proposé par la recherche), jamais supprimé pour autant. La tranche de prix est calculée sans modèle ; la catégorie et le résumé entrent dans le texte vectorisé, ce qui aide la recherche. Une catégorie hors liste devient « autre » au lieu de faire perdre publics et résumé ; accents et variantes (« Théâtre », « enfants ») sont ramenés à la liste (14/10 : plus de la moitié des lots perdus pour cela). Changer la consigne (`ENRICHMENT_VERSION`) fait ré-enrichir tous les événements à venir. Contrôles (15/10) : un titre explicite (« Pause jeux », « Visite guidée ») fixe la catégorie ; un résumé qui cite un nom ou un nombre absent de la source est écarté (16/10 : les siècles en chiffres romains, « DJ », les âges et les prix ne comptent plus comme inventés) |
 | Le même événement publié par deux sources (titres écrits autrement) | Fusionné : même jour, même commune, heures compatibles, titres presque identiques ; la fiche du partenaire, sinon d'OpenAgenda, est gardée et complétée par l'autre |
 | Score du juge de qualité sous 80 % | Alerte, avec des exemples de problèmes (16/10 : le juge connaît la liste fermée des catégories et ne reproche plus « marché » au lieu de « brocante ») |
-| Des commentaires clients attendent une modération (service indisponible au moment du dépôt) | Modérés par Mistral Moderation (publiés ou refusés) |
+| Des commentaires clients attendent une modération (service indisponible au moment du dépôt) | Modérés par Mistral Moderation (publiés ou refusés) ; le lundi, les commentaires refusés de la semaine sont listés dans le mail, et un humain peut publier un commentaire refusé à tort (`uv run python -m agent.commentaires --publier N`, 16/10/2026) |
 | Mistral ne répond pas (quota, clé, panne) | Enrichissement, embeddings, juge et modération sont passés pour cette nuit et repris la suivante ; les événements sont quand même écrits. Trois lots d'embeddings en échec de suite arrêtent les embeddings de la nuit |
 | Un partenaire a 2,5/5 ou moins sur 5 notes clients au moins | Alerte « à contacter » |
+| Une sortie a 2/5 ou moins sur 3 notes au moins, dont une nouvelle dans les 24 h (16/10/2026) | Alerte « sortie mal notée » : vérifier la fiche (date, lieu, description) et la fiabilité de la source |
 | La base dépasse 10 000 événements | Les plus lointains sont retirés (statistiques gardées) et une alerte est envoyée ; alerte dès 90 % |
 | C'est le jour de la découverte (`discovery_weekday`, dimanche par défaut), ou `--decouverte` | Recherche complète des agendas OpenAgenda (~6 min) ; chaque agenda utile absent de `agenda_uids` devient une **proposition** « ajouter l'agenda » (nombre d'événements dans la zone, lien), jamais ajoutée seule ; un agenda refusé n'est plus reproposé |
 | Une source tombe en panne | Diagnostic (document déplacé, accès refusé, accès bloqué par le site, quota, réseau, format) et conseil ; pour un document déplacé, l'agent cherche et vérifie la nouvelle adresse, puis **propose** la réparation, appliquée seulement après accord humain |
 | Chaque nuit, après l'écriture | Vocabulaire des titres recalculé : les sujets que la recherche reconnaît (« photo » est un sujet, « romantique » une ambiance) |
-| C'est lundi | Bilan de la recherche des 7 derniers jours dans le mail, puis, pour chaque mot cherché au moins 2 fois et absent de la base : **proposition** de synonyme ou de correction, **proposition** d'agenda OpenAgenda qui traite le sujet, ou piste pour les partenaires (détail plus bas) |
+| C'est lundi | Bilan de la recherche des 7 derniers jours dans le mail, puis, pour chaque mot cherché au moins 2 fois et absent de la base : **proposition** de synonyme ou de correction, **proposition** d'agenda OpenAgenda qui traite le sujet, ou piste pour les partenaires (détail plus bas). Avant cela (16/10/2026), Mistral lit les **pouces bas** de la semaine (question, commentaire, cartes proposées) et range chacun dans une cause : sujet absent, question mal comprise, date ou lieu non respectés, rédaction, autre. Le mot d'un sujet absent ou mal compris rejoint les mots à apprendre (un pouce bas vaut une recherche ratée confirmée) ; le classement part dans le mail (`feedback_learning.py`) |
 
 Le statut d'une source vient du bilan de son extracteur : `ok` (`success`
 ou `empty`), `partiel` (`partial_success` : des événements, mais une partie

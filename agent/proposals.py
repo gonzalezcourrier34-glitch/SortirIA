@@ -8,6 +8,10 @@ humain décide. Rien n'est modifié sans cette décision.
     uv run python -m agent.proposals --accepter 3    # applique la proposition n° 3
     uv run python -m agent.proposals --refuser 3     # l'écarte
 
+Depuis le 16/10/2026, l'agent ouvre aussi une pull request par proposition
+(`agent/pull_requests.py`, si `GITHUB_TOKEN_AGENT` est réglé) : on décide alors
+sur GitHub (Merge ou Close), et cette commande renvoie vers la PR.
+
 Appliquer « remplacer_url » remplace l'ancienne adresse par la nouvelle dans
 `config/sources.yaml`, seulement si l'ancienne y figure exactement une fois
 (sinon : rien n'est touché, la proposition reste à traiter à la main).
@@ -149,7 +153,8 @@ def describe(proposal: Mapping[str, Any]) -> str:
     """Une ligne lisible par proposition."""
 
     created = str(proposal.get("created_at") or "")[:16]
-    return f"n° {proposal['proposal_id']} ({created}) {describe_action(proposal)}"
+    link = f"\n      pull request : {proposal['pr_url']}" if proposal.get("pr_url") else ""
+    return f"n° {proposal['proposal_id']} ({created}) {describe_action(proposal)}{link}"
 
 
 def main() -> None:
@@ -182,6 +187,13 @@ def main() -> None:
         proposal = pending.get(number)
         if proposal is None:
             print(f"Pas de proposition en attente n° {number}.")
+            return
+        if proposal.get("pr_url"):
+            # Une pull request est ouverte : la décision se prend là-bas (Merge
+            # ou Close), sinon la PR et la base diraient deux choses différentes.
+            print(f"La proposition n° {number} a une pull request : {proposal['pr_url']}\n"
+                  "Décider sur GitHub (Merge pour accepter, Close pour refuser) ; "
+                  "la décision est notée la nuit suivante.")
             return
         if args.refuser is not None:
             repository.set_proposal_status(connection, number, "refusee")

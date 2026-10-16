@@ -237,7 +237,22 @@
 
 <div class="experiment-card">
 <div class="experiment-header">
-<div><span class="experiment-number">PROCÉDURE 3.1 · APRÈS CHAQUE MAIL QUI EN ANNONCE</span><h3>Lister, accepter, refuser</h3></div>
+<div><span class="experiment-number">PROCÉDURE 3.1 · APRÈS CHAQUE MAIL QUI EN ANNONCE</span><h3>Relire la pull request, merger ou fermer</h3></div>
+<span class="experiment-status selected">GitHub</span>
+</div>
+<div class="experiment-analysis">
+<div><span>BUT</span><p>Depuis le 16/10/2026, l'agent ouvre une <strong>pull request par proposition</strong> (<code>agent/pull_requests.py</code>) : le changement exact (une ligne de <code>config/sources.yaml</code>, de <code>config/synonymes.yaml</code> ou de <code>_documents_valides.json</code>) et son diagnostic. Le mail du matin donne le lien de chacune ; Grafana les liste (« Modèles et coûts », partie 05).</p></div>
+<div><span>DÉCIDER</span><p>Ouvrir la PR, lire le diagnostic et le changement, attendre la CI verte (tests et évaluation de la recherche à 95 %). <strong>Merge</strong> : appliquée, la CD déploie et la collecte suivante l'utilise. <strong>Close</strong> : refusée, jamais reproposée. La nuit suivante, l'agent note la décision en base (<code>decided_by = github</code>).</p></div>
+</div>
+<div class="experiment-analysis">
+<div><span>UNE FOIS</span><p>Un jeton GitHub « fine-grained » limité au dépôt SortirIA (droits <em>Contents</em> et <em>Pull requests</em> en écriture), rangé en secret de la tâche <code>sortiria-collecte</code> (<code>GITHUB_TOKEN_AGENT</code>). Sans jeton, pas de PR : on décide en ligne de commande, ci-dessous.</p></div>
+<div><span>SI ÇA ÉCHOUE</span><p>PR en conflit (le fichier a changé entre-temps) : l'agent la refait sur <code>main</code> à jour la nuit suivante. Proposition qui ne peut pas devenir une PR (document absent du dépôt, adresse présente deux fois) : le mail le dit, elle se décide à la main.</p></div>
+</div>
+</div>
+
+<div class="experiment-card">
+<div class="experiment-header">
+<div><span class="experiment-number">PROCÉDURE 3.2 · SANS JETON GITHUB, OU EN LOCAL</span><h3>Lister, accepter, refuser en ligne de commande</h3></div>
 <span class="experiment-status selected">agent.proposals</span>
 </div>
 <div class="experiment-analysis">
@@ -255,7 +270,7 @@
 </tbody>
 </table>
 <div class="experiment-analysis">
-<div><span>SI ÇA ÉCHOUE</span><p>« Pas de proposition en attente n° N. » : numéro faux ou déjà traité, relister. « La table des propositions n'existe pas encore » : lancer <code>uv run python -m scripts.init_db</code>. « Proposition n° N acceptée : … à corriger à la main » : l'action n'a pas pu s'appliquer sans risque (adresse présente plusieurs fois, liste écrite autrement) ; le message dit quoi faire, rien n'a été touché.</p></div>
+<div><span>SI ÇA ÉCHOUE</span><p>« Pas de proposition en attente n° N. » : numéro faux ou déjà traité, relister. « La table des propositions n'existe pas encore » : lancer <code>uv run python -m scripts.init_db</code>. « La proposition n° N a une pull request » : décider sur GitHub, la commande renvoie vers la PR pour que la base et la PR ne disent pas deux choses différentes. « Proposition n° N acceptée : … à corriger à la main » : l'action n'a pas pu s'appliquer sans risque (adresse présente plusieurs fois, liste écrite autrement) ; le message dit quoi faire, rien n'a été touché.</p></div>
 <div><span>STATUTS</span><p><code>en_attente</code> à la création ; puis <code>appliquee</code> (fichier modifié), <code>acceptee</code> (accord donné, à faire à la main) ou <code>refusee</code>. Une même proposition ne peut être en attente qu'une fois (index unique).</p></div>
 </div>
 </div>
@@ -271,6 +286,26 @@
 </tbody>
 </table>
 <p class="table-note">D'après <code>agent/proposals.py</code> (<code>apply_proposal</code>, <code>replace_url_in_config</code>, <code>add_agenda_to_config</code>, <code>add_synonym_to_config</code>), <code>agent/report.py</code> (<code>describe_action</code>) et <code>sql/sortiria/03_collect.sql</code>.</p>
+
+<div class="experiment-card">
+<div class="experiment-header">
+<div><span class="experiment-number">PROCÉDURE 3.3 · LE LUNDI, SI LE MAIL EN LISTE</span><h3>Revoir un commentaire refusé, ou en masquer un</h3></div>
+<span class="experiment-status selected">agent.commentaires</span>
+</div>
+<div class="experiment-analysis">
+<div><span>BUT</span><p>Les commentaires sont modérés par Mistral Moderation, sans intervention. Le mail du lundi liste ceux qu'il a refusés dans la semaine, avec les catégories signalées : je publie celui refusé à tort, ou je masque un commentaire publié qui n'aurait pas dû l'être. Effet immédiat sur le site.</p></div>
+<div><span>TRACE</span><p>La décision est gardée dans <code>event_ratings.moderation</code> (clé <code>revue_humaine</code> : décision, statut d'avant, date). La modération de la nuit ne revient jamais sur une décision humaine : elle ne relit que les commentaires en attente.</p></div>
+</div>
+<table class="story-table params-table">
+<thead><tr><th>Étape</th><th>Commande</th><th>Ce qu'on doit voir</th></tr></thead>
+<tbody>
+<tr><td>1. Lister les refusés (30 jours)</td><td><code>uv run python -m agent.commentaires</code></td><td>« n° 12 (date) « titre », ville, 4/5 : « commentaire » (signalé : …) »</td></tr>
+<tr><td>2a. Publier</td><td><code>uv run python -m agent.commentaires --publier 12</code></td><td>« Commentaire n° 12 publié … Visible tout de suite sur le site. »</td></tr>
+<tr><td>2b. Masquer un publié</td><td><code>uv run python -m agent.commentaires --publies</code>, puis <code>--masquer N</code></td><td>« Commentaire n° N masqué … »</td></tr>
+</tbody>
+</table>
+<p class="table-note">Le même mail du lundi range aussi les <strong>pouces bas</strong> de la semaine par cause (sujet absent, question mal comprise, date ou lieu, rédaction) : le mot d'un sujet absent ou mal compris devient une proposition, donc une pull request (procédure 3.1). Une sortie notée 2/5 ou moins sur 3 notes déclenche une alerte dans le mail de la nuit. Code : <code>agent/feedback_learning.py</code>, <code>agent/commentaires.py</code>.</p>
+</div>
 </div>
 </section>
 

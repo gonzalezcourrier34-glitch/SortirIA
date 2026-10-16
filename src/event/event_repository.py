@@ -493,7 +493,8 @@ def fetch_proposals(connection: Any, status: str = "en_attente") -> list[dict[st
 
     with connection.cursor() as cursor:
         cursor.execute(
-            "SELECT proposal_id, created_at, source_id, kind, diagnosis, action, status "
+            "SELECT proposal_id, created_at, run_id, source_id, kind, diagnosis, action, status, "
+            "pr_number, pr_url "
             "FROM sortiria.agent_proposals WHERE status = %(status)s ORDER BY proposal_id",
             {"status": status},
         )
@@ -501,14 +502,33 @@ def fetch_proposals(connection: Any, status: str = "en_attente") -> list[dict[st
         return [dict(zip(columns, row, strict=True)) for row in cursor.fetchall()]
 
 
-def set_proposal_status(connection: Any, proposal_id: int, status: str) -> int:
-    """Change l'état d'une proposition (acceptee, refusee, appliquee). Renvoie 1 si trouvée."""
+def set_proposal_status(connection: Any, proposal_id: int, status: str, *,
+                        decided_by: str = "ligne de commande", decided_at: Any = None) -> int:
+    """Change l'état d'une proposition (acceptee, refusee, appliquee). Renvoie 1 si trouvée.
+
+    `decided_by` : « ligne de commande » (agent.proposals) ou « github » (merge
+    ou fermeture de la pull request, agent/pull_requests.py) ; `decided_at` :
+    l'heure de la décision (par défaut, maintenant).
+    """
 
     with connection.cursor() as cursor:
         cursor.execute(
-            "UPDATE sortiria.agent_proposals SET status = %(status)s, decided_at = now() "
+            "UPDATE sortiria.agent_proposals SET status = %(status)s, "
+            "decided_at = COALESCE(%(at)s, now()), decided_by = %(by)s "
             "WHERE proposal_id = %(id)s",
-            {"status": status, "id": proposal_id},
+            {"status": status, "id": proposal_id, "at": decided_at, "by": decided_by},
+        )
+        return max(cursor.rowcount or 0, 0)
+
+
+def set_proposal_pull_request(connection: Any, proposal_id: int, number: int, url: str) -> int:
+    """Note la pull request ouverte pour une proposition (agent/pull_requests.py)."""
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "UPDATE sortiria.agent_proposals SET pr_number = %(number)s, pr_url = %(url)s "
+            "WHERE proposal_id = %(id)s",
+            {"number": number, "url": url, "id": proposal_id},
         )
         return max(cursor.rowcount or 0, 0)
 
@@ -592,7 +612,25 @@ SELECT
     (SELECT count(*) FROM sortiria.event_ratings),
     (SELECT COALESCE(json_agg(json_build_object('partner', partner_name, 'average', average_stars,
                                                 'ratings', ratings)), '[]'::json)
-     FROM sortiria.v_partner_ratings WHERE ratings >= 5 AND average_stars <= 2.5)
+     FROM sortiria.v_partner_ratings WHERE ratings >= 5 AND average_stars <= 2.5),
+    -- Sorties mal notées (16/10/2026) : 2/5 ou moins sur 3 notes au moins, dont
+    -- une des dernières 24 h (sinon l'alerte reviendrait chaque nuit).
+    (SELECT COALESCE(json_agg(low ORDER BY low.average, low.ratings DESC), '[]'::json) FROM (
+        SELECT event_id, max(title) AS title, max(venue_name) AS venue, max(city) AS city,
+               max(source) AS source, round(avg(stars)::NUMERIC, 1) AS average, count(*) AS ratings
+        FROM sortiria.event_ratings
+        WHERE updated_at > now() - interval '30 days'
+        GROUP BY event_id
+        HAVING count(*) >= 3 AND avg(stars) <= 2 AND max(updated_at) > now() - interval '1 day'
+        LIMIT 5) AS low),
+    -- Commentaires refusés par la modération ces 7 derniers jours (16/10/2026) :
+    -- listés dans le mail du lundi, contestables (python -m agent.commentaires).
+    (SELECT COALESCE(json_agg(refused ORDER BY refused.rating_id DESC), '[]'::json) FROM (
+        SELECT rating_id, title, stars, comment, moderation -> 'flagged' AS flagged
+        FROM sortiria.event_ratings
+        WHERE comment_status = 'refuse' AND updated_at > now() - interval '7 days'
+        ORDER BY rating_id DESC
+        LIMIT 10) AS refused)
 """
 
 
@@ -601,10 +639,50 @@ def ratings_summary(connection: Any) -> dict[str, Any]:
 
     with connection.cursor() as cursor:
         cursor.execute(RATINGS_SUMMARY_SQL)
-        row = cursor.fetchone() or (0, None, 0, [])
-    low = row[3] if isinstance(row[3], list) else json.loads(row[3] or "[]")
+        row = cursor.fetchone() or (0, None, 0, [], [], [])
+
+    def as_list(value: Any) -> list[Any]:
+        return value if isinstance(value, list) else json.loads(value or "[]")
+
     return {"new_24h": int(row[0] or 0), "average_24h": float(row[1]) if row[1] is not None else None,
-            "total": int(row[2] or 0), "low_rated_partners": low}
+            "total": int(row[2] or 0), "low_rated_partners": as_list(row[3]),
+            "low_rated_events": as_list(row[4]), "refused_comments": as_list(row[5])}
+
+
+# Revue humaine d'un commentaire (16/10/2026, python -m agent.commentaires) :
+# publier un commentaire refusé à tort, ou masquer un commentaire publié. La
+# décision est gardée dans `moderation` (clé « revue_humaine »).
+REVIEW_COMMENT_SQL = """
+UPDATE sortiria.event_ratings
+SET comment_status = %(status)s,
+    moderation = moderation || jsonb_build_object('revue_humaine', jsonb_build_object(
+        'decision', %(status)s, 'avant', comment_status, 'le', now()::TEXT))
+WHERE rating_id = %(rating_id)s AND comment <> ''
+"""
+
+
+def review_comment(connection: Any, rating_id: int, status: str) -> int:
+    """Décision humaine sur un commentaire : « publie » ou « refuse ». Renvoie 1 si trouvé."""
+
+    if status not in ("publie", "refuse"):
+        raise ValueError(f"décision inconnue : {status}")
+    with connection.cursor() as cursor:
+        cursor.execute(REVIEW_COMMENT_SQL, {"status": status, "rating_id": rating_id})
+        return max(cursor.rowcount or 0, 0)
+
+
+def fetch_comments(connection: Any, status: str, days: int = 30, limit: int = 50) -> list[dict[str, Any]]:
+    """Commentaires d'un statut (« refuse », « publie ») des `days` derniers jours."""
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT rating_id, updated_at, title, city, stars, comment, moderation "
+            "FROM sortiria.event_ratings WHERE comment_status = %(status)s AND comment <> '' "
+            "AND updated_at > now() - make_interval(days => %(days)s) ORDER BY rating_id DESC LIMIT %(limit)s",
+            {"status": status, "days": int(days), "limit": int(limit)},
+        )
+        columns = [description[0] for description in cursor.description]
+        return [dict(zip(columns, row, strict=True)) for row in cursor.fetchall()]
 
 
 def update_embeddings(
@@ -730,6 +808,32 @@ def refresh_title_vocabulary(connection: Any) -> int:
         cursor.execute(REFRESH_TITLE_VOCABULARY_SQL)
         row = cursor.fetchone()
     return int(row[0]) if row and row[0] is not None else 0
+
+
+# Pouces bas de la semaine (16/10/2026) : la question, le commentaire, les
+# trois premières cartes proposées et le début de la réponse, pour que l'agent
+# en comprenne la cause (agent/feedback_learning.py).
+THUMBS_DOWN_SQL = """
+SELECT f.feedback_id, f.created_at, f.event_id, f.comment, r.question, left(r.answer, 400) AS answer,
+       ARRAY(SELECT e.title FROM unnest(r.event_ids[1:3]) WITH ORDINALITY AS shown (event_id, rank)
+             JOIN sortiria.events AS e USING (event_id) ORDER BY shown.rank) AS titles,
+       (SELECT e.title FROM sortiria.events AS e WHERE e.event_id = f.event_id) AS card_title
+FROM sortiria.feedback AS f
+JOIN sortiria.rag_requests AS r USING (request_id)
+WHERE f.rating = -1 AND f.created_at >= now() - make_interval(days => %(days)s)
+ORDER BY f.created_at DESC
+LIMIT %(limit)s
+"""
+
+
+def fetch_thumbs_down(connection: Any, days: int = 7, limit: int = 20) -> list[dict[str, Any]]:
+    """Pouces bas des `days` derniers jours, avec ce qu'il faut pour en trouver la cause."""
+
+    with connection.cursor() as cursor:
+        cursor.execute(THUMBS_DOWN_SQL, {"days": int(days), "limit": int(limit)})
+        columns = [description[0] for description in cursor.description]
+        rows = [dict(zip(columns, row, strict=True)) for row in cursor.fetchall()]
+    return [{**row, "titles": list(row.get("titles") or [])} for row in rows]
 
 
 def fetch_search_gaps(connection: Any, days: int = 7, limit: int = 10) -> dict[str, Any]:
