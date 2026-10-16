@@ -67,6 +67,7 @@ PRICES_USD_PER_MILLION = {
     "mistral-small-latest": (0.10, 0.30),
     "ministral-8b-latest": (0.10, 0.10),
     "mistral-medium-latest": (0.40, 2.00),   # juge de qualité
+    "mistral-large-latest": (0.50, 1.50),    # juge de pertinence (scripts/eval_pertinence.py, docs/couts.md)
 }
 DEFAULT_PRICE = (0.40, 2.00)          # modèle inconnu : prudence (prix d'un grand modèle)
 DEFAULT_NIGHTLY_BUDGET_USD = 0.50

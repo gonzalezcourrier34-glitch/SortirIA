@@ -60,7 +60,7 @@ de débit (voir [Interface](interface.md)).
   de calcul.
 - **Budget de la nuit** (`MISTRAL_BUDGET_NUIT_USD`, 0,50 $) : au-delà, une
   alerte part dans le mail du matin.
-- **Alerte de budget Azure** conseillée : 5 $ par mois, mail à 50 % et 100 %.
+- **Alerte de budget Azure** conseillée : 20 € par mois (le coût attendu est d’environ 10 $), mail à 50, 80 et 100 % ; réglage dans le [README du monitoring](monitoring.md).
 
 ## Les leviers pour réduire
 

@@ -43,7 +43,6 @@ import argparse
 import csv
 import hashlib
 import json
-import os
 import re
 import statistics
 import time
@@ -284,29 +283,15 @@ def log_to_mlflow(report: Mapping[str, Any], json_path: Path, *, mode: str, ques
                   note: str) -> str:
     """Même lancement dans MLflow (si actif et joignable). Renvoie un message."""
 
-    if os.getenv("MLFLOW_ACTIF", "true").strip().lower() in ("false", "0", "non", "no"):
-        return "MLflow désactivé (MLFLOW_ACTIF)."
-    uri = os.getenv("MLFLOW_TRACKING_URI", "")
-    try:
-        import mlflow
+    from scripts.suivi_mlflow import log_run
 
-        if uri.startswith("http"):
-            from urllib.request import urlopen
-
-            with urlopen(f"{uri.rstrip('/')}/health", timeout=3):
-                pass
-            mlflow.set_tracking_uri(uri)
-        mlflow.set_experiment(MLFLOW_EXPERIMENT)
-        with mlflow.start_run(run_name=f"évaluation {report['date'][:16]}"):
-            mlflow.log_params({"mode": mode, "jeu": question_set_id(question_file), "questions": report["questions"],
-                               "prompt_version": PROMPT_VERSION, "note": note[:250]})
-            mlflow.log_metrics({key: float(report[key]) for key in (
-                "comprehension", "precision", "idees_voisines", "sans_resultat",
-                "latence_mediane_s", "latence_p95_s")})
-            mlflow.log_artifact(str(json_path))
-        return f"Lancement enregistré dans MLflow (expérience {MLFLOW_EXPERIMENT})."
-    except Exception as error:  # noqa: BLE001 (MLflow est un plus : l'historique local est déjà écrit)
-        return f"MLflow indisponible ({type(error).__name__}) : historique local seulement."
+    return log_run(
+        MLFLOW_EXPERIMENT, f"évaluation {report['date'][:16]}",
+        {"mode": mode, "jeu": question_set_id(question_file), "questions": report["questions"],
+         "prompt_version": PROMPT_VERSION, "note": note},
+        {key: report[key] for key in ("comprehension", "precision", "idees_voisines", "sans_resultat",
+                                      "latence_mediane_s", "latence_p95_s")},
+        [json_path])
 
 
 def main() -> None:

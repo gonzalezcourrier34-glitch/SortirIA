@@ -45,6 +45,11 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # Base de production, en lecture seule (facultatif ; voir monitoring/README.md).
+      AZURE_PG_HOST: ${AZURE_PG_HOST:-}
+      AZURE_PG_DB: ${AZURE_PG_DB:-sortiria}
+      AZURE_PG_USER: ${AZURE_PG_USER:-grafana_lecture}
+      AZURE_PG_PASSWORD: ${AZURE_PG_PASSWORD:-}
     ports:
       - "3001:3000"   # 3001 : le port 3000 est souvent pris (autre Grafana)
     volumes:

@@ -44,7 +44,9 @@ rend rejouable :
        uv run python -m scripts.eval_pertinence --preparer --reprendre benchmarks/pertinence/grille_….csv
 
 Les résultats sont gardés dans `benchmarks/pertinence/` (grilles annotées et
-`historique.csv`).
+`historique.csv`) et, depuis le 16/10/2026, dans MLflow (expérience
+`sortiria-evaluation-pertinence` : modèle du juge, version de sa consigne,
+accord, kappa, AC1, grilles en pièces jointes ; `scripts/suivi_mlflow.py`).
 """
 
 from __future__ import annotations
@@ -77,6 +79,8 @@ BENCH_DIR = ROOT / "benchmarks" / "pertinence"
 TOP = 3
 DEFAULT_JUDGE_MODEL = "mistral-large-latest"
 DEFAULT_CALL_PAUSE_S = 3.0
+JUDGE_PROMPT_VERSION = "v7"   # historique des versions juste en dessous
+MLFLOW_EXPERIMENT = "sortiria-evaluation-pertinence"
 TARGET = 0.70
 COLUMNS = ("num", "famille", "question", "filtres", "rang", "titre", "date", "lieu", "categorie", "prix", "public",
            "resume", "pertinent", "commentaire")
@@ -395,6 +399,27 @@ def save_history(report: Mapping[str, Any], grid: Path, note: str = "") -> Path:
     return history
 
 
+def mlflow_record(report: Mapping[str, Any], grid: Path, judged: Path | None,
+                  note: str = "") -> tuple[dict[str, Any], dict[str, Any], list[Path]]:
+    """Paramètres, métriques et fichiers d'un calcul, pour MLflow."""
+
+    judge = report.get("juge") or {}
+    accord = judge.get("accord") or {}
+    params: dict[str, Any] = {"grille": grid.name, "questions": report["questions"],
+                              "cartes_jugees": report["cartes_jugees"], "prompt_version": PROMPT_VERSION,
+                              "note": note}
+    metrics: dict[str, Any] = {"pertinence_at_3": report["pertinence_at_3"],
+                               "questions_satisfaites": report["questions_satisfaites"]}
+    if judge:
+        params |= {"juge_modele": os.getenv("PERTINENCE_JUDGE_MODEL", DEFAULT_JUDGE_MODEL),
+                   "juge_consigne": JUDGE_PROMPT_VERSION}
+        metrics |= {"juge_pertinence_at_3": (judge.get("score") or {}).get("pertinence_at_3"),
+                    "accord_juge": accord.get("accord"), "kappa_juge": accord.get("kappa"),
+                    "ac1_juge": accord.get("ac1"), "rejets_humains": accord.get("rejets_humains"),
+                    "rejets_retrouves": accord.get("rejets_retrouves")}
+    return params, metrics, [grid, *([judged] if judged else [])]
+
+
 def print_score(report: Mapping[str, Any]) -> None:
     def pct(value: Any) -> str:
         return "-" if value is None else f"{value:.0%}"
@@ -452,6 +477,7 @@ def main() -> None:
 
     rows = read_grid(args.calculer)
     report = score(rows)
+    judged = None
     if args.juge:
         rows = judge_rows(rows)
         report["juge"] = {"score": score(rows, "juge"), "accord": agreement(rows)}
@@ -463,6 +489,11 @@ def main() -> None:
         print(f"Verdicts du juge : {judged}")
     print_score(report)
     print(f"Historique : {save_history(report, args.calculer, args.note).relative_to(ROOT)}")
+    from scripts.suivi_mlflow import log_run
+
+    params, metrics, files = mlflow_record(report, args.calculer, judged, args.note)
+    print(log_run(MLFLOW_EXPERIMENT, f"pertinence {args.calculer.stem.removeprefix('grille_')}",
+                  params, metrics, files))
 
 
 if __name__ == "__main__":

@@ -1083,6 +1083,25 @@ def active_sources(connection: Any) -> list[dict[str, Any]]:
             for row in fetch_rows(connection, SOURCES_SQL, {})]
 
 
+# Santé du service (16/10/2026) : lue par la surveillance GitHub
+# (.github/workflows/surveillance.yml) via /api/v1/sante. Aucune donnée
+# sensible : un statut et un âge en heures.
+COLLECT_HEALTH_SQL = """
+SELECT
+    (SELECT status FROM sortiria.collect_runs ORDER BY started_at DESC LIMIT 1) AS statut,
+    (SELECT round((EXTRACT(EPOCH FROM now() - max(started_at)) / 3600)::NUMERIC, 1)
+       FROM sortiria.collect_runs WHERE status NOT IN ('failed', 'running')) AS heures
+"""
+
+
+def collect_health(connection: Any) -> dict[str, Any]:
+    """Statut de la dernière collecte et heures depuis la dernière réussie."""
+
+    row = fetch_rows(connection, COLLECT_HEALTH_SQL, {})[0]
+    hours = row["heures"]
+    return {"statut": row["statut"], "heures_depuis_reussite": None if hours is None else float(hours)}
+
+
 # ----------------------------------------------------------------------------
 # Rédaction
 # ----------------------------------------------------------------------------

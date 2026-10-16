@@ -19,5 +19,27 @@ datasources:
       timescaledb: false
     secureJsonData:
       password: ${POSTGRES_PASSWORD}
+    isDefault: false
+    editable: false
+
+  # Production (16/10/2026) : la base Azure, lue par un compte en LECTURE
+  # SEULE (scripts/creer_lecteur_grafana.py). Les tableaux ont un choix
+  # « Base » en haut pour passer de la base locale à la production.
+  # C'est la source PAR DÉFAUT (16/10/2026) : la production est ce qu'on
+  # surveille. Sans les variables AZURE_PG_* dans le .env, elle reste en
+  # erreur : choisir alors « SortirIA PostgreSQL » (base locale) en haut.
+  - name: SortirIA production (Azure)
+    uid: sortiria-prod
+    type: grafana-postgresql-datasource
+    access: proxy
+    url: ${AZURE_PG_HOST}:5432
+    user: ${AZURE_PG_USER}
+    jsonData:
+      database: ${AZURE_PG_DB}
+      sslmode: require
+      postgresVersion: 1600
+      timescaledb: false
+    secureJsonData:
+      password: ${AZURE_PG_PASSWORD}
     isDefault: true
     editable: false

@@ -10,6 +10,7 @@ La logique est dans `app/search_service.py`.
     GET  /api/v1/partenaires/a-ne-pas-manquer
     GET  /api/v1/sources                   sources qui ont des événements proposables
     POST /api/v1/reponses/{request_id}/avis  pouce haut / pouce bas sur une réponse
+    GET  /api/v1/sante                     l'API et la base répondent, âge de la dernière collecte
 
 Ces routes sont publiques (pas de clé API) : l'interface est ouverte à tous.
 Elles sont limitées par visiteur, et la recherche aussi pour tout le service
@@ -184,3 +185,15 @@ def sources(connection: Any = Depends(get_connection)) -> list[dict[str, Any]]: 
     """Sources qui ont au moins un événement proposable."""
 
     return search_service.active_sources(connection)
+
+
+@router.get("/sante", dependencies=[Depends(rate_limit.limit_reads)])
+def health(connection: Any = Depends(get_connection)) -> dict[str, Any]:  # noqa: B008
+    """L'API répond, la base aussi, et la collecte de la nuit est passée.
+
+    Seule route de santé joignable de l'extérieur (le site ne transmet que
+    `/api/...`) : la surveillance GitHub l'appelle toutes les 3 h
+    (`.github/workflows/surveillance.yml`).
+    """
+
+    return {"api": "ok", "base": "ok", "collecte": search_service.collect_health(connection)}

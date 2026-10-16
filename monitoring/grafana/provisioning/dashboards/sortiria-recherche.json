@@ -36,7 +36,7 @@
       "description": "Recherches de l'interface sur la période (table rag_requests).",
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "sortiria-pg"
+        "uid": "${source}"
       },
       "gridPos": {
         "x": 0,
@@ -49,7 +49,7 @@
           "refId": "A",
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "sortiria-pg"
+            "uid": "${source}"
           },
           "editorMode": "code",
           "format": "table",
@@ -92,7 +92,7 @@
       "description": "Part des avis « Oui, cette réponse m'aide » parmi les avis donnés sur la période (table feedback, 16/10/2026).",
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "sortiria-pg"
+        "uid": "${source}"
       },
       "gridPos": {
         "x": 6,
@@ -105,7 +105,7 @@
           "refId": "A",
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "sortiria-pg"
+            "uid": "${source}"
           },
           "editorMode": "code",
           "format": "table",
@@ -157,7 +157,7 @@
       "description": "95 % des réponses rédigées arrivent en moins de ce temps (question reçue -> réponse complète).",
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "sortiria-pg"
+        "uid": "${source}"
       },
       "gridPos": {
         "x": 12,
@@ -170,7 +170,7 @@
           "refId": "A",
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "sortiria-pg"
+            "uid": "${source}"
           },
           "editorMode": "code",
           "format": "table",
@@ -222,7 +222,7 @@
       "description": "Rédaction de la réponse (tarifs de agent/watch.py) ; une réponse servie par le cache ne coûte rien.",
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "sortiria-pg"
+        "uid": "${source}"
       },
       "gridPos": {
         "x": 18,
@@ -235,7 +235,7 @@
           "refId": "A",
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "sortiria-pg"
+            "uid": "${source}"
           },
           "editorMode": "code",
           "format": "table",
@@ -292,7 +292,7 @@
       "description": "Exacte : la carte montre le sujet. Élargie : trouvé en relâchant une contrainte (public, gratuit, date, lieu). Idées voisines : rien d'exact. Sujet introuvable : le sujet n'existe nulle part dans la base.",
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "sortiria-pg"
+        "uid": "${source}"
       },
       "gridPos": {
         "x": 0,
@@ -305,7 +305,7 @@
           "refId": "A",
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "sortiria-pg"
+            "uid": "${source}"
           },
           "editorMode": "code",
           "format": "time_series",
@@ -350,7 +350,7 @@
       "description": "Pouces haut et bas sur les réponses.",
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "sortiria-pg"
+        "uid": "${source}"
       },
       "gridPos": {
         "x": 12,
@@ -363,7 +363,7 @@
           "refId": "A",
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "sortiria-pg"
+            "uid": "${source}"
           },
           "editorMode": "code",
           "format": "time_series",
@@ -408,7 +408,7 @@
       "description": "Temps de la question à la réponse complète, en millisecondes.",
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "sortiria-pg"
+        "uid": "${source}"
       },
       "gridPos": {
         "x": 0,
@@ -421,7 +421,7 @@
           "refId": "A",
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "sortiria-pg"
+            "uid": "${source}"
           },
           "editorMode": "code",
           "format": "time_series",
@@ -462,7 +462,7 @@
       "description": "Part des réponses servies par le cache, rédigées sans Mistral (service indisponible) ou en erreur.",
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "sortiria-pg"
+        "uid": "${source}"
       },
       "gridPos": {
         "x": 12,
@@ -475,7 +475,7 @@
           "refId": "A",
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "sortiria-pg"
+            "uid": "${source}"
           },
           "editorMode": "code",
           "format": "time_series",
@@ -516,7 +516,7 @@
       "description": "Somme des coûts de rédaction des réponses.",
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "sortiria-pg"
+        "uid": "${source}"
       },
       "gridPos": {
         "x": 0,
@@ -529,7 +529,7 @@
           "refId": "A",
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "sortiria-pg"
+            "uid": "${source}"
           },
           "editorMode": "code",
           "format": "time_series",
@@ -570,7 +570,7 @@
       "description": "Quand les visiteurs cherchent (heure de Paris), sur la période.",
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "sortiria-pg"
+        "uid": "${source}"
       },
       "gridPos": {
         "x": 12,
@@ -583,7 +583,7 @@
           "refId": "A",
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "sortiria-pg"
+            "uid": "${source}"
           },
           "editorMode": "code",
           "format": "time_series",
@@ -637,7 +637,7 @@
       "description": "Écrits dans aucun titre (« zumba ») : une source, un partenaire ou un synonyme à envisager. L'agent en tire ses propositions du lundi.",
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "sortiria-pg"
+        "uid": "${source}"
       },
       "gridPos": {
         "x": 0,
@@ -650,7 +650,7 @@
           "refId": "A",
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "sortiria-pg"
+            "uid": "${source}"
           },
           "editorMode": "code",
           "format": "table",
@@ -674,7 +674,7 @@
       "description": "Les plus fréquentes sur la période.",
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "sortiria-pg"
+        "uid": "${source}"
       },
       "gridPos": {
         "x": 12,
@@ -687,7 +687,7 @@
           "refId": "A",
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "sortiria-pg"
+            "uid": "${source}"
           },
           "editorMode": "code",
           "format": "table",
@@ -711,7 +711,7 @@
       "description": "Réponses jugées inutiles, avec ce qui manquait selon le visiteur (jamais publié).",
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "sortiria-pg"
+        "uid": "${source}"
       },
       "gridPos": {
         "x": 0,
@@ -724,7 +724,7 @@
           "refId": "A",
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "sortiria-pg"
+            "uid": "${source}"
           },
           "editorMode": "code",
           "format": "table",
@@ -743,7 +743,25 @@
     }
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "name": "source",
+        "label": "Base",
+        "type": "datasource",
+        "query": "grafana-postgresql-datasource",
+        "current": {
+          "selected": true,
+          "text": "SortirIA production (Azure)",
+          "value": "sortiria-prod"
+        },
+        "description": "Production (Azure, lecture seule) par défaut, ou base locale (docker compose).",
+        "hide": 0,
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "options": []
+      }
+    ]
   },
   "annotations": {
     "list": []

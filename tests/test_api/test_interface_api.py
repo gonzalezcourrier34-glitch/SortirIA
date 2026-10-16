@@ -33,6 +33,8 @@ def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
                         ({"event_id": event_id, "visitor": visitor_key} if event_id == "e1" else None))
     monkeypatch.setattr(search_service, "partner_highlights", lambda connection, limit: [{"limit": limit}])
     monkeypatch.setattr(search_service, "active_sources", lambda connection: [{"name": "OpenAgenda", "events": 3}])
+    monkeypatch.setattr(search_service, "collect_health",
+                        lambda connection: {"statut": "success", "heures_depuis_reussite": 14.2})
     monkeypatch.setattr(search_service, "events_to_rate",
                         lambda connection, ids, session: [{"event_id": i} for i in ids if i == "hier"])
 
@@ -129,3 +131,8 @@ def test_answer_feedback_route(client: TestClient) -> None:
     assert client.post("/api/v1/reponses/8/avis", json={"rating": 1}).status_code == 404
     assert client.post("/api/v1/reponses/7/avis", json={"rating": 0}).status_code == 422
     assert client.post("/api/v1/reponses/7/avis", json={"rating": 1, "comment": "x" * 301}).status_code == 422
+
+
+def test_health_route_reports_the_last_collect(client: TestClient) -> None:
+    assert client.get("/api/v1/sante").json() == {
+        "api": "ok", "base": "ok", "collecte": {"statut": "success", "heures_depuis_reussite": 14.2}}

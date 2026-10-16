@@ -1,0 +1,50 @@
+# Surveillance du service en ligne (16/10/2026).
+#
+# Toutes les 3 heures, GitHub vérifie depuis l'extérieur que :
+# - le site répond (page d'accueil) ;
+# - l'API et la base répondent (/api/v1/sante, passée par le site) ;
+# - la collecte de la nuit est passée (dernière réussie il y a moins de 26 h).
+# Si une vérification échoue, le workflow échoue et GitHub envoie un mail
+# (réglage du compte : Settings > Notifications > Actions, « Failed workflows only »).
+#
+# Pourquoi toutes les 3 heures et pas toutes les 5 minutes : l'API se met en
+# veille sans visiteur (0 copie) ; chaque appel la réveille quelques minutes.
+# 8 réveils par jour restent dans l'offre gratuite de Container Apps.
+name: Surveillance
+
+on:
+  schedule:
+    - cron: "17 */3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  SITE: https://www.sortiria-montpellier.fr
+  MAX_HEURES_SANS_COLLECTE: "26"
+
+jobs:
+  service:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Le site répond
+        run: curl --fail --silent --show-error --max-time 60 --retry 3 --retry-delay 20 --retry-all-errors -o /dev/null "$SITE/"
+
+      - name: L'API, la base et la collecte de la nuit
+        run: |
+          # Premier appel lent possible : l'API sort de veille.
+          curl --fail --silent --show-error --max-time 120 --retry 3 --retry-delay 30 --retry-all-errors \
+            "$SITE/api/v1/sante" -o sante.json
+          cat sante.json; echo
+          python3 - <<'EOF'
+          import json, os, sys
+          sante = json.load(open("sante.json"))
+          collecte = sante["collecte"]
+          heures = collecte["heures_depuis_reussite"]
+          limite = float(os.environ["MAX_HEURES_SANS_COLLECTE"])
+          print(f"Dernière collecte : {collecte['statut']} ; dernière réussie il y a {heures} h (limite {limite:g} h)")
+          if heures is None or heures > limite:
+              sys.exit("Pas de collecte réussie depuis plus de 26 h : voir l'historique du job sortiria-collecte dans Azure.")
+          EOF
