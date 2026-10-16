@@ -11,6 +11,7 @@ de chaque projet, est dans [Provenance du code](provenance.md).
 | 14/10/2026 | Première collecte complète, schéma définitif, interface | ✅ |
 | 15/10/2026 | Recherche évaluée (98,7 %), **mise en production sur Azure** | ✅ |
 | 16/10/2026 | Déploiement automatique, suivi de la recherche, limite de débit, mesure du coût | ✅ |
+| 16/10/2026 | Pertinence mesurée (97,8 %) et juge calibré (98,6 %, confirmé à 91,9 % sur cartes nouvelles), évaluation rejouée en CI, ménage du code hérité, alertes de sécurité corrigées, dossier du projet en site | ✅ |
 | 4/11/2026 | **Gel du code** | ⏳ |
 | 6/11/2026 | **Soutenance** | ⏳ |
 
@@ -26,12 +27,11 @@ gantt
     Bloc 2 Base et agent nocturne         :done, b2, 2026-10-14, 2d
     Bloc 3 Recherche et interface         :done, b3, 2026-10-14, 3d
     Bloc 4 Production et suivi            :done, b4, 2026-10-15, 2d
+    Mesures : pertinence, juge, CI        :done, m1, 2026-10-16, 1d
+    Ménage, sécurité, dossier en site     :done, d1, 2026-10-16, 1d
     section À faire
-    Mesures : pertinence, petit modèle    :done, m1, 2026-10-16, 1d
-    Corrections : partenaires, ville      :active, c1, 2026-10-17, 3d
-    Évaluation rejouée en CI              :m2, 2026-10-19, 2d
-    Fiabilisation d'après l'usage réel    :f1, 2026-10-20, 7d
-    Nettoyage et documentation            :d1, 2026-10-24, 6d
+    Usage réel : testeurs, corrections    :active, f1, 2026-10-17, 10d
+    Relecture, captures, dossier en ligne :d2, 2026-10-24, 6d
     Soutenance : diapos et répétitions    :s1, 2026-10-27, 8d
     Gel du code                           :milestone, g1, 2026-11-04, 0d
     Soutenance                            :milestone, g2, 2026-11-06, 0d
@@ -87,13 +87,16 @@ fonction ; seulement ce qui mesure, fiabilise ou explique.
 | Semaine | Tâches | Livrable |
 | --- | --- | --- |
 | 16/10 ✅ | Grille de pertinence annotée (50 questions × 3 cartes), juge calibré (v7, figé) ; mesure avec `ministral-8b` (non retenu) | pertinence@3 97,8 %, accord juge / humain 98,6 % |
-| 16/10 ✅ | Offres partenaires en tête seulement si type et public correspondent ; « à Montpellier » = la ville | corrections testées (3 631 tests) |
-| 16/10 ✅ | `eval_recherche` rejoué (100 % / 98,7 %) ; évaluation rejouée en CI sur une base figée, sans vecteur ni Mistral | job CI qui échoue sous 95 % |
-| 17-19/10 | Seconde grille de pertinence : 50 recherches courtes nouvelles, et les 50 questions avec les notes reprises | accord du juge sur des cartes nouvelles, plus de « non » partenaires |
-| 20-26/10 | Lecture des premiers pouces bas et des recherches ratées ; corrections ciblées ; restes du modèle « article » de CheckIt.AI | bilan d'usage, corrections testées |
-| 24-30/10 | Relecture de la documentation, schémas, captures | documentation à jour |
-| 27/10-3/11 | Diapositives, scénario de démonstration, vidéo de secours, répétitions ; décision sur les partenaires d'exemple (présentés comme fictifs) | support de soutenance |
-| 4/11 | Gel du code : dernier déploiement, étiquette git `v1.0` | version présentée |
+| 16/10 ✅ | Offres partenaires en tête seulement si type et public correspondent ; « à Montpellier » = la ville | corrections testées |
+| 16/10 ✅ | `eval_recherche` rejoué (100 % / 98,7 %) ; évaluation rejouée en CI sur une base figée, sans vecteur ni Mistral ; tests du schéma sur un vrai PostgreSQL en CI | job CI qui échoue sous 95 % |
+| 16/10 ✅ | Seconde grille : 50 recherches courtes nouvelles (83,7 %) et les 50 questions après corrections (96,4 %) | juge confirmé sur 135 cartes nouvelles (91,9 %, AC1 0,889) ; sport et loisirs en lieux mesurés (limite voulue) |
+| 16/10 ✅ | Ménage : étiquettes vrai / faux de CheckIt.AI retirées (68 tests en moins), `PROVENANCE.md` à jour, variables mortes retirées | 3 568 tests verts |
+| 16/10 ✅ | Sécurité des dépendances : Angular 21.2.25 (22 alertes npm corrigées, dont 3 critiques), Airflow 3.3.2 (12 alertes) | 0 alerte npm ; Dependabot à revérifier |
+| 16/10 ✅ | Dossier du projet en site HTML (`docs/dossier/`, 11 pages : besoin, parcours, architecture, agent, recherche, modèles, interface, résultats, déploiement, procédures, limites) ; base de données documentée en entier | dossier lisible par le jury |
+| 17-26/10 | **Usage réel** : faire tester le site par 5 à 10 personnes ; lire les pouces bas et les recherches ratées (Grafana, bilan du lundi) ; corrections ciblées ; réponses de Frontignan et de l'Archipel de Thau (intégrer ou citer) | bilan d'usage chiffré, corrections testées |
+| 24-30/10 | Relecture du dossier et de la doc ; captures d'écran du site, de Grafana, du mail de bilan ; publication du dossier en ligne (facultatif) ; pitch et feuille de route PDF mis à jour (datés du 14/10) | dossier final |
+| 27/10-3/11 | Diapositives, scénario de démonstration, vidéo de secours, répétitions avec questions du jury ; décision sur les partenaires d'exemple (présentés comme fictifs) ; coûts Azure réels du mois relevés | support de soutenance |
+| 4/11 | Gel du code : dernier déploiement vert, étiquette git `v1.0` | version présentée |
 
 ## Ce qui est volontairement hors du MVP
 
