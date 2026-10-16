@@ -60,7 +60,7 @@ Trois conditions la rendent tenable, et ce sont elles que le MVP doit prouver :
 | Lecture des pages HTML des lieux par un LLM | **Reporté** (après soutenance) | même principe que le PDF ; à faire quand une source l'exige |
 | Métriques Prometheus de l'API | **Reporté** | le journal `rag_requests` et Grafana couvrent le besoin |
 | Météo pour les sorties en extérieur | **Abandonné** pour le MVP | utile mais hors de la promesse |
-| Base de lieux (bowling, padel, restaurants) | **Après soutenance** | un second produit ([Évolutions](evolutions.md)) |
+| Base de lieux : sport et loisirs ouverts toute l'année (piscine, bowling, padel, karting), restaurants | **Après soutenance**, limite voulue | un second produit ; mesuré le 16/10 : 0 à 57 % de pertinence sur ces recherches, contre 83,7 % au total ([Évolutions](evolutions.md)) |
 | Fine-tuning d'un modèle | **Après soutenance** | pas encore de données réelles ([Évolutions](evolutions.md)) |
 
 ## Critères d'acceptation
@@ -71,7 +71,7 @@ Trois conditions la rendent tenable, et ce sont elles que le MVP doit prouver :
 | Compréhension des questions (50 questions) | ≥ 95 % | 100 % | ✅ |
 | Recherches courtes avec une réponse exacte (125 recherches) | — | 97,6 % de propositions correctes, 19 « idées voisines » annoncées comme telles | ✅ |
 | Pertinence des 3 premières propositions (sujet et public, jugement humain, 50 questions) | ≥ 70 % | 97,8 % (136 cartes sur 139) | ✅ |
-| Accord du juge Mistral avec l'humain (pour rejouer la pertinence sans annotation) | ≥ 85 %, AC1 ≥ 0,6 | 98,6 %, AC1 0,985 | ✅ |
+| Accord du juge Mistral avec l'humain (pour rejouer la pertinence sans annotation) | ≥ 85 %, AC1 ≥ 0,6 | 98,6 %, AC1 0,985 ; confirmé sur 135 cartes nouvelles : 91,9 %, AC1 0,889 | ✅ |
 | Temps de réponse P95 (sans cache) | ≤ 8 s | 6,0 à 6,4 s mesuré depuis un poste ; le tableau Grafana suit la production | ✅ |
 | Temps de réponse P95 (réponse en cache) | ≤ 1 s | 0,11 s | ✅ |
 | Coût Mistral de la recherche | ≤ 1 $ pour 1 000 questions | 0,12 $ | ✅ |

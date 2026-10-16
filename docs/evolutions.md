@@ -18,12 +18,24 @@ SortirIA collecte des agendas : ils n'en parlent que lors d'un événement
 (tournoi, soirée). Pour ces recherches, la réponse est aujourd'hui « rien sur
 ce sujet » ou des idées voisines, annoncées comme telles.
 
+**Mesuré** (seconde grille de pertinence, 50 recherches courtes tirées au
+hasard, 16/10/2026) : pertinence@3 de **83,7 %** au total, mais **0 %** sur
+les « sorties sportives et dynamiques » (piscine, VTT), **37,5 %** sur les
+« loisirs en intérieur » (billard, trampoline park) et **57 %** sur « sport et
+nature ». Les sports **datés** sont trouvés (matchs du MHB et des Vipers,
+Ecorun, randonnées, yoga) ; les **lieux** ne le sont pas. C'est une limite
+**voulue** du MVP : SortirIA est un agenda d'événements.
+
 **Ce qu'il faudrait :**
 
 - une **source de lieux**. DATAtourisme, déjà utilisé pour les événements,
   publierait aussi des lieux de loisirs, de sport et de restauration (à
   vérifier : périmètre, fraîcheur et qualité des données pour Montpellier et
   le bassin de Thau) ; OpenStreetMap en est une autre (licence ODbL, à citer) ;
+  pour le sport, le **Recensement des équipements sportifs** du ministère des
+  Sports (Licence Ouverte : piscines, gymnases, terrains, murs d'escalade,
+  skateparks), à compléter pour les loisirs commerciaux (bowling, karting,
+  laser game), que ce recensement ne couvre sans doute pas ;
 - une **table `places`** (nom, type, adresse, coordonnées, horaires
   d'ouverture, contact, source et licence), avec ses embeddings et son
   vocabulaire, collectée par l'agent comme les événements, mais moins souvent

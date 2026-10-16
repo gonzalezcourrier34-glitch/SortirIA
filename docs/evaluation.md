@@ -9,8 +9,8 @@ chaque lancement est **gardé** (`benchmarks/`, MLflow quand le serveur répond)
 | --- | --- | --- | --- |
 | Compréhension des questions | ≥ 95 % | **100 %** (50 questions) | `scripts/eval_recherche.py` |
 | Respect des contraintes par les propositions | ≥ 95 % | **98,7 %** (50 questions) ; **97,6 %** (125 recherches courtes) | `scripts/eval_recherche.py` |
-| Pertinence des 3 premières propositions (sujet et public) | ≥ 70 % | **97,8 %** (136 cartes sur 139, jugées à la main, 50 questions) ; 100 % des questions ont au moins une carte pertinente | `scripts/eval_pertinence.py` |
-| Accord du juge Mistral avec l'humain | ≥ 85 % et AC1 ≥ 0,6 | **98,6 %**, AC1 0,985, kappa 0,74 ; les 3 rejets humains retrouvés | `scripts/eval_pertinence.py --juge` |
+| Pertinence des 3 premières propositions (sujet et public) | ≥ 70 % | **97,8 %** (50 questions, 139 cartes, jugées à la main) ; **83,7 %** sur 50 recherches courtes tirées au hasard (sport et loisirs en lieux : limite voulue) | `scripts/eval_pertinence.py` |
+| Accord du juge Mistral avec l'humain | ≥ 85 % et AC1 ≥ 0,6 | **98,6 %**, AC1 0,985 (grille de calibrage) ; **91,9 %**, AC1 0,889 sur 135 cartes nouvelles | `scripts/eval_pertinence.py --juge` |
 | Temps de réponse (sans cache) | P95 ≤ 8 s | médiane 3,0 à 3,3 s, P95 6,0 à 6,4 s | `scripts/mesure_cout_latence.py` |
 | Temps de réponse (cache) | P95 ≤ 1 s | médiane 0,10 s, P95 0,11 s | `scripts/mesure_cout_latence.py --cache` |
 | Coût Mistral de la recherche | ≤ 1 $ / 1 000 | **0,12 $ / 1 000** questions | `scripts/mesure_cout_latence.py` |
@@ -182,6 +182,36 @@ Les deux grilles sont conservées (`…_09h50.avant_alignement.csv`).
 - Coût : environ 0,03 $ par passage ([Coûts](couts.md)), lancé à la main,
   jamais pendant une démonstration (il partage le quota Mistral du site).
 
+### Seconde grille : le juge sur des cartes nouvelles (16/10/2026)
+
+Le juge a été calibré sur la première grille ; il fallait le vérifier sur des
+cartes **qu'il n'avait jamais vues**, sans le modifier (v7 figé). Deux
+grilles, annotées avec la même règle (sujet et public) :
+
+| Grille | Humain : pertinence@3 | Juge : accord | AC1 | Rejets humains retrouvés |
+| --- | --- | --- | --- | --- |
+| 50 recherches courtes tirées au hasard dans `config/eval_mots.yaml` (135 cartes, toutes nouvelles) | **83,7 %** (88 % des questions satisfaites) | **91,9 %** | **0,889** | 16 sur 22 |
+| Les 50 questions de départ, après les corrections (139 cartes, 22 nouvelles, notes reprises) | **96,4 %** | 92,8 % | 0,922 | 1 sur 5 |
+
+- **Le juge tient** : au-dessus du seuil (85 %, AC1 0,6) sur des cartes
+  nouvelles. Ses 11 désaccords sur les recherches courtes vont dans les deux
+  sens : plus indulgent sur 6 (un « Paint & Drink » pour « peinture », un
+  marché à Carnon-Plage pour « plage »), plus sévère sur 5 (des expositions
+  nocturnes pour « marché nocturne », un concert intitulé « Salon de musique »
+  pour « salon »).
+- **Les corrections ont marché** : les 3 offres partenaires jugées « non »
+  ne sont plus dans les 3 premières cartes (deux vraies pièces pour
+  « théâtre », un atelier théâtre ados pour « ados »).
+- **Les 5 « non » de la seconde grille de départ** portent sur le **prix** :
+  ce sont les idées voisines payantes des deux questions « gratuit », que la
+  réponse annonce. Le juge ne voit pas le prix (contrainte vérifiée par le
+  code), d'où 4 des 10 désaccords : écart attendu, pas une erreur du juge.
+- **La faiblesse mesurée est voulue** : 0 à 57 % sur le sport et les loisirs
+  ouverts toute l'année (piscine, VTT, billard, trampoline park). Ce sont des
+  **lieux**, pas des événements datés ; SortirIA est un agenda
+  ([Évolutions](evolutions.md), § 1). Les sports datés (matchs, courses,
+  randonnées) sont trouvés.
+
 Pourquoi ce protocole : un juge LLM seul se note lui-même sans garantie ; une
 annotation humaine seule ne se rejoue pas. Calibrer l'un sur l'autre donne
 une mesure à la fois **fondée** et **rejouable**.
@@ -251,10 +281,6 @@ pour 1 000 questions passe de 0,12 $ à 0,08 $.
   précis et leur public correspondent ; « à Montpellier » = la ville
   elle-même ; `eval_recherche` rejoué : compréhension 100 %, précision
   98,7 % ; évaluation rejouée en CI (§ 1) ;
-- **seconde grille de pertinence**, en deux parties :
-  - 50 recherches courtes tirées au hasard dans `config/eval_mots.yaml`
-    (`--preparer --questions config/eval_mots.yaml --echantillon 50`) : des
-    cartes que le juge n'a jamais vues, pour confirmer son accord ;
-  - les 50 questions de départ avec les notes reprises
-    (`--preparer --reprendre grille_….csv`) : seules les cartes nouvelles sont
-    à annoter, pour vérifier que les 3 « non » ont disparu.
+- **fait le 16/10** : seconde grille de pertinence (§ 2, « Seconde grille »).
+- à surveiller : les désaccords du juge sur les recherches d'un mot
+  (« marché nocturne », « salon ») avant de le laisser seul juge d'un rejeu.

@@ -8,3 +8,5 @@ date,grille,questions,cartes_jugees,pertinence_at_3,questions_satisfaites,juge_p
 2026-10-16T11:14:55+02:00,grille_2026-10-16_09h50.csv,50,139,0.942,0.96,0.842,0.899,0.49,2026-10-16.1,"juge v5 fige : dates calculees, regle du public"
 2026-10-16T11:33:13+02:00,grille_2026-10-16_09h50.csv,50,139,0.935,0.96,0.848,0.884,0.413,2026-10-16.1,"juge v6 : sujet public lieu, mistral-large"
 2026-10-16T11:43:56+02:00,grille_2026-10-16_09h50.csv,50,139,0.978,1.0,0.964,0.986,0.743,2026-10-16.1,juge v7 fige : sujet et public
+2026-10-16T13:25:27+02:00,grille_2026-10-16_12h52.csv,50,139,0.964,0.98,0.95,0.928,0.13,2026-10-16.2,apres corrections partenaires et ville
+2026-10-16T13:30:25+02:00,grille_2026-10-16_12h50_mots.csv,50,135,0.837,0.88,0.844,0.919,0.696,2026-10-16.2,"seconde grille : 50 recherches courtes, juge v7"
