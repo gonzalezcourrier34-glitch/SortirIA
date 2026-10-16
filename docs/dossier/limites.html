@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Limites et évolutions | SortirIA</title>
+<meta content="Les limites mesurées et assumées de SortirIA, les risques et leurs parades, les évolutions possibles après la soutenance et ce que j'ai appris." name="description"/>
+<link href="css/style.css" rel="stylesheet"/>
+</head>
+<body>
+<header class="header">
+<nav class="nav container">
+<a class="logo" href="index.html">Sortir<span>IA</span></a>
+<div class="nav-links"><a href="index.html">Projet</a><a href="architecture.html">Architecture</a><a href="agent.html">Agent</a><a href="recherche.html">Recherche</a><a href="modeles.html">Modèles</a><a href="interface.html">Interface</a><a href="resultats.html">Résultats</a><a href="deploiement.html">Déploiement</a><a href="procedures.html">Procédures</a><a class="active" href="limites.html">Limites</a></div>
+</nav>
+</header>
+<main>
+
+<section class="hero project-hero">
+<div class="container hero-content">
+<p class="eyebrow">SORTIRIA · LIMITES ET ÉVOLUTIONS</p>
+<h1>Limites et<span>évolutions</span></h1>
+<p class="hero-text">Ce que SortirIA ne fait pas encore, ce que je n'ai pas pu mesurer, et ce qui viendrait après la soutenance. La limite la plus nette est <strong>voulue</strong> : SortirIA est un agenda d'événements, et les recherches de lieux ouverts toute l'année (piscine, bowling, padel) n'obtiennent que <strong>0 à 57 %</strong> de pertinence, contre 83,7 % sur l'ensemble des recherches courtes.</p>
+<div class="hero-tags"><span>Couverture</span><span>Sources autorisées</span><span>Biais d'annotation</span><span>Dépendance à Mistral</span><span>Base de lieux</span><span>Fine-tuning</span></div>
+<div class="hero-actions">
+<a class="button primary" href="#s01">Lire les limites</a>
+<a class="button secondary" href="resultats.html">Voir les résultats</a>
+</div>
+</div>
+</section>
+
+<section class="section" id="s01">
+<div class="container">
+<p class="section-number">01</p>
+<h2>Les limites mesurées et assumées</h2>
+<p class="section-intro">Chaque limite est dite avec ce qui la mesure ou ce qui la compense. Aucune n'empêche la promesse du MVP ; certaines la bornent.</p>
+<div class="reflection-grid">
+<div class="reflection-card"><h3>Couverture : des événements, pas des lieux</h3><p>Les sports <strong>datés</strong> sont trouvés (matchs du MHB et des Vipers, courses, randonnées). Les <strong>lieux</strong> ouverts toute l'année ne le sont pas : 0 % sur les sorties sportives (piscine, VTT), 37,5 % sur les loisirs en intérieur (billard, trampoline park), 57 % sur sport et nature. C'est une limite voulue : les agendas n'en parlent que lors d'un événement.</p></div>
+<div class="reflection-card"><h3>Sources : rien sans autorisation écrite</h3><p>Le moteur d'agendas en ligne est prêt mais désactivé. Demandes envoyées à Frontignan le 14/10 et à l'office de tourisme Archipel de Thau le 16/10, réponses attendues. Le PDF de Sète agglopôle, bloqué depuis les serveurs Azure, est coupé sur le serveur et lu depuis un poste : ses 434 événements restent en base, mais cette source n'est pas automatique.</p></div>
+<div class="reflection-card"><h3>Pas encore d'utilisateurs réels</h3><p>Les 50 questions et les 125 recherches courtes sont écrites à la main. Elles mesurent bien ce que je sais anticiper, pas les tournures imprévues. Le journal <code>rag_requests</code>, le pouce haut / bas et le bilan des recherches ratées sont prêts à prendre le relais.</p></div>
+<div class="reflection-card"><h3>L'annotateur est l'auteur</h3><p>J'ai annoté moi-même la pertinence (97,8 %) : biais possible vers l'indulgence. Contre-mesures : protocole écrit avant la mesure, et un juge Mistral Large qui n'a pas vu le code et s'est montré plutôt plus sévère que moi. L'annotation a d'ailleurs trouvé de vrais défauts (offres partenaires en tête à tort).</p></div>
+<div class="reflection-card"><h3>Un juge calibré sur une grille</h3><p>Le juge v7 atteint 98,6 % d'accord (AC1 0,985) sur la grille qui a servi à le régler. Figé, il tombe à 91,9 % (AC1 0,889) sur 135 cartes nouvelles : au-dessus du seuil (85 %, AC1 0,6), mais l'écart rappelle qu'une seule grille ne suffit pas. Ses désaccords sur les recherches d'un mot (« marché nocturne », « salon ») sont à surveiller.</p></div>
+<div class="reflection-card"><h3>Dépendance à Mistral</h3><p>Enrichissement, embeddings, rédaction, juge, lecture des PDF : tout passe par un seul fournisseur. Si Mistral tombe, la recherche continue sans vecteur (tri par date), la réponse est simplifiée et signalée à l'écran ; la collecte continue sans embeddings, calculés la nuit suivante.</p></div>
+<div class="reflection-card"><h3>Un quota Mistral partagé</h3><p>Le site, la collecte et le juge de pertinence utilisent le même quota. Le juge est donc lancé à la main, jamais pendant une démonstration ; la limite de débit (12 recherches par minute par visiteur, 1 000 par heure au total) borne le reste.</p></div>
+<div class="reflection-card"><h3>Une base gratuite 12 mois</h3><p>Le coût de ≈ 10 $ par mois tient à l'offre gratuite d'Azure : la base PostgreSQL est offerte la 1re année. Après 12 mois, elle ajoute ≈ 18 $ par mois à chaque niveau d'usage (<code>docs/couts.md</code>).</p></div>
+<div class="reflection-card"><h3>Des partenaires d'exemple fictifs</h3><p>Les trois fichiers partenaires sont des exemples, marqués « (exemple) » dans leur titre, pour montrer le circuit : un fichier déposé, importé la nuit, des offres en tête quand elles répondent. Aucun partenaire réel n'est encore branché.</p></div>
+</div>
+<p class="table-note">Sources : <code>docs/evaluation.md</code> (seconde grille, 16/10/2026), <code>docs/evolutions.md</code>, <code>docs/mvp.md</code>, <code>docs/fiabilite.md</code>, <code>docs/couts.md</code>, <code>docs/architecture.md</code>.</p>
+<div class="callout subtle">
+<span class="eyebrow">LIMITE</span>
+<strong>La pertinence globale tombe de 97,8 % à 83,7 % quand on passe des questions écrites aux recherches courtes tirées au hasard.</strong>
+<p>L'écart vient surtout des lieux permanents, que SortirIA ne collecte pas. Les questions de la première grille ressemblent à ce que j'avais en tête en construisant la recherche ; la seconde est plus proche d'un usage réel.</p>
+</div>
+</div>
+</section>
+
+<section class="section section-alt" id="s02">
+<div class="container">
+<p class="section-number">02</p>
+<h2>Les risques et leurs parades</h2>
+<p class="section-intro">Les risques identifiés pour le MVP, avec la parade déjà en place. Deux se sont réellement produits : le PDF bloqué sur Azure, et la couverture faible en soirée sur le bassin de Thau.</p>
+<table class="story-table params-table">
+<thead><tr><th>Risque</th><th>Probabilité</th><th>Parade en place</th></tr></thead>
+<tbody>
+<tr><td>Une source change de format ou d'adresse</td><td>Forte</td><td>L'agent réessaie, garde les événements de la veille, diagnostique et propose la réparation (<code>agent/diagnosis.py</code>).</td></tr>
+<tr><td>Une source bloque les serveurs (cas réel : PDF de Sète agglopôle sur Azure)</td><td>Moyenne</td><td>Source coupée sur le serveur (<code>SOURCES_DESACTIVEES</code>), lue depuis un poste.</td></tr>
+<tr><td>Mistral indisponible ou en quota</td><td>Moyenne</td><td>Recherche sans vecteur, réponse simplifiée sans Mistral, signalée à l'écran.</td></tr>
+<tr><td>Hallucination dans la réponse ou un résumé</td><td>Moyenne</td><td>Citations limitées aux événements fournis et vérifiées, résumés contrôlés, juge de qualité chaque nuit avec un autre modèle.</td></tr>
+<tr><td>Coût qui dérape (robot, abus)</td><td>Faible</td><td>Limite de débit par visiteur et plafond global : au plus 1 000 recherches par heure (<code>app/rate_limit.py</code>).</td></tr>
+<tr><td>Couverture faible (peu de sorties en soirée sur le bassin de Thau)</td><td>Réelle</td><td>Alerte de couverture chaque nuit ; PDF, partenaires, agendas proposés par l'agent.</td></tr>
+<tr><td>Manque de temps avant le gel</td><td>Moyenne</td><td>MVP en production dès le 15/10 ; jusqu'au 4/11 : mesure, fiabilisation, documentation.</td></tr>
+</tbody>
+</table>
+<p class="table-note">D'après <code>docs/mvp.md</code>, section « Risques et parades » (16/10/2026).</p>
+</div>
+</section>
+
+<section class="section" id="s03">
+<div class="container">
+<p class="section-number">03</p>
+<h2>Les évolutions possibles</h2>
+<p class="section-intro">Rien de ce qui suit n'est dans le périmètre du MVP. Chaque piste dit ce qu'elle apporterait, ce qu'elle demande, et pourquoi elle attend la soutenance.</p>
+<div class="projects-grid">
+<article class="project-card">
+<div class="project-top"><span class="project-type">PISTE 1 · LA PLUS ATTENDUE</span></div>
+<h3>Une base de lieux, à côté des événements</h3>
+<p>Une source de lieux : le <strong>Recensement des équipements sportifs</strong> du ministère des Sports (piscines, gymnases, murs d'escalade, skateparks), OpenStreetMap, les lieux publiés par DATAtourisme (à vérifier pour la zone). Une table <code>places</code> avec horaires d'ouverture, une recherche sur les deux bases, une carte « lieu ».</p>
+<p><strong>Pourquoi après :</strong> c'est un second produit dans le premier (source, schéma, recherche, interface, évaluation), à trois semaines du gel. Un bowling partenaire peut déjà publier ses soirées.</p>
+</article>
+<article class="project-card">
+<div class="project-top"><span class="project-type">PISTE 2</span></div>
+<h3>Le fine-tuning d'un modèle</h3>
+<p>Pour l'enrichissement (un modèle plus petit et plus constant), la compréhension des questions (fautes, tournures imprévues, les règles restant le filet), la rédaction (ton et format plus réguliers).</p>
+<p><strong>Pourquoi après :</strong> il faut des données réelles, quelques centaines d'exemples par tâche ; entraîné sur les jeux d'évaluation, un modèle les apprendrait par cœur. La mesure avant / après existe déjà.</p>
+</article>
+<article class="project-card">
+<div class="project-top"><span class="project-type">PISTE 3</span></div>
+<h3>Les pages HTML des lieux lues par Mistral</h3>
+<p>Même principe que les PDF : titre et date vérifiés dans la page, rien sans adresse ni date, tout validé avant d'entrer en base. Un nœud de plus dans l'agent.</p>
+<p><strong>Pourquoi après :</strong> à faire quand une source autorisée l'exigera ; aujourd'hui, aucune ne le demande.</p>
+</article>
+<article class="project-card">
+<div class="project-top"><span class="project-type">PISTE 4</span></div>
+<h3>OpenAgenda par l'API v2</h3>
+<p>Sa recherche transverse (expérimentale, accès à demander) chercherait un sujet dans toute la zone en un appel, au lieu d'un appel par agenda.</p>
+<p><strong>Pourquoi après :</strong> la version actuelle fonctionne chaque nuit ; changer d'API avant le gel ajouterait un risque sans gain pour la démonstration.</p>
+</article>
+<article class="project-card">
+<div class="project-top"><span class="project-type">PISTE 5</span></div>
+<h3>Fautes de frappe et diagnostic par Mistral</h3>
+<p>Une recherche approchée (<code>pg_trgm</code>) rattraperait « cirqe » dès la première question. Mistral pourrait lire une erreur de collecte et choisir entre réessayer, ignorer la source ou proposer une réparation, toujours validée.</p>
+<p><strong>Pourquoi après :</strong> la recherche par le sens et l'agent du lundi rattrapent déjà les fautes ; les règles de diagnostic couvrent les pannes vues.</p>
+</article>
+<article class="project-card">
+<div class="project-top"><span class="project-type">REPORTÉ OU ABANDONNÉ</span></div>
+<h3>Prometheus, météo</h3>
+<p>Les métriques Prometheus de l'API sont reportées : le journal <code>rag_requests</code> et le tableau Grafana « Recherche » couvrent le besoin. La météo est abandonnée pour le MVP : « s'il pleut » est compris comme « en intérieur ».</p>
+<p><strong>Pourquoi après :</strong> utiles, mais hors de la promesse.</p>
+</article>
+</div>
+<p class="table-note">D'après <code>docs/evolutions.md</code> et <code>docs/mvp.md</code>.</p>
+
+<figure class="story-figure"><svg class="story-svg" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 440" role="img" aria-label="Feuille de route après la soutenance en trois horizons. Court terme, brancher ce qui est prêt : agendas en ligne autorisés, OpenAgenda v2, fautes de frappe avec pg_trgm, pages HTML lues par Mistral ; déclencheur : une autorisation écrite des sources. Moyen terme, une base de lieux : équipements sportifs, OpenStreetMap, DATAtourisme, table places, recherche sur les deux bases, carte lieu ; point de départ mesuré : 0 à 57 % de pertinence. Long terme, apprendre de l'usage réel : fine-tuning de l'enrichissement, de la compréhension et de la rédaction, diagnostic des pannes par Mistral ; déclencheur : quelques centaines d'exemples réels par tâche. Chaque étape est mesurée avec les mêmes jeux d'évaluation.">
+<rect width="1080" height="440" rx="18" fill="#111a22"/>
+<defs><marker id="arr-limites-1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#98a8ad"/></marker></defs>
+<text x="40" y="46" fill="#edf4f4" font-size="22" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">Feuille de route après la soutenance</text>
+<text x="40" y="72" fill="#98a8ad" font-size="14" font-family="Inter, 'Segoe UI', Arial, sans-serif">Trois horizons ; chacun s'ouvre sur une condition, pas sur une date.</text>
+
+<rect x="40" y="100" width="300" height="250" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
+<text x="56" y="126" fill="#48c9b0" font-size="10.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" letter-spacing="1.3">COURT TERME</text>
+<text x="56" y="152" fill="#edf4f4" font-size="16" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">Brancher ce qui est prêt</text>
+<text x="56" y="182" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">• Agendas en ligne autorisés</text>
+<text x="70" y="200" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">(Frontignan, Archipel de Thau)</text>
+<text x="56" y="224" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">• OpenAgenda par l'API v2</text>
+<text x="56" y="248" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">• Fautes de frappe : pg_trgm</text>
+<text x="56" y="272" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">• Pages HTML lues par Mistral</text>
+<line x1="56" y1="300" x2="324" y2="300" stroke="#2f9e8a" stroke-width="1" stroke-dasharray="4 4"/>
+<text x="56" y="326" fill="#edf4f4" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">Si : réponse écrite des sources</text>
+<line x1="340" y1="225" x2="388" y2="225" stroke="#98a8ad" stroke-width="1.6" marker-end="url(#arr-limites-1)"/>
+
+<rect x="390" y="100" width="300" height="250" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
+<text x="406" y="126" fill="#48c9b0" font-size="10.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" letter-spacing="1.3">MOYEN TERME</text>
+<text x="406" y="152" fill="#edf4f4" font-size="16" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">Une base de lieux</text>
+<text x="406" y="182" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">• Équipements sportifs,</text>
+<text x="420" y="200" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">OpenStreetMap, DATAtourisme</text>
+<text x="406" y="224" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">• Table places, horaires</text>
+<text x="406" y="248" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">• Recherche sur les deux bases</text>
+<text x="406" y="272" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">• Carte « lieu » dans l'interface</text>
+<line x1="406" y1="300" x2="674" y2="300" stroke="#2f9e8a" stroke-width="1" stroke-dasharray="4 4"/>
+<text x="406" y="326" fill="#edf4f4" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">Départ mesuré : 0 à 57 %</text>
+<line x1="690" y1="225" x2="738" y2="225" stroke="#98a8ad" stroke-width="1.6" marker-end="url(#arr-limites-1)"/>
+
+<rect x="740" y="100" width="300" height="250" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
+<text x="756" y="126" fill="#48c9b0" font-size="10.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" letter-spacing="1.3">LONG TERME</text>
+<text x="756" y="152" fill="#edf4f4" font-size="16" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">Apprendre de l'usage réel</text>
+<text x="756" y="182" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">• Fine-tuning : enrichissement,</text>
+<text x="770" y="200" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">compréhension, rédaction</text>
+<text x="756" y="224" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">• Diagnostic des pannes</text>
+<text x="770" y="242" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">par Mistral, validé</text>
+<text x="756" y="266" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">• Prometheus, météo</text>
+<line x1="756" y1="300" x2="1024" y2="300" stroke="#2f9e8a" stroke-width="1" stroke-dasharray="4 4"/>
+<text x="756" y="326" fill="#edf4f4" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">Si : centaines d'exemples réels</text>
+
+<rect x="40" y="372" width="1000" height="44" rx="10" fill="#17232d" stroke="#48c9b0" stroke-width="1.5"/>
+<text x="540" y="399" fill="#edf4f4" font-size="13" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="middle">Chaque étape mesurée avant / après : 50 questions, 125 recherches courtes, juge v7 figé, historique dans benchmarks/</text>
+</svg><figcaption>Les trois horizons ne sont pas datés : chacun dépend d'une condition extérieure (autorisation des sources, données réelles). La mesure commune permet de vérifier qu'une évolution ne dégrade rien.</figcaption></figure>
+</div>
+</section>
+
+<section class="section section-alt" id="s04">
+<div class="container">
+<p class="section-number">04</p>
+<h2>Ce que je referais autrement, ce que j'ai appris</h2>
+<p class="section-intro">Quelques leçons tirées du projet, la plupart apprises en mesurant.</p>
+<div class="about-grid">
+<div class="large-text">Un modèle de langage juge bien le sens. Les dates, les prix et les lieux, c'est le code qui doit les vérifier.</div>
+<div><p>Mon juge de pertinence est passé par sept versions, de 68 % à 98,6 % d'accord avec moi. Le tournant est venu à la v3, quand je lui ai demandé <strong>une raison par verdict</strong>. Ses raisons ont montré qu'il calculait mal les dates (« 31 oct. &lt; 16 oct. »), inventait des contraintes que la question ne posait pas et prenait un prix absent pour un prix payant.</p><p>La plupart des corrections suivantes ont <strong>retiré</strong> un critère au juge pour le confier au code. Aucune règle n'a été écrite pour une carte précise.</p></div>
+</div>
+<div class="reflection-grid">
+<div class="reflection-card"><h3>Demander ses raisons au juge dès le début</h3><p>Les deux premières versions rendaient des verdicts sans explication : je réglais à l'aveugle (68 %, puis 55 %). Je commencerais aujourd'hui par une question par appel et une raison par verdict.</p></div>
+<div class="reflection-card"><h3>Confier au code ce qui est vérifiable</h3><p>Date, lieu, public, budget : contrôlés par le code (98,7 %). Sujet et public : jugés par un humain ou un modèle. Ce partage vaut pour la recherche comme pour l'évaluation.</p></div>
+<div class="reflection-card"><h3>Mieux poser l'argument « agent ou ETL »</h3><p>Mon premier tableau laissait croire que l'agent apportait le réessai et la gestion d'erreurs, ce qu'un ETL sait faire. Le vrai apport, ce sont les étapes qui lisent et jugent : PDF, enrichissement, juge, recherches ratées, diagnostic.</p></div>
+<div class="reflection-card"><h3>Tester une source depuis le serveur cible</h3><p>Le PDF de Sète agglopôle se lisait depuis mon poste et pas depuis Azure. L'agent l'a diagnostiqué (« page web reçue au lieu du PDF ») sans perte de données, mais je l'ai découvert en production.</p></div>
+<div class="reflection-card"><h3>Préférer des règles mesurées à un modèle de plus</h3><p>J'avais prévu d'extraire les contraintes avec Ministral. Les règles font 100 % sur 50 questions, en 1 ms et sans coût : le modèle attendra des questions réelles.</p></div>
+<div class="reflection-card"><h3>Vérifier un juge sur des cartes qu'il n'a pas vues</h3><p>98,6 % sur la grille de calibrage, 91,9 % sur une grille nouvelle. Sans la seconde grille, j'aurais présenté le premier chiffre seul.</p></div>
+</div>
+<p class="table-note">D'après <code>docs/evaluation.md</code> (historique des versions du juge), <code>agent/README.md</code> et les notes de préparation de la soutenance.</p>
+</div>
+</section>
+
+<section class="section contact">
+<div class="container">
+<p class="eyebrow">CONTINUER</p>
+<h2>Les limites se lisent mieux à côté des mesures.</h2>
+<div class="hero-actions">
+<a class="button primary" href="resultats.html">Résultats</a>
+<a class="button secondary" href="index.html">Projet</a>
+</div>
+</div>
+</section>
+</main>
+<footer>
+<div class="container footer-content">
+<span>SortirIA • Projet de fin de formation Ingénieur IA (OpenClassrooms)</span>
+<span>Montpellier et bassin de Thau • 2026</span>
+</div>
+</footer>
+<script src="js/main.js"></script>
+</body>
+</html>

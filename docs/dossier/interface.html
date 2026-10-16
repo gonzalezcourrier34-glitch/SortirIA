@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>L'interface Angular | SortirIA</title>
+<meta content="L'écran de SortirIA en Angular 21 : critères, question, étapes de la recherche en direct, réponse sourcée, cartes, détail, avis, offres partenaires signalées, et son déploiement sur Azure Static Web Apps." name="description"/>
+<link href="css/style.css" rel="stylesheet"/>
+</head>
+<body>
+<header class="header">
+<nav class="nav container">
+<a class="logo" href="index.html">Sortir<span>IA</span></a>
+<div class="nav-links"><a href="index.html">Projet</a><a href="architecture.html">Architecture</a><a href="agent.html">Agent</a><a href="recherche.html">Recherche</a><a href="modeles.html">Modèles</a><a class="active" href="interface.html">Interface</a><a href="resultats.html">Résultats</a><a href="deploiement.html">Déploiement</a><a href="procedures.html">Procédures</a><a href="limites.html">Limites</a></div>
+</nav>
+</header>
+<main>
+
+<section class="hero project-hero">
+<div class="container hero-content">
+<p class="eyebrow">SORTIRIA · INTERFACE</p>
+<h1>L'interface <span>Angular</span></h1>
+<p class="hero-text">Un seul écran : on coche ses critères, on écrit son envie, on voit SortirIA chercher étape par étape, puis on lit une réponse qui cite ses sources et on ouvre les événements proposés. J'ai repris l'architecture de mon projet Chess Agent (Angular, proxy <code>/api</code>, flux Server-Sent Events) et écrit l'écran pour SortirIA. Il est en ligne sur <strong>www.sortiria-montpellier.fr</strong>, compilé et déployé à chaque push, avec <strong>0 alerte de sécurité npm</strong>.</p>
+<div class="hero-tags"><span>Angular 21</span><span>Signaux</span><span>Server-Sent Events</span><span>Azure Static Web Apps</span><span>Vitest</span></div>
+<div class="hero-actions">
+<a class="button primary" href="#s01">Lire</a>
+<a class="button secondary" href="recherche.html">La recherche derrière</a>
+</div>
+</div>
+</section>
+
+<section class="section" id="s01">
+<div class="container">
+<p class="section-number">01</p>
+<h2>Ce que voit le visiteur</h2>
+<p class="section-intro">L'écran est découpé en deux : à gauche l'échange avec SortirIA, à droite l'événement choisi et les offres des partenaires. Tout tient dans la fenêtre d'un ordinateur.</p>
+
+<figure class="story-figure"><svg class="story-svg" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 720" role="img" aria-label="Maquette de l'écran de SortirIA. En haut, l'en-tête avec le titre et les agendas réunis. À gauche : les critères Public, Zone, Quand et Gratuit seulement ; la zone de question sur deux lignes avec les boutons Nouvelle conversation et Chercher ; la réponse rédigée avec ses renvois [1] et [2] et la question Cette réponse vous aide-t-elle ; huit cartes d'événements sur deux rangées, la première marquée Offre partenaire ; les relances proposées. À droite : le détail de l'événement avec sa source, l'attribution et le lien vers l'organisateur, les avis sur le lieu et le formulaire d'avis ; dessous, la colonne À ne pas manquer avec les offres des partenaires.">
+<rect width="1080" height="720" rx="18" fill="#111a22"/>
+<g font-family="Inter, 'Segoe UI', Arial, sans-serif">
+<text x="40" y="46" fill="#edf4f4" font-size="22" font-weight="700">L'écran de SortirIA, sur ordinateur</text>
+<text x="40" y="72" fill="#98a8ad" font-size="14">Disposition fidèle à app.component.html · titres, lieux et dates des cartes laissés génériques</text>
+
+<rect x="20" y="88" width="1040" height="616" rx="14" fill="#17232d" stroke="#98a8ad" stroke-width="1"/>
+
+<!-- En-tête -->
+<text x="40" y="126" fill="#48c9b0" font-size="18" font-weight="700">SortirIA</text>
+<text x="130" y="126" fill="#edf4f4" font-size="15" font-weight="700">Que faire autour de Montpellier et de l'étang de Thau ?</text>
+<text x="130" y="146" fill="#98a8ad" font-size="12">Événements des 3 prochains mois, sources citées</text>
+<text x="634" y="122" fill="#98a8ad" font-size="12">Agendas réunis, mis à jour chaque nuit :</text>
+<rect x="634" y="132" width="88" height="20" rx="10" fill="#111a22" stroke="#2f9e8a" stroke-width="1"/>
+<text x="678" y="146" fill="#edf4f4" font-size="12" text-anchor="middle">OpenAgenda</text>
+<rect x="726" y="132" width="92" height="20" rx="10" fill="#111a22" stroke="#2f9e8a" stroke-width="1"/>
+<text x="772" y="146" fill="#edf4f4" font-size="12" text-anchor="middle">DATAtourisme</text>
+<rect x="824" y="132" width="104" height="20" rx="10" fill="#111a22" stroke="#2f9e8a" stroke-width="1"/>
+<text x="876" y="146" fill="#edf4f4" font-size="12" text-anchor="middle">Agglopôle Sète</text>
+<rect x="934" y="132" width="86" height="20" rx="10" fill="#111a22" stroke="#2f9e8a" stroke-width="1"/>
+<text x="977" y="146" fill="#edf4f4" font-size="12" text-anchor="middle">Partenaires</text>
+<line x1="20" y1="166" x2="1060" y2="166" stroke="#98a8ad" stroke-width="0.8" opacity="0.5"/>
+
+<!-- Critères, ligne 1 -->
+<text x="36" y="195" fill="#98a8ad" font-size="12">Public</text>
+<rect x="84" y="178" width="62" height="24" rx="12" fill="#48c9b0"/>
+<text x="115" y="194" fill="#111a22" font-size="12" font-weight="700" text-anchor="middle">Famille</text>
+<rect x="152" y="178" width="58" height="24" rx="12" fill="#111a22" stroke="#98a8ad" stroke-width="1"/>
+<text x="181" y="194" fill="#edf4f4" font-size="12" text-anchor="middle">Soirée</text>
+<rect x="216" y="178" width="46" height="24" rx="12" fill="#111a22" stroke="#98a8ad" stroke-width="1"/>
+<text x="239" y="194" fill="#edf4f4" font-size="12" text-anchor="middle">Ados</text>
+<rect x="268" y="178" width="62" height="24" rx="12" fill="#111a22" stroke="#98a8ad" stroke-width="1"/>
+<text x="299" y="194" fill="#edf4f4" font-size="12" text-anchor="middle">Seniors</text>
+<text x="350" y="195" fill="#98a8ad" font-size="12">Zone</text>
+<rect x="388" y="178" width="86" height="24" rx="12" fill="#111a22" stroke="#98a8ad" stroke-width="1"/>
+<text x="431" y="194" fill="#edf4f4" font-size="12" text-anchor="middle">Montpellier</text>
+<rect x="480" y="178" width="46" height="24" rx="12" fill="#111a22" stroke="#98a8ad" stroke-width="1"/>
+<text x="503" y="194" fill="#edf4f4" font-size="12" text-anchor="middle">Thau</text>
+<rect x="532" y="178" width="62" height="24" rx="12" fill="#111a22" stroke="#98a8ad" stroke-width="1"/>
+<text x="563" y="194" fill="#edf4f4" font-size="12" text-anchor="middle">Partout</text>
+<!-- Critères, ligne 2 -->
+<text x="36" y="227" fill="#98a8ad" font-size="12">Quand</text>
+<rect x="84" y="210" width="86" height="24" rx="12" fill="#111a22" stroke="#98a8ad" stroke-width="1"/>
+<text x="127" y="226" fill="#edf4f4" font-size="12" text-anchor="middle">Aujourd'hui</text>
+<rect x="176" y="210" width="92" height="24" rx="12" fill="#48c9b0"/>
+<text x="222" y="226" fill="#111a22" font-size="12" font-weight="700" text-anchor="middle">Ce week-end</text>
+<rect x="274" y="210" width="58" height="24" rx="12" fill="#111a22" stroke="#98a8ad" stroke-width="1"/>
+<text x="303" y="226" fill="#edf4f4" font-size="12" text-anchor="middle">7 jours</text>
+<rect x="338" y="210" width="58" height="24" rx="12" fill="#111a22" stroke="#98a8ad" stroke-width="1"/>
+<text x="367" y="226" fill="#edf4f4" font-size="12" text-anchor="middle">3 mois</text>
+<rect x="416" y="210" width="128" height="24" rx="12" fill="#111a22" stroke="#98a8ad" stroke-width="1"/>
+<text x="480" y="226" fill="#edf4f4" font-size="12" text-anchor="middle">Gratuit seulement</text>
+
+<!-- Question -->
+<rect x="36" y="246" width="500" height="56" rx="10" fill="#111a22" stroke="#2f9e8a" stroke-width="1.2"/>
+<text x="50" y="270" fill="#edf4f4" font-size="13">Un concert ce soir à Montpellier</text>
+<text x="50" y="292" fill="#98a8ad" font-size="12">Entrée : chercher · Maj + Entrée : à la ligne</text>
+<rect x="548" y="246" width="164" height="24" rx="12" fill="#111a22" stroke="#98a8ad" stroke-width="1"/>
+<text x="630" y="262" fill="#edf4f4" font-size="12" text-anchor="middle">Nouvelle conversation</text>
+<rect x="548" y="276" width="164" height="26" rx="13" fill="#48c9b0"/>
+<text x="630" y="293" fill="#111a22" font-size="13" font-weight="700" text-anchor="middle">Chercher</text>
+
+<!-- Réponse -->
+<rect x="36" y="314" width="676" height="94" rx="12" fill="#111a22" stroke="#2f9e8a" stroke-width="1.2"/>
+<circle cx="58" cy="337" r="11" fill="#48c9b0"/>
+<text x="58" y="341" fill="#111a22" font-size="12" font-weight="700" text-anchor="middle">S</text>
+<text x="76" y="341" fill="#edf4f4" font-size="13" font-weight="700">SortirIA</text>
+<text x="144" y="341" fill="#98a8ad" font-size="12">« Un concert ce soir à Montpellier »</text>
+<text x="700" y="341" fill="#48c9b0" font-size="12" text-anchor="end">Voir comment j'ai cherché</text>
+<text x="50" y="368" fill="#edf4f4" font-size="13">Réponse de 2 à 4 phrases ; chaque renvoi est un bouton :</text>
+<rect x="420" y="354" width="30" height="20" rx="6" fill="#17232d" stroke="#48c9b0" stroke-width="1"/>
+<text x="435" y="368" fill="#48c9b0" font-size="12" text-anchor="middle">[1]</text>
+<rect x="456" y="354" width="30" height="20" rx="6" fill="#17232d" stroke="#48c9b0" stroke-width="1"/>
+<text x="471" y="368" fill="#48c9b0" font-size="12" text-anchor="middle">[2]</text>
+<text x="50" y="396" fill="#98a8ad" font-size="12">Cette réponse vous aide-t-elle ?</text>
+<rect x="246" y="382" width="48" height="20" rx="10" fill="#17232d" stroke="#98a8ad" stroke-width="1"/>
+<text x="270" y="396" fill="#edf4f4" font-size="12" text-anchor="middle">Oui</text>
+<rect x="300" y="382" width="48" height="20" rx="10" fill="#17232d" stroke="#98a8ad" stroke-width="1"/>
+<text x="324" y="396" fill="#edf4f4" font-size="12" text-anchor="middle">Non</text>
+
+<!-- Cartes, rangée 1 -->
+<rect x="36" y="420" width="161" height="104" rx="10" fill="#111a22" stroke="#48c9b0" stroke-width="2.2" stroke-dasharray="6 3"/>
+<text x="46" y="438" fill="#48c9b0" font-size="12">[1]</text>
+<rect x="70" y="426" width="112" height="18" rx="9" fill="#17232d" stroke="#48c9b0" stroke-width="1"/>
+<text x="126" y="439" fill="#48c9b0" font-size="12" text-anchor="middle">Offre partenaire</text>
+<text x="46" y="462" fill="#edf4f4" font-size="13" font-weight="700">Titre de la sortie</text>
+<text x="46" y="480" fill="#98a8ad" font-size="12">Lieu · commune</text>
+<text x="46" y="500" fill="#edf4f4" font-size="12">Type · prix</text>
+<text x="46" y="516" fill="#98a8ad" font-size="12">Partenaires</text>
+
+<rect x="207" y="420" width="161" height="104" rx="10" fill="#111a22" stroke="#98a8ad" stroke-width="1"/>
+<text x="217" y="438" fill="#48c9b0" font-size="12">[2] date</text>
+<text x="358" y="438" fill="#98a8ad" font-size="12" text-anchor="end">+ n dates</text>
+<text x="217" y="462" fill="#edf4f4" font-size="13" font-weight="700">Titre de la sortie</text>
+<text x="217" y="480" fill="#98a8ad" font-size="12">Lieu · commune</text>
+<text x="217" y="500" fill="#edf4f4" font-size="12">Type · prix</text>
+<text x="217" y="516" fill="#98a8ad" font-size="12">OpenAgenda</text>
+
+<rect x="378" y="420" width="161" height="104" rx="10" fill="#111a22" stroke="#98a8ad" stroke-width="1"/>
+<text x="388" y="438" fill="#48c9b0" font-size="12">[3] date</text>
+<text x="388" y="462" fill="#edf4f4" font-size="13" font-weight="700">Titre de la sortie</text>
+<text x="388" y="480" fill="#98a8ad" font-size="12">Lieu · commune</text>
+<text x="388" y="500" fill="#edf4f4" font-size="12">Type · prix</text>
+<text x="388" y="516" fill="#98a8ad" font-size="12">DATAtourisme</text>
+
+<rect x="549" y="420" width="161" height="104" rx="10" fill="#111a22" stroke="#98a8ad" stroke-width="1"/>
+<text x="559" y="438" fill="#48c9b0" font-size="12">[4] date</text>
+<text x="559" y="462" fill="#edf4f4" font-size="13" font-weight="700">Titre de la sortie</text>
+<text x="559" y="480" fill="#98a8ad" font-size="12">Lieu · commune</text>
+<text x="559" y="500" fill="#edf4f4" font-size="12">Type · prix</text>
+<text x="559" y="516" fill="#98a8ad" font-size="12">Agglopôle Sète</text>
+
+<!-- Cartes, rangée 2 -->
+<rect x="36" y="532" width="161" height="104" rx="10" fill="#111a22" stroke="#98a8ad" stroke-width="1"/>
+<text x="46" y="550" fill="#48c9b0" font-size="12">[5] date</text>
+<text x="46" y="574" fill="#edf4f4" font-size="13" font-weight="700">Titre de la sortie</text>
+<text x="46" y="592" fill="#98a8ad" font-size="12">Lieu · commune</text>
+<text x="46" y="612" fill="#edf4f4" font-size="12">Type · prix</text>
+<text x="46" y="628" fill="#98a8ad" font-size="12">OpenAgenda</text>
+<rect x="207" y="532" width="161" height="104" rx="10" fill="#111a22" stroke="#98a8ad" stroke-width="1"/>
+<text x="217" y="550" fill="#48c9b0" font-size="12">[6] date</text>
+<text x="217" y="574" fill="#edf4f4" font-size="13" font-weight="700">Titre de la sortie</text>
+<text x="217" y="592" fill="#98a8ad" font-size="12">Lieu · commune</text>
+<text x="217" y="612" fill="#edf4f4" font-size="12">Type · prix</text>
+<text x="217" y="628" fill="#98a8ad" font-size="12">OpenAgenda</text>
+<rect x="378" y="532" width="161" height="104" rx="10" fill="#111a22" stroke="#98a8ad" stroke-width="1"/>
+<text x="388" y="550" fill="#48c9b0" font-size="12">[7] date</text>
+<text x="388" y="574" fill="#edf4f4" font-size="13" font-weight="700">Titre de la sortie</text>
+<text x="388" y="592" fill="#98a8ad" font-size="12">Lieu · commune</text>
+<text x="388" y="612" fill="#edf4f4" font-size="12">Type · prix</text>
+<text x="388" y="628" fill="#98a8ad" font-size="12">DATAtourisme</text>
+<rect x="549" y="532" width="161" height="104" rx="10" fill="#111a22" stroke="#98a8ad" stroke-width="1"/>
+<text x="559" y="550" fill="#48c9b0" font-size="12">[8] date</text>
+<text x="559" y="574" fill="#edf4f4" font-size="13" font-weight="700">Titre de la sortie</text>
+<text x="559" y="592" fill="#98a8ad" font-size="12">Lieu · commune</text>
+<text x="559" y="612" fill="#edf4f4" font-size="12">Type · prix</text>
+<text x="559" y="628" fill="#98a8ad" font-size="12">OpenAgenda</text>
+
+<!-- Relances -->
+<text x="36" y="664" fill="#98a8ad" font-size="12">Pour continuer :</text>
+<rect x="132" y="648" width="110" height="24" rx="12" fill="#111a22" stroke="#2f9e8a" stroke-width="1"/>
+<text x="187" y="664" fill="#edf4f4" font-size="12" text-anchor="middle">Et s'il pleut ?</text>
+<rect x="250" y="648" width="130" height="24" rx="12" fill="#111a22" stroke="#2f9e8a" stroke-width="1"/>
+<text x="315" y="664" fill="#edf4f4" font-size="12" text-anchor="middle">Plutôt en soirée ?</text>
+<rect x="388" y="648" width="140" height="24" rx="12" fill="#111a22" stroke="#2f9e8a" stroke-width="1"/>
+<text x="458" y="664" fill="#edf4f4" font-size="12" text-anchor="middle">Seulement gratuit ?</text>
+
+<!-- Détail -->
+<rect x="728" y="178" width="316" height="334" rx="12" fill="#111a22" stroke="#48c9b0" stroke-width="1.5" stroke-dasharray="6 3"/>
+<text x="742" y="200" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">L'ÉVÉNEMENT</text>
+<rect x="920" y="188" width="112" height="18" rx="9" fill="#17232d" stroke="#48c9b0" stroke-width="1"/>
+<text x="976" y="201" fill="#48c9b0" font-size="12" text-anchor="middle">Offre partenaire</text>
+<text x="742" y="228" fill="#edf4f4" font-size="15" font-weight="700">Titre de la sortie</text>
+<text x="742" y="248" fill="#98a8ad" font-size="12">date · lieu, commune · type · prix</text>
+<text x="742" y="274" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">EN BREF</text>
+<rect x="742" y="282" width="286" height="8" rx="4" fill="#17232d"/>
+<rect x="742" y="296" width="230" height="8" rx="4" fill="#17232d"/>
+<text x="742" y="330" fill="#98a8ad" font-size="12">Source</text>
+<text x="790" y="330" fill="#edf4f4" font-size="12" font-weight="700">nom de la source</text>
+<text x="742" y="348" fill="#98a8ad" font-size="12">attribution, date de mise à jour</text>
+<text x="742" y="368" fill="#48c9b0" font-size="12">Voir la page de l'organisateur ↗</text>
+<text x="742" y="396" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">AVIS SUR LE LIEU</text>
+<text x="742" y="416" fill="#edf4f4" font-size="12">★★★★☆ · moyenne dès 3 avis</text>
+<text x="742" y="442" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">VOTRE AVIS</text>
+<text x="742" y="466" fill="#98a8ad" font-size="16">☆☆☆☆☆</text>
+<rect x="922" y="452" width="108" height="22" rx="11" fill="#48c9b0"/>
+<text x="976" y="467" fill="#111a22" font-size="12" font-weight="700" text-anchor="middle">Donner mon avis</text>
+<text x="742" y="494" fill="#98a8ad" font-size="12">0/300 · relu par modération</text>
+
+<!-- À ne pas manquer -->
+<rect x="728" y="524" width="316" height="168" rx="12" fill="#111a22" stroke="#98a8ad" stroke-width="1"/>
+<text x="742" y="546" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">À NE PAS MANQUER</text>
+<text x="742" y="564" fill="#98a8ad" font-size="12">Proposé par nos partenaires</text>
+<rect x="742" y="574" width="288" height="50" rx="10" fill="#17232d" stroke="#48c9b0" stroke-width="1" stroke-dasharray="6 3"/>
+<text x="754" y="592" fill="#48c9b0" font-size="12">date</text>
+<text x="754" y="612" fill="#edf4f4" font-size="13" font-weight="700">Offre d'un partenaire · lieu</text>
+<rect x="742" y="632" width="288" height="50" rx="10" fill="#17232d" stroke="#48c9b0" stroke-width="1" stroke-dasharray="6 3"/>
+<text x="754" y="650" fill="#48c9b0" font-size="12">date</text>
+<text x="754" y="670" fill="#edf4f4" font-size="13" font-weight="700">Offre d'un partenaire · lieu</text>
+</g>
+</svg><figcaption>Maquette de l'écran, d'après <code>frontend/src/app/app.component.html</code>. Les critères cochés par défaut sont « Famille » et « Ce week-end » ; les offres partenaires sont encadrées et étiquetées partout (pointillés ici, encadré terracotta dans l'interface).</figcaption></figure>
+
+<div class="about-grid">
+<div class="large-text">Un écran, pas un site : la question, la réponse et l'événement restent visibles ensemble.</div>
+<div>
+<p><strong>En paysage</strong>, l'écran tient dans la fenêtre : la réponse et la colonne de droite défilent chacune de leur côté. <strong>En portrait</strong>, sous 900 px de large, tout passe sur une colonne et les critères reviennent à la ligne.</p>
+<p><strong>Avant la première question</strong>, l'accueil propose trois idées de recherche (« Un truc à faire avec les enfants samedi près de Sète », « Un concert ce soir à Montpellier », « Une sortie gratuite ce week-end ») et des tuiles d'offres partenaires ; elles disparaissent à la première question et restent dans « À ne pas manquer ».</p>
+<p>L'état de la collecte (alertes, coût, couverture) n'apparaît <strong>pas</strong> ici : il est réservé au mail de l'agent, à Grafana et à MLflow. Le visiteur ne voit que des sorties.</p>
+</div>
+</div>
+</div>
+</section>
+
+<section class="section section-alt" id="s02">
+<div class="container">
+<p class="section-number">02</p>
+<h2>Le parcours d'une recherche</h2>
+<p class="section-intro">Ce qui se passe à l'écran, dans l'ordre, et ce que fait le code à chaque moment.</p>
+<div class="timeline">
+<div class="timeline-item"><span>01 • Critères</span><h3>Cocher Public, Zone, Quand, Gratuit</h3><p>Des boutons à bascule, pas des listes déroulantes : Famille, Soirée, Ados, Seniors (un second clic décoche) ; Montpellier, Thau ou Partout ; Aujourd'hui, Ce week-end, 7 jours ou 3 mois ; « Gratuit seulement ». Ils sont envoyés avec la question, et la question les précise : « samedi » écrit l'emporte sur « Aujourd'hui » coché.</p></div>
+<div class="timeline-item"><span>02 • Question</span><h3>Écrire son envie, sur deux lignes</h3><p>Une zone de texte de 500 caractères au plus. Entrée lance la recherche, Maj + Entrée passe à la ligne. « Nouvelle conversation » efface le fil ; sinon, la demande comprise précédente (<code>context</code>, renvoyée par l'API) accompagne la question suivante, et « et pour les enfants ? » complète la recherche d'avant.</p></div>
+<div class="timeline-item"><span>03 • Étapes en direct</span><h3>« SortirIA cherche pour vous »</h3><p>Un clic sur « Chercher » ouvre une fenêtre : les 4 étapes (compréhension, recherche dans la base, filtres, rédaction) passent de « À venir » à « En cours… » puis « Fait », avec le message de l'API (« n séances (sens + mots-clés) », « n retenus, dont n de type concert »…) et une barre d'avancement. La fenêtre se referme 0,7 s après la réponse ; « Voir comment j'ai cherché » la rouvre, Échap la ferme.</p></div>
+<div class="timeline-item"><span>04 • Réponse</span><h3>Une réponse qui cite ses sources</h3><p>La réponse arrive en entier avec le message final du flux (<code>event: completed</code>) : ce sont les étapes qui sont diffusées au fil de l'eau, pas le texte mot à mot. Chaque renvoi [n] devient un bouton qui ouvre la carte correspondante. Si Mistral n'a pas répondu, une mention le dit : « Réponse simplifiée : l'assistant Mistral n'a pas répondu, les événements restent exacts. » Dessous, « Pour continuer » propose trois relances cliquables.</p></div>
+<div class="timeline-item"><span>05 • Cartes</span><h3>Huit cartes au plus, dans l'ordre de la réponse</h3><p>Chaque carte montre le numéro et la date, le titre, le lieu, le type, le prix, la note du lieu et la source. Une activité répétée n'occupe qu'une carte, avec « + n dates » (liste au survol). La première carte s'ouvre d'elle-même dans le détail ; toute la carte est cliquable, à la souris ou au clavier.</p></div>
+<div class="timeline-item"><span>06 • Détail</span><h3>L'événement, sa source, son lieu</h3><p>À droite : titre, date et lieu, autres dates, type, prix, publics, résumé « En bref », source avec son attribution et le lien « Voir la page de l'organisateur ». Puis les avis sur le lieu : la moyenne ne s'affiche qu'à partir de 3 notes, les commentaires seulement une fois publiés. Un événement passé depuis plus de 7 jours ou annulé affiche un message clair au lieu d'une erreur.</p></div>
+<div class="timeline-item"><span>07 • Avis</span><h3>Noter une sortie vécue</h3><p>Cinq étoiles et un commentaire facultatif de 300 caractères, « relu par modération ». Possible du début de l'événement à 7 jours après sa fin ; avant, le détail dit à partir de quand. Après l'envoi, le visiteur revoit son avis et son état (publié, en relecture, refusé), avec « Modifier mon avis ». Le navigateur retient les 30 dernières sorties consultées : une fois passées, elles apparaissent dans « Vos sorties à noter ».</p></div>
+<div class="timeline-item"><span>08 • Pouce</span><h3>« Cette réponse vous aide-t-elle ? »</h3><p>« Oui » part tout de suite. « Non » ouvre « Qu'est-ce qui manquait ? (facultatif) » avant l'envoi. Un merci remplace les boutons. Le pouce n'est proposé que pour une réponse enregistrée dans le journal (elle a un <code>request_id</code>). <a class="project-link" href="recherche.html#s03">Ce que devient le pouce →</a></p></div>
+</div>
+</div>
+</section>
+
+<section class="section" id="s03">
+<div class="container">
+<p class="section-number">03</p>
+<h2>L'architecture du front</h2>
+<p class="section-intro">Volontairement petite : un composant autonome pour l'écran, un service pour l'API, un module pour lire le flux. L'interface ne connaît que <code>/api/v1</code> ; elle ne parle jamais à la base ni à Mistral.</p>
+
+<figure class="story-figure"><svg class="story-svg" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 500" role="img" aria-label="Architecture de l'interface. Dans le navigateur, le composant AppComponent appelle SearchService, qui utilise HttpClient pour les lectures et les avis, et fetch avec la lecture du flux pour la recherche ; sse.ts découpe et lit les messages ; localStorage garde l'identifiant anonyme et les sorties vues. Les appels à /api passent par Static Web Apps sortiria-web, qui sert l'interface compilée et transmet /api à l'API liée sortiria-api sur Container Apps. En développement, le proxy d'Angular joue ce rôle. PostgreSQL et Mistral ne sont appelés que par l'API.">
+<rect width="1080" height="500" rx="18" fill="#111a22"/>
+<defs>
+<marker id="arr-ui-1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#48c9b0"/></marker>
+<marker id="arr-ui-2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#98a8ad"/></marker>
+</defs>
+<g font-family="Inter, 'Segoe UI', Arial, sans-serif">
+<text x="40" y="46" fill="#edf4f4" font-size="22" font-weight="700">Du navigateur à l'API</text>
+<text x="40" y="72" fill="#98a8ad" font-size="14">Le même chemin /api/v1 en production et en développement</text>
+
+<!-- Navigateur -->
+<rect x="30" y="92" width="340" height="388" rx="14" fill="#111a22" stroke="#98a8ad" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="46" y="114" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">NAVIGATEUR · ANGULAR 21</text>
+<rect x="46" y="126" width="308" height="70" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
+<text x="60" y="146" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">COMPOSANT AUTONOME</text>
+<text x="60" y="168" fill="#edf4f4" font-size="16" font-weight="700">AppComponent</text>
+<text x="60" y="187" fill="#98a8ad" font-size="12.5">signaux · @if / @for · un écran</text>
+<rect x="46" y="216" width="308" height="90" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
+<text x="60" y="236" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">SERVICE</text>
+<text x="60" y="258" fill="#edf4f4" font-size="16" font-weight="700">SearchService</text>
+<text x="60" y="280" fill="#98a8ad" font-size="12.5">HttpClient : lectures, avis, pouces</text>
+<text x="60" y="298" fill="#98a8ad" font-size="12.5">fetch + flux : la recherche</text>
+<rect x="46" y="326" width="308" height="62" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
+<text x="60" y="350" fill="#edf4f4" font-size="16" font-weight="700">sse.ts</text>
+<text x="60" y="372" fill="#98a8ad" font-size="12.5">découpe et lit les messages du flux</text>
+<rect x="46" y="406" width="308" height="56" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
+<text x="60" y="429" fill="#edf4f4" font-size="15" font-weight="700">localStorage</text>
+<text x="60" y="450" fill="#98a8ad" font-size="12.5">identifiant anonyme, sorties vues</text>
+<line x1="200" y1="198" x2="200" y2="214" stroke="#48c9b0" stroke-width="1.6" marker-start="url(#arr-ui-1)" marker-end="url(#arr-ui-1)"/>
+<line x1="200" y1="308" x2="200" y2="324" stroke="#48c9b0" stroke-width="1.6" marker-start="url(#arr-ui-1)" marker-end="url(#arr-ui-1)"/>
+
+<!-- Static Web Apps -->
+<rect x="426" y="126" width="274" height="200" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
+<text x="440" y="146" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">STATIC WEB APPS</text>
+<text x="440" y="170" fill="#edf4f4" font-size="16" font-weight="700">sortiria-web</text>
+<text x="440" y="196" fill="#98a8ad" font-size="12.5">sert l'interface compilée</text>
+<text x="440" y="216" fill="#98a8ad" font-size="12.5">toute route → /index.html</text>
+<text x="440" y="236" fill="#98a8ad" font-size="12.5">sauf /api/* et les fichiers</text>
+<text x="440" y="256" fill="#98a8ad" font-size="12.5">nosniff · Referrer-Policy</text>
+<text x="440" y="276" fill="#edf4f4" font-size="12.5">backend lié : /api → API</text>
+<text x="440" y="306" fill="#48c9b0" font-size="12" font-family="Consolas, monospace">staticwebapp.config.json</text>
+<rect x="426" y="346" width="274" height="102" rx="12" fill="#17232d" stroke="#98a8ad" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="440" y="366" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">EN DÉVELOPPEMENT</text>
+<text x="440" y="390" fill="#edf4f4" font-size="15" font-weight="700">ng serve, port 4210</text>
+<text x="440" y="412" fill="#98a8ad" font-size="12.5">proxy.conf.json : /api → 8010</text>
+<text x="440" y="432" fill="#98a8ad" font-size="12.5">compose : proxy.docker.json</text>
+<line x1="354" y1="261" x2="424" y2="261" stroke="#48c9b0" stroke-width="1.6" marker-start="url(#arr-ui-1)" marker-end="url(#arr-ui-1)"/>
+<text x="389" y="251" fill="#edf4f4" font-size="12" text-anchor="middle">/api</text>
+
+<!-- API -->
+<rect x="746" y="126" width="304" height="236" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
+<text x="760" y="146" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">CONTAINER APPS · SORTIRIA-API</text>
+<text x="760" y="170" fill="#edf4f4" font-size="16" font-weight="700">FastAPI · /api/v1</text>
+<text x="760" y="196" fill="#98a8ad" font-size="12.5">POST /recherche/stream (SSE)</text>
+<text x="760" y="216" fill="#98a8ad" font-size="12.5">GET /evenements/{id}</text>
+<text x="760" y="236" fill="#98a8ad" font-size="12.5">POST /evenements/{id}/avis</text>
+<text x="760" y="256" fill="#98a8ad" font-size="12.5">POST /avis/a-donner</text>
+<text x="760" y="276" fill="#98a8ad" font-size="12.5">POST /reponses/{id}/avis</text>
+<text x="760" y="296" fill="#98a8ad" font-size="12.5">GET /partenaires/a-ne-pas-manquer</text>
+<text x="760" y="316" fill="#98a8ad" font-size="12.5">GET /sources</text>
+<text x="760" y="344" fill="#48c9b0" font-size="12" font-family="Consolas, monospace">app/interface_api.py</text>
+<rect x="746" y="382" width="304" height="66" rx="12" fill="#17232d" stroke="#98a8ad" stroke-width="1"/>
+<text x="760" y="406" fill="#edf4f4" font-size="15" font-weight="700">PostgreSQL · Mistral</text>
+<text x="760" y="428" fill="#98a8ad" font-size="12.5">jamais appelés par le navigateur</text>
+<line x1="700" y1="226" x2="744" y2="226" stroke="#48c9b0" stroke-width="1.6" marker-start="url(#arr-ui-1)" marker-end="url(#arr-ui-1)"/>
+<line x1="898" y1="362" x2="898" y2="380" stroke="#98a8ad" stroke-width="1.4" marker-end="url(#arr-ui-2)"/>
+</g>
+</svg><figcaption>Le front et ses voisins. En production, le « backend lié » de Static Web Apps transmet toute adresse <code>/api/…</code> à l'API, qui n'accepte que les appels passés par le site ; en développement, le proxy d'Angular fait la même chose. L'interface n'a donc aucune adresse à configurer.</figcaption></figure>
+
+<table class="story-table params-table">
+<thead><tr><th>Fichier</th><th>Rôle</th><th>Origine</th></tr></thead>
+<tbody>
+<tr><td><code>src/app/app.component.*</code></td><td>L'écran entier : critères, question, réponse, cartes, détail, avis, partenaires, fenêtre des étapes. L'état tient dans des signaux (<code>signal</code>, <code>computed</code>).</td><td>Écrit pour SortirIA d'après la maquette validée</td></tr>
+<tr><td><code>src/app/search.service.ts</code></td><td>Appels à <code>/api/v1</code> : <code>HttpClient</code> pour les lectures et les avis, <code>fetch</code> pour la recherche diffusée.</td><td>Lecture du flux reprise de Chess Agent</td></tr>
+<tr><td><code>src/app/sse.ts</code></td><td>Découpe le texte reçu en messages complets (<code>splitSseBuffer</code>) et lit <code>event:</code> / <code>data:</code> (<code>parseSseEvent</code>) ; ignore tout événement inconnu.</td><td>Repris de Chess Agent, testé (<code>sse.spec.ts</code>)</td></tr>
+<tr><td><code>src/app/search.model.ts</code></td><td>Types échangés avec l'API ; mêmes noms d'étapes que <code>app/search_service.py</code>.</td><td>Écrit pour SortirIA</td></tr>
+<tr><td><code>proxy.conf.json</code>, <code>proxy.docker.json</code>, <code>Dockerfile</code></td><td>Adresse de l'API en local et dans docker compose (profil <code>interface</code>).</td><td>Configuration reprise de Chess Agent</td></tr>
+<tr><td><code>public/staticwebapp.config.json</code></td><td>Repli de navigation vers <code>/index.html</code> (sauf <code>/api/*</code> et les fichiers), en-têtes <code>X-Content-Type-Options: nosniff</code> et <code>Referrer-Policy</code>.</td><td>Écrit pour le déploiement Azure</td></tr>
+</tbody>
+</table>
+<p class="table-note">Provenance : <code>PROVENANCE.md</code> et <code>frontend/README.md</code>.</p>
+
+<h3>Lire un flux SSE envoyé en réponse à un POST</h3>
+<p>Le navigateur sait écouter un flux SSE avec <code>EventSource</code>, mais seulement en GET, sans corps. La recherche envoie une question et des critères : j'utilise donc <code>fetch</code> en POST, puis je lis le corps morceau par morceau (<code>TextDecoderStream</code>, <code>getReader()</code>). Un message peut arriver coupé en deux : <code>splitSseBuffer</code> garde le reste incomplet pour le morceau suivant. Le tout est enveloppé dans un <code>Observable</code> : se désabonner (nouvelle question, « Nouvelle conversation ») annule la requête par un <code>AbortController</code>.</p>
+<div class="code-panel">
+<div class="code-panel-header"><span>Limite de débit côté interface</span><small>frontend/src/app/search.service.ts</small></div>
+<pre><code>// Limite de débit (16/10/2026) : le message de l'API est montré tel quel.
+if (response.status === 429) {
+    const body = await response.json().catch(() =&gt; null) as { detail?: string } | null;
+    subscriber.next({
+        event: 'error',
+        message: body?.detail ?? 'Trop de recherches d’affilée : réessayez dans un instant.'
+    } as SearchStreamEvent);
+    subscriber.complete();
+    return;
+}</code></pre>
+</div>
+
+<table class="story-table params-table">
+<thead><tr><th>Situation</th><th>Ce que voit le visiteur</th></tr></thead>
+<tbody>
+<tr><td>Trop de recherches (429)</td><td>Le message de l'API à la place de la réponse (« Trop de recherches d'affilée… » ou, plafond global atteint, « SortirIA reçoit beaucoup de questions en ce moment… »). L'API envoie <code>Retry-After</code> ; l'interface ne fait pas de compte à rebours.</td></tr>
+<tr><td>Erreur pendant la recherche</td><td><code>event: error</code> dans le flux : « La recherche n'a pas pu aboutir. Réessayez dans un instant. »</td></tr>
+<tr><td>API injoignable</td><td>« Le serveur ne répond pas. » ; la fenêtre des étapes se referme. Les offres « À ne pas manquer » sont redemandées après la première réponse réussie, au cas où l'API dormait au chargement de la page.</td></tr>
+<tr><td>Mistral absent (mode dégradé)</td><td>Réponse simplifiée, signalée ; les cartes restent exactes.</td></tr>
+<tr><td>Événement plus proposé</td><td>« Cet événement n'est plus proposé (passé depuis plus de 7 jours, ou annulé). »</td></tr>
+<tr><td>Avis hors délai (409)</td><td>« L'avis est possible du début de l'événement jusqu'à 7 jours après sa fin. »</td></tr>
+<tr><td>Navigation privée, stockage refusé</td><td>Toute lecture et écriture de <code>localStorage</code> est protégée : l'avis reste possible pendant la visite.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="section section-alt" id="s04">
+<div class="container">
+<p class="section-number">04</p>
+<h2>La transparence, visible à l'écran</h2>
+<p class="section-intro">Ce qui est vrai dans la base doit se voir dans l'interface : d'où vient une sortie, qui la met en avant, et quand la réponse n'est pas exactement ce qui était demandé.</p>
+<div class="projects-grid">
+<article class="project-card">
+<div class="project-top"><span class="project-type">SOURCES</span></div>
+<h3>Une source et un lien sur chaque proposition</h3>
+<p>La carte nomme sa source ; le détail donne l'attribution calculée par la base (par exemple « Source : DATAtourisme (producteur), mise à jour le… ») et le lien vers la page de l'organisateur. C'est ce que demande la Licence Ouverte 2.0 d'OpenAgenda et de DATAtourisme : citer la source et la date de mise à jour.</p>
+</article>
+<article class="project-card">
+<div class="project-top"><span class="project-type">PARTENAIRES</span></div>
+<h3>« Offre partenaire », partout</h3>
+<p>Une offre d'un partenaire est encadrée en terracotta doux et porte l'étiquette « Offre partenaire » sur les cartes, dans le détail, dans l'encadré des offres proches, sur les tuiles de l'accueil et dans « À ne pas manquer ». Elle n'est mêlée aux cartes que si elle répond à la question.</p>
+</article>
+<article class="project-card">
+<div class="project-top"><span class="project-type">IDÉES VOISINES</span></div>
+<h3>Dire quand ce n'est pas exact</h3>
+<p>Quand la base n'a rien d'exact, la réponse le dit d'abord (« pas gratuit », « dans 3 semaines ») et, pour une demande sans sujet précis, un encadré « Pas exactement ce que vous cherchiez ? Nos partenaires proposent aussi » montre jusqu'à 3 offres proches, à part des cartes.</p>
+</article>
+<article class="project-card">
+<div class="project-top"><span class="project-type">MÉCANISME</span></div>
+<h3>Montrer comment la réponse a été trouvée</h3>
+<p>La fenêtre des étapes affiche ce que la recherche a compris (« ce week-end · famille »), combien de séances elle a trouvées et par quel moyen (sens, mots-clés), et ce qu'elle a retenu. « Voir comment j'ai cherché » la rouvre après coup.</p>
+</article>
+</div>
+<div class="callout">
+<span class="eyebrow">À RETENIR</span>
+<strong>Le texte de Mistral ne fabrique aucune carte.</strong>
+<p>Les cartes, les dates, les prix, les sources et les liens viennent de la base ; la réponse rédigée ne fait que les citer. Si Mistral se trompait de numéro, le renvoi serait retiré avant d'arriver à l'écran. <a class="project-link" href="recherche.html#s04">Les garde-fous →</a></p>
+</div>
+</div>
+</section>
+
+<section class="section" id="s05">
+<div class="container">
+<p class="section-number">05</p>
+<h2>Accessibilité et mobile</h2>
+<p class="section-intro">Seulement ce qui est réellement dans le code de <code>app.component.html</code>, <code>app.component.scss</code> et <code>styles.scss</code>.</p>
+<div class="reflection-grid">
+<div class="reflection-card"><h3>Au clavier</h3><ul><li>Entrée lance la recherche, Maj + Entrée passe à la ligne ;</li><li>chaque carte est un <code>role="button"</code> avec <code>tabindex="0"</code>, ouverte par Entrée ou Espace ;</li><li>Échap ferme la fenêtre des étapes ;</li><li>contour de focus visible (<code>:focus-visible</code>) sur toute la page.</li></ul></div>
+<div class="reflection-card"><h3>Pour les lecteurs d'écran</h3><ul><li>critères en groupes nommés (<code>role="group"</code>, <code>aria-label</code> Public, Zone, Quand) et boutons à bascule avec <code>aria-pressed</code> ;</li><li>étiquette cachée pour la question (<code>visually-hidden</code>) ;</li><li>renvois [n] et cartes avec un <code>aria-label</code> explicite (« Voir le détail : … ») ;</li><li>emojis et étoiles décoratives en <code>aria-hidden</code>.</li></ul></div>
+<div class="reflection-card"><h3>Ce qui change à l'écran est annoncé</h3><ul><li>fil de la réponse et détail en <code>aria-live="polite"</code> ;</li><li>erreurs en <code>role="alert"</code>, confirmations (« Merci… ») en <code>role="status"</code> ;</li><li>fenêtre des étapes en <code>role="dialog"</code>, <code>aria-modal</code>, avec une barre <code>role="progressbar"</code> et sa valeur ;</li><li>notation en <code>radiogroup</code> de 5 boutons <code>radio</code>.</li></ul></div>
+<div class="reflection-card"><h3>Sur téléphone</h3><ul><li>sous 900 px : une seule colonne, la page défile normalement ;</li><li>les groupes de critères prennent chacun leur ligne et passent à la ligne : « 3 mois » ne sort plus de l'écran ;</li><li>la page garde 16 px de marge sur les côtés.</li></ul></div>
+</div>
+<div class="callout subtle">
+<span class="eyebrow">LIMITE</span>
+<strong>Aucun audit d'accessibilité n'est documenté dans le dépôt.</strong>
+<p>Les attributs ci-dessus ont été posés en écrivant l'écran ; ils n'ont pas été vérifiés avec un lecteur d'écran ni mesurés par un outil. Le survol des étoiles et la liste des autres dates (« + n dates », au survol) restent pensés pour la souris.</p>
+</div>
+</div>
+</section>
+
+<section class="section section-alt" id="s06">
+<div class="container">
+<p class="section-number">06</p>
+<h2>Build et déploiement du front</h2>
+<p class="section-intro">L'interface est compilée et envoyée par la même CD que l'API, après la CI, à chaque push sur <code>main</code>.</p>
+<div class="timeline">
+<div class="timeline-item"><span>01 • Développer</span><h3>Deux terminaux, ou docker compose</h3><p><code>npm start</code> sert l'interface sur le port 4210 et envoie <code>/api</code> à l'API sur le port 8010 (8000 et 4200 restent libres pour mes projets précédents). Avec Docker : <code>docker compose --profile interface up -d --build</code>. Les tests du front passent par Vitest (<code>npm test</code>), dont ceux de la lecture du flux.</p></div>
+<div class="timeline-item"><span>02 • Compiler</span><h3>Angular 21, dans la CD</h3><p>Node 22, <code>npm ci</code> sur le <code>package-lock.json</code>, puis <code>npx ng build</code>. Angular en 21.2.25 ; après cette mise à jour, <code>npm audit</code> ne remonte plus aucune alerte de sécurité.</p></div>
+<div class="timeline-item"><span>03 • Envoyer</span><h3>Static Web Apps, sans secret de plus</h3><p>Le dossier <code>frontend/dist/sortiria-front/browser</code> part sur <code>sortiria-web</code> par la CLI Static Web Apps. Le jeton d'envoi est lu dans Azure à chaque déploiement (la CD est connectée à Azure par OpenID Connect) et masqué dans les journaux : aucun secret de plus dans GitHub.</p></div>
+<div class="timeline-item"><span>04 • Vérifier</span><h3>Le site et l'API répondent</h3><p>Dernière étape de la CD : le site et <code>/api/v1/sources</code> doivent répondre, en passant par le site, puisque l'API n'accepte que les appels transmis par lui. On laisse à l'API le temps de se réveiller : sans visiteur, elle dort. <a class="project-link" href="deploiement.html">Le déploiement complet →</a></p></div>
+</div>
+<div class="config-grid">
+<div class="config-card"><span>Hébergement</span><strong>Static Web Apps Standard</strong></div>
+<div class="config-card"><span>Coût</span><strong>environ 9 $ par mois</strong></div>
+<div class="config-card"><span>Domaine</span><strong>www.sortiria-montpellier.fr</strong></div>
+</div>
+<p class="table-note">Source : <code>docs/deploiement.md</code> et <code>.github/workflows/cd.yml</code>. L'offre gratuite de Static Web Apps ne sait pas relier une Container App : c'est ce qui impose l'offre Standard. Certificat HTTPS fourni par Azure.</p>
+</div>
+</section>
+
+<!-- 07 PROVENANCE -->
+<section class="section" id="s07">
+<div class="container">
+<p class="section-number">07</p>
+<h2>D'où vient le code</h2>
+<p class="section-intro">L'interface reprend l'architecture de Chess Agent (projet 13) : Angular en composants autonomes, proxy <code>/api</code>, recherche diffusée en Server-Sent Events. La configuration, le Dockerfile et la lecture du flux viennent de Chess Agent ; l'écran est écrit pour SortirIA d'après la maquette validée. Le rôle de chaque fichier est décrit en section 03 ; ce tableau en donne seulement l'origine.</p>
+<table class="story-table params-table">
+<thead><tr><th>Fichier ou module</th><th>Origine</th><th>Statut</th><th>Ce qui a été adapté ou écrit</th></tr></thead>
+<tbody>
+<tr><td><code>frontend/src/app/app.component.*</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>L'écran entier, d'après la maquette validée : filtres, question, réponse sourcée, cartes, détail, avis, partenaires, fenêtre des étapes.</td></tr>
+<tr><td><code>frontend/src/app/sse.ts</code>, <code>sse.spec.ts</code></td><td>Chess Agent (projet 13)</td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Découpage et lecture des messages SSE de Chess Agent, branchés sur les types de la recherche de SortirIA ; testés.</td></tr>
+<tr><td><code>frontend/src/app/search.service.ts</code></td><td>Chess Agent (projet 13)</td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Lecture du flux reprise ; appels à <code>/api/v1</code> de SortirIA et réponse 429 (limite de débit, 16/10) ajoutés.</td></tr>
+<tr><td><code>frontend/src/app/search.model.ts</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Types échangés avec l'API, mêmes noms d'étapes que <code>app/search_service.py</code>.</td></tr>
+<tr><td><code>frontend/angular.json</code>, <code>package.json</code>, <code>proxy.conf.json</code>, <code>proxy.docker.json</code></td><td>Chess Agent (projet 13)</td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Configuration Angular 21 reprise ; proxy <code>/api</code> vers l'API de SortirIA en local et dans docker compose.</td></tr>
+<tr><td><code>frontend/Dockerfile</code></td><td>Chess Agent (projet 13)</td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Dockerfile de Chess Agent ; dans docker compose, l'API s'appelle « api » et l'interface lit <code>proxy.docker.json</code>.</td></tr>
+<tr><td><code>frontend/public/staticwebapp.config.json</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Nouveau fichier pour Static Web Apps : toute adresse inconnue renvoie <code>index.html</code>, sauf <code>/api/*</code>.</td></tr>
+</tbody>
+</table>
+<p class="table-note">Sources : <code>frontend/README.md</code>, en-têtes de <code>frontend/Dockerfile</code> et <code>frontend/src/app/sse.ts</code>, <code>docs/interface.md</code>, <code>perso/deploiement_azure.md</code> (fichiers nouveaux) ; <code>PROVENANCE.md</code> (« Interface finale », 14/10/2026).</p>
+<p class="table-note">Le détail ligne à ligne : <code>PROVENANCE.md</code> du dépôt.</p>
+</div>
+</section>
+
+<section class="section contact">
+<div class="container">
+<p class="eyebrow">CONTINUER</p>
+<h2>Derrière l'écran, la recherche ; derrière la recherche, la collecte de la nuit.</h2>
+<div class="hero-actions">
+<a class="button primary" href="resultats.html">Les résultats</a>
+<a class="button secondary" href="recherche.html">La recherche</a>
+<a class="button secondary" href="deploiement.html">Le déploiement</a>
+</div>
+</div>
+</section>
+</main>
+<footer>
+<div class="container footer-content">
+<span>SortirIA • Projet de fin de formation Ingénieur IA (OpenClassrooms)</span>
+<span>Montpellier et bassin de Thau • 2026</span>
+</div>
+</footer>
+<script src="js/main.js"></script>
+</body>
+</html>

@@ -10,8 +10,14 @@ le 6 novembre 2026. Plutôt que de repartir de zéro, il **industrialise deux pr
 | --- | --- | --- |
 | Collecte des données | CheckIt.AI (projet 12) | Moteur multi-sources réutilisable : un moteur par type de source, un adaptateur et une configuration YAML par fournisseur, validation, déduplication, PostgreSQL, Airflow |
 | Recherche et réponse | Assistant RAG OpenAgenda (projet 6) | Point de départ de l'API FastAPI ; remplacé par une recherche hybride PostgreSQL + pgvector (sens et mots), une compréhension des questions par règles, une rédaction sourcée par Mistral et une interface Angular |
-| Suivi en production | Scoring crédit (projet 5), triage médical (projet 14) | Journalisation des requêtes, Evidently, Prometheus, Grafana, CI/CD |
+| Suivi en production | Scoring crédit (projet 5), triage médical (projet 14) | Journalisation de chaque requête (`rag_requests`), tableaux Grafana, MLflow, CI/CD (Evidently et Prometheus de ces projets ne sont pas repris : le journal et Grafana couvrent le besoin) |
 | Agent de collecte | Chess Agent (projet 13) | Graphe LangGraph : collecte nocturne, surveillance, propositions de réparation, apprentissage des recherches ratées |
+
+!!! tip "Le dossier du projet, en site"
+    Une présentation complète, page par page, pour le jury : le besoin, l'architecture,
+    l'agent, la recherche, l'interface, les résultats, le déploiement, les limites et
+    les évolutions. Site HTML autonome, à ouvrir dans un navigateur :
+    [`docs/dossier/index.html`](dossier/index.html).
 
 **Le dossier du projet** : [MVP et arbitrages](mvp.md) ·
 [Feuille de route](feuille_de_route.md) · [Architecture](architecture.md) ·

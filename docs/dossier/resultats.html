@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Les résultats | SortirIA</title>
+<meta content="Les résultats mesurés de SortirIA : critères d'acceptation, respect des contraintes, pertinence, juge LLM calibré, temps de réponse, coût, qualité des données, et les commandes pour tout rejouer." name="description"/>
+<link href="css/style.css" rel="stylesheet"/>
+</head>
+<body>
+<header class="header">
+<nav class="nav container">
+<a class="logo" href="index.html">Sortir<span>IA</span></a>
+<div class="nav-links"><a href="index.html">Projet</a><a href="architecture.html">Architecture</a><a href="agent.html">Agent</a><a href="recherche.html">Recherche</a><a href="modeles.html">Modèles</a><a href="interface.html">Interface</a><a class="active" href="resultats.html">Résultats</a><a href="deploiement.html">Déploiement</a><a href="procedures.html">Procédures</a><a href="limites.html">Limites</a></div>
+</nav>
+</header>
+<main>
+
+<section class="hero project-hero">
+<div class="container hero-content">
+<p class="eyebrow">SORTIRIA · RÉSULTATS</p>
+<h1>Les <span>résultats</span></h1>
+<p class="hero-text">Chaque chiffre de cette page vient d'un script que l'on peut relancer, et chaque lancement est gardé. J'ai mesuré ce que le code peut vérifier seul (les contraintes : <strong>98,7 %</strong>), puis ce qui demande un jugement (la pertinence : <strong>97,8 %</strong>, jugée à la main), puis j'ai calibré un juge Mistral sur mon jugement pour pouvoir le rejouer sans moi.</p>
+<div class="metrics">
+<div><strong>98,7 %</strong><span>propositions qui respectent les contraintes (50 questions)</span></div>
+<div><strong>97,8 %</strong><span>pertinence@3, jugement humain (139 cartes)</span></div>
+<div><strong>91,9 %</strong><span>accord du juge sur 135 cartes nouvelles (98,6 % au calibrage)</span></div>
+<div><strong>0,12 $</strong><span>coût Mistral pour 1 000 questions ; P95 6,0 à 6,4 s</span></div>
+</div>
+<div class="hero-tags"><span>pytest</span><span>GitHub Actions</span><span>Mistral Large (juge)</span><span>AC1 de Gwet</span><span>MLflow</span><span>Grafana</span></div>
+<div class="hero-actions">
+<a class="button primary" href="#s01">Lire</a>
+<a class="button secondary" href="#s07">Tout rejouer</a>
+</div>
+</div>
+</section>
+
+<section class="section" id="s01">
+<div class="container">
+<p class="section-number">01</p>
+<h2>Les critères d'acceptation du MVP</h2>
+<p class="section-intro">Avant de mesurer, j'ai écrit les seuils. Les onze critères sont atteints au 16/10/2026.</p>
+<table class="story-table params-table">
+<thead><tr><th>Critère</th><th>Seuil</th><th>Mesuré</th><th>État</th></tr></thead>
+<tbody>
+<tr><td>Propositions qui respectent les contraintes (50 questions annotées)</td><td>≥ 95 %</td><td><strong>98,7 %</strong></td><td><span class="experiment-status selected">Atteint</span></td></tr>
+<tr><td>Compréhension des questions (50 questions)</td><td>≥ 95 %</td><td><strong>100 %</strong></td><td><span class="experiment-status selected">Atteint</span></td></tr>
+<tr><td>Recherches courtes avec une réponse exacte (125 recherches)</td><td>—</td><td>97,6 % de propositions correctes ; 19 « idées voisines » annoncées comme telles</td><td><span class="experiment-status selected">Atteint</span></td></tr>
+<tr><td>Pertinence des 3 premières propositions (sujet et public, jugement humain, 50 questions)</td><td>≥ 70 %</td><td><strong>97,8 %</strong> (136 cartes sur 139) ; 96,4 % sur la seconde grille, après corrections</td><td><span class="experiment-status selected">Atteint</span></td></tr>
+<tr><td>Accord du juge Mistral avec l'humain (pour rejouer la pertinence sans annotation)</td><td>≥ 85 %, AC1 ≥ 0,6</td><td><strong>98,6 %</strong>, AC1 0,985 ; confirmé sur 135 cartes nouvelles : <strong>91,9 %</strong>, AC1 0,889</td><td><span class="experiment-status selected">Atteint</span></td></tr>
+<tr><td>Temps de réponse P95 (sans cache)</td><td>≤ 8 s</td><td>6,0 à 6,4 s, mesuré depuis un poste ; Grafana suit la production</td><td><span class="experiment-status selected">Atteint</span></td></tr>
+<tr><td>Temps de réponse P95 (réponse en cache)</td><td>≤ 1 s</td><td>0,11 s</td><td><span class="experiment-status selected">Atteint</span></td></tr>
+<tr><td>Coût Mistral de la recherche</td><td>≤ 1 $ pour 1 000 questions</td><td>0,12 $</td><td><span class="experiment-status selected">Atteint</span></td></tr>
+<tr><td>Fraîcheur : collecte réussie depuis moins de 24 h</td><td>chaque jour</td><td>suivi Grafana et mail du matin</td><td><span class="experiment-status selected">Atteint</span></td></tr>
+<tr><td>Aucun événement inventé dans une réponse</td><td>0</td><td>citations limitées aux événements fournis, vérifiées</td><td><span class="experiment-status selected">Atteint</span></td></tr>
+<tr><td>Qualité des fiches (juge Mistral, 20 fiches par nuit)</td><td>≥ 80 %</td><td>89 à 94 %</td><td><span class="experiment-status selected">Atteint</span></td></tr>
+</tbody>
+</table>
+<p class="table-note">Source : <code>docs/mvp.md</code> (critères d'acceptation) et <code>docs/evaluation.md</code> (vue d'ensemble), mis à jour le 16/10/2026.</p>
+<div class="callout">
+<span class="eyebrow">À RETENIR</span>
+<strong>Le code vérifie les contraintes ; l'humain, puis un juge calibré, jugent la pertinence.</strong>
+<p>Le moment, le lieu et le budget se vérifient sans jugement : c'est du code (§ 02). Le sujet et le public demandent de comprendre la demande : c'est un jugement, d'abord humain, puis confié à un juge Mistral seulement après avoir mesuré son accord avec moi (§ 03 et 04).</p>
+</div>
+</div>
+</section>
+
+<section class="section section-alt" id="s02">
+<div class="container">
+<p class="section-number">02</p>
+<h2>Compréhension et respect des contraintes</h2>
+<p class="section-intro">Une mesure automatique : la recherche se trompe-t-elle de cible ?</p>
+<div class="about-grid">
+<div class="large-text">Une carte compte comme juste seulement si elle n'a aucune erreur : date, lieu, public, gratuité, budget, type.</div>
+<div>
+<p>Le jeu de test, <code>config/eval_recherche.yaml</code>, compte <strong>50 questions</strong> écrites à la main, en <strong>8 familles</strong> : type de sortie ; quand ; où ; pour qui, combien ; noms et sujets précis ; cases cochées et question ; budget, météo, distance ; questions du quotidien. Pour chacune, j'ai écrit ce que la recherche doit comprendre (période, communes, public, gratuit, soir, types, budget, cadre) et parfois des mots qui doivent figurer dans les propositions.</p>
+<p>Un second jeu, <code>config/eval_mots.yaml</code>, contient <strong>125 recherches courtes</strong>, comme les tapent les visiteurs (« jazz », « brocante », « bowling »). Même mesure.</p>
+</div>
+</div>
+<div class="experiment-method">
+<div class="method-step"><span>01 • COMPRÉHENSION</span><strong>Champ par champ</strong><small>La question est comprise si tous les champs attendus sont justes.</small></div>
+<div class="method-step"><span>02 • CONTRAINTES</span><strong>Chaque carte contrôlée</strong><small>Score = part des cartes sans aucune erreur. Objectif : 95 %.</small></div>
+<div class="method-step"><span>03 • IDÉES VOISINES</span><strong>Comptées à part</strong><small>Quand la base n'a rien d'exact, la réponse le dit ; ces questions sortent du score.</small></div>
+</div>
+<div class="experiment-metrics">
+<div><strong>100 %</strong><span>compréhension (50 questions)</span></div>
+<div><strong>98,7 %</strong><span>cartes sans erreur (50 questions)</span></div>
+<div><strong>97,6 %</strong><span>cartes sans erreur (125 recherches courtes)</span></div>
+<div><strong>19 / 125</strong><span>recherches de lieux ouverts toute l'année (bowling, padel…)</span></div>
+</div>
+<p class="table-note">Source : <code>docs/evaluation.md</code> § 1, mesures des 15 et 16/10/2026.</p>
+
+<figure class="story-figure"><svg class="story-svg" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 420" role="img" aria-label="Graphique en barres de la précision de la recherche : 32 questions, 82 % puis 99 % ; 50 questions, 95,7 % puis 98,7 % ; recherches courtes, 80,8 % sur 100 puis 97,6 % sur 125. Seuil de 95 %.">
+<rect width="1080" height="420" rx="18" fill="#111a22"/>
+<text x="40" y="46" fill="#edf4f4" font-size="22" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">Respect des contraintes, mesure après mesure</text>
+<text x="40" y="72" fill="#98a8ad" font-size="14" font-family="Inter, 'Segoe UI', Arial, sans-serif">Part des cartes proposées sans aucune erreur (date, lieu, public, gratuité, budget, type), 15/10/2026</text>
+<rect x="40" y="90" width="14" height="14" rx="3" fill="#48c9b0"/><text x="62" y="102" fill="#98a8ad" font-size="13" font-family="Inter, 'Segoe UI', Arial, sans-serif">au-dessus du seuil</text>
+<rect x="210" y="90" width="14" height="14" rx="3" fill="#4a5d66"/><text x="232" y="102" fill="#98a8ad" font-size="13" font-family="Inter, 'Segoe UI', Arial, sans-serif">sous le seuil</text>
+<line x1="350" y1="97" x2="384" y2="97" stroke="#edf4f4" stroke-width="1.5" stroke-dasharray="6 4"/><text x="392" y="102" fill="#98a8ad" font-size="13" font-family="Inter, 'Segoe UI', Arial, sans-serif">seuil d'acceptation : 95 %</text>
+<line x1="100" y1="350.0" x2="1040" y2="350.0" stroke="#24333d" stroke-width="1"/>
+<text x="90" y="354.0" fill="#98a8ad" font-size="12" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="end">0 %</text>
+<line x1="100" y1="295.0" x2="1040" y2="295.0" stroke="#24333d" stroke-width="1"/>
+<text x="90" y="299.0" fill="#98a8ad" font-size="12" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="end">25 %</text>
+<line x1="100" y1="240.0" x2="1040" y2="240.0" stroke="#24333d" stroke-width="1"/>
+<text x="90" y="244.0" fill="#98a8ad" font-size="12" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="end">50 %</text>
+<line x1="100" y1="185.0" x2="1040" y2="185.0" stroke="#24333d" stroke-width="1"/>
+<text x="90" y="189.0" fill="#98a8ad" font-size="12" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="end">75 %</text>
+<line x1="100" y1="130.0" x2="1040" y2="130.0" stroke="#24333d" stroke-width="1"/>
+<text x="90" y="134.0" fill="#98a8ad" font-size="12" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="end">100 %</text>
+<line x1="100" y1="141.0" x2="1040" y2="141.0" stroke="#edf4f4" stroke-width="1.5" stroke-dasharray="6 4"/>
+<rect x="133.3" y="169.6" width="90.0" height="180.4" rx="6" fill="#4a5d66"/>
+<text x="178.3" y="209.6" fill="#edf4f4" font-size="15" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">82 %</text>
+<text x="178.3" y="372" fill="#edf4f4" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">32 questions</text>
+<text x="178.3" y="390" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="middle">1re mesure</text>
+<rect x="290.0" y="132.2" width="90.0" height="217.8" rx="6" fill="#48c9b0"/>
+<text x="335.0" y="172.2" fill="#0b1117" font-size="15" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">99 %</text>
+<text x="335.0" y="372" fill="#edf4f4" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">32 questions</text>
+<text x="335.0" y="390" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="middle">réponses exactes</text>
+<rect x="446.7" y="139.5" width="90.0" height="210.5" rx="6" fill="#48c9b0"/>
+<text x="491.7" y="179.5" fill="#0b1117" font-size="15" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">95,7 %</text>
+<text x="491.7" y="372" fill="#edf4f4" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">50 questions</text>
+<text x="491.7" y="390" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="middle">jeu complet</text>
+<rect x="603.3" y="132.9" width="90.0" height="217.1" rx="6" fill="#48c9b0"/>
+<text x="648.3" y="172.9" fill="#0b1117" font-size="15" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">98,7 %</text>
+<text x="648.3" y="372" fill="#edf4f4" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">50 questions</text>
+<text x="648.3" y="390" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="middle">après corrections</text>
+<rect x="760.0" y="172.2" width="90.0" height="177.8" rx="6" fill="#4a5d66"/>
+<text x="805.0" y="212.2" fill="#edf4f4" font-size="15" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">80,8 %</text>
+<text x="805.0" y="372" fill="#edf4f4" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">100 recherches</text>
+<text x="805.0" y="390" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="middle">courtes, 1re mesure</text>
+<rect x="916.7" y="135.3" width="90.0" height="214.7" rx="6" fill="#48c9b0"/>
+<text x="961.7" y="175.3" fill="#0b1117" font-size="15" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">97,6 %</text>
+<text x="961.7" y="372" fill="#edf4f4" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">125 recherches</text>
+<text x="961.7" y="390" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="middle">type lu dans le titre</text>
+<line x1="100" y1="350" x2="1040" y2="350" stroke="#98a8ad" stroke-width="1.2"/>
+<line x1="100" y1="124" x2="100" y2="350" stroke="#98a8ad" stroke-width="1.2"/>
+</svg>
+<figcaption>Chaque correction de la recherche a été suivie d'une nouvelle mesure. Les deux jeux de 32 et 50 questions ne se comparent pas strictement (empreinte de jeu différente). Les deux premières valeurs sont dans <code>benchmarks/recherche/historique.csv</code> (reconstituées depuis le terminal, arrondies) ; les suivantes viennent du tableau d'historique de <code>docs/evaluation.md</code> § 1.</figcaption></figure>
+
+<div class="reflection-grid">
+<div class="reflection-card"><h3>Rejouée à chaque push</h3><p>Le job « Évaluation de la recherche » de <code>.github/<wbr/>workflows/<wbr/>ci.yml</code> charge une base <strong>figée</strong> (<code>tests/<wbr/>data/<wbr/>jeu_recherche.json.gz</code>, exportée par <code>scripts/<wbr/>jeu_test_recherche.py</code>) dans un PostgreSQL avec pgvector, place l'horloge à l'instant de l'export et lance les 50 questions sans vecteur ni Mistral : aucune clé, aucun coût. Il <strong>échoue sous 95 %</strong> de précision ou de compréhension, et le déploiement attend la CI.</p></div>
+<div class="reflection-card"><h3>Ce que ce score ne dit pas</h3><p>Il dit si la recherche se trompe de cible. Il ne dit pas si les propositions sont les meilleures : c'est la pertinence, mesurée à part (§ 03). Le jeu figé exclut aussi le programme PDF de Sète agglopôle : publié avec le code, il ne garde que des données sous licence ouverte.</p></div>
+</div>
+</div>
+</section>
+
+<section class="section" id="s03">
+<div class="container">
+<p class="section-number">03</p>
+<h2>Pertinence des propositions</h2>
+<p class="section-intro">« Est-ce que je proposerais cette sortie à la personne qui a posé cette question ? » C'est un jugement, donc humain d'abord.</p>
+<div class="timeline">
+<div class="timeline-item"><span>01 • PRÉPARER</span><h3>La grille</h3><p>Les 50 questions passent par la vraie recherche, sans journal ni cache. Les 3 premières cartes de chaque réponse sont écrites dans un CSV : titre, date, lieu, catégorie, prix, public, résumé (<code>--preparer</code>).</p></div>
+<div class="timeline-item"><span>02 • ANNOTER</span><h3>o ou n, à la main</h3><p>Une colonne <code>pertinent</code>, un commentaire court pour chaque « n ». Une question sans proposition compte 0 carte pertinente sur 3. Environ 140 cartes, une heure.</p></div>
+<div class="timeline-item"><span>03 • CALCULER</span><h3>pertinence@3</h3><p>Part des cartes pertinentes (objectif 70 %), part des questions avec au moins une carte pertinente, détail par famille de questions (<code>--calculer</code>).</p></div>
+<div class="timeline-item"><span>04 • JUGER</span><h3>Le juge calibré</h3><p>Mistral Large juge les mêmes cartes ; on mesure son accord avec moi (§ 04). Au-dessus du seuil, il peut rejouer la mesure sans annotation (<code>--juge</code>).</p></div>
+</div>
+<div class="callout subtle">
+<span class="eyebrow">QUI JUGE QUOI</span>
+<strong>La pertinence juge le sujet et le public, pas les contraintes.</strong>
+<p>Le moment, le lieu et le budget sont vérifiés par du code (§ 02). La pertinence mesure ce que le code ne sait pas juger : le sujet (une lecture de contes pour « une lecture de contes ») et le public (rien pour tout-petits quand on demande « pour des ados »). Le même partage vaut pour l'humain et pour le juge.</p>
+</div>
+<table class="story-table params-table">
+<thead><tr><th>Grille</th><th>Cartes</th><th>pertinence@3 (humain)</th><th>Questions satisfaites</th></tr></thead>
+<tbody>
+<tr><td>Grille 1 : les 50 questions</td><td>139</td><td><strong>97,8 %</strong> (136 / 139)</td><td>100 %</td></tr>
+<tr><td>Seconde grille : 50 recherches courtes tirées au hasard (graine fixe) dans <code>config/eval_mots.yaml</code></td><td>135, toutes nouvelles</td><td><strong>83,7 %</strong></td><td>88 %</td></tr>
+<tr><td>Seconde grille : les 50 questions, après corrections (notes reprises)</td><td>139, dont 22 nouvelles</td><td><strong>96,4 %</strong></td><td>—</td></tr>
+</tbody>
+</table>
+<p class="table-note">Source : <code>docs/evaluation.md</code> § 2, grilles du 16/10/2026 annotées par l'auteur (<code>benchmarks/pertinence/</code>).</p>
+<div class="projects-grid">
+<article class="project-card">
+<div class="project-top"><span class="project-type">TROUVÉ PAR L'ANNOTATION</span></div>
+<h3>Les 3 « non » de la grille 1</h3>
+<p>Tous viennent des <strong>offres partenaires</strong> mises en tête sur un critère trop large : un spectacle de marionnettes pour « un spectacle de danse » et pour « j'aimerais aller au théâtre », une initiation à l'escalade pour enfants pour « un truc à faire avec des ados ».</p>
+</article>
+<article class="project-card">
+<div class="project-top"><span class="project-type">CORRIGÉ LE 16/10</span></div>
+<h3>Partenaires : type et public exacts</h3>
+<p>Une offre partenaire ne passe en tête que si son type précis et son public correspondent. Sur la seconde grille, les 3 cartes ne sont plus dans les 3 premières : deux vraies pièces pour « théâtre », un atelier théâtre ados pour « ados ».</p>
+</article>
+<article class="project-card">
+<div class="project-top"><span class="project-type">HORS PERTINENCE</span></div>
+<h3>« À Montpellier » élargi à la zone</h3>
+<p>Pendant l'annotation, deux cartes à Mauguio et Palavas-les-Flots sont apparues pour « des spectacles gratuits à Montpellier ». C'est une contrainte de lieu : corrigée, « à Montpellier » vise désormais la ville elle-même.</p>
+</article>
+</div>
+<div class="reflection-grid">
+<div class="reflection-card"><h3>Par famille : où ça pèche</h3><p>Sur les recherches courtes, la faiblesse est concentrée : <strong>0 à 57 %</strong> sur le sport et les loisirs ouverts toute l'année (piscine, VTT, billard, trampoline park). Ce sont des <strong>lieux</strong>, pas des événements datés ; SortirIA est un agenda. Les sports datés (matchs, courses, randonnées) sont trouvés. C'est une limite voulue, et la base de lieux est une évolution prévue après la soutenance.</p></div>
+<div class="reflection-card"><h3>Les 5 « non » de la seconde grille de départ</h3><p>Ils portent tous sur le <strong>prix</strong> : ce sont les idées voisines payantes des deux questions « gratuit », où la base n'a rien de gratuit. La réponse l'annonce, et <code>eval_recherche</code> les compte à part.</p></div>
+</div>
+</div>
+</section>
+
+<section class="section section-alt" id="s04">
+<div class="container">
+<p class="section-number">04</p>
+<h2>Le juge LLM</h2>
+<p class="section-intro">Un juge seul se note lui-même sans garantie ; une annotation seule ne se rejoue pas. J'ai calibré l'un sur l'autre.</p>
+<table class="story-table params-table">
+<thead><tr><th>Version</th><th>Changement</th><th>Accord</th><th>AC1</th></tr></thead>
+<tbody>
+<tr><td>v1</td><td>lots de 15 cartes, sans date ni prix ni public</td><td>68 %</td><td>—</td></tr>
+<tr><td>v2</td><td>+ date du jour, prix, public</td><td>55 %</td><td>—</td></tr>
+<tr><td>v3</td><td>une question par appel, une raison par verdict</td><td>67 %</td><td>0,53</td></tr>
+<tr><td>v4</td><td>ce que la demande ne précise pas n'est pas une contrainte</td><td>78 %</td><td>0,71</td></tr>
+<tr><td>v5</td><td>dates converties par le code ; règle « public = qui convient, pas réservé »</td><td>90 %</td><td>0,88</td></tr>
+<tr><td>v6</td><td>le juge ne voit plus ni la date ni le prix ; Mistral Large</td><td>88 %</td><td>0,86</td></tr>
+<tr><td><strong>v7 (figé)</strong></td><td>le juge ne voit plus la commune : <strong>sujet et public seulement</strong></td><td><strong>98,6 %</strong></td><td><strong>0,985</strong></td></tr>
+</tbody>
+</table>
+<p class="table-note">Source : <code>docs/evaluation.md</code> § 2 « Comment le juge a été calibré » et <code>benchmarks/pertinence/historique.csv</code>.</p>
+
+<figure class="story-figure"><svg class="story-svg" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 440" role="img" aria-label="Graphique en barres de l'accord du juge avec l'humain : v1 68 %, v2 55 %, v3 67 %, v4 78 %, v5 90 %, v6 88 %, v7 98,6 %. Seuil de 85 %.">
+<rect width="1080" height="440" rx="18" fill="#111a22"/>
+<text x="40" y="46" fill="#edf4f4" font-size="22" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">Accord du juge Mistral avec l'humain, version par version</text>
+<text x="40" y="72" fill="#98a8ad" font-size="14" font-family="Inter, 'Segoe UI', Arial, sans-serif">Grille de calibrage : 50 questions, 3 premières cartes ; accord brut (AC1 de Gwet sous chaque version)</text>
+<rect x="40" y="90" width="14" height="14" rx="3" fill="#48c9b0"/><text x="62" y="102" fill="#98a8ad" font-size="13" font-family="Inter, 'Segoe UI', Arial, sans-serif">au-dessus du seuil</text>
+<rect x="210" y="90" width="14" height="14" rx="3" fill="#4a5d66"/><text x="232" y="102" fill="#98a8ad" font-size="13" font-family="Inter, 'Segoe UI', Arial, sans-serif">sous le seuil</text>
+<line x1="350" y1="97" x2="384" y2="97" stroke="#edf4f4" stroke-width="1.5" stroke-dasharray="6 4"/><text x="392" y="102" fill="#98a8ad" font-size="13" font-family="Inter, 'Segoe UI', Arial, sans-serif">seuil d'acceptation : 85 % (et AC1 ≥ 0,6)</text>
+<line x1="100" y1="350.0" x2="1040" y2="350.0" stroke="#24333d" stroke-width="1"/>
+<text x="90" y="354.0" fill="#98a8ad" font-size="12" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="end">0 %</text>
+<line x1="100" y1="295.0" x2="1040" y2="295.0" stroke="#24333d" stroke-width="1"/>
+<text x="90" y="299.0" fill="#98a8ad" font-size="12" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="end">25 %</text>
+<line x1="100" y1="240.0" x2="1040" y2="240.0" stroke="#24333d" stroke-width="1"/>
+<text x="90" y="244.0" fill="#98a8ad" font-size="12" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="end">50 %</text>
+<line x1="100" y1="185.0" x2="1040" y2="185.0" stroke="#24333d" stroke-width="1"/>
+<text x="90" y="189.0" fill="#98a8ad" font-size="12" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="end">75 %</text>
+<line x1="100" y1="130.0" x2="1040" y2="130.0" stroke="#24333d" stroke-width="1"/>
+<text x="90" y="134.0" fill="#98a8ad" font-size="12" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="end">100 %</text>
+<line x1="100" y1="163.0" x2="1040" y2="163.0" stroke="#edf4f4" stroke-width="1.5" stroke-dasharray="6 4"/>
+<rect x="126.9" y="200.4" width="80.6" height="149.6" rx="6" fill="#4a5d66"/>
+<text x="167.1" y="240.4" fill="#edf4f4" font-size="15" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">68 %</text>
+<text x="167.1" y="372" fill="#edf4f4" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">v1</text>
+<text x="167.1" y="390" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="middle">lots de 15 cartes</text>
+<text x="167.1" y="408" fill="#48c9b0" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="middle">AC1 —</text>
+<rect x="261.1" y="229.0" width="80.6" height="121.0" rx="6" fill="#4a5d66"/>
+<text x="301.4" y="269.0" fill="#edf4f4" font-size="15" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">55 %</text>
+<text x="301.4" y="372" fill="#edf4f4" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">v2</text>
+<text x="301.4" y="390" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="middle">+ date et prix</text>
+<text x="301.4" y="408" fill="#48c9b0" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="middle">AC1 —</text>
+<rect x="395.4" y="202.6" width="80.6" height="147.4" rx="6" fill="#4a5d66"/>
+<text x="435.7" y="242.6" fill="#edf4f4" font-size="15" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">67 %</text>
+<text x="435.7" y="372" fill="#edf4f4" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">v3</text>
+<text x="435.7" y="390" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="middle">1 appel/question</text>
+<text x="435.7" y="408" fill="#48c9b0" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="middle">AC1 0,53</text>
+<rect x="529.7" y="178.4" width="80.6" height="171.6" rx="6" fill="#4a5d66"/>
+<text x="570.0" y="218.4" fill="#edf4f4" font-size="15" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">78 %</text>
+<text x="570.0" y="372" fill="#edf4f4" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">v4</text>
+<text x="570.0" y="390" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="middle">rien d’implicite</text>
+<text x="570.0" y="408" fill="#48c9b0" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="middle">AC1 0,71</text>
+<rect x="664.0" y="152.0" width="80.6" height="198.0" rx="6" fill="#48c9b0"/>
+<text x="704.3" y="192.0" fill="#0b1117" font-size="15" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">90 %</text>
+<text x="704.3" y="372" fill="#edf4f4" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">v5</text>
+<text x="704.3" y="390" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="middle">dates par code</text>
+<text x="704.3" y="408" fill="#48c9b0" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="middle">AC1 0,88</text>
+<rect x="798.3" y="156.4" width="80.6" height="193.6" rx="6" fill="#48c9b0"/>
+<text x="838.6" y="196.4" fill="#0b1117" font-size="15" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">88 %</text>
+<text x="838.6" y="372" fill="#edf4f4" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">v6</text>
+<text x="838.6" y="390" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="middle">sans date ni prix</text>
+<text x="838.6" y="408" fill="#48c9b0" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="middle">AC1 0,86</text>
+<rect x="932.6" y="133.1" width="80.6" height="216.9" rx="6" fill="#48c9b0"/>
+<text x="972.9" y="173.1" fill="#0b1117" font-size="15" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">98,6 %</text>
+<text x="972.9" y="372" fill="#edf4f4" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" text-anchor="middle">v7</text>
+<text x="972.9" y="390" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="middle">sujet et public</text>
+<text x="972.9" y="408" fill="#48c9b0" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" text-anchor="middle">AC1 0,985</text>
+<line x1="100" y1="350" x2="1040" y2="350" stroke="#98a8ad" stroke-width="1.2"/>
+<line x1="100" y1="124" x2="100" y2="350" stroke="#98a8ad" stroke-width="1.2"/>
+</svg>
+<figcaption>Chaque version corrige une erreur systématique lue dans les raisons du juge, puis on mesure à nouveau. La plupart des corrections retirent un critère au juge pour le confier au code. Source : <code>docs/evaluation.md</code> § 2.</figcaption></figure>
+
+<div class="reflection-grid">
+<div class="reflection-card"><h3>Ce que les raisons ont révélé</h3><ul><li><strong>Des dates mal calculées</strong> : « 31 oct. &lt; 16 oct. 2026 ».</li><li><strong>Des contraintes inventées</strong> : un « délai implicite », un lieu « Montpellier » non demandé.</li><li><strong>Un prix absent lu comme payant.</strong></li></ul></div>
+<div class="reflection-card"><h3>Le partage code / LLM</h3><p>Ces vérifications sont donc faites par du code : dates, prix, commune. Le juge garde ce qu'il fait mieux que le code : comprendre un sujet et un public. Aucune règle n'a été écrite pour une carte précise ; une raison courte accompagne chaque verdict (colonne <code>raison_juge</code>).</p></div>
+</div>
+<div class="callout subtle">
+<span class="eyebrow">TRANSPARENCE</span>
+<strong>Ma grille aussi a été relue.</strong>
+<p>Entre v5 et v7, 6 cartes que j'avais notées « n » pour le prix ou la commune ont été repassées à « o », la commune restant en commentaire : elles relèvent des contraintes, mesurées au § 02. Les deux grilles sont conservées (<code>…_09h50.avant_alignement.csv</code>).</p>
+</div>
+
+<div class="experiment-card">
+<div class="experiment-header">
+<div><span class="experiment-number">CONFIRMATION · JUGE v7 FIGÉ</span><h3>135 cartes qu'il n'avait jamais vues</h3></div>
+<span class="experiment-status selected">Au-dessus du seuil</span>
+</div>
+<div class="experiment-metrics">
+<div><strong>91,9 %</strong><span>accord, recherches courtes (135 cartes)</span></div>
+<div><strong>0,889</strong><span>AC1 de Gwet (seuil 0,6)</span></div>
+<div><strong>16 / 22</strong><span>rejets humains retrouvés</span></div>
+<div><strong>92,8 %</strong><span>accord, 50 questions après corrections (AC1 0,922)</span></div>
+</div>
+<div class="experiment-analysis">
+<div><span>LES DÉSACCORDS VONT DANS LES DEUX SENS</span><p>Sur les 11 désaccords des recherches courtes, le juge est plus indulgent sur 6 (un « Paint &amp; Drink » pour « peinture », un marché à Carnon-Plage pour « plage ») et plus sévère sur 5 (des expositions nocturnes pour « marché nocturne », un concert intitulé « Salon de musique » pour « salon »).</p></div>
+<div><span>UN ÉCART ATTENDU</span><p>Sur les 50 questions après corrections, 4 des 10 désaccords viennent des idées voisines payantes : le juge ne voit pas le prix, contrôlé par le code. À surveiller avant de le laisser seul juge d'un rejeu : les recherches d'un mot (« marché nocturne », « salon »).</p></div>
+</div>
+</div>
+<p class="table-note">Source : <code>docs/evaluation.md</code> § 2 « Seconde grille », 16/10/2026. Coût du juge : environ 0,03 $ par passage, lancé à la main (<code>docs/couts.md</code>).</p>
+
+<div class="callout">
+<span class="eyebrow">KAPPA OU AC1 ?</span>
+<strong>Avec 3 « non » sur 139, le kappa de Cohen est instable ; l'AC1 de Gwet ne l'est pas.</strong>
+<p>Les deux corrigent l'accord brut de la part due au hasard. Le kappa estime ce hasard à partir des proportions de « oui » : quand presque tout est « oui », deux juges qui disent toujours « oui » s'accordent déjà presque toujours par hasard, et une seule carte fait basculer le score. Sur la grille 1, il passe de 0,05 à 0,74 pour quelques cartes. L'AC1 calcule le hasard autrement et reste stable dans ce déséquilibre : 0,985 pour le même juge, avec un kappa de 0,74. Je donne les deux, et je lis l'accord brut et l'AC1.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="s05">
+<div class="container">
+<p class="section-number">05</p>
+<h2>Temps de réponse et coût</h2>
+<p class="section-intro">Les 175 questions des deux jeux, dans un ordre fixe, passent par la vraie recherche avec la rédaction par Mistral, sans être tracées.</p>
+<div class="experiment-metrics">
+<div><strong>3,0 à 3,3 s</strong><span>médiane, sans cache (100 puis 175 questions)</span></div>
+<div><strong>6,0 à 6,4 s</strong><span>P95, sans cache (seuil 8 s)</span></div>
+<div><strong>0,11 s</strong><span>P95 avec cache (médiane 0,10 s)</span></div>
+<div><strong>0,000118 $</strong><span>coût Mistral par question (0,12 $ pour 1 000)</span></div>
+</div>
+<p class="table-note">Source : <code>docs/evaluation.md</code> § 3 et <code>docs/couts.md</code>, mesures du 16/10/2026 (<code>benchmarks/cout_latence/</code>). Réponses dégradées, sans carte : 0.</p>
+<div class="about-grid">
+<div class="large-text">Le temps se partage entre la base et Mistral ; comprendre la question ne coûte presque rien.</div>
+<div>
+<table class="story-table params-table">
+<thead><tr><th>Étape (moyenne, sans cache)</th><th>Temps</th><th>Ce qui s'y passe</th></tr></thead>
+<tbody>
+<tr><td>Comprendre</td><td>1 ms</td><td>des règles, pas de modèle</td></tr>
+<tr><td>Rechercher</td><td>1,5 s</td><td>embedding de la question par Mistral, requêtes SQL</td></tr>
+<tr><td>Filtrer</td><td>0,5 s</td><td>autres dates de chaque événement, une requête par carte</td></tr>
+<tr><td>Rédiger</td><td>1,2 s</td><td><code>mistral-small</code></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="config-grid">
+<div class="config-card"><span>Cache</span><strong>0,1 s et 0 $</strong><p>Une question déjà posée le même jour, sur la même collecte, répond en 0,1 s et ne coûte rien. Avec 30 % de questions répétées, le coût pour 1 000 questions passe de 0,12 $ à 0,08 $.</p></div>
+<div class="config-card"><span>Modèle plus petit</span><strong>ministral-8b non retenu</strong><p>Mesuré sur 100 questions : médiane 3,8 s, P95 6,4 s (maximum 13,8 s), rédaction 1,9 s contre 1,3 s ; 0,097 $ pour 1 000 questions contre 0,117 $. 17 % d'économie, soit 0,02 $ pour 1 000 questions, pour des réponses plus lentes et une qualité non mesurée : <code>mistral-small</code> est gardé.</p></div>
+<div class="config-card"><span>Lecture des temps</span><strong>Un majorant</strong><p>Mesuré depuis un poste de travail : chaque requête fait l'aller-retour jusqu'à la base, à Paris. En production, l'API est dans le même centre de données que la base. Le tableau Grafana « Recherche » donne la latence réelle.</p></div>
+</div>
+<h3>Projection des coûts mensuels</h3>
+<table class="story-table params-table">
+<thead><tr><th>Poste (par mois)</th><th>1 000 questions</th><th>10 000 questions</th><th>100 000 questions</th></tr></thead>
+<tbody>
+<tr><td>Interface (Static Web Apps)</td><td>9 $</td><td>9 $</td><td>9 $</td></tr>
+<tr><td>API et collecte (Container Apps)</td><td>0 $ (dans l'offert)</td><td>≈ 6 $</td><td>≈ 14 $</td></tr>
+<tr><td>Mistral, recherche (avec cache)</td><td>0,1 $</td><td>0,8 à 1,4 $</td><td>8 à 14 $</td></tr>
+<tr><td>Mistral, collecte de la nuit</td><td>0,2 à 0,5 $</td><td>0,2 à 0,5 $</td><td>0,2 à 0,5 $</td></tr>
+<tr><td>Domaine</td><td>&lt; 1 $</td><td>&lt; 1 $</td><td>&lt; 1 $</td></tr>
+<tr><td><strong>Total, 1re année</strong> (base offerte)</td><td><strong>≈ 10 $</strong></td><td><strong>≈ 17 $</strong></td><td><strong>≈ 32 à 38 $</strong></td></tr>
+<tr><td>Base PostgreSQL après 12 mois</td><td>+ ≈ 18 $</td><td>+ ≈ 18 $</td><td>+ ≈ 18 $</td></tr>
+<tr><td><strong>Total ensuite</strong></td><td>≈ 28 $</td><td>≈ 35 $</td><td>≈ 50 à 56 $</td></tr>
+<tr><td>Coût complet par question</td><td>0,010 à 0,028 $</td><td>0,0017 à 0,0035 $</td><td>0,0003 à 0,0006 $</td></tr>
+</tbody>
+</table>
+<p class="table-note">Source : <code>docs/couts.md</code>, prix publics relevés le 16/10/2026. Hypothèses : 3 s de traitement par question (mesuré), 30 % de questions servies par le cache, prix Mistral entre 0,12 $ (mesuré) et 0,20 $ pour 1 000 questions. La limite de 1 000 recherches par heure plafonne Mistral à 85 à 145 $ par mois, même en cas d'abus.</p>
+</div>
+</section>
+
+<section class="section section-alt" id="s06">
+<div class="container">
+<p class="section-number">06</p>
+<h2>Qualité des données</h2>
+<p class="section-intro">Une bonne recherche sur une base fausse ne sert à rien : la base est contrôlée chaque nuit.</p>
+<div class="skills-grid">
+<div class="skill-group"><h3>Juge de qualité nocturne</h3><div class="constraint-value">89 à 94 %</div><p class="constraint-text">Chaque nuit, 20 fiches tirées au hasard sont notées par <code>mistral-medium</code>, un autre modèle que celui qui enrichit, sur quatre questions fermées : cohérence, est une sortie, publics justes, catégorie juste. Alerte sous 80 %. 89 %, puis 94 % après correction.</p></div>
+<div class="skill-group"><h3>Collecte de la nuit</h3><div class="constraint-value">≈ 1 980</div><p class="constraint-text">événements par nuit via OpenAgenda et DATAtourisme, environ 2 450 en base, dont 434 lus dans le programme PDF de Sète agglopôle. Coût : 0,14 $ la première nuit (base vide), ≈ 0,005 $ ensuite.</p></div>
+<div class="skill-group"><h3>Fraîcheur</h3><div class="constraint-value">&lt; 24 h</div><p class="constraint-text">Collecte réussie depuis moins de 24 h, suivie dans Grafana (heures depuis la dernière collecte réussie) et dans le mail du matin. La recherche ne propose que les 3 prochains mois.</p></div>
+</div>
+<div class="reflection-grid">
+<div class="reflection-card"><h3>Motifs de rejet, comptés chaque nuit</h3><ul><li>pas de date ;</li><li>événement passé ;</li><li>annulé ou reporté ;</li><li>pas une sortie (offre d'emploi, collecte de sang…).</li></ul><p>Chaque nuit, par source : extraits, rejetés et pourquoi, enregistrés, disparus ; dans le mail, en base (<code>collect_runs</code>) et dans Grafana.</p></div>
+<div class="reflection-card"><h3>Une base à jour sans intervention</h3><ul><li>événements passés retirés chaque nuit ;</li><li>événements disparus retirés seulement si la source a été lue en entier, sans échec ;</li><li>alerte si une source échoue ou baisse de moitié, ou si la couverture famille ou soirée d'une zone tombe sous 10 sorties dans la semaine ;</li><li>date de mise à jour de la source sur chaque fiche.</li></ul></div>
+</div>
+<p class="table-note">Source : <code>docs/fiabilite.md</code> § 1 et 2, <code>docs/evaluation.md</code> § 4, <code>docs/couts.md</code>.</p>
+</div>
+</section>
+
+<section class="section" id="s07">
+<div class="container">
+<p class="section-number">07</p>
+<h2>Comment tout rejouer</h2>
+<p class="section-intro">Les commandes exactes, depuis la racine du dépôt. Chaque lancement laisse une trace.</p>
+<div class="api-example">
+<div><span>CONTRAINTES ET COMPRÉHENSION</span><pre><code>uv run python -m scripts.eval_recherche
+uv run python -m scripts.eval_recherche --avec-redaction
+uv run python -m scripts.eval_recherche --note "ce qui a changé"
+uv run python -m scripts.eval_recherche --fichier config/eval_mots.yaml</code></pre></div>
+<div><span>EN CI, SUR LA BASE FIGÉE</span><pre><code>uv run python -m scripts.jeu_test_recherche --exporter
+uv run python -m scripts.jeu_test_recherche --charger
+uv run python -m scripts.eval_recherche --jeu-test --seuil 0.95</code></pre></div>
+<div><span>PERTINENCE ET JUGE</span><pre><code>uv run python -m scripts.eval_pertinence --preparer
+uv run python -m scripts.eval_pertinence --calculer benchmarks/pertinence/grille_….csv
+uv run python -m scripts.eval_pertinence --calculer grille.csv --juge
+uv run python -m scripts.eval_pertinence --preparer --questions config/eval_mots.yaml --echantillon 50</code></pre></div>
+<div><span>TEMPS DE RÉPONSE ET COÛT</span><pre><code>uv run python -m scripts.mesure_cout_latence
+uv run python -m scripts.mesure_cout_latence --cache
+uv run python -m scripts.mesure_cout_latence --modele ministral-8b-latest
+uv run python -m scripts.mesure_cout_latence --n 1000 --oui</code></pre></div>
+</div>
+<table class="story-table params-table">
+<thead><tr><th>Mesure</th><th>Où le résultat est gardé</th></tr></thead>
+<tbody>
+<tr><td>Contraintes et compréhension</td><td><code>benchmarks/recherche/historique.csv</code> (une ligne par lancement) et un rapport JSON question par question ; MLflow, expérience <code>sortiria-evaluation-recherche</code>, quand le serveur répond</td></tr>
+<tr><td>Pertinence et juge</td><td><code>benchmarks/pertinence/</code> : grilles annotées, verdicts et raisons du juge (<code>…_juge.csv</code>), <code>historique.csv</code> du juge v1 au v7</td></tr>
+<tr><td>Temps de réponse et coût</td><td><code>benchmarks/cout_latence/</code> : rapport JSON (temps par étape, coût selon la part de questions répétées) et <code>historique.csv</code></td></tr>
+<tr><td>CI</td><td>rapport <code>eval_recherche.json</code> attaché au job « Évaluation de la recherche » ; environ 3 570 tests pytest sur un vrai PostgreSQL</td></tr>
+</tbody>
+</table>
+<p class="table-note">Source : <code>benchmarks/README.md</code>, docstrings de <code>scripts/eval_recherche.py</code>, <code>scripts/eval_pertinence.py</code>, <code>scripts/mesure_cout_latence.py</code>, <code>scripts/jeu_test_recherche.py</code>, et <code>.github/workflows/ci.yml</code>. Le juge (<code>--juge</code>) coûte environ 0,03 $ par passage ; il est lancé à la main, jamais pendant une démonstration.</p>
+</div>
+</section>
+
+<section class="section section-alt" id="s08">
+<div class="container">
+<p class="section-number">08</p>
+<h2>Limites des mesures</h2>
+<p class="section-intro">Ces chiffres sont solides pour ce qu'ils mesurent. Voici ce qu'ils ne mesurent pas.</p>
+<div class="reflection-grid">
+<div class="reflection-card"><h3>Des questions écrites à la main</h3><p>Les 50 questions et les 125 recherches courtes sont les miennes. Elles couvrent 8 familles, mais pas encore la façon dont de vrais visiteurs écrivent.</p></div>
+<div class="reflection-card"><h3>L'annotateur est l'auteur</h3><p>Biais possible vers l'indulgence. Contre-mesure : un juge qui n'a pas vu le code et se montre plutôt plus sévère, des désaccords publiés, et une seconde grille sur des cartes nouvelles.</p></div>
+<div class="reflection-card"><h3>Pas encore d'usage réel</h3><p>Le pouce haut / bas et le tableau Grafana « Recherche » tournent depuis le 16/10 : la satisfaction réelle reste à mesurer, sur des questions réelles en nombre.</p></div>
+<div class="reflection-card"><h3>Des temps majorés</h3><p>La latence est mesurée depuis un poste, avec l'aller-retour vers la base : un majorant de la production.</p></div>
+</div>
+<div class="hero-actions">
+<a class="button secondary" href="limites.html">Toutes les limites du projet</a>
+</div>
+</div>
+</section>
+
+<!-- 09 PROVENANCE -->
+<section class="section" id="s09">
+<div class="container">
+<p class="section-number">09</p>
+<h2>D'où vient le code</h2>
+<p class="section-intro">Les mesures sont toutes écrites pour SortirIA : aucun outil d'évaluation n'est repris des projets précédents (RAGAS, utilisé au projet 6, n'a pas été repris). Chaque lancement garde son résultat dans <code>benchmarks/</code>.</p>
+<table class="story-table params-table">
+<thead><tr><th>Fichier ou module</th><th>Origine</th><th>Statut</th><th>Ce qui a été adapté ou écrit</th></tr></thead>
+<tbody>
+<tr><td><code>scripts/eval_recherche.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Compréhension des questions et respect des contraintes sur les 50 questions et les 125 recherches courtes ; historique dans <code>benchmarks/recherche/</code>.</td></tr>
+<tr><td><code>scripts/jeu_test_recherche.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Base de test figée pour rejouer l'évaluation des contraintes à chaque push dans la CI (échec sous 95 %).</td></tr>
+<tr><td><code>scripts/eval_pertinence.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Pertinence des 3 premières propositions : grille de jugement humain, puis juge Mistral Large calibré sur cette grille.</td></tr>
+<tr><td><code>scripts/mesure_cout_latence.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Temps de réponse et coût Mistral, avec ou sans cache, sans trace dans <code>rag_requests</code> ; résultats dans <code>benchmarks/cout_latence/</code>.</td></tr>
+<tr><td><code>src/event/quality_judge.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Méthode « LLM comme juge » : 20 fiches enrichies tirées au hasard chaque nuit, score suivi dans MLflow et Grafana.</td></tr>
+</tbody>
+</table>
+<p class="table-note">Sources : mentions « Provenance » des docstrings de <code>scripts/</code> et de <code>src/event/quality_judge.py</code> ; <code>benchmarks/README.md</code> ; <code>PROVENANCE.md</code> (section « Non repris »).</p>
+<p class="table-note">Le détail ligne à ligne : <code>PROVENANCE.md</code> du dépôt.</p>
+</div>
+</section>
+
+<section class="section contact">
+<div class="container">
+<p class="eyebrow">CONTINUER</p>
+<h2>Mesuré, gardé, rejouable : reste à voir comment c'est mis en production.</h2>
+<div class="hero-actions">
+<a class="button primary" href="deploiement.html">Le déploiement</a>
+<a class="button secondary" href="limites.html">Les limites</a>
+<a class="button secondary" href="index.html">Projet</a>
+</div>
+</div>
+</section>
+</main>
+<footer>
+<div class="container footer-content">
+<span>SortirIA • Projet de fin de formation Ingénieur IA (OpenClassrooms)</span>
+<span>Montpellier et bassin de Thau • 2026</span>
+</div>
+</footer>
+<script src="js/main.js"></script>
+</body>
+</html>

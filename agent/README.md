@@ -14,7 +14,7 @@ Il propose, un humain décide : aucune configuration n'est modifiée sans
 Chaque nuit à 2 h (heure de Paris), l'agent met à jour la base d'événements de
 Montpellier et du bassin de Thau. Il est déclenché par le DAG Airflow
 `dags/sortiria_nightly_dag.py` en local, et par une tâche planifiée Azure
-Container Apps Job en production (même cron : `0 2 * * *`).
+Container Apps Job en production (cron `0 1 * * *` en UTC, soit 2 h à Paris en hiver et 3 h en été).
 
 Organisation reprise du graphe LangGraph de Chess Agent
 (`reference/p13_agent/backend/app/agent/`, gardé comme référence) : services

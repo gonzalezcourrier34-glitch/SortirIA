@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>La recherche (RAG) | SortirIA</title>
+<meta content="Comment SortirIA répond à une question : compréhension par règles, recherche hybride sous filtres SQL dans PostgreSQL et pgvector, rédaction sourcée par Mistral, cache, journal et garde-fous." name="description"/>
+<link href="css/style.css" rel="stylesheet"/>
+</head>
+<body>
+<header class="header">
+<nav class="nav container">
+<a class="logo" href="index.html">Sortir<span>IA</span></a>
+<div class="nav-links"><a href="index.html">Projet</a><a href="architecture.html">Architecture</a><a href="agent.html">Agent</a><a class="active" href="recherche.html">Recherche</a><a href="modeles.html">Modèles</a><a href="interface.html">Interface</a><a href="resultats.html">Résultats</a><a href="deploiement.html">Déploiement</a><a href="procedures.html">Procédures</a><a href="limites.html">Limites</a></div>
+</nav>
+</header>
+<main>
+
+<section class="hero project-hero">
+<div class="container hero-content">
+<p class="eyebrow">SORTIRIA · RECHERCHE</p>
+<h1>La recherche <span>(RAG)</span></h1>
+<p class="hero-text">Un visiteur écrit « un concert ce soir à Montpellier » ; SortirIA lui répond en quelques phrases qui citent de vrais événements de la base. J'ai construit cette recherche comme une petite chaîne en 4 étapes : des règles pour comprendre, PostgreSQL et pgvector pour chercher sous des filtres stricts, Mistral seulement pour rédiger. Résultat : <strong>98,7 %</strong> des propositions respectent les contraintes de la question, en <strong>3 s</strong> (médiane) et pour <strong>0,12 $ les 1 000 questions</strong>.</p>
+<div class="hero-tags"><span>PostgreSQL</span><span>pgvector</span><span>Plein texte français</span><span>mistral-embed</span><span>mistral-small</span><span>FastAPI</span><span>Server-Sent Events</span></div>
+<div class="hero-actions">
+<a class="button primary" href="#s01">Lire</a>
+<a class="button secondary" href="resultats.html">Voir les résultats</a>
+</div>
+</div>
+</section>
+
+<section class="section section-alt" id="chiffres">
+<div class="container">
+<p class="eyebrow">EN CHIFFRES</p>
+<h2>Ce que la recherche fait aujourd'hui</h2>
+<div class="result-grid">
+<div class="result-card"><strong>100 %</strong><span>Questions comprises (50 questions)</span></div>
+<div class="result-card"><strong>98,7 %</strong><span>Propositions qui respectent les contraintes (50 questions)</span></div>
+<div class="result-card"><strong>97,6 %</strong><span>Même mesure sur 125 recherches courtes</span></div>
+<div class="result-card"><strong>97,8 %</strong><span>Pertinence des 3 premières cartes (139 cartes, jugement humain)</span></div>
+<div class="result-card"><strong>3 s</strong><span>Temps de réponse médian sans cache (3,0 à 3,3 s)</span></div>
+<div class="result-card"><strong>6,4 s</strong><span>P95 sans cache (6,0 à 6,4 s)</span></div>
+<div class="result-card"><strong>0,11 s</strong><span>P95 quand la réponse est dans le cache</span></div>
+<div class="result-card"><strong>0,12 $</strong><span>Coût Mistral pour 1 000 questions (0,000118 $ l'une)</span></div>
+</div>
+<p class="table-note">Sources : <code>docs/evaluation.md</code> (mise à jour du 16/10/2026), <code>benchmarks/recherche/historique.csv</code>, <code>benchmarks/pertinence/</code> et <code>benchmarks/cout_latence/</code>. Les temps sont mesurés depuis un poste de travail, base à Paris : c'est un majorant.</p>
+</div>
+</section>
+
+<section class="section" id="s01">
+<div class="container">
+<p class="section-number">01</p>
+<h2>Pourquoi ce RAG-là</h2>
+<p class="section-intro">Chercher une sortie n'est pas chercher un passage dans un document. Le visiteur pose des conditions qui ne se discutent pas.</p>
+<div class="about-grid">
+<div class="large-text">« Samedi, à Sète, avec les enfants, gratuit » : quatre contraintes strictes, et un vecteur ne sait en vérifier aucune.</div>
+<div>
+<p>Un RAG documentaire classique découpe des textes, les range dans un index de vecteurs et donne au modèle les passages les plus proches de la question. C'est ce que faisait le projet dont SortirIA est parti (index FAISS, routes <code>/ask</code> et <code>/rebuild</code>). Pour des événements, cela ne suffit pas : un concert de jazz dimanche à Lattes est « proche » d'un concert de jazz samedi à Sète, mais il ne répond pas à la question.</p>
+<p>J'ai donc séparé les rôles. Ce qui doit être exact est vérifié par du code ; ce qui relève du sens est laissé aux vecteurs ; le modèle de langage n'intervient qu'à la fin, pour écrire une réponse courte à partir d'une liste qu'il ne peut pas compléter. L'ancien RAG a été retiré le 15/10/2026 : l'API démarre désormais en une seconde, sans appel à Mistral.</p>
+</div>
+</div>
+<div class="projects-grid">
+<article class="project-card">
+<div class="project-top"><span class="project-type">CONTRAINTES</span></div>
+<h3>Filtres SQL</h3>
+<p>Période, commune ou zone, public, gratuit ou budget, soir, intérieur ou plein air, rayon en kilomètres : des clauses <code>WHERE</code> sur la vue <code>v_upcoming_events</code>. Ce qui ne passe pas le filtre n'est jamais proposé comme une réponse.</p>
+</article>
+<article class="project-card">
+<div class="project-top"><span class="project-type">SENS</span></div>
+<h3>pgvector</h3>
+<p>La question devient un vecteur <code>mistral-embed</code>, comparé à celui de chaque événement. C'est ce qui retrouve « une sortie romantique » ou « un truc à faire quand il pleut », que les mots seuls ratent.</p>
+</article>
+<article class="project-card">
+<div class="project-top"><span class="project-type">MOTS PRÉCIS</span></div>
+<h3>Plein texte français</h3>
+<p>« échecs », « Fabre », « cirque » : les noms propres et les sujets précis sont cherchés dans le texte, sans accents et par préfixe (« photo » trouve « photographies »). Le sens seul les confond avec des voisins.</p>
+</article>
+<article class="project-card">
+<div class="project-top"><span class="project-type">RÉDACTION</span></div>
+<h3>Mistral, en dernier</h3>
+<p>Mistral reçoit au plus 8 événements numérotés et écrit 2 à 4 phrases qui les citent [1], [2]. Il ne choisit pas ce qui est vrai : un renvoi vers un numéro qui n'existe pas est retiré par le code.</p>
+</article>
+</div>
+<div class="callout">
+<span class="eyebrow">À RETENIR</span>
+<strong>PostgreSQL fait les trois recherches dans la même requête.</strong>
+<p>Filtres, sens et mots précis vivent dans la même base que les événements collectés chaque nuit. Il n'y a pas d'index séparé à reconstruire ni à synchroniser : un événement collecté à 2 h du matin est cherchable dès qu'il est écrit.</p>
+</div>
+</div>
+</section>
+
+<section class="section section-alt" id="s02">
+<div class="container">
+<p class="section-number">02</p>
+<h2>La pipeline en 4 étapes</h2>
+<p class="section-intro">Le cœur est la fonction <code>run_search</code> de <code>app/search_service.py</code> : un générateur qui produit les étapes une à une, puis le résultat. Chaque étape a son repli quand les choses tournent mal.</p>
+
+<figure class="story-figure"><svg class="story-svg" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 690" role="img" aria-label="Schéma de la recherche. Une question et les cases cochées passent par 4 étapes : comprendre par des règles en 1 milliseconde, rechercher en hybride sous filtres SQL (sens par pgvector, mots par plein texte, fusion des rangs), filtrer pour garder ce qui répond exactement (8 cartes au plus, 2 par lieu, partenaires en tête s'ils répondent), rédiger avec Mistral qui cite les cartes. Sous chaque étape, un repli : réponse déjà en cache, contraintes de la question relâchées sauf la date, sujet cherché en relâchant les contraintes une à une, réponse simple sans Mistral. En sortie : la réponse sourcée, les cartes, les relances et le journal rag_requests.">
+<rect width="1080" height="690" rx="18" fill="#111a22"/>
+<defs>
+<marker id="arr-rag-1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#98a8ad"/></marker>
+<marker id="arr-rag-2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#48c9b0"/></marker>
+</defs>
+<g font-family="Inter, 'Segoe UI', Arial, sans-serif">
+<text x="40" y="46" fill="#edf4f4" font-size="22" font-weight="700">La recherche en 4 étapes, avec ses replis</text>
+<text x="40" y="72" fill="#98a8ad" font-size="14">Chaque étape envoie « en cours » puis « fait » au navigateur · temps moyens sans cache</text>
+
+<!-- Entrée -->
+<rect x="30" y="96" width="237" height="70" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
+<text x="44" y="116" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">ENTRÉE</text>
+<text x="44" y="137" fill="#edf4f4" font-size="13">question + cases cochées</text>
+<text x="44" y="156" fill="#98a8ad" font-size="12.5">+ demande précédente</text>
+
+<!-- Filtres stricts -->
+<rect x="291" y="96" width="759" height="70" rx="12" fill="#17232d" stroke="#98a8ad" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="305" y="116" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">FILTRES STRICTS (SQL)</text>
+<text x="305" y="137" fill="#edf4f4" font-size="13">période · public · commune ou zone · gratuit ou budget · soir · intérieur / plein air · rayon</text>
+<text x="305" y="156" fill="#98a8ad" font-size="12.5">La question précise les cases cochées ; un prix inconnu n'est jamais pris pour gratuit.</text>
+<line x1="409" y1="166" x2="409" y2="194" stroke="#98a8ad" stroke-width="1.4" stroke-dasharray="4 4" marker-end="url(#arr-rag-1)"/>
+
+<line x1="148" y1="166" x2="148" y2="194" stroke="#48c9b0" stroke-width="1.8" marker-end="url(#arr-rag-2)"/>
+
+<!-- Étape 1 -->
+<rect x="30" y="198" width="237" height="220" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
+<text x="44" y="222" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">1 · COMPRENDRE</text>
+<text x="44" y="248" fill="#edf4f4" font-size="16" font-weight="700">Lire la question</text>
+<text x="44" y="268" fill="#48c9b0" font-size="12">1 ms · règles, sans modèle</text>
+<text x="44" y="292" fill="#98a8ad" font-size="12.5">quand, où, pour qui</text>
+<text x="44" y="311" fill="#98a8ad" font-size="12.5">gratuit, budget, météo</text>
+<text x="44" y="330" fill="#98a8ad" font-size="12.5">type, mots précis</text>
+<text x="44" y="349" fill="#98a8ad" font-size="12.5">synonymes appris ajoutés</text>
+<text x="44" y="368" fill="#98a8ad" font-size="12.5">relance : fil gardé</text>
+<text x="44" y="387" fill="#98a8ad" font-size="12.5">« à Montpellier » = ville</text>
+<text x="44" y="406" fill="#48c9b0" font-size="12" font-family="Consolas, monospace">understand()</text>
+
+<!-- Étape 2 -->
+<rect x="291" y="198" width="237" height="220" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
+<text x="305" y="222" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">2 · RECHERCHER</text>
+<text x="305" y="248" fill="#edf4f4" font-size="16" font-weight="700">Recherche hybride</text>
+<text x="305" y="268" fill="#48c9b0" font-size="12">1,5 s en moyenne</text>
+<text x="305" y="292" fill="#98a8ad" font-size="12.5">filtres SQL d'abord</text>
+<text x="305" y="311" fill="#98a8ad" font-size="12.5">sens : vecteur, pgvector</text>
+<text x="305" y="330" fill="#98a8ad" font-size="12.5">mots : plein texte</text>
+<text x="305" y="349" fill="#98a8ad" font-size="12.5">sans accents, par préfixe</text>
+<text x="305" y="368" fill="#98a8ad" font-size="12.5">fusion des rangs (RRF)</text>
+<text x="305" y="387" fill="#98a8ad" font-size="12.5">80 séances candidates</text>
+<text x="305" y="406" fill="#48c9b0" font-size="12" font-family="Consolas, monospace">build_search_query()</text>
+
+<!-- Étape 3 -->
+<rect x="552" y="198" width="237" height="220" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
+<text x="566" y="222" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">3 · FILTRER</text>
+<text x="566" y="248" fill="#edf4f4" font-size="16" font-weight="700">Garder l'exact</text>
+<text x="566" y="268" fill="#48c9b0" font-size="12">0,5 s en moyenne</text>
+<text x="566" y="292" fill="#98a8ad" font-size="12.5">mots précis, puis type</text>
+<text x="566" y="311" fill="#98a8ad" font-size="12.5">séances regroupées</text>
+<text x="566" y="330" fill="#98a8ad" font-size="12.5">2 cartes au plus par lieu</text>
+<text x="566" y="349" fill="#98a8ad" font-size="12.5">8 cartes au plus</text>
+<text x="566" y="368" fill="#98a8ad" font-size="12.5">partenaires en tête si</text>
+<text x="566" y="387" fill="#98a8ad" font-size="12.5">type et public justes</text>
+<text x="566" y="406" fill="#48c9b0" font-size="12" font-family="Consolas, monospace">keep_exact_matches()</text>
+
+<!-- Étape 4 -->
+<rect x="813" y="198" width="237" height="220" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
+<text x="827" y="222" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">4 · RÉDIGER</text>
+<text x="827" y="248" fill="#edf4f4" font-size="16" font-weight="700">Écrire et citer</text>
+<text x="827" y="268" fill="#48c9b0" font-size="12">1,2 s · mistral-small</text>
+<text x="827" y="292" fill="#98a8ad" font-size="12.5">ne voit que les cartes</text>
+<text x="827" y="311" fill="#98a8ad" font-size="12.5">2 à 4 phrases avec [n]</text>
+<text x="827" y="330" fill="#98a8ad" font-size="12.5">[n] hors liste : retiré</text>
+<text x="827" y="349" fill="#98a8ad" font-size="12.5">cartes rangées comme [n]</text>
+<text x="827" y="368" fill="#98a8ad" font-size="12.5">3 relances proposées</text>
+<text x="827" y="387" fill="#98a8ad" font-size="12.5">réponse en JSON lue</text>
+<text x="827" y="406" fill="#48c9b0" font-size="12" font-family="Consolas, monospace">write_with_mistral()</text>
+
+<!-- Flux principal -->
+<line x1="267" y1="308" x2="289" y2="308" stroke="#48c9b0" stroke-width="1.8" marker-end="url(#arr-rag-2)"/>
+<line x1="528" y1="308" x2="550" y2="308" stroke="#48c9b0" stroke-width="1.8" marker-end="url(#arr-rag-2)"/>
+<line x1="789" y1="308" x2="811" y2="308" stroke="#48c9b0" stroke-width="1.8" marker-end="url(#arr-rag-2)"/>
+<path d="M1050,300 H1066 V629 H1054" fill="none" stroke="#48c9b0" stroke-width="1.8" marker-end="url(#arr-rag-2)"/>
+
+<!-- Replis -->
+<line x1="148" y1="420" x2="148" y2="460" stroke="#98a8ad" stroke-width="1.4" stroke-dasharray="4 4" marker-end="url(#arr-rag-1)"/>
+<text x="158" y="444" fill="#98a8ad" font-size="12">même demande ?</text>
+<line x1="409" y1="420" x2="409" y2="460" stroke="#98a8ad" stroke-width="1.4" stroke-dasharray="4 4" marker-start="url(#arr-rag-1)" marker-end="url(#arr-rag-1)"/>
+<text x="419" y="444" fill="#98a8ad" font-size="12">rien du tout ?</text>
+<line x1="670" y1="420" x2="670" y2="460" stroke="#98a8ad" stroke-width="1.4" stroke-dasharray="4 4" marker-start="url(#arr-rag-1)" marker-end="url(#arr-rag-1)"/>
+<text x="680" y="444" fill="#98a8ad" font-size="12">sujet absent ?</text>
+<line x1="931" y1="420" x2="931" y2="460" stroke="#98a8ad" stroke-width="1.4" stroke-dasharray="4 4" marker-end="url(#arr-rag-1)"/>
+<text x="941" y="444" fill="#98a8ad" font-size="12">Mistral absent ?</text>
+
+<rect x="30" y="462" width="237" height="90" rx="12" fill="#17232d" stroke="#98a8ad" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="44" y="484" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">CACHE · QUERY_CACHE</text>
+<text x="44" y="508" fill="#edf4f4" font-size="15" font-weight="700">Réponse déjà rédigée</text>
+<text x="44" y="532" fill="#98a8ad" font-size="12.5">0,11 s, sans Mistral</text>
+
+<rect x="291" y="462" width="237" height="90" rx="12" fill="#17232d" stroke="#98a8ad" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="305" y="484" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">REPLI</text>
+<text x="305" y="508" fill="#edf4f4" font-size="15" font-weight="700">Contraintes relâchées</text>
+<text x="305" y="532" fill="#98a8ad" font-size="12.5">sauf la date ; annoncé</text>
+
+<rect x="552" y="462" width="237" height="90" rx="12" fill="#17232d" stroke="#98a8ad" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="566" y="484" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">ÉLARGIR AU SUJET</text>
+<text x="566" y="508" fill="#edf4f4" font-size="15" font-weight="700">Sujet cherché ailleurs</text>
+<text x="566" y="532" fill="#98a8ad" font-size="12.5">public → 3 mois → partout</text>
+
+<rect x="813" y="462" width="237" height="90" rx="12" fill="#17232d" stroke="#98a8ad" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="827" y="484" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">REPLI SANS MISTRAL</text>
+<text x="827" y="508" fill="#edf4f4" font-size="15" font-weight="700">Réponse simple</text>
+<text x="827" y="532" fill="#98a8ad" font-size="12.5">liste exacte, signalée</text>
+
+<line x1="148" y1="552" x2="148" y2="594" stroke="#98a8ad" stroke-width="1.4" stroke-dasharray="4 4" marker-end="url(#arr-rag-1)"/>
+<text x="158" y="578" fill="#98a8ad" font-size="12">trouvée : on saute 2, 3, 4</text>
+<line x1="931" y1="552" x2="931" y2="594" stroke="#98a8ad" stroke-width="1.4" stroke-dasharray="4 4" marker-end="url(#arr-rag-1)"/>
+
+<!-- Sortie -->
+<rect x="30" y="598" width="1020" height="62" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
+<text x="44" y="620" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">SORTIE · EVENT: COMPLETED</text>
+<text x="44" y="644" fill="#edf4f4" font-size="13">réponse sourcée · 8 cartes au plus (partenaires, puis citées, puis autres) · 3 relances · trace dans rag_requests</text>
+</g>
+</svg><figcaption>La pipeline de <code>run_search</code>. En trait plein, le chemin normal ; en pointillé, les replis. Temps moyens par étape : <code>docs/evaluation.md</code>, § 3 (16/10/2026).</figcaption></figure>
+
+<div class="timeline">
+<div class="timeline-item"><span>01 • Comprendre · app/query_understanding.py</span><h3>Des règles, pas un modèle</h3>
+<p>La fonction <code>understand</code> lit la question comme un humain la lirait : <strong>quand</strong> (ce soir, samedi, ce week-end, le 24/10, en novembre), <strong>où</strong> (une commune, « l'étang », « près de Sète », « à moins de 10 km de Mèze »), <strong>pour qui</strong> (enfants, ados, seniors, soirée), <strong>gratuit</strong> ou <strong>budget</strong> (« pas cher » vaut 15 €), <strong>intérieur ou plein air</strong> (« s'il pleut » écarte le plein air), le <strong>type</strong> de sortie et les <strong>mots précis</strong> qui restent. <code>merge_with_filters</code> fusionne ensuite le tout avec les cases cochées : la question précise ce qui est coché.</p>
+<p>Pourquoi pas un LLM ? Les règles font 100 % sur les 50 questions du jeu de test, en 1 ms et sans coût. Un modèle ajouterait du temps, un coût et un risque d'erreur sur les dates relatives ; l'extraction par un petit modèle Mistral a été essayée puis abandonnée (<code>docs/mvp.md</code>). Il se justifiera avec des questions réelles en nombre.</p>
+<p>Trois finesses apprises en évaluant. <strong>« à Montpellier »</strong> désigne la ville elle-même (<code>MONTPELLIER_ITSELF</code>), alors que « Montpellier » seul ou « près de Montpellier » désigne la métropole : la grille de pertinence avait trouvé Mauguio et Palavas pour « des spectacles gratuits à Montpellier ». <strong>Une relance</strong> courte (« et pour les enfants ? », « plutôt dimanche ») complète la demande précédente (<code>is_follow_up</code>, <code>combine</code>), mais « photo » après « du cirque » repart de zéro. <strong>Les synonymes appris</strong> (<code>config/synonymes.yaml</code>) sont ajoutés à la question : le mot tapé reste, le mot connu de la base est cherché en plus.</p></div>
+<div class="timeline-item"><span>02 • Rechercher · build_search_query</span><h3>Une requête hybride, sous filtres</h3>
+<p>Une seule requête SQL. D'abord les <strong>filtres stricts</strong> sur <code>sortiria.v_upcoming_events</code>. Puis deux classements des événements qui restent : <strong>par le sens</strong> (distance pgvector entre le vecteur de la question et celui de l'événement, 200 rangs gardés) et <strong>par les mots</strong> (<code>to_tsquery('french', …)</code> sur le titre, compté deux fois, le résumé, la catégorie, le lieu, la commune et le début de la description ; sans accents, par préfixe à partir de 4 lettres). Les deux sont fusionnés par <strong>Reciprocal Rank Fusion</strong> : score = 1/(60 + rang sens) + 1/(60 + rang mots).</p>
+<p>L'ordre final fait passer devant ce que le visiteur verra sur la carte : d'abord les mots trouvés dans le titre, le résumé ou le lieu, puis le nombre de mots trouvés, puis le type demandé, puis le score. Le type compte aussi quand il est écrit dans le titre (« Atelier jeux en famille », rangé en atelier, répond à « jeux »), avec des racines exactes : « jeux » ne trouve pas « jeudi ». La requête garde 80 séances, et une seconde ajoute les 20 meilleures séances des partenaires qui passent les mêmes filtres (<code>fetch_candidates</code>).</p>
+<p>Repli : si les contraintes <em>lues dans la question</em> ne laissent rien, elles sont relâchées, sauf la date, et la réponse le dit d'abord. Si le vecteur de la question n'a pas pu être calculé, la recherche continue avec les mots et la date.</p></div>
+<div class="timeline-item"><span>03 • Filtrer et ordonner · keep_exact_matches, widen_for_subject, partners_first</span><h3>Seulement ce qui répond, quand il y en a</h3>
+<p><strong>L'exact d'abord.</strong> Si des événements contiennent les mots précis de la question, seuls eux sont gardés ; parmi eux, seuls ceux du type demandé s'il y en a. Deux concerts à Mèze valent mieux que deux concerts et quatre autres choses.</p>
+<p><strong>Sujet ou ambiance.</strong> Un mot est un sujet s'il figure dans au moins un titre de la base (table <code>title_vocabulary</code>, recalculée par l'agent après chaque collecte : <code>sql/sortiria/07_vocabulary.sql</code>) ; sinon (« romantique », « insolite »), c'est une ambiance, laissée au sens. Aucune liste écrite à la main.</p>
+<p><strong>Élargir au sujet</strong> quand rien n'en parle. Plutôt que 8 idées sans rapport, <code>widen_for_subject</code> cherche le sujet en relâchant une étape à la fois : pour « à Montpellier », d'abord la métropole avec toutes les autres contraintes ; puis le public, le gratuit, le budget, le soir et le cadre ; puis les 3 prochains mois ; puis la métropole ; puis toute la zone. La réponse dit ce qui diffère (« pas gratuit », « dans 3 semaines ») et la page annonce des <strong>idées voisines</strong>. Un sujet qui n'existe nulle part donne une réponse franche, sans carte, écrite par le code.</p>
+<p><strong>Ordonner.</strong> Les séances d'un même événement sont regroupées en une carte (« + n dates »), 2 cartes au plus par lieu, 8 au plus. Une offre partenaire passe en tête seulement si elle respecte toutes les contraintes et, depuis le 16/10/2026, si son <strong>type précis</strong> et son <strong>public</strong> sont les bons (<code>partner_fits</code>) : un spectacle de marionnettes ne passe plus devant pour « du théâtre », ni une escalade « enfants » pour des ados. C'étaient les 3 cartes jugées non pertinentes sur 139.</p></div>
+<div class="timeline-item"><span>04 • Rédiger · write_with_mistral, parse_answer, order_cards</span><h3>Mistral écrit, le code vérifie</h3>
+<p>Mistral (<code>mistral-small-latest</code> par défaut) reçoit la demande, les contraintes comprises et la liste numérotée des cartes : titre, date, lieu, type, prix, public, autres dates, résumé, et la mention « offre partenaire ». Des notes s'ajoutent quand il le faut (<code>writer_question</code>) : type absent, mots absents, contraintes relâchées ou sujet élargi, avec la consigne de le dire d'abord. Il répond en JSON : 2 à 4 phrases et 3 relances de moins de 6 mots.</p>
+<p>Le code relit tout : un renvoi [n] vers une carte qui n'existe pas est retiré, puis les cartes sont rangées dans l'ordre partenaires, cartes citées dans l'ordre de la réponse, autres cartes ; les numéros sont refaits de 1 à 8 et la réponse suit (« [5], [7] » devient « [2], [3] »), pour que [n] désigne toujours la n-ième carte.</p>
+<p>Repli : si Mistral ne répond pas ou renvoie un texte illisible, <code>fallback_answer</code> écrit une phrase simple qui liste les trois premiers événements. La réponse porte <code>degraded: true</code> et l'interface l'affiche. Les cartes, elles, restent exactes : elles viennent de la base.</p></div>
+</div>
+<div class="config-grid">
+<div class="config-card"><span>Comprendre</span><strong>1 ms</strong></div>
+<div class="config-card"><span>Rechercher</span><strong>1,5 s</strong></div>
+<div class="config-card"><span>Filtrer</span><strong>0,5 s</strong></div>
+<div class="config-card"><span>Rédiger</span><strong>1,2 s</strong></div>
+<div class="config-card"><span>Médiane de bout en bout</span><strong>3,0 à 3,3 s</strong></div>
+<div class="config-card"><span>Réponse servie par le cache</span><strong>0,10 s (médiane)</strong></div>
+</div>
+<p class="table-note">Moyennes par étape et temps de bout en bout : <code>scripts/mesure_cout_latence.py</code>, 175 questions, 16/10/2026 (<code>docs/evaluation.md</code>, § 3). « Filtrer » coûte surtout la lecture des autres dates de chaque carte, une requête par carte.</p>
+</div>
+</section>
+
+<section class="section" id="s03">
+<div class="container">
+<p class="section-number">03</p>
+<h2>Le cycle de vie d'une question</h2>
+<p class="section-intro">De l'appui sur « Chercher » au pouce levé, puis au bilan du lundi : ce que voit le navigateur, ce que fait l'API, ce qui reste en base.</p>
+
+<figure class="story-figure"><svg class="story-svg" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 720" role="img" aria-label="Diagramme de séquence d'une question entre le navigateur, l'API FastAPI, PostgreSQL et Mistral : envoi de la question, limite de débit, compréhension par règles, lecture du cache, vecteur de la question par mistral-embed, recherche hybride sous filtres, étapes envoyées au navigateur en flux SSE, rédaction par Mistral à partir des cartes numérotées, écriture du cache et du journal rag_requests, réponse finale, puis pouce haut ou bas enregistré dans la table feedback. Le lundi, l'agent lit le journal et propose des synonymes ou des agendas, appliqués après validation humaine.">
+<rect width="1080" height="720" rx="18" fill="#111a22"/>
+<defs>
+<marker id="arr-rag-3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#48c9b0"/></marker>
+<marker id="arr-rag-4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#98a8ad"/></marker>
+</defs>
+<g font-family="Inter, 'Segoe UI', Arial, sans-serif">
+<text x="40" y="46" fill="#edf4f4" font-size="22" font-weight="700">Une question, de l'arrivée au journal</text>
+<text x="40" y="72" fill="#98a8ad" font-size="14">Trait plein : appel · pointillé : réponse ou message du flux SSE</text>
+
+<!-- Couloirs -->
+<rect x="50" y="92" width="200" height="50" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
+<text x="64" y="112" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">NAVIGATEUR</text>
+<text x="64" y="132" fill="#edf4f4" font-size="15" font-weight="700">Angular</text>
+<rect x="320" y="92" width="200" height="50" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
+<text x="334" y="112" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">API · SORTIRIA-API</text>
+<text x="334" y="132" fill="#edf4f4" font-size="15" font-weight="700">FastAPI</text>
+<rect x="590" y="92" width="200" height="50" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
+<text x="604" y="112" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">BASE · PGVECTOR</text>
+<text x="604" y="132" fill="#edf4f4" font-size="15" font-weight="700">PostgreSQL</text>
+<rect x="850" y="92" width="200" height="50" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
+<text x="864" y="112" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">MISTRAL</text>
+<text x="864" y="132" fill="#edf4f4" font-size="15" font-weight="700">embed + small</text>
+
+<line x1="150" y1="142" x2="150" y2="648" stroke="#2f9e8a" stroke-width="1" stroke-dasharray="3 5"/>
+<line x1="420" y1="142" x2="420" y2="648" stroke="#2f9e8a" stroke-width="1" stroke-dasharray="3 5"/>
+<line x1="690" y1="142" x2="690" y2="648" stroke="#2f9e8a" stroke-width="1" stroke-dasharray="3 5"/>
+<line x1="950" y1="142" x2="950" y2="648" stroke="#2f9e8a" stroke-width="1" stroke-dasharray="3 5"/>
+
+<!-- 1. question -->
+<text x="160" y="173" fill="#edf4f4" font-size="12.5">POST /api/v1/recherche/stream</text>
+<line x1="150" y1="180" x2="418" y2="180" stroke="#48c9b0" stroke-width="1.6" marker-end="url(#arr-rag-3)"/>
+<!-- 2. limite -->
+<rect x="320" y="196" width="200" height="28" rx="8" fill="#17232d" stroke="#2f9e8a" stroke-width="1"/>
+<text x="420" y="215" fill="#edf4f4" font-size="12.5" text-anchor="middle">limite de débit, sinon 429</text>
+<!-- 3. comprendre -->
+<rect x="320" y="234" width="200" height="28" rx="8" fill="#17232d" stroke="#2f9e8a" stroke-width="1"/>
+<text x="420" y="253" fill="#edf4f4" font-size="12.5" text-anchor="middle">comprendre : règles, 1 ms</text>
+<line x1="420" y1="274" x2="152" y2="274" stroke="#98a8ad" stroke-width="1.3" stroke-dasharray="5 4" marker-end="url(#arr-rag-4)"/>
+<text x="160" y="268" fill="#98a8ad" font-size="12.5">progress · comprendre</text>
+<!-- 4. cache -->
+<text x="430" y="300" fill="#edf4f4" font-size="12.5">cache : même clé, valide ?</text>
+<line x1="420" y1="307" x2="688" y2="307" stroke="#48c9b0" stroke-width="1.6" marker-end="url(#arr-rag-3)"/>
+<text x="430" y="332" fill="#98a8ad" font-size="12.5">trouvée : réponse gardée → fin</text>
+<line x1="690" y1="339" x2="422" y2="339" stroke="#98a8ad" stroke-width="1.3" stroke-dasharray="5 4" marker-end="url(#arr-rag-4)"/>
+<!-- 5. embed -->
+<text x="705" y="366" fill="#edf4f4" font-size="12.5">vecteur (mistral-embed)</text>
+<line x1="420" y1="373" x2="948" y2="373" stroke="#48c9b0" stroke-width="1.6" marker-end="url(#arr-rag-3)"/>
+<!-- 6. recherche -->
+<text x="430" y="400" fill="#edf4f4" font-size="12.5">recherche hybride sous filtres</text>
+<line x1="420" y1="407" x2="688" y2="407" stroke="#48c9b0" stroke-width="1.6" marker-end="url(#arr-rag-3)"/>
+<!-- 7. progress -->
+<text x="160" y="434" fill="#98a8ad" font-size="12.5">progress × 2 par étape</text>
+<line x1="420" y1="441" x2="152" y2="441" stroke="#98a8ad" stroke-width="1.3" stroke-dasharray="5 4" marker-end="url(#arr-rag-4)"/>
+<!-- 8. rédaction -->
+<text x="705" y="468" fill="#edf4f4" font-size="12.5">8 cartes numérotées + consigne</text>
+<line x1="420" y1="475" x2="948" y2="475" stroke="#48c9b0" stroke-width="1.6" marker-end="url(#arr-rag-3)"/>
+<text x="705" y="502" fill="#98a8ad" font-size="12.5">JSON : réponse [n] + relances</text>
+<line x1="950" y1="509" x2="422" y2="509" stroke="#98a8ad" stroke-width="1.3" stroke-dasharray="5 4" marker-end="url(#arr-rag-4)"/>
+<!-- 9. cache + journal -->
+<text x="430" y="536" fill="#edf4f4" font-size="12.5">cache + journal rag_requests</text>
+<line x1="420" y1="543" x2="688" y2="543" stroke="#48c9b0" stroke-width="1.6" marker-end="url(#arr-rag-3)"/>
+<!-- 10. completed -->
+<text x="160" y="570" fill="#98a8ad" font-size="12.5">completed : réponse + cartes</text>
+<line x1="420" y1="577" x2="152" y2="577" stroke="#98a8ad" stroke-width="1.3" stroke-dasharray="5 4" marker-end="url(#arr-rag-4)"/>
+<!-- 11. pouce -->
+<text x="160" y="604" fill="#edf4f4" font-size="12.5">pouce : /reponses/{id}/avis</text>
+<line x1="150" y1="611" x2="418" y2="611" stroke="#48c9b0" stroke-width="1.6" marker-end="url(#arr-rag-3)"/>
+<text x="430" y="632" fill="#edf4f4" font-size="12.5">table feedback (moins d'un jour)</text>
+<line x1="420" y1="639" x2="688" y2="639" stroke="#48c9b0" stroke-width="1.6" marker-end="url(#arr-rag-3)"/>
+
+<!-- Lundi -->
+<rect x="30" y="660" width="1020" height="46" rx="12" fill="#17232d" stroke="#98a8ad" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="44" y="688" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">LE LUNDI</text>
+<text x="120" y="688" fill="#edf4f4" font-size="13">l'agent lit 7 jours de rag_requests → propositions (synonyme, correction, agenda) → appliquées après validation</text>
+</g>
+</svg><figcaption>Une recherche servie sans cache. Avec le cache, l'API envoie aussitôt les étapes 2 à 4 « faites » et la réponse gardée, sans appeler Mistral. Code : <code>app/interface_api.py</code>, <code>app/search_service.py</code>.</figcaption></figure>
+
+<div class="timeline">
+<div class="timeline-item"><span>01 • Arrivée</span><h3>Une route, un corps validé</h3><p>Le navigateur envoie <code>POST /api/v1/recherche/stream</code> avec la question (500 caractères au plus), les cases cochées (public, zone, période, gratuit) et le <code>context</code>, la demande comprise précédente (1 000 caractères au plus). Pydantic refuse toute valeur hors des listes connues. La connexion à la base est ouverte <em>dans</em> le flux, pour qu'elle ne se referme pas avant la fin de la réponse.</p></div>
+<div class="timeline-item"><span>02 • Limite de débit · app/rate_limit.py</span><h3>Borner le coût avant tout calcul</h3><p>Les routes sont publiques, sans clé : sans limite, un script pourrait poser des milliers de questions, chacune payée à Mistral. Avant d'entrer dans la recherche, une fenêtre glissante compte les appels par visiteur (première adresse de <code>X-Forwarded-For</code>), puis pour tout le service. Au-delà : réponse <strong>429</strong> avec <code>Retry-After</code>, et l'interface affiche le message à la place de la réponse. Les seuils sont dans la section 05.</p></div>
+<div class="timeline-item"><span>03 • Comprendre, puis cache · query_cache</span><h3>La même demande, le même jour, sur la même base</h3><p>Après l'étape « comprendre », l'API calcule une empreinte SHA-256 de la demande : <code>PROMPT_VERSION</code>, numéro de la dernière collecte (<code>max(run_id)</code> de <code>collect_runs</code>), date du jour à Paris, question et contexte normalisés, cases cochées et synonymes appris. Si la clé est valide, la réponse gardée est renvoyée tout de suite. Une entrée vit 6 h au plus et jamais après minuit (« ce soir » change de sens chaque jour) ; une nouvelle collecte invalide tout ; un synonyme validé sert à la question suivante. Les réponses dégradées ou sans carte ne sont jamais gardées. La lecture et l'écriture du cache ne bloquent jamais : en cas d'erreur, la recherche se fait normalement.</p></div>
+<div class="timeline-item"><span>04 • Flux SSE</span><h3>Les étapes en direct</h3><p>La réponse est un flux <code>text/event-stream</code> (en-têtes <code>Cache-Control: no-cache</code> et <code>X-Accel-Buffering: no</code>), au même format que Chess Agent : <code>event: progress</code> deux fois par étape (« en cours », puis « fait » avec un message comme « n séances (sens + mots-clés) »), soit 8 messages, puis <code>event: completed</code> avec le résultat complet. Une panne de la base pendant la recherche n'interrompt pas brutalement le flux déjà ouvert : il se termine par <code>event: error</code> et un message lisible.</p></div>
+<div class="timeline-item"><span>05 • Journal · rag_requests</span><h3>Chaque demande est tracée</h3><p><code>log_request</code> écrit une ligne dans <code>sortiria.rag_requests</code> : question, cases cochées et contraintes comprises, événements proposés, statut, durée, tokens, coût en dollars, modèle, <code>PROMPT_VERSION</code>, réponse rédigée, <code>degraded</code> et <code>from_cache</code>. Sous <code>constraints → 'recherche'</code> : réponse exacte ou non, mots inconnus de la base, contraintes relâchées, mots absents, sujet introuvable. Le journal ne bloque jamais une réponse ; les questions de l'évaluation n'y sont pas écrites ; il est purgé après 90 jours. Le <code>request_id</code> renvoyé permet ensuite le pouce.</p></div>
+<div class="timeline-item"><span>06 • Pouce haut ou bas · feedback</span><h3>L'avis du visiteur sur la réponse</h3><p><code>POST /api/v1/reponses/{request_id}/avis</code> avec <code>rating</code> 1 ou -1 et, pour un pouce bas, « ce qui manquait » (300 caractères, jamais publié). Seulement pour une réponse de moins d'un jour ; un second clic remplace le premier (contrainte <code>feedback_once</code>) ; 404 sinon. La satisfaction apparaît dans le tableau Grafana « Recherche ».</p></div>
+<div class="timeline-item"><span>07 • Le lundi · agent/search_learning.py</span><h3>Apprendre de ce qui a manqué</h3><p>Chaque lundi, l'agent lit les 7 derniers jours du journal et prend les mots cherchés au moins deux fois et absents de tous les titres (« zumba », « cirqe »). Mistral dit ce que c'est : faute de frappe, synonyme d'un sujet connu (seul un mot réellement présent dans les titres est retenu), sujet absent ou ambiance. Il en sort des propositions : ajouter un synonyme à <code>config/synonymes.yaml</code>, ou un agenda OpenAgenda de la zone qui traite le sujet. Rien n'est appliqué sans validation humaine (<code>uv run python -m agent.proposals --accepter N</code>). Voir <a class="project-link" href="agent.html">l'agent →</a></p></div>
+</div>
+
+<h3>Le cycle de vie de l'application</h3>
+<div class="reflection-grid">
+<div class="reflection-card"><h3>Démarrage</h3><p>L'API (<code>app/main.py</code>) ne construit rien au démarrage : pas d'index à charger, pas d'appel à Mistral. Elle démarre en une seconde. Sur Azure, <code>sortiria-api</code> tourne de 0 à 1 copie : sans visiteur, elle se met en veille et se réveille à la première requête.</p></div>
+<div class="reflection-card"><h3>Une seule copie, exprès</h3><p>Les compteurs de la limite de débit sont en mémoire (10 000 visiteurs suivis au plus). C'est juste parce que l'API tourne en une seule copie (<code>--max-replicas 1</code>). Avec plusieurs copies, il faudrait un compteur partagé (Redis, ou la base).</p></div>
+<div class="reflection-card"><h3>Ce qui change sans redémarrer</h3><ul><li>les synonymes : le fichier est relu quand sa date ou sa taille change ;</li><li>le vocabulaire des titres : recalculé par l'agent après chaque collecte ;</li><li>le cache : rendu inutilisable par la collecte de la nuit, puis purgé.</li></ul></div>
+<div class="reflection-card"><h3>Ce qui change avec un déploiement</h3><ul><li><code>PROMPT_VERSION</code> : une nouvelle valeur invalide le cache et date chaque ligne du journal ;</li><li>les seuils <code>LIMITE_*</code> : lus dans l'environnement au démarrage de l'API ; le modèle de rédaction (<code>SEARCH_MODEL</code>) est relu à chaque rédaction, mais en production toute variable passe par une nouvelle révision.</li></ul></div>
+</div>
+</div>
+</section>
+
+<section class="section section-alt" id="s04">
+<div class="container">
+<p class="section-number">04</p>
+<h2>Les garde-fous contre les inventions</h2>
+<p class="section-intro">Le modèle de langage ne décide jamais seul de ce qui est vrai. Chaque risque a sa parade dans le code, pas seulement dans la consigne.</p>
+<table class="story-table params-table">
+<thead><tr><th>Risque</th><th>Garde-fou</th><th>Où</th></tr></thead>
+<tbody>
+<tr><td>Citer un événement qui n'existe pas</td><td>Mistral ne reçoit que les cartes trouvées en base, numérotées ; un renvoi [n] hors de la liste est retiré de la réponse.</td><td><code>events_for_prompt</code>, <code>parse_answer</code></td></tr>
+<tr><td>Inventer un lieu, une date, un prix</td><td>Les cartes affichées viennent de la base, jamais du texte de Mistral ; la consigne interdit d'inventer ; un prix inconnu s'affiche « Prix non communiqué ».</td><td><code>to_card</code>, <code>WRITE_PROMPT</code></td></tr>
+<tr><td>Présenter une idée voisine comme une réponse</td><td>Le code calcule si la réponse est exacte (<code>exact</code>) ; sinon il ajoute à la demande une note « dis-le d'abord » et l'interface annonce des idées voisines.</td><td><code>writer_question</code></td></tr>
+<tr><td>Proposer n'importe quoi quand le sujet n'existe pas</td><td>Sujet absent de toute la zone sur 3 mois : la réponse le dit, sans carte, et elle est écrite par le code, pas par Mistral.</td><td><code>run_search</code></td></tr>
+<tr><td>Mettre en avant une offre partenaire hors sujet</td><td>En tête seulement si elle respecte les contraintes, le type précis et le public ; Mistral la cite « simplement, sans ton publicitaire ».</td><td><code>partners_first</code>, <code>partner_fits</code></td></tr>
+<tr><td>Mistral absent ou réponse illisible</td><td>Réponse simple qui liste les événements, signalée (<code>degraded: true</code>) ; elle n'entre pas dans le cache.</td><td><code>fallback_answer</code></td></tr>
+<tr><td>Commentaires injurieux des visiteurs</td><td>Mistral Moderation avant publication ; sans réponse de la modération, l'agent reprend le commentaire la nuit suivante.</td><td><code>src/event/event_ratings.py</code></td></tr>
+</tbody>
+</table>
+<p class="table-note">Source : <code>docs/fiabilite.md</code> (16/10/2026) et le code cité. La modération porte sur les commentaires publiés ; le code ne modère pas les questions, qui ne sont montrées à personne d'autre.</p>
+<div class="code-panel">
+<div class="code-panel-header"><span>WRITE_PROMPT (extrait)</span><small>app/search_service.py</small></div>
+<pre><code>- ne parle QUE des événements de la liste ; n'invente ni lieu, ni date, ni prix ;
+- cite chaque événement mentionné par son numéro entre crochets : [1], [2] ;
+- si aucun événement ne correspond vraiment, dis-le franchement ;
+- respecte les contraintes comprises (date, lieu, public, gratuit) : ne
+  présente pas un événement qui ne les respecte pas comme s'il y répondait ;
+- propose 3 questions de relance courtes (moins de 6 mots chacune).
+Réponds uniquement en JSON : {"reponse": "...", "suggestions": ["...", "...", "..."]}</code></pre>
+</div>
+<div class="callout subtle">
+<span class="eyebrow">LIMITE</span>
+<strong>La recherche par préfixe peut rapprocher deux mots de même début.</strong>
+<p>« tapas » et « tapissiers » commencent pareil. C'est rare et visible dans l'évaluation ; je l'ai gardé, parce que le préfixe est ce qui fait trouver « photographies » à partir de « photo ».</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="s05">
+<div class="container">
+<p class="section-number">05</p>
+<h2>La configuration</h2>
+<p class="section-intro">Deux niveaux : des réglages d'exploitation dans l'environnement (<code>.env</code> en local, secrets et variables Container Apps en production), et des seuils de conception dans le code, chacun commenté avec la mesure qui l'a fixé.</p>
+<table class="story-table params-table">
+<thead><tr><th>Variable</th><th>Défaut</th><th>Rôle</th></tr></thead>
+<tbody>
+<tr><td><code>SEARCH_MODEL</code></td><td><code>mistral-small-latest</code></td><td>Modèle de rédaction. <code>ministral-8b</code> a été mesuré : 17 % moins cher, plus lent, qualité non mesurée ; écarté.</td></tr>
+<tr><td><code>EMBEDDING_MODEL</code></td><td><code>mistral-embed</code></td><td>Vecteur de la question, le même modèle que pour les événements.</td></tr>
+<tr><td><code>MODERATION_MODEL</code></td><td>—</td><td>Modération des commentaires des visiteurs.</td></tr>
+<tr><td><code>LIMITE_RECHERCHES_MINUTE</code></td><td>12</td><td>Recherches par visiteur et par minute.</td></tr>
+<tr><td><code>LIMITE_RECHERCHES_HEURE</code></td><td>120</td><td>Recherches par visiteur et par heure.</td></tr>
+<tr><td><code>LIMITE_RECHERCHES_HEURE_TOTAL</code></td><td>1 000</td><td>Recherches par heure pour tout le service : borne le coût Mistral, même face à un robot qui change d'adresse.</td></tr>
+<tr><td><code>LIMITE_ECRITURES_MINUTE</code></td><td>30</td><td>Avis et pouces, par visiteur.</td></tr>
+<tr><td><code>LIMITE_LECTURES_MINUTE</code></td><td>120</td><td>Détail, sources, partenaires, sorties à noter, par visiteur.</td></tr>
+</tbody>
+</table>
+<p class="table-note">Noms de variables : <code>.env.example</code> ; défauts : <code>app/rate_limit.py</code>, <code>app/search_service.py</code>, <code>agent/services.py</code>. Pour une limite, 0 la désactive.</p>
+<div class="config-grid">
+<div class="config-card"><span>PROMPT_VERSION</span><strong>2026-10-16.2</strong><p>Version de la recherche : dans la clé du cache et dans chaque ligne du journal.</p></div>
+<div class="config-card"><span>CANDIDATES · PARTNER_CANDIDATES</span><strong>80 + 20</strong><p>Séances comparées à la question, plus les meilleures séances partenaires qui passent les filtres.</p></div>
+<div class="config-card"><span>MAX_PROPOSALS</span><strong>8</strong><p>Cartes montrées et données à Mistral : 2 rangées de 4.</p></div>
+<div class="config-card"><span>MAX_PER_VENUE</span><strong>2</strong><p>Cartes au plus pour un même lieu, tant qu'il y en a d'autres.</p></div>
+<div class="config-card"><span>PARTNER_TOP_RANK</span><strong>40</strong><p>Sans type ni mot précis, une offre partenaire doit être parmi les 40 plus proches par le sens pour passer en tête.</p></div>
+<div class="config-card"><span>WIDER_PERIOD</span><strong>90 jours</strong><p>Jusqu'où l'élargissement au sujet étend la période.</p></div>
+<div class="config-card"><span>RRF_K · POOL</span><strong>60 · 200</strong><p>Constante de la fusion des rangs ; rangs gardés par chaque classement avant fusion.</p></div>
+<div class="config-card"><span>CACHE_HOURS</span><strong>6 h</strong><p>Durée de vie d'une réponse en cache, jamais au-delà de minuit.</p></div>
+<div class="config-card"><span>FEEDBACK_WINDOW</span><strong>1 jour</strong><p>Délai pour lever ou baisser le pouce sur une réponse.</p></div>
+</div>
+<p class="table-note">Constantes de <code>app/search_service.py</code> au 16/10/2026.</p>
+<div class="about-grid">
+<div class="large-text">Les synonymes ne s'écrivent pas à la main : ils se valident.</div>
+<div><p><code>config/synonymes.yaml</code> associe un mot tapé à un mot connu de la base (« zumba » : « fitness »). Le mot tapé est gardé, le mot connu est cherché en plus, et un synonyme compte comme une alternative, pas comme un mot de plus à exiger.</p><p>Le fichier ne se remplit que par les propositions du lundi, acceptées une à une. À ce jour, il est vide : SortirIA n'a pas encore assez de vraies questions pour en tirer des synonymes.</p></div>
+</div>
+</div>
+</section>
+
+<section class="section section-alt" id="s06">
+<div class="container">
+<p class="section-number">06</p>
+<h2>L'évaluation en bref</h2>
+<p class="section-intro">Chaque mesure est rejouable par un script et gardée dans <code>benchmarks/</code>. Le détail est sur la page Résultats.</p>
+<div class="reflection-grid">
+<div class="reflection-card"><h3>Contraintes : rejouées à chaque push</h3><p>50 questions écrites à la main (<code>config/eval_recherche.yaml</code>) et 125 recherches courtes (<code>config/eval_mots.yaml</code>) passent par la vraie recherche. Chaque carte est contrôlée : date, lieu, public, gratuit, budget, type, mots visibles. En CI, sur une base figée et sans Mistral, le job échoue sous 95 %.</p></div>
+<div class="reflection-card"><h3>Pertinence : un humain, puis un juge calibré</h3><p>139 cartes jugées à la main sur le sujet et le public : 97,8 %. Un juge Mistral Large, calibré sur cette grille (98,6 % d'accord, AC1 0,985), garde 91,9 % d'accord (AC1 0,889) sur 135 cartes qu'il n'avait jamais vues.</p></div>
+<div class="reflection-card"><h3>Temps et coût</h3><p>175 questions avec rédaction : médiane 3,0 à 3,3 s, P95 6,0 à 6,4 s, 0,12 $ pour 1 000 questions ; 0,11 s et 0 $ avec le cache. En production, le tableau Grafana « Recherche » suit la latence réelle.</p></div>
+</div>
+<div class="callout subtle">
+<span class="eyebrow">LIMITE</span>
+<strong>Le jeu de test a été écrit en même temps que les règles.</strong>
+<p>Il protège contre les régressions ; la vraie mesure viendra des questions réelles (journal, pouces, bilan du lundi). Et la faiblesse mesurée est voulue : 0 à 57 % de pertinence sur le sport et les loisirs ouverts toute l'année (piscine, billard…), qui sont des lieux, pas des événements datés. 83,7 % sur 50 recherches courtes tirées au hasard. <a class="project-link" href="limites.html">Les limites →</a></p>
+</div>
+</div>
+</section>
+
+<!-- 07 PROVENANCE -->
+<section class="section" id="s07">
+<div class="container">
+<p class="section-number">07</p>
+<h2>D'où vient le code</h2>
+<p class="section-intro">La recherche est écrite pour SortirIA. Le point de départ était l'API de l'Assistant RAG OpenAgenda (projet 6) : son index FAISS ne savait pas filtrer, et tout l'ancien RAG (<code>rag_service</code>, <code>retrieval_service</code>, routes <code>/ask</code> et <code>/rebuild</code>…) a été retiré le 15/10/2026. Il en reste le fichier d'entrée de l'API et l'idée du texte indexé ; la diffusion en direct suit le modèle de Chess Agent (projet 13).</p>
+<table class="story-table params-table">
+<thead><tr><th>Fichier ou module</th><th>Origine</th><th>Statut</th><th>Ce qui a été adapté ou écrit</th></tr></thead>
+<tbody>
+<tr><td><code>app/main.py</code></td><td>Assistant RAG OpenAgenda (projet 6)</td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Routes héritées (<code>/ask</code>, <code>/ask/debug</code>, <code>/rebuild</code>) et index FAISS construit au démarrage retirés ; il sert <code>/api/v1</code>, les notes et <code>/health</code>.</td></tr>
+<tr><td><code>app/interface_api.py</code></td><td>Écrit pour SortirIA, sur le modèle de l'API de Chess Agent (projet 13)</td><td><span class="experiment-status selected">Écrit</span></td><td>Préfixe <code>/api/v1</code>, recherche diffusée en Server-Sent Events (<code>event: progress</code>, puis <code>event: completed</code>).</td></tr>
+<tr><td><code>app/search_service.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Recherche en 4 étapes sur PostgreSQL et pgvector, rédaction Mistral avec citations vérifiées, repli sans Mistral, cache, trace dans <code>rag_requests</code>.</td></tr>
+<tr><td><code>app/query_understanding.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Contraintes lues par des règles et des synonymes validés, sans appel à un modèle : la première version ne comparait qu'un seul vecteur.</td></tr>
+<tr><td><code>app/rate_limit.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Limite par visiteur et plafond global de la recherche, réponse 429 avec <code>Retry-After</code>, pour borner le coût Mistral.</td></tr>
+<tr><td><code>src/event/event_embedding.py</code></td><td>Écrit pour SortirIA, idée reprise de Assistant RAG OpenAgenda (projet 6)</td><td><span class="experiment-status selected">Écrit</span></td><td>Texte indexé sur le modèle du « texte enrichi » du RAG : titre, catégorie, lieu et description dans un seul texte.</td></tr>
+</tbody>
+</table>
+<p class="table-note">Sources : mentions « Provenance » des docstrings de <code>app/</code> et de <code>src/event/event_embedding.py</code> ; <code>PROVENANCE.md</code> (« Remplacer FAISS par pgvector », 14 et 15/10/2026).</p>
+<p class="table-note">Le détail ligne à ligne : <code>PROVENANCE.md</code> du dépôt.</p>
+</div>
+</section>
+
+<section class="section contact">
+<div class="container">
+<p class="eyebrow">CONTINUER</p>
+<h2>La recherche répond ; l'interface la rend lisible.</h2>
+<div class="hero-actions">
+<a class="button primary" href="interface.html">L'interface</a>
+<a class="button secondary" href="resultats.html">Les résultats</a>
+<a class="button secondary" href="agent.html">L'agent</a>
+</div>
+</div>
+</section>
+</main>
+<footer>
+<div class="container footer-content">
+<span>SortirIA • Projet de fin de formation Ingénieur IA (OpenClassrooms)</span>
+<span>Montpellier et bassin de Thau • 2026</span>
+</div>
+</footer>
+<script src="js/main.js"></script>
+</body>
+</html>
