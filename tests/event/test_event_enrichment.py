@@ -86,3 +86,25 @@ def test_summary_with_an_invented_name_is_dropped() -> None:
     assert enrichment.check_enrichment(faithful, row) == (faithful, [])
     games = enrichment.Enrichment(id="e1", categorie="atelier", resume="Partie d'échecs.")
     assert enrichment.check_enrichment(games, {"title": "PAUSE JEUX : Les échecs"})[0].categorie == "jeux"
+
+
+@pytest.mark.parametrize("summary, row", [
+    # Collecte du 15/10/2026 : résumés écartés à tort.
+    ("Visite d'un hôtel particulier du XIXe siècle.", {"title": "L'HÔTEL DE LUNAS", "description": "Visite guidée."}),
+    ("Soirée électro avec deux DJs.", {"title": "Hard Night", "description": "Techno toute la nuit."}),
+    ("Un DJ set au bord de l'eau.", {"title": "Dub Striker", "description": "Soirée dub."}),
+    ("Jeux en famille, de 4 à 12 ans.", {"title": "Atelier jeux en famille", "description": "Jeux de société.",
+                                          "age_min": 4, "age_max": 12}),
+    ("Entrée à 12 euros.", {"title": "Concert", "description": "Concert.", "price_min": 12.0}),
+])
+def test_common_words_centuries_ages_and_prices_are_not_invented_names(summary: str, row: dict) -> None:
+    result = enrichment.Enrichment(id="e1", categorie="visite", resume=summary)
+    assert enrichment.unsupported_names(summary, row) == []
+    assert enrichment.check_enrichment(result, row)[0].resume == summary
+
+
+def test_real_invented_names_are_still_caught() -> None:
+    row = {"title": "CYRANA", "description": "Spectacle de théâtre."}
+    assert enrichment.unsupported_names("Une relecture de Cyrano de Bergerac.", row) == ["Cyrano", "Bergerac"]
+    row = {"title": "GREASE IS THE WORD", "description": "Comédie musicale."}
+    assert enrichment.unsupported_names("Le spectacle culte de 1978 revient.", row) == ["1978"]

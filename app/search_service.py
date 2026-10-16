@@ -51,7 +51,7 @@ from app.query_understanding import (
 )
 
 PARIS = ZoneInfo("Europe/Paris")
-PROMPT_VERSION = "2026-10-15.16"  # carte = séance trouvée ; mot seulement en description = idée voisine
+PROMPT_VERSION = "2026-10-16.1"  # sujet mieux montré sans les contraintes : il passe devant (karaoké)
 DEFAULT_SEARCH_MODEL = "mistral-small-latest"
 CANDIDATES = 80          # séances comparées à la question (regroupées ensuite par événement)
 MAX_PROPOSALS = 8        # événements montrés et donnés à Mistral (2 rangées de 4 cartes, 15/10)
@@ -326,6 +326,35 @@ def on_subject(rows: Sequence[Mapping[str, Any]], plan: QueryPlan) -> list[Mappi
     if distinctive_keywords(plan.keywords):
         return [row for row in rows if row.get("keyword_match")]
     return [row for row in rows if row.get("category_match")]
+
+
+def lexical_words(words: Sequence[str]) -> set[str]:
+    """Mots distincts de la recherche par mots (sans les synonymes ajoutés)."""
+
+    return {word for word in lexical_query(words).split(" | ") if word}
+
+
+def core_words(words: Sequence[str]) -> list[str]:
+    """Mots de la question, sans les synonymes appris (une alternative, pas un mot de plus)."""
+
+    from app.query_understanding import learned_synonyms
+
+    synonyms = learned_synonyms()
+    return [word for word in words if word not in synonyms and word not in synonyms.values()]
+
+
+def best_match(rows: Sequence[Mapping[str, Any]]) -> tuple[int, int]:
+    """Meilleur couple (mots visibles, mots trouvés) parmi les lignes sur le sujet."""
+
+    return max(((int(row.get("visible_hits") or 0), int(row.get("keyword_hits") or 0))
+                for row in rows if row.get("keyword_match")), default=(0, 0))
+
+
+def plan_can_widen(plan: QueryPlan) -> bool:
+    """Le plan a des contraintes que `widen_for_subject` peut relâcher."""
+
+    return bool(plan.public or plan.free_only or plan.max_price is not None or plan.evening or plan.setting
+                or plan.zone or plan.cities or plan.near or plan.end < plan.start + WIDER_PERIOD)
 
 
 def widen_for_subject(connection: Any, plan: QueryPlan, vector: str | None,
@@ -1338,6 +1367,21 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
         # sens pour un mot d'ambiance ; Mistral dit ce qui manque.
         words_found = any(row.get("keyword_match") for row in candidates)
         type_found = any(row.get("category_match") for row in candidates)
+    elif words_found and not relaxed and plan_can_widen(plan) \
+            and best_match(candidates)[0] < len(lexical_words(core_words(words))):
+        # Quelques mots seulement trouvés avec ces contraintes, et pas là où le
+        # visiteur les voit en entier (16/10/2026) : « karaoké géant… gratuit,
+        # pour un public adulte » avec « Famille » coché trouvait une fête qui
+        # cite « groupe », pendant que le Karaoké géant d'un partenaire, en
+        # soirée, était écarté par le public. On regarde sans les contraintes :
+        # si le sujet y est nettement mieux montré, il passe devant, et la
+        # réponse dit ce qui a été relâché.
+        wider_rows, wider_plan, dropped = widen_for_subject(connection, plan, vector)
+        if best_match(wider_rows)[0] > best_match(candidates)[0]:
+            candidates = keep_exact_matches(wider_rows)[0]
+            plan, widened = wider_plan, dropped
+            words_found = any(row.get("keyword_match") for row in candidates)
+            type_found = any(row.get("category_match") for row in candidates)
     missing_words = distinctive_keywords(plan.keywords) if not words_found else []
     # Exact seulement si la carte montre le sujet (15/10/2026, évaluation des
     # 100 recherches) : des mots trouvés dans la seule description (« bière »

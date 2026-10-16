@@ -413,6 +413,38 @@ def test_missing_genre_is_searched_before_settling_for_the_type() -> None:
     assert [card["event_id"] for card in result["events"]] == ["j1"] and result["exact"] is False
 
 
+def test_subject_better_shown_without_the_constraints_goes_first() -> None:
+    """Capture du 16/10/2026 : « Karaoké géant… » avec « Famille » coché. Une
+    fête qui cite seulement « groupe » passait, le Karaoké géant du partenaire
+    (en soirée) restait dehors. Sans les contraintes, il montre tous les mots :
+    il passe en tête, et la réponse dit ce qui a été relâché."""
+
+    party = [row("f1", title="Martror", summary="Fête avec musique en groupe.", category_norm="fete",
+                 keyword_match=True, keyword_hits=1, visible_hits=1)]
+    karaoke = [row("k1", title="Karaoké géant (exemple)", category_norm="jeux", audiences=["soiree"],
+                   summary="Soirée karaoké géant avec des milliers de titres pour chanter en groupe.",
+                   keyword_match=True, keyword_hits=5, visible_hits=5, partner_id=1, partner_name="Bar Exemple"),
+               *party]
+    seen: dict[str, Any] = {}
+
+    def write(question, plan, cards):
+        seen["question"] = question
+        return json.dumps({"reponse": "Pas pour les familles, mais [1].", "suggestions": []}), {}, "m"
+
+    result = search(SubjectConnection(party, karaoke),
+                    "karaoké géant en groupe avec des milliers de titres", write)
+    assert [card["event_id"] for card in result["events"]] == ["k1"]
+    assert result["events"][0]["partner"] is True and result["exact"] is False
+    assert "pour le public « famille »" in seen["question"]
+
+
+def test_constraints_are_kept_when_widening_shows_the_subject_no_better() -> None:
+    same = [row("f1", title="Martror", summary="Fête avec musique en groupe.", category_norm="fete",
+                keyword_match=True, keyword_hits=1, visible_hits=1)]
+    result = search(SubjectConnection(same, same), "karaoké géant en groupe")
+    assert [card["event_id"] for card in result["events"]] == ["f1"]
+
+
 def test_words_are_searched_by_prefix() -> None:
     assert service.lexical_query(["photo", "cine", "art"]) == "photo:* | cine:* | art"
 

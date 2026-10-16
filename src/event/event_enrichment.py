@@ -241,6 +241,13 @@ TITLE_CATEGORY_RULES: tuple[tuple[str, re.Pattern[str]], ...] = tuple(
 
 # Noms de la région que le résumé peut citer sans qu'ils soient dans le texte.
 REGION_NAMES = frozenset({"montpellier", "sete", "thau", "herault", "occitanie", "france", "mediterranee"})
+# Mots courants écrits avec une majuscule, qui ne sont pas des noms propres
+# (collecte du 15/10/2026 : 7 résumés écartés à tort pour « DJ » ou « DJs »).
+COMMON_CAPITALIZED = frozenset({"dj", "djs", "vj", "mc", "bd", "ia", "vr"})
+# Siècles en chiffres romains (« XIXe », « XXe siècle ») : pas des noms propres
+# (15/10/2026 : « Castelnau, de la Révolution à la Première Guerre mondiale »
+# a perdu son résumé pour « XIXe »).
+ROMAN_CENTURY = re.compile(r"^[IVXL]+(e|er|ème|eme)$")
 SENTENCE_START = re.compile(r"(^|[.!?…]\s+|[«\"(]\s*)$")
 
 
@@ -261,15 +268,18 @@ def unsupported_names(summary: str, row: Mapping[str, Any]) -> list[str]:
     Un mot à majuscule en début de phrase n'est pas compté (« Concert de… »).
     """
 
+    # Âges et prix : envoyés à Mistral avec le texte (« de 4 à 12 ans »), ils ne
+    # sont pas inventés (15/10/2026 : « 4, 12 » refusés pour un atelier en famille).
     source = " " + re.sub(r"[^a-z0-9]+", " ", plain(" ".join(str(row.get(key) or "") for key in (
-        "title", "category", "venue_name", "city", "description")))) + " "
+        "title", "category", "venue_name", "city", "description",
+        "age_min", "age_max", "price_min", "price_max")))) + " "
     found = []
     for match in re.finditer(r"[A-ZÀ-ÖØ-Ý][\wÀ-ÖØ-öø-ÿ'’-]+|\d+", summary):
         word = match.group(0)
         if not word[0].isdigit() and SENTENCE_START.search(summary[:match.start()]):
             continue
         key = re.sub(r"[^a-z0-9]+", " ", plain(word)).strip()
-        if not key or key in REGION_NAMES:
+        if not key or key in REGION_NAMES or key in COMMON_CAPITALIZED or ROMAN_CENTURY.match(word):
             continue
         if f" {key} " not in source and not all(f" {part} " in source for part in key.split()):
             found.append(word)

@@ -29,12 +29,17 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
-JUDGE_VERSION = "2026-10-14.1"
+from src.event.event_enrichment import CATEGORIES
+
+JUDGE_VERSION = "2026-10-16.1"   # 16/10 : le juge connaît la liste fermée des catégories
 DEFAULT_JUDGE_MODEL = "mistral-medium-latest"
 SAMPLE_SIZE = 20
 CHECKS = ("coherent", "est_une_sortie", "publics_corrects", "categorie_correcte")
 
-JUDGE_PROMPT = """Tu contrôles la qualité d'un agenda de sorties (Montpellier, bassin de Thau).
+# La liste fermée des catégories est donnée au juge (16/10/2026) : sans elle, il
+# reprochait à « marche » de ne pas être « brocante », ou à une dégustation de
+# ne pas être « œnologie », catégories qui n'existent pas dans SortirIA.
+JUDGE_PROMPT = f"""Tu contrôles la qualité d'un agenda de sorties (Montpellier, bassin de Thau).
 Pour chaque fiche fournie, réponds par vrai ou faux à quatre questions :
 - "coherent" : le titre, la catégorie et le résumé décrivent fidèlement le texte ;
 - "est_une_sortie" : c'est une sortie de loisir qu'on peut proposer au public
@@ -42,12 +47,15 @@ Pour chaque fiche fournie, réponds par vrai ou faux à quatre questions :
 - "publics_corrects" : les publics indiqués sont justes (famille = adapté aux
   enfants ; soiree = sortie du soir entre adultes ; ados ; seniors ; liste vide
   acceptable pour un tout public) ;
-- "categorie_correcte" : la catégorie est la plus juste.
+- "categorie_correcte" : la catégorie est la plus juste PARMI la liste fermée
+  de l'agenda : {", ".join(CATEGORIES)} (une brocante ou un marché aux puces
+  est un « marche » ; « autre » convient quand aucune ne va). Ne reproche pas
+  l'absence d'une catégorie qui n'est pas dans cette liste.
 Si une réponse est fausse, explique en une courte phrase dans "probleme".
 
 Réponds uniquement avec un objet JSON :
-{"verdicts": [{"id": "...", "coherent": true, "est_une_sortie": true,
-"publics_corrects": true, "categorie_correcte": true, "probleme": ""}]}"""
+{{"verdicts": [{{"id": "...", "coherent": true, "est_une_sortie": true,
+"publics_corrects": true, "categorie_correcte": true, "probleme": ""}}]}}"""
 
 
 class Verdict(BaseModel):

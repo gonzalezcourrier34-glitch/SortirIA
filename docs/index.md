@@ -24,8 +24,10 @@ le 6 novembre 2026. Plutôt que de repartir de zéro, il **industrialise deux pr
     - **Boucle d'apprentissage** : ce que les gens cherchent sans trouver est gardé ;
       chaque lundi, l'agent en tire des synonymes et des agendas à lire, validés par un
       humain.
-    - **À venir** : déploiement Azure, CI complète, suivi Grafana de la recherche,
-      limite de débit des routes publiques. Après la soutenance : une base de lieux
+    - **En production** sur Azure depuis le 15/10/2026 : https://www.sortiria-montpellier.fr,
+      déployé à chaque push sur `main` ([Déploiement Azure](deploiement.md)).
+    - **À venir** : CI complète, suivi Grafana de la recherche, limite de débit des
+      routes publiques. Après la soutenance : une base de lieux
       (bowling, padel, restaurants…) et le fine-tuning d'un modèle
       ([Évolutions possibles](evolutions.md)).
 

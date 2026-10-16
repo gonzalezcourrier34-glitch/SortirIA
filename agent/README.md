@@ -77,9 +77,9 @@ C'est ce qui le distingue d'un ETL, qui exécuterait toujours la même suite :
 | Un fichier partenaire n'a plus de séance à venir, ou n'a pas changé depuis 30 jours | Rappel « relancer le partenaire » |
 | Moins de 10 sorties « famille » ou « soirée » à Montpellier ou sur le bassin de Thau dans les 7 jours (compté dans la base, toutes sources confondues) | Rappel « couverture faible » (la promesse du service) |
 | Le coût Mistral estimé de la nuit dépasse le budget | Alerte |
-| Nouvel événement, ou texte modifié | Enrichi par Mistral : catégorie unifiée, publics (famille, soirée, ados, seniors), résumé d'une phrase ; signalé s'il ne s'agit pas d'une sortie. Contrôles (15/10) : un titre explicite (« Pause jeux », « Visite guidée ») fixe la catégorie ; un résumé qui cite un nom ou un nombre absent de la source est écarté |
+| Nouvel événement, ou texte modifié | Enrichi par Mistral : catégorie unifiée, publics (famille, soirée, ados, seniors), résumé d'une phrase ; signalé s'il ne s'agit pas d'une sortie. Contrôles (15/10) : un titre explicite (« Pause jeux », « Visite guidée ») fixe la catégorie ; un résumé qui cite un nom ou un nombre absent de la source est écarté (16/10 : les siècles en chiffres romains, « DJ », les âges et les prix ne comptent plus comme inventés) |
 | Le même événement publié par deux sources (titres écrits autrement) | Fusionné : même jour, même commune, heures compatibles, titres presque identiques ; la fiche du partenaire, sinon d'OpenAgenda, est gardée et complétée par l'autre |
-| Score du juge de qualité sous 80 % | Alerte, avec des exemples de problèmes |
+| Score du juge de qualité sous 80 % | Alerte, avec des exemples de problèmes (16/10 : le juge connaît la liste fermée des catégories et ne reproche plus « marché » au lieu de « brocante ») |
 | Des commentaires clients attendent une modération | Modérés par Mistral Moderation (publiés ou refusés) |
 | Un partenaire a 2,5/5 ou moins sur 5 notes clients au moins | Alerte « à contacter » |
 | La base dépasse 10 000 événements | Les plus lointains sont retirés (statistiques gardées) et une alerte est envoyée ; alerte dès 90 % |

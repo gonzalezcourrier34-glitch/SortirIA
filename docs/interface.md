@@ -108,6 +108,14 @@ le type. Puis :
 - une **ambiance** introuvable : les idées les plus proches par le sens
   restent proposées, et la réponse le dit (`exact: false`).
 
+**Quand le sujet n'est trouvé qu'en partie** (16/10/2026). Avec les
+contraintes choisies, quelques mots seulement sont trouvés (« karaoké
+géant… » avec « Famille » coché : une fête qui cite « groupe »). Le sujet est
+alors aussi cherché sans les contraintes ; s'il y est **nettement mieux
+montré** (plus de mots de la question dans le titre, le résumé ou le lieu),
+ces cartes passent devant et la réponse dit ce qui a été relâché (« pas pour
+les familles »). Sinon, les contraintes sont gardées.
+
 **Diversité et ordre des cartes.** Pas plus de 2 propositions au même lieu
 tant qu'il y en a d'autres. Ordre final (`order_cards`) : les offres
 partenaires qui répondent, puis les événements cités dans la réponse (dans

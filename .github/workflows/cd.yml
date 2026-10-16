@@ -5,7 +5,8 @@
 #
 # Objectif :
 # Construire l'image de l'API FastAPI, la publier sur GHCR,
-# puis la déployer (Azure Container Apps, à brancher en semaine 2).
+# puis la déployer sur Azure (16/10/2026) : API et collecte de
+# la nuit (Container Apps), interface (Static Web Apps).
 # ============================================================
 
 name: CD
@@ -102,60 +103,102 @@ jobs:
 
 
 # ------------------------------------------------------------
-# 4. Déploiement pilote
+# 4. Déploiement sur Azure (16/10/2026)
 # ------------------------------------------------------------
+#
+# Remplace le déploiement SSH hérité du triage médical. Actif quand la
+# variable de dépôt DEPLOY_ENABLED vaut "true" (Settings > Secrets and
+# variables > Actions > Variables).
+#
+# Connexion sans mot de passe (OpenID Connect) : GitHub prouve à Azure
+# qu'il s'agit de ce dépôt et de la branche main ; Azure n'accepte que
+# ce cas (identifiant fédéré) et ne donne accès qu'au groupe sortiria-rg.
+# Secrets du dépôt (des identifiants, pas des mots de passe) :
+# AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID.
+# Mise en place : perso/deploiement_azure.md (étape 11).
 
-  # Déploiement SSH hérité du triage médical, désactivé tant que la variable
-  # de dépôt DEPLOY_ENABLED ne vaut pas "true" (Settings > Variables).
-  # À REMPLACER en semaine 2 par un déploiement Azure Container Apps
-  # (azure/login puis az containerapp update --image ...).
   deploy:
-    name: Deploy Pilot
+    name: Deploy Azure
     needs: build
     if: ${{ vars.DEPLOY_ENABLED == 'true' }}
-
-    # Protection possible par approbation manuelle.
-    environment: pilot
-
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write   # jeton OpenID Connect pour azure/login
+
+    env:
+      RESOURCE_GROUP: sortiria-rg
+      API_APP: sortiria-api
+      COLLECT_JOB: sortiria-collecte
+      WEB_APP: sortiria-web
+      SITE_URL: https://www.sortiria-montpellier.fr
+      IMAGE: ${{ needs.build.outputs.image }}
 
     steps:
 
-      # Préparation du client SSH.
-      - name: Configure SSH
-        shell: bash
-        env:
-          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          SSH_HOST: ${{ secrets.DEPLOY_HOST }}
+      # Le code du commit validé (pour compiler l'interface).
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Nouvelle révision de l'API : secrets et réglages gardés.
+      - name: Update API
+        run: >
+          az containerapp update
+          --name "$API_APP" --resource-group "$RESOURCE_GROUP"
+          --image "$IMAGE"
+          --query properties.latestRevisionName -o tsv
+
+      # La collecte de la nuit prend la même image (SOURCES_DESACTIVEES gardée).
+      - name: Update nightly collection job
+        run: >
+          az containerapp job update
+          --name "$COLLECT_JOB" --resource-group "$RESOURCE_GROUP"
+          --image "$IMAGE"
+          --query name -o tsv
+
+      # Interface Angular : compilée puis envoyée sur Static Web Apps.
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build frontend
+        working-directory: frontend
         run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
+          npm ci
+          npx ng build
 
-          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-
-          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
-
-      # Connexion au serveur et mise à jour de l'API.
-      - name: Deploy application
+      # Le jeton d'envoi est lu dans Azure à chaque fois (pas de secret de plus)
+      # et masqué dans les journaux.
+      - name: Deploy frontend
         shell: bash
-        env:
-          SSH_HOST: ${{ secrets.DEPLOY_HOST }}
-          SSH_USER: ${{ secrets.DEPLOY_USER }}
-          IMAGE: ${{ needs.build.outputs.image }}
         run: |
-          ssh "$SSH_USER@$SSH_HOST" \
-            "cd /opt/sortiria && \
-             API_IMAGE='$IMAGE' docker compose pull api && \
-             API_IMAGE='$IMAGE' docker compose up -d api"
+          TOKEN=$(az staticwebapp secrets list --name "$WEB_APP" --resource-group "$RESOURCE_GROUP" \
+                  --query properties.apiKey -o tsv)
+          echo "::add-mask::$TOKEN"
+          npx --yes @azure/static-web-apps-cli deploy frontend/dist/sortiria-front/browser \
+            --deployment-token "$TOKEN" --env production
 
-      # Vérification de l'endpoint après déploiement.
+      # Le site et l'API répondent (l'API dort sans visiteur : on lui laisse le
+      # temps de se réveiller). /health n'est pas joignable de l'extérieur
+      # (l'API n'accepte que les appels passés par le site) : on passe par lui.
       - name: Healthcheck
         shell: bash
-        env:
-          HEALTH_URL: ${{ secrets.PILOT_HEALTH_URL }}
         run: |
-          curl --fail --silent --show-error \
-               --retry 5 \
-               --retry-delay 5 \
-               "$HEALTH_URL"
+          curl --fail --silent --show-error --retry 6 --retry-delay 10 --retry-all-errors \
+               "$SITE_URL/" -o /dev/null
+          curl --fail --silent --show-error --retry 6 --retry-delay 10 --retry-all-errors \
+               "$SITE_URL/api/v1/sources" -o /dev/null

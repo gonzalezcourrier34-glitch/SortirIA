@@ -20,8 +20,9 @@ Le détail de ce qui a été repris, et de ce qui reste à adapter, est dans [PR
 4. Réponse rédigée par Mistral, qui cite chaque événement ; offres partenaires qui répondent en tête.
 5. Journalisation de chaque requête et de ce qui a manqué ; chaque lundi, l'agent en tire des propositions (synonymes, agendas à lire).
 
-Déploiement : API FastAPI et interface Angular sur Azure Container Apps, base Azure Database for PostgreSQL,
-CI/CD GitHub Actions.
+En ligne : https://www.sortiria-montpellier.fr. Déploiement sur Azure : interface Angular sur Static Web Apps,
+API FastAPI et collecte de la nuit sur Container Apps, base Azure Database for PostgreSQL ; CI/CD GitHub Actions,
+déploiement à chaque push sur `main` (voir `docs/deploiement.md`).
 
 ## Démarrage local
 

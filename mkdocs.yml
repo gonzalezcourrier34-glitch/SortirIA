@@ -73,6 +73,7 @@ nav:
   - Interface: interface.md
   - Base de données: base_de_donnees.md
   - MLOps et monitoring: monitoring.md
+  - Déploiement Azure: deploiement.md
   - Provenance du code: provenance.md
   - Évolutions possibles: evolutions.md
   - Référence du code:

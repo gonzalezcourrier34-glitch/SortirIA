@@ -44,3 +44,12 @@ def test_judge_sees_what_the_user_sees() -> None:
                                     "audiences": ["soiree"], "summary": "Danses trad.", "city": "Marseillan",
                                     "description": "Bal avec initiation."}])
     assert "Catégorie : soiree" in text and "Publics : soiree" in text and "Résumé : Danses trad." in text
+
+
+def test_judge_knows_the_closed_category_list() -> None:
+    """16/10/2026 : sans la liste, le juge reprochait « marche » au lieu de « brocante »."""
+
+    from src.event.event_enrichment import CATEGORIES
+
+    assert all(category in judge.JUDGE_PROMPT for category in CATEGORIES)
+    assert "brocante" in judge.JUDGE_PROMPT and '{"verdicts": [{"id"' in judge.JUDGE_PROMPT
