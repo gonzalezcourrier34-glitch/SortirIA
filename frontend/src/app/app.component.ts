@@ -173,13 +173,20 @@ export class AppComponent implements OnInit {
 
     readonly question = signal('');
 
-    readonly selectedPublic = signal<Public | null>('famille');
+    // Aucun filtre imposé (16/10/2026) : la question décide. « Famille » et
+    // « Ce week-end » cochés par défaut faisaient répondre « rien pour un
+    // public familial » à « un concert ce soir à Montpellier ».
+    readonly selectedPublic = signal<Public | null>(null);
 
     readonly selectedZone = signal<Zone | null>(null);
 
-    readonly selectedPeriod = signal<Period>('weekend');
+    readonly selectedPeriod = signal<Period>('3mois');
 
     readonly freeOnly = signal(false);
+
+    /** Téléphone : filtres repliés en une ligne après une recherche (16/10/2026),
+     *  pour que la réponse soit visible sans faire défiler. */
+    readonly filtersCollapsed = signal(false);
 
     readonly sources = signal<string[]>(DEFAULT_SOURCES);
 
@@ -238,6 +245,19 @@ export class AppComponent implements OnInit {
 
 
     // # Valeurs calculées
+
+    /** Résumé des filtres, affiché quand ils sont repliés. */
+    readonly filtersSummary = computed(() => {
+        const parts = [
+            PUBLICS.find(choice => choice.value === this.selectedPublic())?.label ?? 'Tous publics',
+            ZONES.find(choice => choice.value === this.selectedZone())?.label ?? 'Partout',
+            PERIODS.find(choice => choice.value === this.selectedPeriod())?.label ?? ''
+        ];
+        if (this.freeOnly()) {
+            parts.push('Gratuit');
+        }
+        return parts.filter(Boolean).join(' · ');
+    });
 
     readonly progressPercent = computed(() => {
         const done = this.steps().filter(step => step.status === 'completed').length;
@@ -336,6 +356,10 @@ export class AppComponent implements OnInit {
         this.clearCloseTimer();
         this.searchSubscription?.unsubscribe();
 
+        if (typeof window !== 'undefined' && window.matchMedia?.('(max-width: 900px)').matches) {
+            this.filtersCollapsed.set(true);
+        }
+
         this.searchSubscription = this.searchService.searchStream({
             question: text,
             public: this.selectedPublic(),
@@ -354,8 +378,13 @@ export class AppComponent implements OnInit {
         this.search(suggestion);
     }
 
+    showFilters(): void {
+        this.filtersCollapsed.set(false);
+    }
+
     newConversation(): void {
         this.searchSubscription?.unsubscribe();
+        this.filtersCollapsed.set(false);
         this.loading.set(false);
         this.question.set('');
         this.askedQuestion.set('');

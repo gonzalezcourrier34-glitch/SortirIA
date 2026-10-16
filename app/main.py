@@ -19,6 +19,7 @@ Routes :
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
@@ -38,6 +39,34 @@ app = FastAPI(
 )
 app.include_router(interface_router)
 app.include_router(ratings_router)
+
+
+class NoIndexingOfTheData:
+    """Les données (offres des partenaires, agendas réunis) ne sont pas à indexer
+    ni à archiver (16/10/2026) : en-tête X-Robots-Tag sur /api/, en complément
+    de `frontend/public/robots.txt` (que seuls les robots honnêtes respectent ;
+    la limite de débit fait le reste). Middleware ASGI pur : la recherche
+    diffusée (Server-Sent Events) passe sans être mise en mémoire tampon."""
+
+    HEADER = (b"x-robots-tag", b"noindex, nofollow, noarchive")
+
+    def __init__(self, app: Any) -> None:
+        self.app = app
+
+    async def __call__(self, scope: dict[str, Any], receive: Any, send: Any) -> None:
+        if scope["type"] != "http" or not scope["path"].startswith("/api/"):
+            await self.app(scope, receive, send)
+            return
+
+        async def send_with_header(message: dict[str, Any]) -> None:
+            if message["type"] == "http.response.start":
+                message["headers"] = [*message.get("headers", []), self.HEADER]
+            await send(message)
+
+        await self.app(scope, receive, send_with_header)
+
+
+app.add_middleware(NoIndexingOfTheData)
 
 
 @app.get("/", include_in_schema=False)

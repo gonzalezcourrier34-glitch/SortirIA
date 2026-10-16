@@ -32,6 +32,14 @@
                  cadre, saisie sur 2 lignes, « Nouvelle conversation » au-dessus de « Chercher ») -->
 
             <form class="search" (submit)="$event.preventDefault(); search()">
+                @if (filtersCollapsed()) {
+                    <div class="filters-summary">
+                        <span class="filter-label">Filtres</span>
+                        <span class="filters-summary-text">{{ filtersSummary() }}</span>
+                        <button type="button" class="chip" (click)="showFilters()"
+                            aria-label="Modifier les filtres">Modifier</button>
+                    </div>
+                } @else {
                 <div class="filters">
                     <div class="filter-group" role="group" aria-label="Public">
                         <span class="filter-label">Public</span>
@@ -68,6 +76,7 @@
                         [attr.aria-pressed]="freeOnly()"
                         (click)="toggleFree()">Gratuit seulement</button>
                 </div>
+                }
 
                 <div class="ask">
                     <label for="question" class="visually-hidden">Votre envie de sortie</label>

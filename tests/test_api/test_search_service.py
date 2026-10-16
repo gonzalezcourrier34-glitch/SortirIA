@@ -108,8 +108,35 @@ def test_card_labels() -> None:
     assert card["price"] == "Gratuit" and card["audiences"] == ["famille"] and card["ref"] == 2
     assert card["partner"] is False and card["venue_rating"] is None
     assert service.to_card(row(time_known=False))["date"] == "Sam. 17 oct."
-    assert service.price_label({"is_free": False, "price_text": "", "price_min": 6.5}) == "dès 6,5 €"
+    assert service.price_label({"is_free": False, "price_text": "", "price_min": 6.5}) == "dès 6,50 €"
+    assert service.price_label({"is_free": False, "price_text": "", "price_min": 12.0}) == "dès 12 €"
     assert service.price_label({"is_free": None}) == "Prix non communiqué"
+
+
+def test_prices_and_places_read_the_french_way() -> None:
+    """16/10/2026 : « À partir de 25.5 € » et « Montpellier · Montpellier » sur le site."""
+
+    assert service.french_prices("À partir de 25.5 €") == "À partir de 25,50 €"
+    assert service.french_prices("De 12.33 € à 20.55 €") == "De 12,33 € à 20,55 €"
+    assert service.french_prices("10 euros, 2 adultes, 1.5 h") == "10 euros, 2 adultes, 1.5 h"
+    assert service.french_prices("Tarif 7,5 €") == "Tarif 7,50 €"
+    assert service.place_label({"venue_name": "Montpellier", "city": "Montpellier"}) == "Montpellier"
+    assert service.place_label({"venue_name": "Jam", "city": "Montpellier"}) == "Jam · Montpellier"
+    assert service.place_label({"venue_name": "", "city": "Sète"}) == "Sète"
+
+
+def test_suggestions_must_be_short_questions() -> None:
+    """16/10/2026 : Mistral mettait des phrases sur les cartes dans les relances."""
+
+    raw = json.dumps({"reponse": "Voici des idées proches: [1].", "suggestions": [
+        "Ce concert familial a lieu ce soir à 20h30 à Montpellier, mais il est payant [2].",
+        "Et s'il pleut ?", "Plutôt en soirée?", "Veux-tu un concert en famille ?"]})
+    answer, suggestions = service.parse_answer(raw, count=2)
+    assert answer == "Voici des idées proches\u00a0: [1]."
+    assert suggestions == ["Et s'il pleut\u00a0?", "Plutôt en soirée\u00a0?", "Veux-tu un concert en famille\u00a0?"]
+    none = json.dumps({"reponse": "Ok.", "suggestions": ["Une phrase sans question.", "Voir la carte [1] ?"]})
+    assert service.parse_answer(none, 1)[1] == []          # aucune : relances par défaut
+    assert service.french_spacing("Rendez-vous à 20:30 : entrée libre !") == "Rendez-vous à 20:30\u00a0: entrée libre\u00a0!"
 
 
 def test_summary_falls_back_to_description() -> None:
@@ -121,7 +148,7 @@ def test_summary_falls_back_to_description() -> None:
 def test_answer_drops_citations_that_do_not_exist() -> None:
     raw = json.dumps({"reponse": "Allez à la balade [1] ou au concert [7] .", "suggestions": ["Et s'il pleut ?"]})
     answer, suggestions = service.parse_answer(raw, count=2)
-    assert answer == "Allez à la balade [1] ou au concert." and suggestions == ["Et s'il pleut ?"]
+    assert answer == "Allez à la balade [1] ou au concert." and suggestions == ["Et s'il pleut\u00a0?"]
     with pytest.raises(ValueError):
         service.parse_answer('{"reponse": ""}', 2)
 
@@ -148,7 +175,7 @@ def test_search_streams_the_four_steps_then_the_result() -> None:
     assert steps == [(step, status) for step in ("comprendre", "rechercher", "filtrer", "rediger")
                      for status in ("running", "completed")]
     result = events[-1]["result"]
-    assert result["answer"] == "Essayez la balade [1]." and result["suggestions"] == ["Le matin ?"]
+    assert result["answer"] == "Essayez la balade [1]." and result["suggestions"] == ["Le matin\u00a0?"]
     # L'offre partenaire répond à la demande : elle passe en tête (15/10/2026).
     assert [card["ref"] for card in result["events"]] == [1, 2] and result["events"][0]["partner"] is True
     assert "offre partenaire" in service.events_for_prompt(seen["cards"]).split("\n")[0]

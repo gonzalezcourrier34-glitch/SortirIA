@@ -52,7 +52,7 @@ from app.query_understanding import (
 )
 
 PARIS = ZoneInfo("Europe/Paris")
-PROMPT_VERSION = "2026-10-16.2"  # offres partenaires : type précis et public ; « à Montpellier » = la ville
+PROMPT_VERSION = "2026-10-16.3"  # vouvoiement, prix seulement si demandé, relances = questions courtes
 DEFAULT_SEARCH_MODEL = "mistral-small-latest"
 CANDIDATES = 80          # séances comparées à la question (regroupées ensuite par événement)
 MAX_PROPOSALS = 8        # événements montrés et donnés à Mistral (2 rangées de 4 cartes, 15/10)
@@ -83,6 +83,7 @@ numérotée d'événements réels tirés de notre base.
 
 Règles :
 - réponds en français, en 2 à 4 phrases, sur un ton simple et chaleureux ;
+  vouvoie toujours l'utilisateur ;
 - ne parle QUE des événements de la liste ; n'invente ni lieu, ni date, ni prix ;
 - cite chaque événement mentionné par son numéro entre crochets : [1], [2] ;
 - si aucun événement ne correspond vraiment, dis-le franchement ;
@@ -95,8 +96,11 @@ Règles :
   les premiers de la liste ; cite-en 2 à 4, pas plus ;
 - les événements marqués « offre partenaire » répondent à la demande : cite-les
   en premier, simplement, sans ton publicitaire ;
-- propose 3 questions de relance courtes (moins de 6 mots chacune) que
-  l'utilisateur pourrait poser ensuite.
+- ne parle du prix que si la demande parle de budget ou de gratuité ;
+- propose 3 questions de relance courtes (moins de 6 mots chacune, finies par
+  un point d'interrogation) que l'utilisateur pourrait te poser ensuite
+  (« Et s'il pleut ? », « Plutôt en soirée ? ») : jamais une phrase sur les
+  événements de la liste.
 
 Réponds uniquement en JSON : {"reponse": "...", "suggestions": ["...", "...", "..."]}"""
 
@@ -697,17 +701,43 @@ def event_date_label(row: Mapping[str, Any], now: datetime | None = None) -> str
     return date_label(start, bool(row.get("time_known", True)))
 
 
+EURO_AMOUNT = re.compile(r"(?<![\d.,])(\d+)[.,](\d{1,2})(?![\d.,])(?=\s*(?:€|euros?\b))")
+
+
+def french_amount(value: float) -> str:
+    """12.5 -> « 12,50 » ; 12.0 -> « 12 » (16/10/2026 : « 25.5 € » s'affichait tel quel)."""
+
+    return f"{value:g}" if float(value).is_integer() else f"{value:.2f}".replace(".", ",")
+
+
+def french_prices(text: str) -> str:
+    """Montants d'un texte de source au format français : « 25.5 € » -> « 25,50 € »."""
+
+    return EURO_AMOUNT.sub(lambda m: f"{m.group(1)},{m.group(2):0<2}", text)
+
+
 def price_label(row: Mapping[str, Any]) -> str:
     """Prix affiché sur la carte."""
 
     if row.get("is_free"):
         return "Gratuit"
-    text = str(row.get("price_text") or "").strip()
+    text = french_prices(str(row.get("price_text") or "").strip())
     if text:
         return text if len(text) <= 40 else text[:39].rstrip() + "…"
     if row.get("price_min") is not None:
-        return f"dès {float(row['price_min']):g} €".replace(".", ",")
+        return f"dès {french_amount(float(row['price_min']))} €"
     return "Prix non communiqué"
+
+
+def place_label(row: Mapping[str, Any]) -> str:
+    """Lieu affiché : « Salle · Ville », ou la ville seule quand le lieu porte
+    son nom (16/10/2026 : « Montpellier · Montpellier »)."""
+
+    venue = str(row.get("venue_name") or "").strip()
+    city = str(row.get("city") or "").strip()
+    if venue and city and venue.casefold() == city.casefold():
+        return city
+    return " · ".join(part for part in (venue, city) if part)
 
 
 def short_summary(row: Mapping[str, Any]) -> str:
@@ -898,8 +928,7 @@ def category_display(row: Mapping[str, Any]) -> str:
 def to_card(row: Mapping[str, Any], ref: int | None = None) -> dict[str, Any]:
     """Un événement tel que l'interface l'affiche (carte et détail)."""
 
-    place = " · ".join(part for part in (str(row.get("venue_name") or "").strip(),
-                                         str(row.get("city") or "").strip()) if part)
+    place = place_label(row)
     rating = row.get("venue_rating")
     return {
         "ref": ref,
@@ -996,8 +1025,7 @@ def events_to_rate(connection: Any, event_ids: Sequence[str], session_id: str,
     rows = fetch_rows(connection, TO_RATE_SQL, {"event_ids": ids, "user_key": user_key(session_id),
                                                 "limit": limit})
     return [{"event_id": str(row["event_id"]), "title": str(row["title"]), "date": event_date_label(row),
-             "place": " · ".join(part for part in (str(row.get("venue_name") or "").strip(),
-                                                    str(row.get("city") or "").strip()) if part)}
+             "place": place_label(row)}
             for row in rows]
 
 
@@ -1138,9 +1166,39 @@ def parse_answer(raw: str, count: int) -> tuple[str, list[str]]:
     if not answer:
         raise ValueError("réponse vide")
     answer = CITATION.sub(lambda m: m.group(0) if 1 <= int(m.group(1)) <= count else "", answer)
-    answer = re.sub(r"\s+([.,;:!?])", r"\1", re.sub(r" {2,}", " ", answer)).strip()
-    suggestions = [str(item).strip() for item in data.get("suggestions") or [] if str(item).strip()][:3]
+    answer = french_spacing(re.sub(r"\s+([.,;:!?])", r"\1", re.sub(r" {2,}", " ", answer)).strip())
+    suggestions = clean_suggestions(data.get("suggestions") or [])
     return answer, suggestions
+
+
+# Typographie française (16/10/2026) : espace insécable avant « : ; ! ? »
+# (« idées proches: » s'affichait collé). Pas dans une heure (« 20:30 »).
+HIGH_PUNCTUATION = re.compile(r"(?:(?<=[^\s\d\u00a0])| +)([:;!?])(?=\s|$|[»)\]])")
+
+
+def french_spacing(text: str) -> str:
+    return HIGH_PUNCTUATION.sub(lambda m: "\u00a0" + m.group(1), text)
+
+
+MAX_SUGGESTION_WORDS = 8
+
+
+def clean_suggestions(items: Sequence[Any]) -> list[str]:
+    """Relances gardées : des questions courtes que le visiteur pourrait poser.
+
+    16/10/2026 : Mistral y mettait parfois des phrases sur les cartes
+    (« Ce concert familial a lieu ce soir… [2] »), qui se contredisaient.
+    Une relance trop longue, sans point d'interrogation ou citant une carte
+    est écartée ; s'il n'en reste aucune, les relances par défaut servent.
+    """
+
+    kept = []
+    for item in items:
+        text = " ".join(str(item).split())
+        if (text.endswith("?") and len(text.split()) <= MAX_SUGGESTION_WORDS
+                and not CITATION.search(text) and text not in kept):
+            kept.append(french_spacing(text))
+    return kept[:3]
 
 
 def order_cards(cards: list[dict[str, Any]], answer: str) -> tuple[list[dict[str, Any]], str]:

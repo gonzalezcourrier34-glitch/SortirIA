@@ -156,6 +156,24 @@ $pastille: 999px;
     scrollbar-width: none;
 }
 
+// Filtres repliés (téléphone, après une recherche) : une ligne de résumé.
+.filters-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.filters-summary-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    color: #3d342e;
+}
+
 .filter-group {
     display: flex;
     flex: 0 0 auto;
