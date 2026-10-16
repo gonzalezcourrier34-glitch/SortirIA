@@ -50,6 +50,24 @@ de l'image), puis la **CD** (`.github/workflows/cd.yml`) :
 Le déploiement n'est actif que si la variable de dépôt `DEPLOY_ENABLED` vaut
 `true`.
 
+## Surveiller la production (16/10/2026)
+
+| Quoi | Comment | Prévient |
+| --- | --- | --- |
+| Collecte de la nuit | mail de bilan (`agent/report.py`) | chaque matin, statut dans le sujet |
+| Site, API, base, fraîcheur de la collecte | workflow GitHub « Surveillance » toutes les 3 h (`.github/workflows/surveillance.yml`, route `/api/v1/sante`) | mail de GitHub si une vérification échoue ou si la dernière collecte réussie a plus de 26 h |
+| Modèles, coûts Mistral, versions de consigne, avis | Grafana sur le poste, qui lit la base de production avec un compte en **lecture seule** (`grafana_lecture`, `scripts/creer_lecteur_grafana.py`) | consulté (pas d'envoi) |
+| Facture Azure | budget `sortiria-mensuel` sur `sortiria-rg` : 20 € par mois, mails à 50, 80 et 100 % du coût réel et à 100 % du coût prévu | mail d'Azure (8 à 24 h de retard) |
+| Pannes | journaux Log Analytics, historique des exécutions du job | consultés |
+
+Pourquoi la surveillance ne passe que toutes les 3 h : l'API se met en veille
+sans visiteur, et chaque appel la réveille quelques minutes ; 8 réveils par
+jour restent dans l'offre gratuite de Container Apps.
+
+Le pare-feu de la base n'accepte que l'adresse IP du poste (et les services
+Azure) : si l'adresse de la box change, Grafana ne lit plus la production ;
+mettre à jour la règle (procédure dans le [README du monitoring](monitoring.md)).
+
 ## Une source lue hors d'Azure
 
 Le site de Sète agglopôle renvoie une page web au lieu de son programme PDF

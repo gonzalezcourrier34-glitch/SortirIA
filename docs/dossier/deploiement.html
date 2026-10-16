@@ -379,6 +379,7 @@
 <tr><td>Cache</td><td>une question déjà posée le même jour ne coûte rien et répond en 0,1 s.</td></tr>
 <tr><td>Mise en veille</td><td>l'API passe à 0 réplique sans visiteur : pas de coût fixe de calcul.</td></tr>
 <tr><td>Budget de la nuit</td><td>au-delà de 0,50 $ de Mistral, une alerte part dans le mail du matin.</td></tr>
+<tr><td>Budget Azure</td><td><code>sortiria-mensuel</code> sur <code>sortiria-rg</code> (16/10/2026) : 20 € par mois, mails à 50, 80 et 100 % du coût réel et à 100 % du coût prévu.</td></tr>
 </tbody>
 </table>
 <div class="projects-grid">
@@ -402,7 +403,7 @@
 <div class="callout subtle">
 <span class="eyebrow">À SAVOIR</span>
 <strong>Une API mise en veille met quelques secondes à se réveiller.</strong>
-<p>C'est le prix d'un coût fixe nul. Avant une démonstration, j'ouvre le site une minute avant. Une alerte de budget Azure (5 $ par mois, mail à 50 % et 100 %) est conseillée en complément.</p>
+<p>C'est le prix d'un coût fixe nul. Avant une démonstration, j'ouvre le site une minute avant. C'est aussi pourquoi la surveillance GitHub ne passe que toutes les 3 h : chaque appel réveille l'API, et 8 réveils par jour restent dans l'offre gratuite.</p>
 </div>
 </div>
 </section>

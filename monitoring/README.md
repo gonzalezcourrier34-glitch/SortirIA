@@ -86,12 +86,26 @@ coupées à 30 s). Mise en place, une fois :
    en haut d'un tableau.
 
 Le pare-feu de la base n'accepte que l'adresse IP du poste : si elle change,
-la mettre à jour (`perso/`, journal de déploiement, étape du pare-feu).
+Grafana ne lit plus la production. Lister les règles, puis mettre à jour celle
+du poste (pour les règles, le serveur se donne avec `--server-name`, et
+`--name` désigne la règle) :
 
-## Coût Azure : budget avec alerte
+```powershell
+Invoke-RestMethod https://api.ipify.org
+az postgres flexible-server firewall-rule list --resource-group sortiria-rg --server-name sortiria-db-gonza -o table
+az postgres flexible-server firewall-rule update --resource-group sortiria-rg --server-name sortiria-db-gonza --name <règle du poste> --start-ip-address <nouvelle adresse> --end-ip-address <nouvelle adresse>
+```
 
-Le coût Azure n'est pas dans la base : il se suit dans Azure. À régler une
-fois dans le portail : **Gestion des coûts → Budgets → Ajouter**, sur le
+Le mot de passe de `grafana_lecture` : lettres et chiffres seulement (un `$`
+ou un `#` dans le `.env` serait mal lu par docker compose). Relancer
+`scripts.creer_lecteur_grafana` le change sans rien casser.
+
+## Coût Azure : budget avec alerte (fait le 16/10/2026)
+
+Le coût Azure n'est pas dans la base : il se suit dans Azure. Réglé une
+fois dans le portail : recherche `sortiria-rg` → **Gestion des coûts →
+Budgets → Ajouter** (par Cost Management, l'étendue proposée est le compte de
+facturation : passer par le groupe de ressources), budget `sortiria-mensuel` sur le
 groupe de ressources `sortiria-rg`, budget mensuel de 20 €, alertes par mail
 à 50 %, 80 % et 100 % du coût réel, et à 100 % du coût prévu. Le coût attendu
 est d'environ 10 $ par mois ([Coûts](couts.md)).

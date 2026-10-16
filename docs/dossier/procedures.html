@@ -198,7 +198,7 @@
    …    | (date de la nuit)      | success         |     …      |        …        |        …</code></pre></div>
 <div class="experiment-analysis">
 <div><span>SI ÇA ÉCHOUE</span><p>Pas de mail : vérifier <code>REPORT_EMAIL_TO</code> et <code>SMTP_*</code> ; avec <code>REPORT_EMAIL_WHEN=alertes</code>, une nuit sans alerte n'envoie rien. Un mail qui ne part pas ne fait jamais échouer la collecte. MLflow vide : si le serveur ne répond pas en 3 s, la nuit se fait sans suivi ; sur Azure, le suivi MLflow est coupé (<code>MLFLOW_ACTIF=false</code>), le mail et <code>collect_runs</code> restent.</p></div>
-<div><span>EN PRODUCTION</span><p>Le statut de chaque exécution se lit avec <code>az containerapp job execution list</code> (procédure 7.4). Pour suivre la production dans Grafana, il suffit de pointer sa source de données (<code>monitoring/grafana/provisioning/datasources/postgres.yml</code>) vers la base Azure.</p></div>
+<div><span>EN PRODUCTION</span><p>Le statut de chaque exécution se lit avec <code>az containerapp job execution list</code> (procédure 7.4). Grafana lit la production par défaut, avec un compte en lecture seule (procédure 7.5).</p></div>
 </div>
 </div>
 <p class="table-note">Sources : <code>monitoring/README.md</code>, <code>agent/report.py</code> (<code>REPORT_EMAIL_WHEN</code> : <code>toujours</code> ou <code>alertes</code>), <code>sql/sortiria/05_views.sql</code> (colonnes de <code>v_collect_health</code>).</p>
@@ -735,7 +735,34 @@ az monitor log-analytics query --workspace $WS --analytics-query "ContainerAppCo
 <div><span>À SAVOIR</span><p>Le journal se lit aussi dans le portail : <code>sortiria-collecte</code> &gt; Historique des exécutions &gt; Journaux. Toutes les commandes <code>az</code> de cette page filtrent leur sortie (<code>--query … -o tsv</code> ou <code>-o table</code>) : aucun secret ne s'affiche.</p></div>
 </div>
 </div>
-<p class="table-note">Sources : <code>.github/workflows/ci.yml</code> et <code>cd.yml</code>, <code>docs/deploiement.md</code>, mon journal de déploiement (étapes 8, 9d, 9f et 11). <code>az containerapp logs show</code> et <code>az containerapp revision list</code> sont des commandes standard d'Azure CLI que le journal de déploiement n'utilise pas encore. Plus de contexte : <a class="project-link" href="deploiement.html">Déploiement →</a></p>
+<div class="experiment-card">
+<div class="experiment-header">
+<div><span class="experiment-number">PROCÉDURE 7.5 · UNE FOIS, PUIS CHAQUE JOUR</span><h3>Suivre la production</h3></div>
+<span class="experiment-status selected">Grafana · GitHub · Azure</span>
+</div>
+<div class="experiment-analysis">
+<div><span>BUT</span><p>Voir les modèles, les coûts et les avis <strong>de la production</strong> dans Grafana, être prévenu si le site tombe ou si la nuit n'est pas passée, et surveiller la facture Azure.</p></div>
+<div><span>UNE FOIS</span><p>Compte <code>grafana_lecture</code> en lecture seule (le <code>.env</code> pointe déjà sur Azure avec le compte d'administration) ; les 4 variables <code>AZURE_PG_*</code> dans le <code>.env</code> ; budget <code>sortiria-mensuel</code> dans le portail (recherche <code>sortiria-rg</code> &gt; Gestion des coûts &gt; Budgets).</p></div>
+</div>
+<div class="code-panel">
+<div class="code-panel-header"><span>PowerShell</span><small>mise en place, puis vérifications</small></div>
+<pre><code># Le pare-feu de la base accepte-t-il ce poste ? (--server-name pour le serveur)
+Invoke-RestMethod https://api.ipify.org
+az postgres flexible-server firewall-rule list --resource-group sortiria-rg --server-name sortiria-db-gonza -o table
+
+# Compte en lecture seule pour Grafana (mot de passe demandé au clavier)
+uv run python -m scripts.creer_lecteur_grafana
+
+# Après avoir rempli AZURE_PG_* dans le .env
+docker compose up -d
+# http://localhost:3001 : Data sources &gt; SortirIA production (Azure) &gt; Test</code></pre>
+</div>
+<div class="experiment-analysis">
+<div><span>CHAQUE JOUR</span><p>Le mail de bilan ; Grafana s'ouvre sur la production (« Collecte nocturne », « Recherche », « Modèles et coûts »). Sans mail de GitHub ni d'Azure, le site, la base, la nuit et la facture vont bien.</p></div>
+<div><span>SI ÇA ÉCHOUE</span><p>Test Grafana rouge avec « timeout » : l'adresse IP du poste a changé, mettre à jour la règle du pare-feu (<code>firewall-rule update --server-name … --name &lt;règle&gt;</code>). « password authentication failed » : relancer le script et recopier le mot de passe (lettres et chiffres seulement). Mail « Surveillance » de GitHub : ouvrir l'exécution dans Actions, puis la procédure 7.4.</p></div>
+</div>
+</div>
+<p class="table-note">Sources : <code>.github/workflows/ci.yml</code> et <code>cd.yml</code>, <code>docs/deploiement.md</code>, mon journal de déploiement (étapes 8, 9d, 9f, 11 et 12). <code>az containerapp logs show</code> et <code>az containerapp revision list</code> sont des commandes standard d'Azure CLI que le journal de déploiement n'utilise pas encore. Plus de contexte : <a class="project-link" href="deploiement.html">Déploiement →</a></p>
 </div>
 </section>
 
