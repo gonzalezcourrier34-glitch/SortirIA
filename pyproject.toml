@@ -33,8 +33,11 @@ dependencies = [
 
 [project.optional-dependencies]
 airflow = [
-    "apache-airflow==3.3.0",
-    "apache-airflow-providers-postgres==6.8.0",
+    # Collecte en local seulement (dags/) ; la production utilise un Container
+    # Apps Job. Plancher et non version figée (16/10/2026) : Airflow 3.3.0 avait
+    # 12 alertes de sécurité (désérialisation, API) ; on suit les correctifs 3.x.
+    "apache-airflow>=3.3.0,<4",
+    "apache-airflow-providers-postgres>=6.8.0",
 ]
 
 [dependency-groups]
