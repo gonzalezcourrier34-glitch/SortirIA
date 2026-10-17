@@ -69,6 +69,17 @@
                                 [attr.aria-pressed]="selectedPeriod() === choice.value"
                                 (click)="selectPeriod(choice.value)">{{ choice.label }}</button>
                         }
+                        <!-- « Le soir » : un moment de la journée ; « Soirée » reste un public (17/10/2026). -->
+                        <button type="button" class="chip"
+                            [class.chip-on]="selectedEvening()"
+                            [attr.aria-pressed]="selectedEvening()"
+                            (click)="toggleEvening()">Le soir</button>
+                        @if (questionDate(); as date) {
+                            <!-- Date précise lue dans la question : affichée, pas cochable. -->
+                            <span class="chip chip-read" title="Date lue dans votre question">
+                                <span aria-hidden="true">📅</span> {{ date }}
+                            </span>
+                        }
                     </div>
 
                     <button type="button" class="chip"
@@ -104,6 +115,25 @@
 
                 @if (error(); as message) {
                     <p class="error" role="alert">{{ message }}</p>
+                }
+
+                <!-- Échanges précédents de la conversation (17/10/2026). -->
+                @for (past of history(); track $index) {
+                    <div class="past-exchange">
+                        <div class="past-question">« {{ past.question }} »</div>
+                        <p class="past-answer">{{ past.answer }}</p>
+                        @if (past.events.length) {
+                            <div class="past-events">
+                                @for (card of past.events; track card.event_id) {
+                                    <button type="button" class="past-event"
+                                        [class.card-on]="selectedId() === card.event_id"
+                                        (click)="selectEvent(card.event_id)">
+                                        [{{ card.ref }}] {{ card.title }} <span class="small">· {{ card.date }}</span>
+                                    </button>
+                                }
+                            </div>
+                        }
+                    </div>
                 }
 
                 @if (result(); as answer) {

@@ -61,7 +61,18 @@ Server-Sent Events, comme l'analyse d'une position dans Chess Agent.
   (« et pour les enfants ? », « plutôt dimanche », « à Sète ? ») complète la
   demande précédente ; une question courte qui nomme un nouveau sujet
   (« photo », « du jazz ») repart de zéro. « Nouvelle conversation » efface
-  le fil.
+  le fil. Une relance **cliquée** complète la question affichée (« … près de
+  Sète, plutôt en matinée ? ») ; chaque relance est un seul choix (« Plutôt
+  samedi ? », « Plutôt dimanche ? », jamais « samedi ou dimanche ? »). Les
+  échanges précédents restent affichés au-dessus de la réponse en cours
+  (17/10/2026).
+- **La question coche les cases** : un public ou un lieu écrit l'emporte sur
+  la case cochée, et l'interface la coche (« avec les enfants » → Famille,
+  « à Sète » → Thau) ; la date lue (« samedi ») s'affiche dans « Quand ».
+- **« Le soir » n'est pas « Soirée »** (17/10/2026) : « Le soir », dans
+  « Quand », est un moment de la journée (séances à partir de 17 h) ;
+  « Soirée » reste un public (bars, fêtes). « en soirée » écrit coche « Le
+  soir », « en journée » ou « le matin » le décoche.
 - **Synonymes appris** (`config/synonymes.yaml`) : « zumba » cherche aussi
   « fitness » une fois le synonyme validé (voir « Ce qui a manqué » plus bas).
 

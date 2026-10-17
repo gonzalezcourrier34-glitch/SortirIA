@@ -563,11 +563,18 @@ def test_type_written_in_the_title_counts_as_the_type() -> None:
     assert "type_words" not in params
 
 
+def test_default_suggestions_offer_the_evening_as_a_time() -> None:
+    assert "Plutôt le soir ?" in service.default_suggestions(service.SearchFilters())
+    assert "Plutôt en journée ?" in service.default_suggestions(service.SearchFilters(evening=True))
+
+
 def test_a_suggestion_is_a_single_choice() -> None:
     """17/10/2026 : une relance est un bouton, donc un seul choix."""
 
     assert service.single_choices("En intérieur ou en extérieur ?") == ["En intérieur ?", "En extérieur ?"]
-    assert service.single_choices("Plutôt samedi ou dimanche ?") == ["Plutôt samedi ?", "Dimanche ?"]
+    assert service.single_choices("Plutôt samedi ou dimanche ?") == ["Plutôt samedi ?", "Plutôt dimanche ?"]
+    assert service.single_choices("Et s'il pleut ou s'il vente ?") == ["Et s'il pleut ?", "Et s'il vente ?"]
+    assert service.single_choices("Plutôt samedi ou plutôt dimanche ?") == ["Plutôt samedi ?", "Plutôt dimanche ?"]
     assert service.single_choices("Où manger après ?") == ["Où manger après ?"]          # « où » : un lieu
     assert service.single_choices("Et s'il pleut ?") == ["Et s'il pleut ?"]
     raw = json.dumps({"reponse": "Ok.", "suggestions": ["En intérieur ou en extérieur ?", "Plutôt en soirée ?"]})

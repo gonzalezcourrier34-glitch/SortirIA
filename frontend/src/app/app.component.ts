@@ -46,6 +46,13 @@ interface StepView {
 }
 
 /** Morceau de la réponse : du texte, ou un renvoi [n] vers une carte. */
+/** Échange précédent de la conversation, gardé à l'écran (17/10/2026). */
+interface PastExchange {
+    question: string;
+    answer: string;
+    events: { event_id: string; ref: number | null; title: string; date: string }[];
+}
+
 interface AnswerPart {
     text: string;
     ref: number | null;
@@ -184,6 +191,15 @@ export class AppComponent implements OnInit {
 
     readonly freeOnly = signal(false);
 
+    /** « Le soir » : un moment de la journée, pas le public « Soirée » (17/10/2026). */
+    readonly selectedEvening = signal(false);
+
+    /** Date précise lue dans la question (« sam. 18 oct. »), affichée dans « Quand ». */
+    readonly questionDate = signal<string | null>(null);
+
+    /** Échanges précédents, du plus ancien au plus récent (les 5 derniers). */
+    readonly history = signal<PastExchange[]>([]);
+
     /** Téléphone : filtres repliés en une ligne après une recherche (16/10/2026),
      *  pour que la réponse soit visible sans faire défiler. */
     readonly filtersCollapsed = signal(false);
@@ -251,8 +267,11 @@ export class AppComponent implements OnInit {
         const parts = [
             PUBLICS.find(choice => choice.value === this.selectedPublic())?.label ?? 'Tous publics',
             ZONES.find(choice => choice.value === this.selectedZone())?.label ?? 'Partout',
-            PERIODS.find(choice => choice.value === this.selectedPeriod())?.label ?? ''
+            this.questionDate() ?? PERIODS.find(choice => choice.value === this.selectedPeriod())?.label ?? ''
         ];
+        if (this.selectedEvening()) {
+            parts.push('Le soir');
+        }
         if (this.freeOnly()) {
             parts.push('Gratuit');
         }
@@ -322,6 +341,10 @@ export class AppComponent implements OnInit {
         this.freeOnly.update(value => !value);
     }
 
+    toggleEvening(): void {
+        this.selectedEvening.update(value => !value);
+    }
+
     onQuestionInput(event: Event): void {
         this.question.set((event.target as HTMLTextAreaElement).value);
     }
@@ -351,6 +374,17 @@ export class AppComponent implements OnInit {
         // (« … près de Sète, plutôt en matinée ? ») au lieu d'être remplacée.
         const isFollowUp = followUp && !!context && !!this.askedQuestion();
         const shown = isFollowUp ? completeQuestion(this.askedQuestion(), text) : text;
+        // La réponse précédente reste affichée au-dessus de la nouvelle (17/10/2026).
+        const previous = this.result();
+        if (previous && this.askedQuestion()) {
+            this.history.update(past => [...past, {
+                question: this.askedQuestion(),
+                answer: previous.answer,
+                events: previous.events.slice(0, 4).map(card => ({
+                    event_id: card.event_id, ref: card.ref, title: card.title, date: card.date
+                }))
+            }].slice(-5));
+        }
         this.question.set(shown);
         this.askedQuestion.set(shown);
         this.error.set(null);
@@ -370,6 +404,7 @@ export class AppComponent implements OnInit {
             zone: this.selectedZone(),
             period: this.selectedPeriod(),
             free_only: this.freeOnly(),
+            evening: this.selectedEvening(),
             context,
             follow_up: isFollowUp
         }).subscribe({
@@ -395,6 +430,8 @@ export class AppComponent implements OnInit {
         this.question.set('');
         this.askedQuestion.set('');
         this.result.set(null);
+        this.history.set([]);
+        this.questionDate.set(null);
         this.error.set(null);
         this.selectedId.set(null);
         this.detail.set(null);
@@ -426,6 +463,11 @@ export class AppComponent implements OnInit {
         if (checked?.zone) {
             this.selectedZone.set(checked.zone);
         }
+        // « en soirée » coche « Le soir », « en journée » le décoche.
+        if (typeof checked?.evening === 'boolean') {
+            this.selectedEvening.set(checked.evening);
+        }
+        this.questionDate.set(checked?.date ?? null);
 
         // L'API n'était peut-être pas prête au chargement de la page : on réessaie.
         if (this.highlights().length === 0) {

@@ -89,7 +89,45 @@ d'exemples.
 actuelles atteignent 93 à 99 % sur les jeux d'évaluation ; et un modèle affiné
 sans données réelles apprendrait surtout les jeux d'évaluation eux-mêmes.
 
-## 3. D'autres pistes repérées en route
+## 3. Les gestes qui suivent une recherche
+
+**Le constat** (essais de l'interface, 17/10/2026) : une fois la sortie
+trouvée, le visiteur quitte SortirIA pour la noter, s'y rendre ou en parler.
+Quatre gestes simples le garderaient dans le parcours ; aucun ne demande de
+nouvelle source ni de modèle, seulement des données que la carte a déjà.
+
+- **« Ajouter à mon agenda »** sur chaque carte : un fichier `.ics` (titre,
+  date et heure, lieu, lien vers la source), généré par l'API à partir de
+  l'événement. C'est le geste naturel après avoir trouvé une sortie ; il
+  marche avec Google Agenda, Outlook et le calendrier du téléphone. À
+  soigner : les événements sans heure connue (une journée entière) et les
+  séances multiples (une seule date, celle de la carte).
+- **« Y aller »** : un lien vers l'itinéraire depuis l'adresse de la carte,
+  vers Google Maps ou OpenStreetMap (coordonnées quand elles sont connues,
+  sinon l'adresse). Rien à stocker ; le lien s'ouvre dans l'application de
+  cartes du téléphone.
+- **« Partager » une sortie** : un lien direct vers la fiche de l'événement
+  (une adresse stable, `…/?evenement=<id>`, qui ouvre la fiche au
+  chargement), ou un message tout prêt pour WhatsApp (titre, date, lieu,
+  lien), via le partage natif du téléphone quand il existe. À vérifier :
+  aucune donnée du visiteur dans le lien.
+- **La distance** quand on demande « près de Sète » : afficher « à 8 km »
+  sur chaque carte. La recherche calcule déjà cette distance pour filtrer
+  (`sortiria.distance_km`, rayon autour de la commune) ; il suffit de la
+  renvoyer avec la carte et de l'arrondir.
+
+**Ce qu'il faudrait :** une route d'API pour le `.ics`, deux champs de plus
+sur la carte (lien d'itinéraire, distance), une adresse de fiche lisible au
+chargement de la page, et des tests (fichier `.ics` valide, lien sans donnée
+personnelle, distance seulement pour une recherche « près de »).
+
+**Pourquoi après :** ce sont des gestes de confort, pas la promesse
+(trouver une sortie qui respecte les contraintes, sourcée). À trois semaines
+du gel, la priorité va à la qualité des réponses et aux tests d'usage ; ces
+quatre gestes sont les premiers à faire ensuite, parce qu'ils sont courts et
+qu'ils se voient tout de suite.
+
+## 4. D'autres pistes repérées en route
 
 - **Les fautes de frappe** (« cirqe ») : aujourd'hui rattrapées par la
   recherche par le sens et, chaque lundi, proposées comme correction par

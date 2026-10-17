@@ -62,6 +62,7 @@ Trois conditions la rendent tenable, et ce sont elles que le MVP doit prouver :
 | Météo pour les sorties en extérieur | **Abandonné** pour le MVP | utile mais hors de la promesse |
 | Base de lieux : sport et loisirs ouverts toute l'année (piscine, bowling, padel, karting), restaurants | **Après soutenance**, limite voulue | un second produit ; mesuré le 16/10 : 0 à 57 % de pertinence sur ces recherches, contre 83,7 % au total ([Évolutions](evolutions.md)) |
 | Fine-tuning d'un modèle | **Après soutenance** | pas encore de données réelles ([Évolutions](evolutions.md)) |
+| Sur chaque carte : ajouter à l'agenda (`.ics`), itinéraire, partage, distance « à 8 km » | **Après soutenance** | du confort, pas la promesse ; court à faire ([Évolutions](evolutions.md)) |
 
 ## Critères d'acceptation
 

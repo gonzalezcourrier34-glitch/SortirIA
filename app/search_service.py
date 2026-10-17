@@ -53,7 +53,7 @@ from app.query_understanding import (
 )
 
 PARIS = ZoneInfo("Europe/Paris")
-PROMPT_VERSION = "2026-10-17.1"  # relances : un seul choix chacune (pas de « A ou B ? »)
+PROMPT_VERSION = "2026-10-17.2"  # « le soir » (moment) distinct du public « Soirée »
 DEFAULT_SEARCH_MODEL = "mistral-small-latest"
 CANDIDATES = 80          # séances comparées à la question (regroupées ensuite par événement)
 MAX_PROPOSALS = 8        # événements montrés et donnés à Mistral (2 rangées de 4 cartes, 15/10)
@@ -100,7 +100,7 @@ Règles :
 - ne parle du prix que si la demande parle de budget ou de gratuité ;
 - propose 3 questions de relance courtes (moins de 6 mots chacune, finies par
   un point d'interrogation) que l'utilisateur pourrait te poser ensuite
-  (« Et s'il pleut ? », « Plutôt en soirée ? ») : jamais une phrase sur les
+  (« Et s'il pleut ? », « Plutôt le soir ? ») : jamais une phrase sur les
   événements de la liste. Chaque relance est un seul choix, cliquable tel
   quel : « En intérieur ? », jamais « En intérieur ou en extérieur ? » ;
 
@@ -119,6 +119,7 @@ class SearchFilters:
     zone: str | None = None
     period: str = "3mois"
     free_only: bool = False
+    evening: bool = False        # « Le soir » coché dans « Quand » (17/10/2026)
 
     def __post_init__(self) -> None:
         if self.public not in (None, *PUBLICS):
@@ -131,7 +132,7 @@ class SearchFilters:
     def describe(self) -> str:
         """Résumé lisible, affiché à l'étape « comprendre »."""
 
-        parts = [PERIOD_LABELS[self.period]]
+        parts = [PERIOD_LABELS[self.period] + (" (le soir)" if self.evening else "")]
         if self.public:
             parts.append(PUBLIC_LABELS[self.public])
         if self.zone:
@@ -381,7 +382,7 @@ def widen_for_subject(connection: Any, plan: QueryPlan, vector: str | None,
 
     dropped: list[str] = []
     if plan.public:
-        dropped.append({"soiree": "en soirée"}.get(plan.public, f"pour le public « {plan.public} »"))
+        dropped.append(f"pour le public « {PUBLIC_LABELS.get(plan.public, plan.public)} »")
     if plan.free_only or plan.max_price is not None:
         dropped.append("gratuit" if plan.free_only else f"à moins de {plan.max_price:g} €")
     if plan.evening:
@@ -414,7 +415,8 @@ def plan_from_filters(filters: SearchFilters, now: datetime, categories: Sequenc
 
     return merge_with_filters(Understanding(categories=tuple(categories)), public=filters.public,
                               zone=filters.zone, period_bounds=period_bounds(filters.period, now),
-                              period_label=PERIOD_LABELS[filters.period], free_only=filters.free_only)
+                              period_label=PERIOD_LABELS[filters.period], free_only=filters.free_only,
+                              evening=filters.evening)
 
 
 def build_search_query(plan: QueryPlan | SearchFilters, vector: str | None, now: datetime | None = None,
@@ -1216,6 +1218,7 @@ def clean_suggestions(items: Sequence[Any]) -> list[str]:
 
 
 CHOICE = re.compile(r"\s+ou\s+", re.IGNORECASE)   # « ou » (choix), pas « où » (lieu)
+LEAD_WORDS = {"plutot", "et", "seulement", "juste", "uniquement", "aussi"}
 
 
 def single_choices(text: str) -> list[str]:
@@ -1233,6 +1236,11 @@ def single_choices(text: str) -> list[str]:
     if len(parts) != 2 or not all(0 < len(part.split()) <= 4 for part in parts):
         return [text]
     first, second = (part.strip(" ,") for part in parts)
+    # « Plutôt samedi ou dimanche ? » → « Plutôt samedi ? », « Plutôt dimanche ? » :
+    # le mot d'appel passe aussi sur le second choix (17/10/2026).
+    lead = first.split()[0]
+    if len(first.split()) > 1 and plain(lead) in LEAD_WORDS and plain(second.split()[0]) not in LEAD_WORDS:
+        second = f"{lead} {second[:1].lower()}{second[1:]}"
     return [f"{first} ?", f"{second[:1].upper()}{second[1:]} ?"]
 
 
@@ -1276,7 +1284,7 @@ def fallback_answer(cards: Sequence[Mapping[str, Any]], filters: QueryPlan | Sea
 def default_suggestions(filters: QueryPlan | SearchFilters) -> list[str]:
     """Relances proposées si Mistral n'en donne pas."""
 
-    suggestions = ["Et s'il pleut ?", "Plutôt en soirée ?" if filters.public != "soiree" else "Plutôt en journée ?"]
+    suggestions = ["Et s'il pleut ?", "Plutôt en journée ?" if filters.evening else "Plutôt le soir ?"]
     suggestions.append("Seulement gratuit ?" if not filters.free_only else "Sur 3 mois ?")
     return suggestions
 
@@ -1435,6 +1443,12 @@ def checked_by_question(plan: QueryPlan) -> dict[str, Any]:
     checked: dict[str, Any] = {}
     if "public" in plan.from_question and plan.public:
         checked["public"] = plan.public
+    if "evening" in plan.from_question:
+        checked["evening"] = True
+    elif plan.daytime:
+        checked["evening"] = False
+    if plan.period_from_question:
+        checked["date"] = plan.period_label
     places = plan.from_question & {"cities", "zone", "near"}
     if places:
         if plan.near:
@@ -1477,7 +1491,8 @@ def plan_search(question: str, filters: SearchFilters, now: datetime,
         embed_text = f"{context} {question}"
     plan = merge_with_filters(current, public=public, zone=zone,
                               period_bounds=period_bounds(filters.period, now),
-                              period_label=PERIOD_LABELS[filters.period], free_only=filters.free_only)
+                              period_label=PERIOD_LABELS[filters.period], free_only=filters.free_only,
+                              evening=filters.evening)
     return plan, embed_text
 
 

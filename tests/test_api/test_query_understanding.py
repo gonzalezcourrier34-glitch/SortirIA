@@ -198,11 +198,41 @@ def test_the_question_changes_the_checked_boxes() -> None:
     plan = plan_search("un truc avec les enfants samedi près de Sète", SearchFilters(public="seniors",
                                                                                    zone="montpellier"), NOW)[0]
     assert plan.public == "famille"
-    assert checked_by_question(plan) == {"public": "famille", "zone": "thau"}
+    assert checked_by_question(plan) == {"public": "famille", "zone": "thau", "date": plan.period_label}
     # Sans public écrit, la case cochée reste.
     plan = plan_search("un concert samedi", SearchFilters(public="seniors"), NOW)[0]
-    assert plan.public == "seniors" and checked_by_question(plan) == {}
+    assert plan.public == "seniors" and checked_by_question(plan) == {"date": plan.period_label}
+    assert "sam" in plan.period_label
     # Ce qui vient de la question précédente cède à la case qu'on vient de cocher.
     plan = plan_search("et samedi ?", SearchFilters(public="seniors"), NOW, "un atelier pour les enfants")[0]
     assert plan.public == "seniors" and "public" not in checked_by_question(plan)
 
+
+
+def test_in_the_evening_is_a_time_not_the_evening_public() -> None:
+    """17/10/2026 : « Plutôt en soirée ? » cochait le public « Soirée » (bars, fêtes)."""
+    from app.search_service import SearchFilters, checked_by_question, plan_search
+
+    understood = understand("un spectacle en soirée à Sète", NOW)
+    assert understood.evening and understood.public is None
+    assert "soiree" not in understood.keywords
+    assert understand("une soirée dans un bar", NOW).public == "soiree"          # le public reste
+    plan = plan_search("Plutôt en soirée ?", SearchFilters(), NOW, "un spectacle à Sète", follow_up=True)[0]
+    assert plan.evening and plan.public is None
+    assert checked_by_question(plan) == {"evening": True, "zone": "thau"}
+    assert not plan.period_from_question
+
+
+def test_the_evening_box_and_the_daytime_question() -> None:
+    """« Le soir » coché filtre ; « en journée » écrit (ou relancé) l'annule et décoche."""
+    from app.search_service import SearchFilters, checked_by_question, plan_search
+
+    plan = plan_search("un concert à Sète", SearchFilters(evening=True), NOW)[0]
+    assert plan.evening and checked_by_question(plan) == {"zone": "thau"}
+    assert plan.relaxed().evening                                               # coché : gardé
+    plan = plan_search("un concert en journée", SearchFilters(evening=True), NOW)[0]
+    assert not plan.evening and checked_by_question(plan) == {"evening": False}
+    plan = plan_search("Plutôt en matinée ?", SearchFilters(), NOW, "un concert le soir", follow_up=True)[0]
+    assert not plan.evening
+    plan = plan_search("un concert le soir", SearchFilters(), NOW)[0]
+    assert not plan.relaxed().evening                                           # écrit : relâché
