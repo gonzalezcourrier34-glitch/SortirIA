@@ -189,3 +189,20 @@ def test_the_cache_tells_a_clicked_follow_up_apart() -> None:
     from app.search_service import SearchFilters, cache_key
 
     assert cache_key("x ?", "y", SearchFilters(), NOW, "v") != cache_key("x ?", "y", SearchFilters(), NOW, "v", True)
+
+
+def test_the_question_changes_the_checked_boxes() -> None:
+    """17/10/2026 : « avec les enfants » avec « Seniors » coché cherchait pour les seniors."""
+    from app.search_service import SearchFilters, checked_by_question, plan_search
+
+    plan = plan_search("un truc avec les enfants samedi près de Sète", SearchFilters(public="seniors",
+                                                                                   zone="montpellier"), NOW)[0]
+    assert plan.public == "famille"
+    assert checked_by_question(plan) == {"public": "famille", "zone": "thau"}
+    # Sans public écrit, la case cochée reste.
+    plan = plan_search("un concert samedi", SearchFilters(public="seniors"), NOW)[0]
+    assert plan.public == "seniors" and checked_by_question(plan) == {}
+    # Ce qui vient de la question précédente cède à la case qu'on vient de cocher.
+    plan = plan_search("et samedi ?", SearchFilters(public="seniors"), NOW, "un atelier pour les enfants")[0]
+    assert plan.public == "seniors" and "public" not in checked_by_question(plan)
+

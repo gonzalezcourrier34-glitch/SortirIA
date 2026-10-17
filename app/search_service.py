@@ -49,6 +49,7 @@ from app.query_understanding import (
     plain,
     understand,
     wanted_categories,  # noqa: F401 (réexporté pour les appelants existants)
+    zone_of_city,
 )
 
 PARIS = ZoneInfo("Europe/Paris")
@@ -1340,6 +1341,10 @@ class SearchResult:
     # Pas de réponse exacte : les offres de nos partenaires les plus proches
     # de la demande (affichées à part, dans un encadré « partenaire »).
     partner_offers: list[dict[str, Any]] = field(default_factory=list)
+    # Cases à cocher selon la question (17/10/2026) : « avec les enfants »
+    # coche « Famille », « à Sète » coche « Thau ». Seules les cases que la
+    # question a fixées sont présentes.
+    checked: dict[str, Any] = field(default_factory=dict)
     # Ce qui a manqué (15/10/2026), gardé dans le journal pour le bilan
     # hebdomadaire de l'agent : mots écrits dans aucun titre de la base,
     # contraintes relâchées, mots absents des propositions, sujet introuvable.
@@ -1424,6 +1429,23 @@ def index_version(connection: Any) -> str:
         return ""
 
 
+def checked_by_question(plan: QueryPlan) -> dict[str, Any]:
+    """Cases que l'interface doit cocher pour refléter la question."""
+
+    checked: dict[str, Any] = {}
+    if "public" in plan.from_question and plan.public:
+        checked["public"] = plan.public
+    places = plan.from_question & {"cities", "zone", "near"}
+    if places:
+        if plan.near:
+            checked["zone"] = zone_of_city(plan.near[0])
+        elif plan.cities and len({zone_of_city(city) for city in plan.cities}) == 1:
+            checked["zone"] = zone_of_city(plan.cities[0])
+        elif plan.zone:
+            checked["zone"] = plan.zone
+    return checked
+
+
 def plan_search(question: str, filters: SearchFilters, now: datetime,
                 context: str = "", follow_up: bool = False) -> tuple[QueryPlan, str]:
     """Plan de recherche et texte à vectoriser.
@@ -1435,14 +1457,25 @@ def plan_search(question: str, filters: SearchFilters, now: datetime,
     `follow_up` : le visiteur a cliqué une relance proposée sous la réponse
     (17/10/2026). C'est toujours une suite, même longue ou avec un sujet
     (« Des spectacles en intérieur ? ») : la demande précédente est gardée.
+
+    Cases cochées (17/10/2026) : un public ou un lieu écrit dans la question
+    qu'on vient de poser l'emporte sur la case cochée (« avec les enfants »
+    avec « Seniors » coché cherche pour les familles, et l'interface coche
+    « Famille ») ; ce qui vient seulement de la question précédente cède à la
+    case : cocher, c'est vouloir changer.
     """
 
     current = understand(question, now)
+    public, zone = filters.public, filters.zone
+    if current.public:
+        public = None
+    if current.zone or current.cities or current.near:
+        zone = None
     embed_text = question
     if context and (follow_up or is_follow_up(question)):
         current = combine(understand(context, now), current)
         embed_text = f"{context} {question}"
-    plan = merge_with_filters(current, public=filters.public, zone=filters.zone,
+    plan = merge_with_filters(current, public=public, zone=zone,
                               period_bounds=period_bounds(filters.period, now),
                               period_label=PERIOD_LABELS[filters.period], free_only=filters.free_only)
     return plan, embed_text
@@ -1635,7 +1668,7 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
 
     result = SearchResult(answer=answer, events=cards, suggestions=suggestions, filters=plan.describe(),
                           degraded=degraded, tokens=tokens, context=embed_text[-1000:], exact=exact,
-                          partner_offers=offers,
+                          partner_offers=offers, checked=checked_by_question(plan),
                           gaps={"mots_inconnus": unknown_words, "elargi": widened,
                                 "mots_absents": missing_words, "sujet_introuvable": nothing_on_subject})
     if key and cards and not degraded:

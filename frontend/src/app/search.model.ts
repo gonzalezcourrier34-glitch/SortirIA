@@ -118,6 +118,9 @@ export interface SearchResult {
     /** Rien d'exact : offres de nos partenaires les plus proches de la demande
      *  (absent d'une réponse mise en cache avant le 15/10 après-midi). */
     partner_offers?: EventCard[];
+    /** Cases que la question a fixées (« avec les enfants » → Famille) ;
+     *  absent d'une réponse mise en cache avant le 17/10. */
+    checked?: { public?: Public; zone?: Zone };
 }
 
 

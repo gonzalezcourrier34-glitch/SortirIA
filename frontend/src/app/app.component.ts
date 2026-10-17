@@ -417,6 +417,16 @@ export class AppComponent implements OnInit {
         this.loading.set(false);
         this.resetAnswerFeedback();
 
+        // La question l'emporte sur les cases (17/10/2026) : « avec les enfants »
+        // coche « Famille », « à Sète » coche « Thau ».
+        const checked = event.result.checked;
+        if (checked?.public) {
+            this.selectedPublic.set(checked.public);
+        }
+        if (checked?.zone) {
+            this.selectedZone.set(checked.zone);
+        }
+
         // L'API n'était peut-être pas prête au chargement de la page : on réessaie.
         if (this.highlights().length === 0) {
             this.loadHighlights();
