@@ -27,12 +27,12 @@ gantt
     Bloc 2 Base et agent nocturne         :done, b2, 2026-10-14, 2d
     Bloc 3 Recherche et interface         :done, b3, 2026-10-14, 3d
     Bloc 4 Production et suivi            :done, b4, 2026-10-15, 2d
-    Mesures : pertinence, juge, CI        :done, m1, 2026-10-16, 1d
+    Mesures, pertinence, juge, CI         :done, m1, 2026-10-16, 1d
     Ménage, sécurité, dossier en site     :done, d1, 2026-10-16, 1d
     section À faire
-    Usage réel : testeurs, corrections    :active, f1, 2026-10-17, 10d
+    Usage réel, testeurs, corrections     :active, f1, 2026-10-17, 10d
     Relecture, captures, dossier en ligne :d2, 2026-10-24, 6d
-    Soutenance : diapos et répétitions    :s1, 2026-10-27, 8d
+    Diapositives et répétitions           :s1, 2026-10-27, 8d
     Gel du code                           :milestone, g1, 2026-11-04, 0d
     Soutenance                            :milestone, g2, 2026-11-06, 0d
 ```
@@ -96,6 +96,7 @@ fonction ; seulement ce qui mesure, fiabilise ou explique.
 | 16/10 ✅ | Propositions de l'agent en **pull request** : une PR par proposition, testée par la CI, Merge = appliquée, Close = refusée ; liens dans le mail, panneau Grafana | l'agent est relu comme un contributeur |
 | 16/10 ✅ | Avis des visiteurs lus par l'agent : pouces bas rangés par cause le lundi (leurs mots deviennent des propositions), commentaires refusés contestables (`agent.commentaires`), alerte sur une sortie mal notée | l'avis des visiteurs nourrit l'amélioration |
 | 16/10 ✅ | Revue du site en ligne : aucun filtre coché par défaut (la question décide), relances contrôlées (questions courtes), vouvoiement, prix au format français, typographie, filtres repliés sur téléphone ; consigne `2026-10-16.3` ; `robots.txt` (données et robots d'entraînement d'IA exclus) et en-tête `X-Robots-Tag` sur `/api/` | site prêt pour les tests d'usage |
+| 17/10 ✅ | Nuit du 17/10 en échec (fiche DATAtourisme au prix inversé) détectée par la surveillance, corrigée le matin ; l'agent finit désormais toujours par un bilan ; page **Suivi** des incidents et résolutions (doc et dossier) | 20 incidents tracés, de la détection au test |
 | 16/10 ✅ | Dossier du projet en site HTML (`docs/dossier/`, 11 pages : besoin, parcours, architecture, agent, recherche, modèles, interface, résultats, déploiement, procédures, limites) ; base de données documentée en entier | dossier lisible par le jury |
 | 17-26/10 | **Usage réel** : faire tester le site par 5 à 10 personnes ; lire les pouces bas et les recherches ratées (Grafana, bilan du lundi) ; corrections ciblées ; réponses de Frontignan et de l'Archipel de Thau (intégrer ou citer) | bilan d'usage chiffré, corrections testées |
 | 24-30/10 | Relecture du dossier et de la doc ; captures d'écran du site, de Grafana, du mail de bilan ; publication du dossier en ligne (facultatif) ; pitch et feuille de route PDF mis à jour (datés du 14/10) | dossier final |
