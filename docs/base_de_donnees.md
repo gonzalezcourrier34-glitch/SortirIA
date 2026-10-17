@@ -226,14 +226,16 @@ base (RGPD).
 | `sector` | `TEXT`, `CHECK` | `animation`, `soiree`, `enfants`, `culture`, `sport`, `autre` (par défaut) : statistiques et prospection |
 | `website` | `TEXT` | lien par défaut des événements du partenaire s'ils n'en ont pas |
 | `status` | `TEXT`, `CHECK` | `prospect` (par défaut), `actif`, `termine` : état de la relation |
-| `sponsored_until` | `DATE` | jusqu'à quand ses événements peuvent être mis en avant (`events.is_sponsored`) |
+| `sponsored_until` | `DATE` | jusqu'à quand sa formule payante court (`events.is_sponsored`) |
+| `formula` | `TEXT`, `CHECK` | `gratuit` (par défaut), `mis_en_avant`, `premium` (17/10/2026) : classe les offres partenaires entre elles, jamais devant un événement qui répond mieux ([Partenaires](partenaires.md)) |
 | `notes` | `TEXT` | suivi interne, gardé même si la configuration change |
 | `created_at` | `TIMESTAMPTZ` | création |
 
 - **Écrite par** : `attach_partners` (`src/event/event_repository.py`), appelée
   par l'agent avant l'upsert des événements, dans la même transaction.
-- **Lue par** : la vue `v_partner_ratings`, la rubrique « À ne pas manquer » de
-  l'interface (`app/search_service.py`), Grafana.
+- **Lue par** : la vue `v_partner_ratings`, la rubrique « À ne pas manquer » et
+  l'ordre des offres partenaires (`partner_rank` : 2 premium, 1 mis en avant,
+  0 sinon, dans `app/search_service.py`), Grafana.
 - **Conservation** : permanente.
 
 ### `partner_imports`

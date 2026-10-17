@@ -31,8 +31,9 @@ Server-Sent Events, comme l'analyse d'une position dans Chess Agent.
   touchée (17/10/2026). La première carte, choisie d'office après une
   recherche, ne fait pas défiler.
 - **Avant la première question**, des tuiles d'offres partenaires remplissent
-  l'accueil ; elles disparaissent dès la première question et restent dans
-  « À ne pas manquer ».
+  l'accueil ; « À ne pas manquer », à droite, n'apparaît qu'à la première
+  réponse, quand les tuiles disparaissent (17/10/2026 : plus de doublon).
+  Ordre : premium, puis mis en avant, puis gratuit ([Partenaires](partenaires.md)).
 - Un clic sur **Chercher** ouvre la fenêtre « SortirIA cherche pour vous » :
   les 4 étapes s'y cochent en direct, puis elle se referme. Le lien « Voir
   comment j'ai cherché » la rouvre.
@@ -271,7 +272,7 @@ Garde-fous :
 |---|---|---|
 | POST | `/api/v1/recherche/stream` | recherche diffusée (`event: progress` × 8, puis `event: completed` ou `event: error`) |
 | GET | `/api/v1/evenements/{event_id}?visiteur=…` | détail d'un événement proposable, derniers avis publiés sur son lieu, nombre d'avis du lieu et, avec `visiteur`, l'avis de ce visiteur |
-| GET | `/api/v1/partenaires/a-ne-pas-manquer?limit=3` | prochains événements des partenaires (mis en avant d'abord) |
+| GET | `/api/v1/partenaires/a-ne-pas-manquer?limit=3` | prochains événements des partenaires (premium, puis mis en avant, puis gratuit) |
 | GET | `/api/v1/sources` | sources qui ont des événements proposables (en-tête) |
 | POST | `/api/v1/evenements/{event_id}/avis` | avis d'un visiteur : 1 à 5 étoiles, commentaire modéré (409 hors de la fenêtre d'avis) |
 | POST | `/api/v1/avis/a-donner` | « Vos sorties à noter » : parmi les événements consultés, ceux notables maintenant et pas encore notés |
