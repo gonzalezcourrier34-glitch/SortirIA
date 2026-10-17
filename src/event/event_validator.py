@@ -42,6 +42,7 @@ def conform_to_schema(event: Event) -> Event:
 
     - âges hors de 0-120 ou incohérents (min > max) : oubliés, un âge faux
       venu d'un PDF ou d'un fichier partenaire ne doit pas bloquer la nuit ;
+    - prix minimum au-dessus du maximum : échangés ; fin avant le début : fin oubliée ;
     - publics inconnus : retirés ; statut ou présence inconnus : valeur par défaut.
     """
 
@@ -49,6 +50,14 @@ def conform_to_schema(event: Event) -> Event:
     if ages[0] is not None and ages[1] is not None and ages[0] > ages[1]:
         ages = [None, None]
     event.age_min, event.age_max = ages
+    # 17/10/2026 : « de 32 à 29 € » (DATAtourisme) violait events_price_order
+    # et a arrêté la nuit. Fourchette inversée : remise dans l'ordre.
+    if event.price_min is not None and event.price_max is not None and event.price_min > event.price_max:
+        event.price_min, event.price_max = event.price_max, event.price_min
+    # Fin avant le début (events_end_after_start) : la fin est oubliée.
+    start, end = parse_event_datetime(event.start_at), parse_event_datetime(event.end_at)
+    if start is not None and end is not None and end < start:
+        event.end_at = ""
     event.audiences = sorted({str(a) for a in (event.audiences or []) if str(a) in KNOWN_AUDIENCES})
     if event.status not in KNOWN_STATUSES:
         event.status = "programme"

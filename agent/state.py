@@ -83,3 +83,4 @@ class CollectionState(TypedDict, total=False):
     alerts: list[str]
     run_id: int | None
     errors: list[str]
+    load_error: str                       # écriture en base impossible (17/10/2026) : nuit en échec, avec bilan

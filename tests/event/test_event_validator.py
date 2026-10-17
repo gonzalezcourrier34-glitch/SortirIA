@@ -74,6 +74,11 @@ def test_conform_to_schema_fixes_what_would_break_the_night(event) -> None:
     assert (fixed.status, fixed.attendance) == ("programme", "sur_place")
     kept = conform_to_schema(replace(event, age_min=6, age_max=150))
     assert (kept.age_min, kept.age_max) == (6, None)              # 150 ans : oublié, 6 ans gardé
+    # 17/10/2026 : « de 32 à 29 € » (DATAtourisme) avait arrêté la nuit.
+    prices = conform_to_schema(replace(event, price_min=32.0, price_max=29.0))
+    assert (prices.price_min, prices.price_max) == (29.0, 32.0)
+    ends = conform_to_schema(replace(event, start_at="2026-10-24T20:00:00+02:00", end_at="2026-10-24T18:00:00+02:00"))
+    assert ends.end_at == "" and ends.start_at == "2026-10-24T20:00:00+02:00"
 
 
 def test_pipeline_conforms_events_before_validating(openagenda_item, now) -> None:

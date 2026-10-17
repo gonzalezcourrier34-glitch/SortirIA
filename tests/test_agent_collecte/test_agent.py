@@ -343,3 +343,29 @@ def test_no_mail_in_dry_run_and_mail_failure_is_harmless() -> None:
     services = make_services(lambda sources: ExtractionOutput(articles=[make_article(1, "Concert Jazz")]), FakeDatabase())
     services.notify = broken
     assert run_nightly_collection(services)["status"] == "success"
+
+
+def test_a_database_error_still_ends_with_a_failed_report() -> None:
+    """17/10/2026 : une contrainte violée à l'écriture avait arrêté la nuit sans
+    bilan ni mail. Désormais : statut « échec », alerte, bilan enregistré."""
+
+    class RefusingCursor(FakeCursor):
+        def executemany(self, sql: str, rows: list) -> None:
+            if "INTO sortiria.events" in sql:
+                raise RuntimeError('new row for relation "events" violates check constraint "events_price_order"')
+            super().executemany(sql, rows)
+
+    class RefusingDatabase(FakeDatabase):
+        def cursor(self) -> FakeCursor:
+            return RefusingCursor(self)
+
+    db = RefusingDatabase()
+    sent: list[dict] = []
+    services = make_services(lambda sources: ExtractionOutput(articles=[make_article(1, "Concert Jazz")]), db)
+    services.notify = lambda report: sent.append(dict(report))
+
+    state = run_nightly_collection(services)
+
+    assert state["status"] == "failed" and state["events_upserted"] == 0
+    assert any("Écriture en base impossible" in alert and "events_price_order" in alert for alert in state["alerts"])
+    assert sent and sent[0]["status"] == "failed"                  # le mail part quand même

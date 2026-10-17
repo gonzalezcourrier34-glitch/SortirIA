@@ -183,8 +183,22 @@ def load_events(state: CollectionState, config: RunnableConfig) -> dict[str, Any
     """Enregistre les événements, fait le ménage, calcule les embeddings, purge.
 
     Tout se passe dans une seule transaction : si une étape échoue, la base
-    reste dans l'état de la veille.
+    reste dans l'état de la veille. 17/10/2026 : l'erreur ne remonte plus hors
+    du graphe (une contrainte violée par une fiche DATAtourisme avait arrêté la
+    nuit sans bilan ni mail) ; la nuit continue jusqu'au bilan, en échec.
     """
+
+    try:
+        return write_events(state, config)
+    except Exception as error:  # la nuit doit toujours finir par un bilan
+        logger.exception("Écriture en base impossible : la base reste celle de la veille.")
+        return {"events_upserted": 0, "events_expired": 0, "events_removed": 0, "events_embedded": 0,
+                "events_enriched": 0, "source_drops": {}, "purged": {},
+                "load_error": f"{type(error).__name__} : {str(error).splitlines()[0][:300]}"}
+
+
+def write_events(state: CollectionState, config: RunnableConfig) -> dict[str, Any]:
+    """Le travail de `load_events`, dans une transaction (lève en cas d'erreur)."""
 
     if state.get("dry_run"):
         logger.info("Mode essai : aucune écriture en base.")
@@ -611,6 +625,9 @@ def decide_status(state: CollectionState) -> tuple[str, list[str]]:
     # relancer, couverture, coût) : signalés, sans changer le statut.
     alerts.extend(state.get("watch_alerts", []))
 
+    if state.get("load_error"):
+        alerts.append(f"Écriture en base impossible, la base reste celle de la veille : {state['load_error']}")
+        return STATUS_FAILED, alerts
     if kept == 0:
         return STATUS_FAILED, alerts
     if state.get("failed_sources") or state.get("errors") or state.get("source_drops"):
