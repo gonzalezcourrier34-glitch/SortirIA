@@ -26,6 +26,10 @@ Server-Sent Events, comme l'analyse d'une position dans Chess Agent.
   la colonne de droite défilent chacune de leur côté. Jusqu'à 3 lignes de
   réponse, les deux rangées de cartes restent entières à l'écran.
 - **En portrait** (téléphone, moins de 900 px), tout passe sur une colonne.
+  Toucher une carte, un renvoi [n] ou une offre descend directement au
+  détail de l'événement ; « ↑ Retour aux résultats » remonte à la carte
+  touchée (17/10/2026). La première carte, choisie d'office après une
+  recherche, ne fait pas défiler.
 - **Avant la première question**, des tuiles d'offres partenaires remplissent
   l'accueil ; elles disparaissent dès la première question et restent dans
   « À ne pas manquer ».

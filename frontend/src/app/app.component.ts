@@ -394,7 +394,7 @@ export class AppComponent implements OnInit {
         this.clearCloseTimer();
         this.searchSubscription?.unsubscribe();
 
-        if (typeof window !== 'undefined' && window.matchMedia?.('(max-width: 900px)').matches) {
+        if (isPhone()) {
             this.filtersCollapsed.set(true);
         }
 
@@ -530,6 +530,24 @@ export class AppComponent implements OnInit {
 
 
     // # Détail d'un événement
+
+    /** Événement touché par le visiteur : sur téléphone, le détail est sous
+     *  les résultats, on y descend directement (17/10/2026). La sélection
+     *  automatique de la première carte, elle, ne fait pas défiler. */
+    openEvent(eventId: string): void {
+        this.selectEvent(eventId);
+        if (isPhone()) {
+            scrollToElement(document.getElementById('detail'));
+        }
+    }
+
+    /** Téléphone : remonte à la carte touchée, ou au début de la réponse. */
+    backToResults(): void {
+        const id = this.selectedId();
+        const card = id === null ? null
+            : document.querySelector(`[data-event-id="${CSS.escape(id)}"]`);
+        scrollToElement(card ?? document.querySelector('.thread'));
+    }
 
     selectEvent(eventId: string): void {
         this.selectedId.set(eventId);
@@ -720,7 +738,7 @@ export class AppComponent implements OnInit {
         const card = this.result()?.events.find(event => event.ref === ref);
 
         if (card !== undefined) {
-            this.selectEvent(card.event_id);
+            this.openEvent(card.event_id);
         }
     }
 
@@ -761,6 +779,20 @@ export class AppComponent implements OnInit {
 
 /** « Un truc avec les enfants près de Sète » + « Plutôt en matinée ? »
  *  → « Un truc avec les enfants près de Sète, plutôt en matinée ? ». */
+/** Écran étroit (téléphone, mise en page sur une colonne). */
+function isPhone(): boolean {
+    return typeof window !== 'undefined' && !!window.matchMedia?.('(max-width: 900px)').matches;
+}
+
+/** Fait défiler jusqu'à l'élément (en douceur, sauf si le visiteur réduit les animations). */
+function scrollToElement(element: Element | null): void {
+    if (!element) {
+        return;
+    }
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    element.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+}
+
 export function completeQuestion(previous: string, followUp: string): string {
     const base = previous.trim().replace(/[\s\u00a0]*[?!.…]+$/u, '');
     const suite = followUp.trim();

@@ -323,6 +323,21 @@ $pastille: 999px;
     padding: 14px 24px 18px;
 }
 
+// Téléphone seulement (voir la fin du fichier) : remonter aux résultats.
+.back-to-results {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    padding: 4px 10px;
+    border: 1px solid var(--bordure);
+    border-radius: $pastille;
+    background: var(--blanc);
+    color: #3d342e;
+    font-size: 12.5px;
+    cursor: pointer;
+}
+
 // Échanges précédents : plus discrets que la réponse en cours.
 .past-exchange {
     display: flex;
@@ -1241,6 +1256,16 @@ $pastille: 999px;
 
     .side {
         padding-right: 0;
+    }
+
+    // Le détail défile jusqu'en haut de l'écran : un peu d'air au-dessus.
+    .panel-detail,
+    .card {
+        scroll-margin-top: 12px;
+    }
+
+    .back-to-results {
+        display: inline-flex;
     }
 
     .overlay {

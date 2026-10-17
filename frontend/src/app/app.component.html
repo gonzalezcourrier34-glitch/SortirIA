@@ -127,7 +127,7 @@
                                 @for (card of past.events; track card.event_id) {
                                     <button type="button" class="past-event"
                                         [class.card-on]="selectedId() === card.event_id"
-                                        (click)="selectEvent(card.event_id)">
+                                        (click)="openEvent(card.event_id)">
                                         [{{ card.ref }}] {{ card.title }} <span class="small">· {{ card.date }}</span>
                                     </button>
                                 }
@@ -216,13 +216,14 @@
                                 @for (card of answer.events; track card.event_id) {
                                     <!-- Toute la carte est cliquable (souris, Entrée ou Espace). -->
                                     <article class="card" [class.card-on]="selectedId() === card.event_id"
+                                        [attr.data-event-id]="card.event_id"
                                         [class.card-partner]="card.partner"
                                         role="button" tabindex="0"
                                         [attr.aria-pressed]="selectedId() === card.event_id"
                                         [attr.aria-label]="'Voir le détail : ' + card.title"
-                                        (click)="selectEvent(card.event_id)"
-                                        (keydown.enter)="selectEvent(card.event_id)"
-                                        (keydown.space)="$event.preventDefault(); selectEvent(card.event_id)">
+                                        (click)="openEvent(card.event_id)"
+                                        (keydown.enter)="openEvent(card.event_id)"
+                                        (keydown.space)="$event.preventDefault(); openEvent(card.event_id)">
                                         <div class="card-top">
                                             <span class="card-date">[{{ card.ref }}] {{ card.date }}</span>
                                             @if (card.other_dates.length) {
@@ -269,7 +270,7 @@
                                     @for (offer of answer.partner_offers; track offer.event_id) {
                                         <button type="button" class="partner-offer"
                                             [class.card-on]="selectedId() === offer.event_id"
-                                            (click)="selectEvent(offer.event_id)">
+                                            (click)="openEvent(offer.event_id)">
                                             <span class="highlight-date">{{ offer.date }}</span>
                                             <strong>{{ offer.title }}</strong>
                                             <span class="small">{{ offer.place }}</span>
@@ -310,7 +311,7 @@
                                     @for (item of highlights(); track item.event_id) {
                                         <button type="button" class="offer-tile"
                                             [class.card-on]="selectedId() === item.event_id"
-                                            (click)="selectEvent(item.event_id)">
+                                            (click)="openEvent(item.event_id)">
                                             <span class="highlight-date">{{ item.date }}</span>
                                             <span class="offer-title">{{ item.title }}</span>
                                             <span class="small">{{ item.place }}</span>
@@ -330,10 +331,16 @@
 
         <aside class="side">
 
-            <section class="panel panel-detail" [class.panel-partner]="detail()?.partner"
+            <section class="panel panel-detail" id="detail" [class.panel-partner]="detail()?.partner"
                 aria-live="polite" aria-label="Détail de l’événement">
                 <div class="panel-top">
                     <div class="eyebrow">L’événement</div>
+                    <!-- Téléphone : revenir à la carte touchée (17/10/2026). -->
+                    @if (result()) {
+                        <button type="button" class="back-to-results" (click)="backToResults()">
+                            <span aria-hidden="true">↑</span> Retour aux résultats
+                        </button>
+                    }
                     @if (detail()?.partner) {
                         <span class="badge-partner">Offre partenaire</span>
                     }
@@ -500,7 +507,7 @@
                         @for (item of toRate(); track item.event_id) {
                             <li>
                                 <span class="highlight-date">{{ item.date }}</span>
-                                <button type="button" class="highlight-title" (click)="selectEvent(item.event_id)">
+                                <button type="button" class="highlight-title" (click)="openEvent(item.event_id)">
                                     {{ item.title }}
                                 </button>
                                 <span class="small">{{ item.place }}</span>
@@ -521,7 +528,7 @@
                         <li>
                             <button type="button" class="offer-tile"
                                 [class.card-on]="selectedId() === item.event_id"
-                                (click)="selectEvent(item.event_id)">
+                                (click)="openEvent(item.event_id)">
                                 <span class="highlight-date">{{ item.date }}</span>
                                 <span class="offer-title">{{ item.title }}</span>
                                 <span class="small">{{ item.place }}</span>
