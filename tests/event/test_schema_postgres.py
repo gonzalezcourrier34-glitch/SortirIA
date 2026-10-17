@@ -271,6 +271,7 @@ def test_partner_files_are_recorded(db: Any) -> None:
         repository.attach_partners(db, events)   # nuit suivante : même fichier
     assert scalar(db, "SELECT count(*) FROM sortiria.partners") == 1
     assert scalar(db, "SELECT count(*) FROM sortiria.events WHERE is_sponsored AND partner_id IS NOT NULL") == 2
+    assert scalar(db, "SELECT formula FROM sortiria.partners") == "gratuit"     # sans formule transmise
     assert scalar(db, "SELECT status || ':' || rows_loaded || ':' || (rejection_reasons->>'date_illisible') "
                       "FROM sortiria.partner_imports") == "partiel:2:1"
 
@@ -1022,6 +1023,28 @@ def test_highlights_show_every_partner_first(db: Any) -> None:
     insert_event(db, event_id="vedette", title="Soirée mise en avant", partner_id=bar, is_sponsored=True,
                  start_at=(soon + timedelta(days=20)).isoformat())
     assert [card["event_id"] for card in service.partner_highlights(db, 3)] == ["vedette", "ludo", "bar0"]
+
+
+def test_premium_partners_come_first_in_highlights(db: Any) -> None:
+    """17/10/2026 : formule premium > mis en avant > gratuit ; une formule échue
+    (is_sponsored faux) ne compte plus."""
+
+    from app import search_service as service
+
+    ids = {name: scalar(db, "INSERT INTO sortiria.partners (name, sector, formula) VALUES (%s, 'autre', %s) "
+                            "RETURNING partner_id", (name, formula))
+           for name, formula in (("Gratuit", "gratuit"), ("Avant", "mis_en_avant"), ("Premium", "premium"),
+                                 ("Echu", "premium"))}
+    soon = datetime.now(PARIS) + timedelta(days=2)
+    for index, name in enumerate(("Gratuit", "Avant", "Premium", "Echu")):
+        insert_event(db, event_id=name.lower(), title=f"Offre {name}", partner_id=ids[name],
+                     is_sponsored=name in ("Avant", "Premium"), start_at=(soon + timedelta(days=index)).isoformat())
+    assert [card["event_id"] for card in service.partner_highlights(db, 4)] == ["premium", "avant", "gratuit", "echu"]
+    from psycopg2.errors import CheckViolation
+
+    with pytest.raises(CheckViolation):
+        db.cursor().execute("UPDATE sortiria.partners SET formula = 'or' WHERE name = 'Gratuit'")
+    db.rollback()
 
 
 def test_card_counts_every_date_like_the_detail(db: Any) -> None:

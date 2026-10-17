@@ -117,3 +117,16 @@ def test_all_audiences_for_adults_only_is_not_for_families() -> None:
     row = {**ROW, "titre": "Dégustation", "public": "tout public", "age_min": "18", "age_max": ""}
     event, _ = mapper.map_partner_row(row, PARTNER, today=TODAY)
     assert "famille" not in event.audiences
+
+
+def test_partner_formula_and_sponsoring() -> None:
+    """17/10/2026 : trois formules ; une date seule vaut « mis en avant » (ancienne configuration)."""
+
+    assert mapper.partner_formula({"formule": "Premium"}) == "premium"
+    assert mapper.partner_formula({"formule": "mis en avant"}) == "mis_en_avant"
+    assert mapper.partner_formula({"sponsored_until": "2026-12-31"}) == "mis_en_avant"
+    assert mapper.partner_formula({}) == "gratuit"
+    assert mapper.partner_formula({"formule": "or"}) == "gratuit"
+    assert not mapper.is_sponsored({"formule": "gratuit", "sponsored_until": "2026-12-31"}, TODAY)
+    assert mapper.is_sponsored({"formule": "premium", "sponsored_until": "2026-12-31"}, TODAY)
+    assert not mapper.is_sponsored({"formule": "premium", "sponsored_until": "2026-01-01"}, TODAY)

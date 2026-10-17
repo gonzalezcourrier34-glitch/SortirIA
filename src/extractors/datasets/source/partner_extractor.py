@@ -57,6 +57,7 @@ from src.event.partner_mapper import (
     map_partner_row,
     missing_columns,
     normalize_header,
+    partner_formula,
 )
 from src.extractors.datasets.dataset_adapter import DatasetAdapter
 from src.extractors.datasets.dataset_engine import DatasetExtractor
@@ -118,6 +119,7 @@ def partner_for_file(path: Path, source: Mapping[str, Any]) -> dict[str, Any]:
         "file": path.stem,
         "name": normalize_value(settings.get("name")) or name_from_file(path.stem),
         "sector": sector if sector in SECTORS else "autre",
+        "formula": partner_formula(settings),
         "enabled": settings.get("enabled", True) is not False,
     }
 
@@ -258,6 +260,7 @@ def read_partner_file(path: Path, partner: Mapping[str, Any], today: Any = None,
     summary = {
         "name": partner.get("name"), "file": partner.get("file"), "sector": partner.get("sector"),
         "website": partner.get("website", ""), "sponsored_until": partner.get("sponsored_until"),
+        "formula": partner.get("formula") or partner_formula(partner),
         "file_name": path.name, "file_sha256": file_sha256(path),
         "rows_total": kept + sum(reasons.values()) + past, "rows_loaded": kept,
         "rows_rejected": sum(reasons.values()), "rejection_reasons": dict(reasons),

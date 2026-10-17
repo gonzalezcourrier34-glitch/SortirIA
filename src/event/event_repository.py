@@ -264,13 +264,14 @@ GROUP BY question ORDER BY times DESC, question LIMIT %(limit)s
 # Partenaires (ajout du 14/10/2026) : la configuration fait foi pour le nom, le
 # secteur, le site et la fin du partenariat ; les notes saisies en base restent.
 UPSERT_PARTNER_SQL = """
-INSERT INTO sortiria.partners (name, sector, website, status, sponsored_until)
-VALUES (%(name)s, %(sector)s, %(website)s, 'actif', %(sponsored_until)s)
+INSERT INTO sortiria.partners (name, sector, website, status, sponsored_until, formula)
+VALUES (%(name)s, %(sector)s, %(website)s, 'actif', %(sponsored_until)s, %(formula)s)
 ON CONFLICT (name) DO UPDATE SET
     sector = EXCLUDED.sector,
     website = EXCLUDED.website,
     status = 'actif',
-    sponsored_until = EXCLUDED.sponsored_until
+    sponsored_until = EXCLUDED.sponsored_until,
+    formula = EXCLUDED.formula
 RETURNING partner_id
 """
 
@@ -335,6 +336,7 @@ def attach_partners(connection: Any, events: Sequence[Event]) -> int:
                     "sector": str(info.get("sector") or "autre"),
                     "website": str(info.get("website") or ""),
                     "sponsored_until": str(info.get("sponsored_until") or "")[:10] or None,
+                    "formula": str(info.get("formula") or "gratuit"),
                 })
                 partner_ids[name] = int(cursor.fetchone()[0])
             event.partner_id = partner_ids[name]

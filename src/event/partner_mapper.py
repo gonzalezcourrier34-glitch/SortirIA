@@ -203,11 +203,28 @@ def is_empty_row(row: Mapping[str, Any]) -> bool:
     return not any(cell_text(value) for value in row.values())
 
 
+# Formules de partenariat (17/10/2026), de la moins à la plus visible :
+# « gratuit » (présent, sans mise en avant), « mis_en_avant », « premium »
+# (devant les autres offres partenaires, jamais devant ce qui répond mieux).
+FORMULAS = ("gratuit", "mis_en_avant", "premium")
+
+
+def partner_formula(partner: Mapping[str, Any]) -> str:
+    """Formule déclarée ; sans formule, une date `sponsored_until` vaut « mis_en_avant »
+    (configuration d'avant le 17/10/2026)."""
+
+    value = "_".join(str(partner.get("formule") or partner.get("formula") or "").strip().lower()
+                     .replace("-", " ").replace("é", "e").split())
+    if value in FORMULAS:
+        return value
+    return "mis_en_avant" if partner.get("sponsored_until") else "gratuit"
+
+
 def is_sponsored(partner: Mapping[str, Any], today: date) -> bool:
-    """Le partenariat est-il en cours (`sponsored_until` dans le futur) ?"""
+    """Le partenariat payant est-il en cours (formule payante et `sponsored_until` dans le futur) ?"""
 
     until = parse_cell_date(partner.get("sponsored_until"))
-    return until is not None and until >= today
+    return partner_formula(partner) != "gratuit" and until is not None and until >= today
 
 
 # ---------------------------------------------------------------------------

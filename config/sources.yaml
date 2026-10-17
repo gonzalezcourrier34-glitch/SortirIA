@@ -246,6 +246,10 @@ datasets:
     # Réglages FACULTATIFS par partenaire (clé file = nom du fichier sans
     # extension). Sans entrée : nom tiré du fichier, secteur « autre », pas de
     # mise en avant, et chaque ligne doit avoir son lien.
+    # Formule (17/10/2026) : formule: gratuit | mis_en_avant | premium, payante
+    # jusqu'à sponsored_until. Dans « À ne pas manquer » et entre offres
+    # partenaires : premium, puis mis en avant, puis gratuit ; jamais devant un
+    # événement qui répond mieux à la question (docs/partenaires.md).
     partners:
       # Partenaires FICTIFS de démonstration (14/10/2026) : séances marquées
       # « (exemple) », liens example.org. Passer enabled à false (ou retirer
@@ -254,17 +258,21 @@ datasets:
         name: "Ludothèque Exemple (fictif)"
         sector: "enfants"
         website: "https://example.org/ludotheque"
-        sponsored_until: "2026-11-30"   # mis en avant jusqu'à cette date
+        formule: "mis_en_avant"
+        sponsored_until: "2026-11-30"   # formule payante jusqu'à cette date
         enabled: true
       - file: "bar_exemple"
         name: "Bar Exemple (fictif)"
         sector: "soiree"
         website: "https://example.org/bar"
+        formule: "gratuit"
         enabled: true
       - file: "festival_exemple"
         name: "Festival Exemple (fictif)"
         sector: "culture"
         website: "https://example.org/festival"
+        formule: "premium"
+        sponsored_until: "2026-11-30"
         enabled: true
 
 # Pages d'agenda lues par le moteur scraper de CheckIt.AI (adaptateur

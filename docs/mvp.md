@@ -43,7 +43,7 @@ Trois conditions la rendent tenable, et ce sont elles que le MVP doit prouver :
 | --- | --- | --- |
 | Agent LangGraph : enrichissement, juge de qualité, diagnostic, propositions | Fait | les décisions qui demandent un modèle de langage ([Agent](agent.md)) |
 | Programme PDF lu par Mistral | Fait | première source **non structurée** : 434 événements du bassin de Thau |
-| Fichiers des partenaires, offres en tête quand elles répondent | Fait | piste de modèle économique ([Coûts](couts.md)) |
+| Fichiers des partenaires, offres en tête quand elles répondent ; formules gratuit, mis en avant, premium (17/10) | Fait | piste de modèle économique ([Coûts](couts.md), [Partenaires](partenaires.md)) |
 | PDF et documents Word des partenaires, lus par Mistral, publiés après validation humaine | Fait (16/10) | un partenaire n'a pas à remplir le modèle ([Partenaires](partenaires.md)) |
 | Avis des visiteurs sur les événements, pouce haut / bas sur les réponses | Fait | mesure de satisfaction réelle |
 | Apprentissage des recherches ratées (synonymes, agendas proposés) | Fait | la base progresse avec l'usage |

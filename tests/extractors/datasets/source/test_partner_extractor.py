@@ -109,6 +109,9 @@ def test_partner_name_comes_from_the_file_name(partner_dir: Path) -> None:
     declared = module.partner_for_file(Path("LUDO.csv"), source)   # rapprochement sans casse
     assert (declared["name"], declared["sector"]) == ("Ludothèque du Port", "enfants")
     assert module.partner_for_file(Path("x.csv"), {"partners": [{"file": "x", "sector": "Bowling"}]})["sector"] == "autre"
+    assert module.partner_for_file(Path("x.csv"), {"partners": [{"file": "x", "formule": "premium"}]})["formula"] \
+        == "premium"
+    assert module.partner_for_file(Path("y.csv"), {})["formula"] == "gratuit"
 
 
 def test_json_file(partner_dir: Path) -> None:

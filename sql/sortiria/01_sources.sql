@@ -45,6 +45,10 @@ CREATE TABLE IF NOT EXISTS sortiria.partners (
     status           TEXT NOT NULL DEFAULT 'prospect',
     -- Date jusqu'à laquelle ses événements peuvent être mis en avant.
     sponsored_until  DATE,
+    -- Formule (17/10/2026) : gratuit, mis_en_avant ou premium. Les offres
+    -- premium passent devant les autres offres partenaires, jamais devant ce
+    -- qui répond mieux à la question.
+    formula          TEXT NOT NULL DEFAULT 'gratuit',
     notes            TEXT NOT NULL DEFAULT '',
     created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
 
@@ -53,6 +57,14 @@ CREATE TABLE IF NOT EXISTS sortiria.partners (
     CONSTRAINT partners_status_check
         CHECK (status IN ('prospect', 'actif', 'termine'))
 );
+
+-- Mise à niveau d'une base créée avant le 17/10/2026 (formule des partenaires).
+-- Sans effet sur une base neuve.
+ALTER TABLE sortiria.partners
+    ADD COLUMN IF NOT EXISTS formula TEXT NOT NULL DEFAULT 'gratuit';
+ALTER TABLE sortiria.partners
+    DROP CONSTRAINT IF EXISTS partners_formula_check,
+    ADD CONSTRAINT partners_formula_check CHECK (formula IN ('gratuit', 'mis_en_avant', 'premium'));
 
 
 -- ----------------------------------------------------------------------------

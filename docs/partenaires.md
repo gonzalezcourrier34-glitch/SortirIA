@@ -41,10 +41,12 @@ d'après lui** ; tout ce qui est à la racine est importé chaque nuit :
    séances passées sont ignorées sans erreur.
 4. **Facultatif** : une entrée dans `config/sources.yaml` (`datasets` >
    `partenaire` > `partners`, clé `file` = nom du fichier sans extension)
-   pour donner son vrai nom, son secteur, son site (lien par défaut) et la
-   date de fin d'une mise en avant, ou pour le désactiver
+   pour donner son vrai nom, son secteur, son site (lien par défaut), sa
+   **formule** (`formule: gratuit | mis_en_avant | premium`) et la date de
+   fin de la formule payante (`sponsored_until`), ou pour le désactiver
    (`enabled: false`). Sans entrée : nom tiré du fichier, secteur « autre »,
-   pas de mise en avant, un lien obligatoire sur chaque ligne.
+   formule gratuite, un lien obligatoire sur chaque ligne. Une date sans
+   formule vaut « mis en avant » (configuration d'avant le 17/10/2026).
 
 Ignorés : les sous-dossiers, les fichiers qui commencent par `_`, `.` ou
 `~$` (fichier ouvert dans Excel), les autres extensions.
@@ -143,6 +145,32 @@ type se lit aussi dans le titre et la catégorie du fichier : « Atelier jeux »
 répond à « jeux », « Soirée DJ » à « soirée ». Détail et contrôle sur les
 fichiers d'exemple : page [Interface](interface.md).
 
+### Formules et classement (17/10/2026)
+
+| Formule | Ce qu'elle apporte |
+| --- | --- |
+| `gratuit` | Le programme est dans SortirIA, cité comme les autres sources ; ses offres passent en tête des cartes quand elles répondent |
+| `mis_en_avant` | En plus : devant les offres gratuites dans « À ne pas manquer » et entre offres partenaires |
+| `premium` | En plus : devant les offres mises en avant |
+
+La formule ne **départage que les offres partenaires entre elles** (« À ne
+pas manquer », offres qui répondent, encadré des offres proches) ; à
+pertinence égale seulement dans l'encadré, où le sens de la question passe
+d'abord. Elle ne fait **jamais** passer une offre devant un événement qui
+répond mieux, et une offre qui ne répond pas ne rejoint jamais les cartes :
+la promesse « réponses exactes et sourcées » reste entière. Une formule
+payante échue (`sponsored_until` passée) redevient gratuite à la collecte
+suivante.
+
+**Transparence** : chaque offre partenaire porte l'encadré « Offre
+partenaire », et la règle de classement ci-dessus est publique. Le Code de la
+consommation (article L111-7) demande aux plateformes qui classent des offres
+de dire si un paiement influence ce classement ; à faire vérifier avant une
+ouverture commerciale.
+
+Partenaires d'exemple (fictifs) : Festival Exemple en premium, Ludothèque
+Exemple mise en avant, Bar Exemple gratuit.
+
 Chaque lundi, le bilan de l'agent peut suggérer un sujet à proposer aux
 partenaires (« kitesurf : cherché 3 fois, absent de la base et des agendas
 de la zone »).
@@ -153,7 +181,7 @@ de la zone »).
 
 | Table | Ce qui est écrit |
 | --- | --- |
-| `partners` | Le partenaire (créé ou mis à jour d'après la configuration) |
+| `partners` | Le partenaire (créé ou mis à jour d'après la configuration), sa formule (`formula`) et la fin de sa formule payante |
 | `events` | Ses séances, avec `partner_id`, `is_sponsored` et la source `partenaire` |
 | `partner_imports` | Le bilan de chaque fichier : lignes lues, gardées, refusées, motifs, statut (`importe`, `partiel`) ; un même fichier (même empreinte) n'est compté qu'une fois |
 

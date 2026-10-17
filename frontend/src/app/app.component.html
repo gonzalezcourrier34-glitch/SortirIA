@@ -299,8 +299,8 @@
                             }
                         </div>
 
-                        <!-- Avant la première question : les offres de nos partenaires (disparaissent ensuite,
-                             elles restent dans « À ne pas manquer », à droite). -->
+                        <!-- Avant la première question : les offres de nos partenaires (elles passent
+                             ensuite dans « À ne pas manquer », à droite, qui n'apparaît qu'à ce moment). -->
                         @if (highlights().length) {
                             <div class="welcome-offers">
                                 <div class="eyebrow">À ne pas manquer · nos partenaires</div>
@@ -514,29 +514,33 @@
                 </section>
             }
 
-            <section class="panel">
-                <div>
-                    <div class="eyebrow">À ne pas manquer</div>
-                    <span class="small">Proposé par nos partenaires</span>
-                </div>
+            <!-- Après la première question seulement (17/10/2026) : avant, les mêmes
+                 offres sont déjà en tuiles au centre, pas de doublon. -->
+            @if (result() || error()) {
+                <section class="panel">
+                    <div>
+                        <div class="eyebrow">À ne pas manquer</div>
+                        <span class="small">Proposé par nos partenaires</span>
+                    </div>
 
-                <ul class="offer-list">
-                    @for (item of highlights().slice(0, 4); track item.event_id) {
-                        <li>
-                            <button type="button" class="offer-tile"
-                                [class.card-on]="selectedId() === item.event_id"
-                                (click)="openEvent(item.event_id)">
-                                <span class="highlight-date">{{ item.date }}</span>
-                                <span class="offer-title">{{ item.title }}</span>
-                                <span class="small">{{ item.place }}</span>
-                                <span class="highlight-partner">{{ item.partner_name }}</span>
-                            </button>
-                        </li>
-                    } @empty {
-                        <li class="muted">Pas de proposition de partenaire pour le moment.</li>
-                    }
-                </ul>
-            </section>
+                    <ul class="offer-list">
+                        @for (item of highlights().slice(0, 4); track item.event_id) {
+                            <li>
+                                <button type="button" class="offer-tile"
+                                    [class.card-on]="selectedId() === item.event_id"
+                                    (click)="openEvent(item.event_id)">
+                                    <span class="highlight-date">{{ item.date }}</span>
+                                    <span class="offer-title">{{ item.title }}</span>
+                                    <span class="small">{{ item.place }}</span>
+                                    <span class="highlight-partner">{{ item.partner_name }}</span>
+                                </button>
+                            </li>
+                        } @empty {
+                            <li class="muted">Pas de proposition de partenaire pour le moment.</li>
+                        }
+                    </ul>
+                </section>
+            }
         </aside>
     </section>
 

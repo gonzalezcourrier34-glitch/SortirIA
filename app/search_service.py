@@ -174,6 +174,9 @@ EVENT_COLUMNS = """
     e.price_text, e.price_min, e.is_free, e.audiences, e.age_min, e.age_max,
     e.url, e.source_name, e.source_attribution, e.partner_id, e.is_sponsored,
     e.venue_rating, e.venue_rating_count, p.name AS partner_name,
+    -- Rang du partenaire (17/10/2026) : 2 premium, 1 mis en avant, 0 sinon
+    -- (une formule payante échue ne compte plus : is_sponsored est faux).
+    CASE WHEN NOT e.is_sponsored THEN 0 WHEN p.formula = 'premium' THEN 2 ELSE 1 END AS partner_rank,
     sortiria.event_zone(e.latitude, e.longitude, e.city) AS zone"""
 
 
@@ -630,7 +633,7 @@ SELECT {EVENT_COLUMNS}
 FROM sortiria.v_upcoming_events AS e
 JOIN sortiria.partners AS p ON p.partner_id = e.partner_id
 WHERE e.is_outing
-ORDER BY e.is_sponsored DESC, (e.start_at < now() + interval '30 days') DESC, e.start_at
+ORDER BY partner_rank DESC, (e.start_at < now() + interval '30 days') DESC, e.start_at
 LIMIT %(pool)s"""
 
 SOURCES_SQL = """
@@ -852,6 +855,9 @@ def partners_first(rows: list[dict[str, Any]], plan: QueryPlan, exact: bool,
             ahead.append({**row, "partner_ahead": True})
         else:
             rest.append(row)
+    # Parmi les offres qui répondent, la formule départage (premium d'abord),
+    # sans changer l'ordre de pertinence à formule égale (tri stable).
+    ahead.sort(key=lambda row: -int(row.get("partner_rank") or 0))
     return ahead + rest
 
 
@@ -1069,10 +1075,10 @@ def build_partner_query(plan: QueryPlan, vector: str | None, exclude: Sequence[s
     elif keep_place and plan.zone:
         conditions.append("sortiria.event_zone(e.latitude, e.longitude, e.city) = %(zone)s")
         params["zone"] = ZONES[plan.zone]
-    order = "e.is_sponsored DESC, e.start_at"
+    order = "partner_rank DESC, e.start_at"
     if vector:
         params["vector"] = vector
-        order = "e.embedding <=> %(vector)s::vector NULLS LAST, e.is_sponsored DESC, e.start_at"
+        order = "e.embedding <=> %(vector)s::vector NULLS LAST, partner_rank DESC, e.start_at"
     sql = (f"SELECT {EVENT_COLUMNS}\nFROM sortiria.v_upcoming_events AS e\n"
            "JOIN sortiria.partners AS p ON p.partner_id = e.partner_id\n"
            f"WHERE {' AND '.join(conditions)}\nORDER BY {order}\nLIMIT %(limit)s")

@@ -330,6 +330,14 @@ def test_matching_partner_offers_come_first_in_relevance_order() -> None:
     assert [r["event_id"] for r in ordered] == ["p1", "p2", "e1", "e2"]
 
 
+def test_premium_partner_offers_lead_among_those_that_answer() -> None:
+    """17/10/2026 : la formule départage les offres qui répondent, pas les autres événements."""
+    rows = [row("e1", score=0.04), row("p1", partner_id=1, score=0.03), row("p2", partner_id=2, score=0.02,
+                                                                           partner_rank=2)]
+    ordered = service.partners_first(rows, plan_for("un concert ce week-end"), exact=True)
+    assert [r["event_id"] for r in ordered] == ["p2", "p1", "e1"]
+
+
 def test_partner_offer_far_from_a_vague_question_stays_in_its_place() -> None:
     rows = [row(f"e{i}", score=1 / (60 + i)) for i in range(service.PARTNER_TOP_RANK)]
     rows.append(row("p1", partner_id=1, score=0.001))
