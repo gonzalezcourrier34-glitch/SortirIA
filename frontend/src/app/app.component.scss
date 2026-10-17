@@ -146,14 +146,13 @@ $pastille: 999px;
 }
 
 .filters {
-    // Une seule ligne en paysage ; si la fenêtre est trop étroite, la ligne
-    // défile plutôt que de passer à la ligne (téléphone : voir plus bas).
+    // Une ligne en paysage ; si la fenêtre est trop étroite, ce qui ne tient
+    // pas passe à la ligne au lieu de sortir du cadre (17/10/2026 : « Gratuit
+    // seulement » était coupé depuis l'ajout de « Le soir »).
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 16px;
-    overflow-x: auto;
-    scrollbar-width: none;
+    gap: 8px 12px;
 }
 
 // Filtres repliés (téléphone, après une recherche) : une ligne de résumé.
