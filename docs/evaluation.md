@@ -50,6 +50,38 @@ mesure aussi ce que la base **ne couvre pas** : 19 recherches sur 125 sont des
 lieux ouverts toute l'année (bowling, padel…), absents d'un agenda
 d'événements ([Évolutions](evolutions.md)).
 
+**Troisième jeu : « faire soi-même »** (`config/eval_pratique.yaml`,
+17/10/2026). Constat : « je veux chanter » proposait des concerts (« Lyrica »,
+« Chant choral ») : le mot « chant » est partout dans les concerts, et le sens
+rapproche « chanter » de « concert ». Correction : un verbe de pratique
+(chanter, danser, jouer, peindre, dessiner, sculpter, cuisiner) devient le
+sujet ; pour « chanter », karaoké, cours ou stage de chant, chorale, scène
+ouverte ([Interface](interface.md)). Le jeu : 13 recherches de pratique et
+7 témoins (« un concert de chant », « karaoké », « cours de danse »…) qui ne
+doivent pas changer. Contrôle de plus : `pas_types`, un concert n'est pas une
+réponse à « je veux chanter », sauf si son titre dit qu'on y participe
+(« Stage de chant »).
+
+Mesure **avant / après** sur la base figée de la CI (export du 16/10, sans
+vecteur ni Mistral), la règle retirée par `--sans-pratique` (ablation) :
+
+| Mesure | Avant | Après |
+| --- | --- | --- |
+| Compréhension (pratique, période, public) | 35 % (7 / 20 : les témoins seuls) | **100 %** |
+| Cartes correctes, tout le jeu (réponses exactes) | 70 % (50 / 71) | **95,5 %** (85 / 89) |
+| Cartes correctes, recherches de pratique seules | 54 % (21 / 39) | **98 %** (56 / 57) |
+| Recherches de pratique avec une réponse exacte | 8 / 13 | 12 / 13 |
+| Idées voisines | 5 | 1 (« où chanter ce week-end » : rien ce week-end-là) |
+| Témoins (7 recherches) | mêmes cartes avant et après | |
+| 125 recherches courtes, 50 questions | 98,2 % et 98 % | **identiques** (mêmes cartes) |
+
+Une erreur reste : « apprendre à dessiner » propose une visite des hôtels
+particuliers (le mot « dessin » est dans sa description, pas dans le titre).
+Rejoué en CI à chaque push, avec un seuil de 90 % : le jeu est petit (89 cartes),
+une seule carte fausse de plus ferait passer 95,5 % à 94,4 %. Sur la vraie base
+(avec le sens) : `uv run python -m scripts.eval_recherche --fichier
+config/eval_pratique.yaml`, puis la même commande avec `--sans-pratique`.
+
 **Historique** (`benchmarks/recherche/historique.csv`), le 15/10/2026 :
 
 | Étape | Jeu | Respect des contraintes |

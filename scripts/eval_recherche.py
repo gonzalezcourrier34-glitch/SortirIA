@@ -74,6 +74,9 @@ HISTORY_COLUMNS = ("date", "mode", "jeu", "questions", "prompt_version", "compre
                    "idees_voisines", "sans_resultat", "latence_mediane_s", "latence_p95_s", "note")
 MLFLOW_EXPERIMENT = "sortiria-evaluation-recherche"
 OUTDOOR = {"nature", "marche", "sport", "fete", "festival"}
+# Titre qui dit qu'on participe (17/10/2026) : « Stage de chant », rangé en
+# concert, reste une réponse à « je veux chanter ».
+PARTICIPATION = re.compile(r"\b(cours|stage|atelier|initiation|karaoke|scene ouverte|bal|guinguette|tournoi)\b")
 DAY_LABEL = re.compile(r"^(lun|mar|mer|jeu|ven|sam|dim)\. \d+ ")
 TARGET = 0.95
 
@@ -109,6 +112,8 @@ def understanding_errors(plan: QueryPlan, expected: Mapping[str, Any]) -> list[s
         errors.append(f"cadre {plan.setting} au lieu de {expected['cadre']}")
     if "pres_de" in expected and (plan.near or ("",))[0] != expected["pres_de"]:
         errors.append(f"repère {plan.near} au lieu de {expected['pres_de']}")
+    if "pratique" in expected and plan.practice != expected["pratique"]:
+        errors.append(f"pratique {plan.practice} au lieu de {expected['pratique']}")
     return errors
 
 
@@ -117,7 +122,7 @@ def understanding_errors(plan: QueryPlan, expected: Mapping[str, Any]) -> list[s
 # ----------------------------------------------------------------------------
 
 def card_errors(card: Mapping[str, Any], plan: QueryPlan, expected: Mapping[str, Any],
-                words: Sequence[str]) -> list[str]:
+                words: Sequence[str], excluded_types: Sequence[str] = ()) -> list[str]:
     """Contraintes attendues qu'un événement proposé ne respecte pas."""
 
     errors = []
@@ -160,6 +165,10 @@ def card_errors(card: Mapping[str, Any], plan: QueryPlan, expected: Mapping[str,
         in_title = any(re.search(rf"\b{re.escape(kind.rstrip('sx'))}", title) for kind in kinds)
         if str(card.get("category", "")).lower() not in expected["types"] and not in_title:
             errors.append("type")
+    # « je veux chanter » : un concert n'est pas une réponse, sauf « Stage de chant ».
+    if str(card.get("category", "")).lower() in excluded_types \
+            and not PARTICIPATION.search(plain(str(card.get("title", "")))):
+        errors.append("type exclu")
     return errors
 
 
@@ -177,6 +186,7 @@ def evaluate(connection: Any, questions: Sequence[Mapping[str, Any]], services: 
         filters = SearchFilters(**(item.get("filtres") or {}))
         expected = item.get("compris") or {}
         words = [plain(word) for word in item.get("mots") or []]
+        excluded = [plain(kind) for kind in item.get("pas_types") or []]
         plan, _ = plan_search(question, filters, services.now())
         misunderstood = understanding_errors(plan, expected)
         started = time.monotonic()
@@ -185,7 +195,7 @@ def evaluate(connection: Any, questions: Sequence[Mapping[str, Any]], services: 
         result = events[-1]["result"]
         relaxed = any("élargie" in (event.get("message") or "") for event in events)
         cards = result["events"]
-        problems = [card_errors(card, plan, expected, words) for card in cards]
+        problems = [card_errors(card, plan, expected, words, excluded) for card in cards]
         good = sum(1 for errors in problems if not errors)
         exact = result.get("exact", True)
         understood += not misunderstood
@@ -302,12 +312,21 @@ def main() -> None:
     parser.add_argument("--fichier", type=Path, default=QUESTIONS_FILE, help="Jeu de questions (YAML).")
     parser.add_argument("--jeu-test", action="store_true",
                         help="Base de test figée (CI) : horloge à l'instant de l'export, sans vecteur ni historique.")
+    parser.add_argument("--sans-pratique", action="store_true",
+                        help="Retire la règle des verbes de pratique (mesure « avant », 17/10/2026).")
     parser.add_argument("--seuil", type=float, default=None,
                         help="Échoue (code 1) si la précision ou la compréhension passe sous ce seuil (ex. 0.95).")
     args = parser.parse_args()
 
     load_environment()
     from agent.services import connect_postgres
+
+    if args.sans_pratique:
+        # Ablation : la recherche telle qu'avant le 17/10/2026, pour comparer.
+        from app import query_understanding
+
+        query_understanding.PRACTICE_VERBS.clear()
+        args.note = f"{args.note} (sans verbes de pratique)".strip()
 
     questions = yaml.safe_load(args.fichier.read_text(encoding="utf-8"))["questions"]
     services = SearchServices(embed=embed_question, write=write_with_mistral if args.avec_redaction else None,

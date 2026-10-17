@@ -1,0 +1,103 @@
+# Recherches « faire soi-même » (17/10/2026) : 20 questions.
+#
+# Troisième jeu d'évaluation de la recherche, à côté des 50 questions
+# (config/eval_recherche.yaml) et des 125 recherches courtes
+# (config/eval_mots.yaml). Constat qui l'a fait naître : « je veux chanter »
+# proposait des concerts, parce que « chant » est partout dans les concerts et
+# que le sens rapproche « chanter » de « concert ». Un verbe de pratique
+# (chanter, danser, jouer, peindre, dessiner, sculpter, cuisiner) demande de
+# quoi le faire soi-même : karaoké, cours ou stage de chant, bal, atelier…
+#
+# Lancement :
+#     uv run python -m scripts.eval_recherche --fichier config/eval_pratique.yaml
+#     uv run python -m scripts.eval_recherche --fichier config/eval_pratique.yaml --sans-pratique
+# (le second lancement retire la règle des verbes de pratique : mesure « avant »).
+#
+# Champs (même format que les autres jeux) :
+#   compris   pratique attendue (pratique: null = pas de pratique : témoin) ;
+#   mots      au moins un de ces mots dans chaque proposition (titre, résumé, lieu) ;
+#   pas_types types qui ne sont pas une réponse (un concert pour « chanter »),
+#             sauf si le titre dit qu'on y participe (« Stage de chant »).
+
+questions:
+
+  # --- Chanter ---
+  - question: "je veux chanter"
+    compris: {pratique: chanter}
+    mots: [karaoke, chant, chorale, choeur, scene ouverte, open mic]
+    pas_types: [concert, spectacle, theatre]
+  - question: "où chanter ce week-end"
+    compris: {pratique: chanter, quand: "ce week-end"}
+    mots: [karaoke, chant, chorale, choeur, scene ouverte, open mic]
+    pas_types: [concert, spectacle, theatre]
+  - question: "apprendre à chanter"
+    compris: {pratique: chanter}
+    mots: [karaoke, chant, chorale, choeur, scene ouverte, open mic]
+    pas_types: [concert, spectacle, theatre]
+
+  # --- Danser ---
+  - question: "je veux danser"
+    compris: {pratique: danser}
+    mots: [bal, guinguette, dansant, danse, salsa, tango, bachata, swing, country, flamenco, milonga]
+    pas_types: [concert, spectacle, theatre]
+  - question: "où danser samedi soir"
+    compris: {pratique: danser, quand: jour, soir: true}
+    mots: [bal, guinguette, dansant, danse, salsa, tango, bachata, swing, country, flamenco, milonga]
+    pas_types: [concert, spectacle, theatre]
+  - question: "apprendre à danser le tango"
+    compris: {pratique: danser}
+    mots: [bal, guinguette, dansant, danse, salsa, tango, bachata, swing, country, flamenco, milonga]
+    pas_types: [concert, spectacle, theatre]
+
+  # --- Jouer ---
+  - question: "jouer à des jeux de société"
+    compris: {pratique: jouer}
+    mots: [jeux, "jeu ", tournoi, ludotheque, escape, quiz, blind test, enquete]   # « jeu » suivi d'une espace : pas « jeudi »
+    pas_types: [theatre, spectacle, concert, cinema]
+  - question: "on veut jouer en famille"
+    compris: {pratique: jouer, public: famille}
+    mots: [jeux, "jeu ", tournoi, ludotheque, escape, quiz, blind test, enquete]   # « jeu » suivi d'une espace : pas « jeudi »
+    pas_types: [theatre, spectacle, concert, cinema]
+
+  # --- Peindre, dessiner, sculpter ---
+  - question: "apprendre à dessiner"
+    compris: {pratique: dessiner}
+    mots: [dessin, croquis, manga, illustration, carnet]
+    pas_types: [exposition]
+  - question: "peindre en famille"
+    compris: {pratique: peindre, public: famille}
+    mots: [peinture, aquarelle, acrylique]
+    pas_types: [exposition]
+  - question: "apprendre à sculpter"
+    compris: {pratique: sculpter}
+    mots: [sculpture, modelage, poterie, ceramique, argile]
+    pas_types: [exposition]
+
+  # --- Cuisiner ---
+  - question: "cuisiner avec les enfants"
+    compris: {pratique: cuisiner, public: famille}
+    mots: [cuisine, culinaire, patisserie, recette]
+    pas_types: [marche, fete]
+  - question: "apprendre à cuisiner"
+    compris: {pratique: cuisiner}
+    mots: [cuisine, culinaire, patisserie, recette]
+    pas_types: [marche, fete]
+
+  # --- Témoins : pas de pratique, la recherche habituelle ne doit pas changer ---
+  - question: "un concert de chant"
+    compris: {pratique: null, types: [concert]}
+  - question: "un spectacle de danse"
+    compris: {pratique: null}
+    mots: [danse]
+  - question: "jouer au théâtre"
+    compris: {pratique: null, types: [theatre]}
+  - question: "une exposition de peinture"
+    compris: {pratique: null, types: [exposition]}
+  - question: "karaoké"
+    compris: {pratique: null}
+    mots: [karaoke]
+  - question: "cours de danse"
+    compris: {pratique: null}
+    mots: [danse, salsa, tango, bachata, swing, country, flamenco]
+  - question: "atelier cuisine"
+    compris: {pratique: null, types: [atelier]}

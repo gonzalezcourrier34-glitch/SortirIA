@@ -557,6 +557,7 @@ uv run python -m agent.proposals    # rien en attente pour lui</code></pre>
 <tr><td>Recherche seule</td><td><code>uv run python -m scripts.eval_recherche --note "ce qui a changé"</code></td><td>Le rapport, puis « Lancement gardé : benchmarks/recherche/… et benchmarks/recherche/historique.csv ».</td></tr>
 <tr><td>Avec la rédaction</td><td><code>uv run python -m scripts.eval_recherche --avec-redaction</code></td><td>Même rapport, réponse de Mistral comprise (environ 0,01 $).</td></tr>
 <tr><td>Autre jeu de questions</td><td><code>uv run python -m scripts.eval_recherche --fichier config\eval_mots.yaml</code></td><td>Les 125 recherches courtes.</td></tr>
+<tr><td>Recherches « faire soi-même », avant / après</td><td><code>uv run python -m scripts.eval_recherche --fichier config\eval_pratique.yaml</code>, puis la même avec <code>--sans-pratique</code></td><td>Les 20 recherches de pratique ; le second lancement retire la règle des verbes de pratique (mesure « avant »).</td></tr>
 <tr><td>Comme la CI</td><td><code>uv run python -m scripts.eval_recherche --jeu-test --seuil 0.95 --json eval_recherche.json</code></td><td>Base figée, horloge à l'instant de l'export, sans vecteur ni Mistral ; code de sortie 1 si la précision ou la compréhension passe sous 0,95. Demande la base de test chargée (6.2).</td></tr>
 </tbody>
 </table>
