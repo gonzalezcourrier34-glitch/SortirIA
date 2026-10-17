@@ -111,14 +111,24 @@ sont rangés en « danse », comme les spectacles. Deux causes, deux corrections
   mots à trouver dans l'événement.
 
 Quatre recherches « regarder » ajoutées au jeu (contrôle `pas_pratique` : un
-bal, un cours, un stage ne sont pas une réponse). Mesure sur la base figée,
-les deux règles retirées par `--sans-regarder` :
+bal, un cours, un stage ne sont pas une réponse). Mesure avant / après, les
+deux règles retirées par `--sans-regarder`, sur la vraie base (rapports
+`benchmarks/recherche/2026-10-17_19h27.json` et `_19h29.json`) et sur la base
+figée :
 
-| Recherches « regarder » (4) | Avant | Après |
-| --- | --- | --- |
-| Réponse exacte | 2 / 4 | **4 / 4** |
-| Cartes correctes | 75 % (18 / 24 : un bal folk, deux stages de cirque, un stage de flamenco, un speed dating) | **100 %** (16 / 16) |
-| Tout le jeu (23 recherches) | 95 % | **99 %** (96 / 97) |
+| Recherches « regarder » (4) | Vraie base, avant | Vraie base, après | Base figée, avant | Base figée, après |
+| --- | --- | --- | --- | --- |
+| Compréhension (tout le jeu) | 83 % | **100 %** | 83 % | **100 %** |
+| Cartes correctes des réponses exactes | 67 % (8 / 12) | **93 %** (14 / 15) | 75 % (18 / 24) | **100 %** (16 / 16) |
+| Tout le jeu (23 recherches, réponses exactes) | 94,5 % | **97,9 %** | 95 % | **99 %** |
+
+Sur la vraie base, avant : le Bal folk en tête de « un spectacle de danse »,
+et « voir un spectacle de danse ce week-end » annoncé comme exact avec un
+stage de théâtre, un atelier d'impro et une exposition (0 / 3). Après : des
+spectacles de danse, et pour ce week-end, rien d'exact (aucun spectacle de
+danse ce week-end-là), donc des idées voisines annoncées comme telles plutôt
+qu'une réponse fausse. Reste une carte : « Nuit orange au musée Fabre »
+proposée pour « un spectacle de danse ».
 
 Non-régression sur la base figée : 125 recherches courtes 98,2 % → 98,4 %,
 50 questions 98,0 % → 98,3 % (« un spectacle de danse » y passe aussi de

@@ -1,0 +1,1506 @@
+{
+  "date": "2026-10-17T19:27:33+02:00",
+  "questions": 23,
+  "comprehension": 0.826,
+  "precision": 0.945,
+  "sans_resultat": 0,
+  "idees_voisines": 3,
+  "latence_mediane_s": 1.89,
+  "latence_p95_s": 2.39,
+  "detail": [
+    {
+      "question": "je veux chanter",
+      "compris": "les 3 prochains mois · pour chanter soi-même",
+      "ecarts_comprehension": [],
+      "propositions": 2,
+      "correctes": 2,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Karaoké géant (exemple)",
+        "Malpoésie : Scène ouverte littéraire"
+      ],
+      "cartes": [
+        {
+          "titre": "Karaoké géant (exemple)",
+          "type": "jeux",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée karaoké géant avec des milliers de titres disponibles pour chanter en groupe.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Malpoésie : Scène ouverte littéraire",
+          "type": "lecture",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée littéraire avec lectures d'auteurs et participation du public autour d'un verre.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "où chanter ce week-end",
+      "compris": "ce week-end · pour chanter soi-même",
+      "ecarts_comprehension": [],
+      "propositions": 3,
+      "correctes": 0,
+      "elargie": false,
+      "exact": false,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "STAGES ET ATELIERS - THÉÂTRE BEAUX- ARTS TABARD",
+        "MILLE FORMES - SAISON 2",
+        "Journées nationales de l'Architecture 2026"
+      ],
+      "cartes": [
+        {
+          "titre": "STAGES ET ATELIERS - THÉÂTRE BEAUX- ARTS TABARD",
+          "type": "atelier",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Stages créatifs et théâtraux pour enfants et adolescents avec des professionnels.",
+          "partenaire": false,
+          "ecarts": [
+            "mots"
+          ]
+        },
+        {
+          "titre": "MILLE FORMES - SAISON 2",
+          "type": "exposition",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Expositions et jeux pour enfants de 0 à 6 ans autour des couleurs et de la créativité.",
+          "partenaire": false,
+          "ecarts": [
+            "mots"
+          ]
+        },
+        {
+          "titre": "Journées nationales de l'Architecture 2026",
+          "type": "visite",
+          "publics": [],
+          "resume": "Visite et ateliers sur l'architecture antique et les techniques de construction anciennes.",
+          "partenaire": false,
+          "ecarts": [
+            "mots"
+          ]
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "apprendre à chanter",
+      "compris": "les 3 prochains mois · pour chanter soi-même",
+      "ecarts_comprehension": [],
+      "propositions": 2,
+      "correctes": 2,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Karaoké géant (exemple)",
+        "Malpoésie : Scène ouverte littéraire"
+      ],
+      "cartes": [
+        {
+          "titre": "Karaoké géant (exemple)",
+          "type": "jeux",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée karaoké géant avec des milliers de titres disponibles pour chanter en groupe.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Malpoésie : Scène ouverte littéraire",
+          "type": "lecture",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée littéraire avec lectures d'auteurs et participation du public autour d'un verre.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "je veux danser",
+      "compris": "les 3 prochains mois · pour danser soi-même",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Bal folk (exemple)",
+        "Soirée salsa (exemple)",
+        "Balèti",
+        "Balèti pour tous",
+        "STAGE DANSE DE LA KELEMINIS&CIE",
+        "BACHATA",
+        "ATELIER DANSE-THÉÂTRE",
+        "FOLLE DE RAGE X HALLE TROPISME : LE GRAND BAL D’HALLOWEEN"
+      ],
+      "cartes": [
+        {
+          "titre": "Bal folk (exemple)",
+          "type": "danse",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Bal traditionnel avec danses et initiation en début de soirée.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Soirée salsa (exemple)",
+          "type": "soiree",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée dansante avec initiation à la salsa suivie d'une piste libre.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Balèti",
+          "type": "danse",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée de danses traditionnelles avec initiation puis orchestre pour une ambiance festive.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Balèti pour tous",
+          "type": "danse",
+          "publics": [
+            "famille",
+            "soirée"
+          ],
+          "resume": "Bal traditionnel avec initiation et danse pour tous les âges.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "STAGE DANSE DE LA KELEMINIS&CIE",
+          "type": "atelier",
+          "publics": [],
+          "resume": "Stage de danse explorant l'univers chorégraphique d'une création récente.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "BACHATA",
+          "type": "soiree",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée dansante dédiée à la bachata avec initiation, cours et DJ pour une ambiance festive.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER DANSE-THÉÂTRE",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier d'expression corporelle mêlant danse et théâtre pour petits et grands.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "FOLLE DE RAGE X HALLE TROPISME : LE GRAND BAL D’HALLOWEEN",
+          "type": "danse",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Bal costumé avec musique, drag shows et ambiance festive pour Halloween.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "où danser samedi soir",
+      "compris": "sam. 17 oct. (le soir) · pour danser soi-même",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 0,
+      "elargie": false,
+      "exact": false,
+      "erreurs": [
+        "date"
+      ],
+      "titres": [
+        "Bal folk (exemple)",
+        "Soirée salsa (exemple)",
+        "Balèti",
+        "BACHATA",
+        "GRANDE SOIRÉE PORTUGAISE CARITATIVE",
+        "FOLLE DE RAGE X HALLE TROPISME : LE GRAND BAL D’HALLOWEEN",
+        "Balèti pour tous",
+        "Salsa NINKASI oct"
+      ],
+      "cartes": [
+        {
+          "titre": "Bal folk (exemple)",
+          "type": "danse",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Bal traditionnel avec danses et initiation en début de soirée.",
+          "partenaire": true,
+          "ecarts": [
+            "date"
+          ]
+        },
+        {
+          "titre": "Soirée salsa (exemple)",
+          "type": "soiree",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée dansante avec initiation à la salsa suivie d'une piste libre.",
+          "partenaire": true,
+          "ecarts": [
+            "date"
+          ]
+        },
+        {
+          "titre": "Balèti",
+          "type": "danse",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée de danses traditionnelles avec initiation puis orchestre pour une ambiance festive.",
+          "partenaire": false,
+          "ecarts": [
+            "date"
+          ]
+        },
+        {
+          "titre": "BACHATA",
+          "type": "soiree",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée dansante dédiée à la bachata avec initiation, cours et DJ pour une ambiance festive.",
+          "partenaire": false,
+          "ecarts": [
+            "date"
+          ]
+        },
+        {
+          "titre": "GRANDE SOIRÉE PORTUGAISE CARITATIVE",
+          "type": "fete",
+          "publics": [
+            "famille",
+            "soirée"
+          ],
+          "resume": "Soirée caritative avec cuisine traditionnelle, animations et bal populaire.",
+          "partenaire": false,
+          "ecarts": [
+            "date"
+          ]
+        },
+        {
+          "titre": "FOLLE DE RAGE X HALLE TROPISME : LE GRAND BAL D’HALLOWEEN",
+          "type": "danse",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Bal costumé avec musique, drag shows et ambiance festive pour Halloween.",
+          "partenaire": false,
+          "ecarts": [
+            "date"
+          ]
+        },
+        {
+          "titre": "Balèti pour tous",
+          "type": "danse",
+          "publics": [
+            "famille",
+            "soirée"
+          ],
+          "resume": "Bal traditionnel avec initiation et danse pour tous les âges.",
+          "partenaire": false,
+          "ecarts": [
+            "date"
+          ]
+        },
+        {
+          "titre": "Salsa NINKASI oct",
+          "type": "danse",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée dansante dédiée à la salsa cubaine, avec cours d'initiation et ambiance conviviale.",
+          "partenaire": false,
+          "ecarts": [
+            "date"
+          ]
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "apprendre à danser le tango",
+      "compris": "les 3 prochains mois · pour danser soi-même",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Bal folk (exemple)",
+        "Soirée salsa (exemple)",
+        "Balèti",
+        "BACHATA",
+        "Balèti pour tous",
+        "STAGE DANSE DE LA KELEMINIS&CIE",
+        "Initiation et baléti à bretelles",
+        "FOLLE DE RAGE X HALLE TROPISME : LE GRAND BAL D’HALLOWEEN"
+      ],
+      "cartes": [
+        {
+          "titre": "Bal folk (exemple)",
+          "type": "danse",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Bal traditionnel avec danses et initiation en début de soirée.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Soirée salsa (exemple)",
+          "type": "soiree",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée dansante avec initiation à la salsa suivie d'une piste libre.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Balèti",
+          "type": "danse",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée de danses traditionnelles avec initiation puis orchestre pour une ambiance festive.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "BACHATA",
+          "type": "soiree",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée dansante dédiée à la bachata avec initiation, cours et DJ pour une ambiance festive.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Balèti pour tous",
+          "type": "danse",
+          "publics": [
+            "famille",
+            "soirée"
+          ],
+          "resume": "Bal traditionnel avec initiation et danse pour tous les âges.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "STAGE DANSE DE LA KELEMINIS&CIE",
+          "type": "atelier",
+          "publics": [],
+          "resume": "Stage de danse explorant l'univers chorégraphique d'une création récente.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Initiation et baléti à bretelles",
+          "type": "atelier",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Bal traditionnel avec initiation et musique occitane, suivi d'un baléti en salle.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "FOLLE DE RAGE X HALLE TROPISME : LE GRAND BAL D’HALLOWEEN",
+          "type": "danse",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Bal costumé avec musique, drag shows et ambiance festive pour Halloween.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "jouer à des jeux de société",
+      "compris": "les 3 prochains mois · pour jouer soi-même",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Atelier jeux en famille (exemple)",
+        "Blind test géant (exemple)",
+        "PAUSE JEUX : Les jeux de société et les jeux vidéos",
+        "LUDOTHÈQUE",
+        "LUDOTHÈQUE EN GOGUETTE",
+        "DES JEUX POUR LES GRANDS",
+        "ESCAPE GAME : VOYAGE AU PAYS DES RÊVES",
+        "PAUSE JEUX"
+      ],
+      "cartes": [
+        {
+          "titre": "Atelier jeux en famille (exemple)",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier de jeux de société et de construction pour enfants et adultes dans une ludothèque.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Blind test géant (exemple)",
+          "type": "jeux",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Blind test géant en équipe avec lots à gagner dans un bar.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "PAUSE JEUX : Les jeux de société et les jeux vidéos",
+          "type": "jeux",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier de jeux de société et jeux vidéo encadré par une ludothécaire.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LUDOTHÈQUE",
+          "type": "jeux",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Espace dédié aux jeux de société et d'éveil pour tous les âges.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LUDOTHÈQUE EN GOGUETTE",
+          "type": "jeux",
+          "publics": [],
+          "resume": "Découverte et essai de jeux variés en ludothèque.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "DES JEUX POUR LES GRANDS",
+          "type": "jeux",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Temps dédié aux jeux de société pour ados et adultes amateurs.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ESCAPE GAME : VOYAGE AU PAYS DES RÊVES",
+          "type": "jeux",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Escape game coopératif pour enfants et adolescents explorant des univers oniriques.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "PAUSE JEUX",
+          "type": "jeux",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Découvrir des jeux de société avec une ludothécaire.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "on veut jouer en famille",
+      "compris": "les 3 prochains mois · famille · pour jouer soi-même",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Atelier jeux en famille (exemple)",
+        "PAUSE JEUX : Les jeux de société et les jeux vidéos",
+        "LUDOTHÈQUE",
+        "PAUSE JEUX",
+        "ESCAPE GAME : VOYAGE AU PAYS DES RÊVES",
+        "ESCAPE GAME GÉANT LA QUÊTE FANTASTIQUE - LE SECRET DE L'ALCHIMISTE",
+        "PAUSE JEUX",
+        "PAUSE JEUX"
+      ],
+      "cartes": [
+        {
+          "titre": "Atelier jeux en famille (exemple)",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier de jeux de société et de construction pour enfants et adultes dans une ludothèque.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "PAUSE JEUX : Les jeux de société et les jeux vidéos",
+          "type": "jeux",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier de jeux de société et jeux vidéo encadré par une ludothécaire.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LUDOTHÈQUE",
+          "type": "jeux",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Espace dédié aux jeux de société et d'éveil pour tous les âges.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "PAUSE JEUX",
+          "type": "jeux",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Découverte de jeux de société avec une ludothécaire.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ESCAPE GAME : VOYAGE AU PAYS DES RÊVES",
+          "type": "jeux",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Escape game coopératif pour aider un enfant à retrouver sa créativité à travers des énigmes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ESCAPE GAME GÉANT LA QUÊTE FANTASTIQUE - LE SECRET DE L'ALCHIMISTE",
+          "type": "jeux",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Jeu géant mêlant escape game, chasse aux trésors et jeu de rôles dans un univers fantastique.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "PAUSE JEUX",
+          "type": "jeux",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Découverte de jeux de société avec une ludothécaire.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "PAUSE JEUX",
+          "type": "jeux",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Découvrir des jeux de société avec une ludothécaire.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "apprendre à dessiner",
+      "compris": "les 3 prochains mois · pour dessiner soi-même",
+      "ecarts_comprehension": [],
+      "propositions": 6,
+      "correctes": 5,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "mots"
+      ],
+      "titres": [
+        "ATELIER CARNET DE PARTAGE",
+        "ATELIER LIGHT-PAINTING",
+        "ATELIER BD",
+        "LIGHT PAINTING – SPÉCIAL HALLOWEEN",
+        "ATELIER ROMAN PHOTO",
+        "LES HÔTELS PARTICULIERS, DES TRÉSORS D'ARCHITECTURE"
+      ],
+      "cartes": [
+        {
+          "titre": "ATELIER CARNET DE PARTAGE",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier mêlant dessin et écriture pour créer des carnets illustrés.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER LIGHT-PAINTING",
+          "type": "atelier",
+          "publics": [],
+          "resume": "Dessiner dans l'obscurité avec une lampe pour créer des images lumineuses.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER BD",
+          "type": "atelier",
+          "publics": [],
+          "resume": "Atelier de création de bandes dessinées pour tous niveaux.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LIGHT PAINTING – SPÉCIAL HALLOWEEN",
+          "type": "atelier",
+          "publics": [],
+          "resume": "Atelier créatif de light painting pour dessiner avec la lumière et créer des images féeriques.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER ROMAN PHOTO",
+          "type": "atelier",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Création d'un roman photo mêlant photographie et bande dessinée.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LES HÔTELS PARTICULIERS, DES TRÉSORS D'ARCHITECTURE",
+          "type": "visite",
+          "publics": [],
+          "resume": "Visite guidée des cours d'hôtels particuliers illustrant l'architecture locale.",
+          "partenaire": false,
+          "ecarts": [
+            "mots"
+          ]
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "peindre en famille",
+      "compris": "les 3 prochains mois · famille · pour peindre soi-même",
+      "ecarts_comprehension": [],
+      "propositions": 5,
+      "correctes": 5,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Atelier d'Aquarelle",
+        "STAGES ENFANTS 4-11 ANS DES VACANCES DE LA TOUSSAINT",
+        "ATELIER EN FAMILLE - LES PEINTRES TAPISSIERS",
+        "LES SAMEDIS MERVEILLEUX",
+        "STAGE LOISIRS CRÉATIFS POUR LES 6-10 ANS / VACANCES D'AUTOMNE À LA HUNE"
+      ],
+      "cartes": [
+        {
+          "titre": "Atelier d'Aquarelle",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier d'aquarelle pour explorer les techniques de peinture à l'eau.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "STAGES ENFANTS 4-11 ANS DES VACANCES DE LA TOUSSAINT",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Stages artistiques variés pour enfants avec peinture, sculpture et théâtre.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER EN FAMILLE - LES PEINTRES TAPISSIERS",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier familial mêlant peinture et tapisserie pour créer un décor unique.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LES SAMEDIS MERVEILLEUX",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Ateliers créatifs combinant peinture et théâtre pour enfants.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "STAGE LOISIRS CRÉATIFS POUR LES 6-10 ANS / VACANCES D'AUTOMNE À LA HUNE",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Semaine d'activités créatives pour enfants avec bricolage, peinture et laine.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "apprendre à sculpter",
+      "compris": "les 3 prochains mois · pour sculpter soi-même",
+      "ecarts_comprehension": [],
+      "propositions": 7,
+      "correctes": 7,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "ATELIER DÉCOUVERTE DE L’ARGILE : 21 novembre",
+        "ATELIER DE POTERIE : IMPROVISATIONS - LA TERRE - LE JEU QUI CRÉE",
+        "ATELIER DÉCOUVERTE DE L’ARGILE : 24 octobre",
+        "Atelier : Les petites mignonneries d’Halloween",
+        "ATELIER EN FAMILLE - LE VASE ENTRE EN SCÈNE !",
+        "LES SAMEDIS MERVEILLEUX",
+        "STAGES ENFANTS 4-11 ANS DES VACANCES DE LA TOUSSAINT"
+      ],
+      "cartes": [
+        {
+          "titre": "ATELIER DÉCOUVERTE DE L’ARGILE : 21 novembre",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier de modelage d'argile pour éveiller les sens des petits et grands.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER DE POTERIE : IMPROVISATIONS - LA TERRE - LE JEU QUI CRÉE",
+          "type": "atelier",
+          "publics": [],
+          "resume": "Stage de poterie axé sur le travail à la plaque et les techniques de façonnage de la terre.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER DÉCOUVERTE DE L’ARGILE : 24 octobre",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier sensoriel pour malaxer et façonner de l'argile avec ses mains.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Atelier : Les petites mignonneries d’Halloween",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier de modelage d'argile pour créer des décorations d'Halloween avec les enfants.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER EN FAMILLE - LE VASE ENTRE EN SCÈNE !",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier familial pour façonner et décorer un vase en argile avec des formes géométriques colorées.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LES SAMEDIS MERVEILLEUX",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Ateliers créatifs combinant peinture, sculpture et théâtre pour enfants le samedi matin.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "STAGES ENFANTS 4-11 ANS DES VACANCES DE LA TOUSSAINT",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Stages artistiques variés pour enfants avec peinture, sculpture et théâtre.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "cuisiner avec les enfants",
+      "compris": "les 3 prochains mois · famille · pour cuisiner soi-même",
+      "ecarts_comprehension": [],
+      "propositions": 3,
+      "correctes": 3,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Atelier cuisine parents-enfants (exemple)",
+        "Atelier de cuisine des fêtes",
+        "ATELIER PLANTES COMESTIBLES"
+      ],
+      "cartes": [
+        {
+          "titre": "Atelier cuisine parents-enfants (exemple)",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier culinaire pour préparer un goûter en famille.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Atelier de cuisine des fêtes",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier culinaire avec cuisine locale, anti-gaspi et recettes festives, animé par un chef.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER PLANTES COMESTIBLES",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Balade et atelier pour reconnaître et cuisiner des plantes sauvages comestibles des jardins.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "apprendre à cuisiner",
+      "compris": "les 3 prochains mois · pour cuisiner soi-même",
+      "ecarts_comprehension": [],
+      "propositions": 5,
+      "correctes": 5,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Atelier cuisine parents-enfants (exemple)",
+        "Atelier de cuisine des fêtes",
+        "ATELIER PLANTES COMESTIBLES",
+        "DE LA VIGNE À L'ASSIETTE : CUEILLETTE, CUISINE & ACCORDS METS-VINS",
+        "ATELIERS ÉPICES : L’Italie : le mélange bolognais"
+      ],
+      "cartes": [
+        {
+          "titre": "Atelier cuisine parents-enfants (exemple)",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier culinaire pour préparer un goûter en famille.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Atelier de cuisine des fêtes",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier culinaire avec cuisine locale, anti-gaspi et recettes festives, animé par un chef.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER PLANTES COMESTIBLES",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Balade et atelier pour reconnaître et cuisiner des plantes sauvages comestibles des jardins.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "DE LA VIGNE À L'ASSIETTE : CUEILLETTE, CUISINE & ACCORDS METS-VINS",
+          "type": "atelier",
+          "publics": [],
+          "resume": "Atelier mêlant cueillette de plantes sauvages, cuisine et dégustation de vins.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIERS ÉPICES : L’Italie : le mélange bolognais",
+          "type": "atelier",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Atelier sur les épices avec découverte d'un mélange culinaire étranger.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "voir un spectacle de danse ce week-end",
+      "compris": "ce week-end · spectacle ou théâtre ou danse",
+      "ecarts_comprehension": [
+        "regarder False au lieu de True"
+      ],
+      "propositions": 3,
+      "correctes": 0,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "pratique au lieu de spectacle",
+        "type"
+      ],
+      "titres": [
+        "STAGES ET ATELIERS - THÉÂTRE BEAUX- ARTS TABARD",
+        "ATELIER IMPRO ADULTE",
+        "EXPOSITION \"DUBOUT 50 ANS, DÉJÀ !\""
+      ],
+      "cartes": [
+        {
+          "titre": "STAGES ET ATELIERS - THÉÂTRE BEAUX- ARTS TABARD",
+          "type": "atelier",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Stages créatifs et théâtraux pour enfants et adolescents avec des professionnels.",
+          "partenaire": false,
+          "ecarts": [
+            "type",
+            "pratique au lieu de spectacle"
+          ]
+        },
+        {
+          "titre": "ATELIER IMPRO ADULTE",
+          "type": "atelier",
+          "publics": [
+            "ados",
+            "seniors"
+          ],
+          "resume": "Atelier d'improvisation théâtrale pour adultes, débutants ou confirmés, axé sur le jeu et la créativité.",
+          "partenaire": false,
+          "ecarts": [
+            "type",
+            "pratique au lieu de spectacle"
+          ]
+        },
+        {
+          "titre": "EXPOSITION \"DUBOUT 50 ANS, DÉJÀ !\"",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Rétrospective humoristique et colorée d'un artiste connu pour ses dessins de presse et peintures.",
+          "partenaire": false,
+          "ecarts": [
+            "type"
+          ]
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "regarder un ballet",
+      "compris": "les 3 prochains mois · danse",
+      "ecarts_comprehension": [
+        "regarder False au lieu de True"
+      ],
+      "propositions": 1,
+      "correctes": 1,
+      "elargie": false,
+      "exact": false,
+      "erreurs": [],
+      "titres": [
+        "BALLET OF LIGHTS : LA BELLE AU BOIS DORMANT DANS UN SPECTACLE ÉTINCELANT"
+      ],
+      "cartes": [
+        {
+          "titre": "BALLET OF LIGHTS : LA BELLE AU BOIS DORMANT DANS UN SPECTACLE ÉTINCELANT",
+          "type": "spectacle",
+          "publics": [],
+          "resume": "Spectacle de danse classique revisité avec des costumes lumineux et une chorégraphie époustouflante.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "assister à un spectacle de cirque",
+      "compris": "les 3 prochains mois · spectacle ou théâtre",
+      "ecarts_comprehension": [
+        "regarder False au lieu de True"
+      ],
+      "propositions": 1,
+      "correctes": 1,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "ARLETTE TON CATCH !"
+      ],
+      "cartes": [
+        {
+          "titre": "ARLETTE TON CATCH !",
+          "type": "spectacle",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Spectacle de catch festif mêlant cirque, théâtre burlesque et cascades.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un concert de chant",
+      "compris": "les 3 prochains mois · concert",
+      "ecarts_comprehension": [],
+      "propositions": 5,
+      "correctes": 5,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "CONCERT IN CHORUS : CHOEUR DE CHAMBRE A CAPPELLA",
+        "CHANT CHORAL",
+        "ANOUCK — LES ITINÉRANCES D'AUTOMNE DU FESTIVAL DE THAU",
+        "Nadal occitan",
+        "TARAKNA | AVANT SOLEIL LEVÉ | KAHINA AFZIM – NICOLAS BECK"
+      ],
+      "cartes": [
+        {
+          "titre": "CONCERT IN CHORUS : CHOEUR DE CHAMBRE A CAPPELLA",
+          "type": "concert",
+          "publics": [],
+          "resume": "Chœur de chambre a cappella composé de jeunes chanteurs en résidence dans des lieux patrimoniaux.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CHANT CHORAL",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert de chorale à cappella sur un thème historique.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ANOUCK — LES ITINÉRANCES D'AUTOMNE DU FESTIVAL DE THAU",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert intimiste de chants traditionnels interprétés par trois voix.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Nadal occitan",
+          "type": "concert",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Concert de chants traditionnels en langue régionale, célébrant le patrimoine local pendant l'Avent.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "TARAKNA | AVANT SOLEIL LEVÉ | KAHINA AFZIM – NICOLAS BECK",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert mêlant chants berbères et électro-acoustique pour une expérience vibrante.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un spectacle de danse",
+      "compris": "les 3 prochains mois · spectacle ou théâtre ou danse",
+      "ecarts_comprehension": [
+        "regarder False au lieu de True"
+      ],
+      "propositions": 8,
+      "correctes": 7,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "pratique au lieu de spectacle"
+      ],
+      "titres": [
+        "Bal folk (exemple)",
+        "DANS6T BOUZIANE BOUTELDJA",
+        "PITCHOUN ET LES MONDES CÉLESTES",
+        "BALLET OF LIGHTS : LA BELLE AU BOIS DORMANT DANS UN SPECTACLE ÉTINCELANT",
+        "SPECTACLE CABARET « DEUX BRÉSILIENS À PARIS »",
+        "SPECTACLE : L’ART D’ACCOMMODER LES RESTES",
+        "ÉCLIPSE — SPECTACLE DE JONGLAGE ET ILLUSION",
+        "SPECTACLE : UN CHOU EN HIVER"
+      ],
+      "cartes": [
+        {
+          "titre": "Bal folk (exemple)",
+          "type": "danse",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Bal traditionnel avec danses et initiation en début de soirée.",
+          "partenaire": true,
+          "ecarts": [
+            "pratique au lieu de spectacle"
+          ]
+        },
+        {
+          "titre": "DANS6T BOUZIANE BOUTELDJA",
+          "type": "danse",
+          "publics": [
+            "ados",
+            "seniors"
+          ],
+          "resume": "Spectacle explorant le lien entre danse, luttes sociales et mémoires collectives.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "PITCHOUN ET LES MONDES CÉLESTES",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle de danse poétique et interactive pour les tout-petits avec des objets et des mouvements.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "BALLET OF LIGHTS : LA BELLE AU BOIS DORMANT DANS UN SPECTACLE ÉTINCELANT",
+          "type": "spectacle",
+          "publics": [],
+          "resume": "Spectacle de danse classique revisité avec des costumes lumineux et une chorégraphie époustouflante.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SPECTACLE CABARET « DEUX BRÉSILIENS À PARIS »",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle carnavalesque mêlant danses, musiques brésiliennes et costumes flamboyants.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SPECTACLE : L’ART D’ACCOMMODER LES RESTES",
+          "type": "spectacle",
+          "publics": [],
+          "resume": "Spectacle de marionnettes humoristique et émouvant célébrant l'amitié et la joie de vivre.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ÉCLIPSE — SPECTACLE DE JONGLAGE ET ILLUSION",
+          "type": "spectacle",
+          "publics": [],
+          "resume": "Spectacle de jonglage et illusion explorant la réalité à travers des objets simples.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SPECTACLE : UN CHOU EN HIVER",
+          "type": "theatre",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Pièce de théâtre drôle et poétique sur deux jardinières confrontées à des surprises hivernales.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "jouer au théâtre",
+      "compris": "les 3 prochains mois · théâtre ou spectacle",
+      "ecarts_comprehension": [],
+      "propositions": 2,
+      "correctes": 2,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "JUVI'RIRE PREMIÈRE ÉDITION",
+        "Le Noël des jouets oubliés - Cie la Cortina"
+      ],
+      "cartes": [
+        {
+          "titre": "JUVI'RIRE PREMIÈRE ÉDITION",
+          "type": "festival",
+          "publics": [],
+          "resume": "Festival d'humour avec spectacles variés et ambiance festive sur plusieurs jours.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Le Noël des jouets oubliés - Cie la Cortina",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle de Noël mettant en scène des personnages sauvant Noël.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une exposition de peinture",
+      "compris": "les 3 prochains mois · exposition",
+      "ecarts_comprehension": [],
+      "propositions": 4,
+      "correctes": 4,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "VERNISSAGE EXPOSITION \"FATBOBSTUDIO\"",
+        "EXPOSITION \"DUBOUT 50 ANS, DÉJÀ !\"",
+        "Exposition Terre et Mer de Frédéric Leprince",
+        "BRUNO CORTOT ET GILLES VERNAY, JOYEUX ENFANTS DE LA BOURGOGNE, EXPOSENT"
+      ],
+      "cartes": [
+        {
+          "titre": "VERNISSAGE EXPOSITION \"FATBOBSTUDIO\"",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Vernissage d'une exposition de peintures et dessins dans une galerie d'art.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "EXPOSITION \"DUBOUT 50 ANS, DÉJÀ !\"",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Rétrospective humoristique et colorée d'un artiste connu pour ses dessins de presse et peintures.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Exposition Terre et Mer de Frédéric Leprince",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Peintures où l'instinct guide le geste pour laisser la toile prendre vie.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "BRUNO CORTOT ET GILLES VERNAY, JOYEUX ENFANTS DE LA BOURGOGNE, EXPOSENT",
+          "type": "exposition",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Exposition d'œuvres humoristiques et poétiques mêlant peinture et sculpture.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "karaoké",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 1,
+      "correctes": 1,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Karaoké géant (exemple)"
+      ],
+      "cartes": [
+        {
+          "titre": "Karaoké géant (exemple)",
+          "type": "jeux",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée karaoké géant avec des milliers de titres disponibles pour chanter en groupe.",
+          "partenaire": true,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "cours de danse",
+      "compris": "les 3 prochains mois · danse",
+      "ecarts_comprehension": [],
+      "propositions": 1,
+      "correctes": 1,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Salsa NINKASI oct"
+      ],
+      "cartes": [
+        {
+          "titre": "Salsa NINKASI oct",
+          "type": "danse",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée dansante dédiée à la salsa cubaine, avec cours d'initiation et ambiance conviviale.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "atelier cuisine",
+      "compris": "les 3 prochains mois · atelier",
+      "ecarts_comprehension": [],
+      "propositions": 4,
+      "correctes": 4,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Atelier cuisine parents-enfants (exemple)",
+        "Atelier de cuisine des fêtes",
+        "ATELIER PLANTES COMESTIBLES",
+        "DE LA VIGNE À L'ASSIETTE : CUEILLETTE, CUISINE & ACCORDS METS-VINS"
+      ],
+      "cartes": [
+        {
+          "titre": "Atelier cuisine parents-enfants (exemple)",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier culinaire pour préparer un goûter en famille.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Atelier de cuisine des fêtes",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier culinaire avec cuisine locale, anti-gaspi et recettes festives, animé par un chef.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER PLANTES COMESTIBLES",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Balade et atelier pour reconnaître et cuisiner des plantes sauvages comestibles des jardins.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "DE LA VIGNE À L'ASSIETTE : CUEILLETTE, CUISINE & ACCORDS METS-VINS",
+          "type": "atelier",
+          "publics": [],
+          "resume": "Atelier mêlant cueillette de plantes sauvages, cuisine et dégustation de vins.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    }
+  ],
+  "mode": "recherche",
+  "jeu": "506bf8fd",
+  "prompt_version": "2026-10-17.5",
+  "note": "avant regarder (sans « regarder »)"
+}
