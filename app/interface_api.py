@@ -42,8 +42,6 @@ class SearchRequest(BaseModel):
     zone: Literal["montpellier", "thau"] | None = None
     period: Literal["aujourdhui", "weekend", "7jours", "3mois"] = "3mois"
     free_only: bool = False
-    # « Le soir » coché dans « Quand » (17/10/2026) : distinct du public « Soirée ».
-    evening: bool = False
     # Demande précédente de la conversation (renvoyée par l'API dans `context`) :
     # une relance (« et pour les enfants ? ») garde ce qui avait été demandé.
     context: str = Field(default="", max_length=1000)
@@ -85,8 +83,7 @@ def search_stream(
     """Recherche diffusée étape par étape (text/event-stream)."""
 
     filters = SearchFilters(public=payload.public, zone=payload.zone,
-                            period=payload.period, free_only=payload.free_only,
-                            evening=payload.evening)
+                            period=payload.period, free_only=payload.free_only)
 
     def stream() -> Iterator[str]:
         try:

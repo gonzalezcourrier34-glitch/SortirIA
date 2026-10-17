@@ -310,13 +310,28 @@ PUBLIC_WORDS = {
                "boite de nuit", "discotheque", "afterwork", "pub", "pubs"),
 }
 EVENING_WORDS = ("ce soir", "soir", "soiree", "nocturne", "nuit")
-# Le moment de la journée (17/10/2026) : « en soirée » veut dire « le soir »,
-# pas le public « Soirée » (bars, fêtes), et « en journée » annule le soir
-# d'une demande précédente.
+# Le moment de la journée, lu dans la phrase seulement (17/10/2026) : « en
+# soirée » veut dire « le soir », pas le public « Soirée » (bars, fêtes) ;
+# « le matin », « l'après-midi », « en journée » filtrent l'heure de début.
 EVENING_PHRASES = ("en debut de soiree", "en fin de soiree", "dans la soiree", "en soiree", "le soir",
                    "ce soir")
-DAYTIME_PHRASES = ("en journee", "dans la journee", "la journee", "en matinee", "le matin", "ce matin",
-                   "l apres midi", "cet apres midi", "en apres midi", "de jour")
+MOMENT_PHRASES = {
+    "matin": ("matin", "matinee", "matinees"),
+    "apres-midi": ("apres midi", "aprem", "apres midis"),
+    "journee": ("en journee", "dans la journee", "toute la journee", "de jour"),
+}
+# Heure de début (heure de Paris) acceptée pour chaque moment ; le soir : 17 h et après.
+MOMENT_HOURS = {"matin": (0, 12), "apres-midi": (12, 18), "journee": (0, 18)}
+MOMENT_LABELS = {"matin": "le matin", "apres-midi": "l'après-midi", "journee": "en journée", "soir": "le soir"}
+
+
+def find_moment(padded: str) -> str | None:
+    """« samedi matin » -> « matin », « en journée » -> « journee » (sans le soir)."""
+
+    for moment, phrases in MOMENT_PHRASES.items():
+        if any(f" {phrase} " in padded for phrase in phrases):
+            return moment
+    return None
 FREE_WORDS = ("gratuit", "gratuite", "gratuits", "gratuites", "gratos", "sans payer", "entree libre")
 
 # Mots qui n'aident pas la recherche par mots-clés (le reste est gardé).
@@ -443,7 +458,7 @@ class QueryPlan:
     cities: tuple[str, ...] = ()
     free_only: bool = False
     evening: bool = False
-    daytime: bool = False                    # « en journée », « le matin » : pas le soir
+    moment: str | None = None                # « matin », « apres-midi », « journee » (le soir : `evening`)
     period_from_question: bool = False       # la date vient de la question (« samedi »)
     categories: tuple[str, ...] = ()
     keywords: tuple[str, ...] = ()
@@ -457,7 +472,8 @@ class QueryPlan:
     def describe(self) -> str:
         """Résumé lisible : « sam. 18 oct. · Sète · famille · gratuit · théâtre ou spectacle »."""
 
-        parts = [self.period_label + (" (le soir)" if self.evening else "")]
+        moment = "soir" if self.evening else self.moment
+        parts = [self.period_label + (f" ({MOMENT_LABELS[moment]})" if moment else "")]
         if self.near:
             parts.append(f"à moins de {self.near[1]:g} km de {city_label(self.near[0])}")
         elif self.cities:
@@ -485,9 +501,7 @@ class QueryPlan:
             public=None if "public" in self.from_question else self.public,
             zone=None if "zone" in self.from_question else self.zone,
             cities=(), free_only=False if "free" in self.from_question else self.free_only,
-            # Le soir coché reste ; celui lu dans la question est relâché.
-            evening=self.evening and "evening" not in self.from_question,
-            categories=self.categories, keywords=self.keywords, from_question=set(),
+            evening=False, categories=self.categories, keywords=self.keywords, from_question=set(),
             max_price=None, setting=None, near=None,
         )
 
@@ -502,7 +516,7 @@ class Understanding:
     cities: tuple[str, ...] = ()
     free_only: bool = False
     evening: bool = False
-    daytime: bool = False
+    moment: str | None = None
     categories: tuple[str, ...] = ()
     keywords: tuple[str, ...] = ()
     max_price: float | None = None
@@ -571,7 +585,7 @@ def understand(question: str, now: datetime) -> Understanding:
     consumed |= {word for word, _ in ZONE_WORDS.items() if f" {word} " in padded}
     consumed |= set(WEEKDAYS) | set(MONTH_NAMES) | {"soir", "week", "end", "weekend", "semaine", "mois", "jour"}
     evening_phrase = any(f" {phrase} " in padded for phrase in EVENING_PHRASES)
-    daytime = not evening_phrase and any(f" {phrase} " in padded for phrase in DAYTIME_PHRASES)
+    moment = None if evening_phrase else find_moment(padded)
     # « en soirée » est un moment, pas le public « Soirée » : retiré avant de chercher le public.
     public_text = padded
     for phrase in EVENING_PHRASES:
@@ -602,7 +616,7 @@ def understand(question: str, now: datetime) -> Understanding:
         free_only=free,
         # « marché nocturne » : le soir aussi (pas « nuit » : « boîte de nuit », « Nuit des musées »).
         evening=evening_phrase or any(f" {word} " in padded for word in (*EVENING_WORDS[:2], "nocturne")),
-        daytime=daytime,
+        moment=moment,
         categories=categories,
         keywords=keywords_of(text, consumed),
         max_price=max_price,
@@ -621,8 +635,8 @@ def combine(previous: Understanding, current: Understanding) -> Understanding:
         zone=current.zone or (None if current.cities else previous.zone),
         cities=current.cities or (() if current.zone else previous.cities),
         free_only=current.free_only or previous.free_only,
-        evening=current.evening or (previous.evening and not current.period and not current.daytime),
-        daytime=current.daytime,
+        evening=current.evening or (previous.evening and not current.period and not current.moment),
+        moment=current.moment or (None if current.evening else previous.moment),
         categories=current.categories or previous.categories,
         keywords=current.keywords if (current.categories or len(current.keywords) >= 2) else
         tuple(dict.fromkeys((*previous.keywords, *current.keywords)))[:8],
@@ -654,7 +668,7 @@ def is_follow_up(question: str) -> bool:
 
 def merge_with_filters(understanding: Understanding, *, public: str | None, zone: str | None,
                        period_bounds: tuple[datetime, datetime], period_label: str,
-                       free_only: bool, evening: bool = False) -> QueryPlan:
+                       free_only: bool) -> QueryPlan:
     """Fusionne la question avec les filtres de l'interface.
 
     - Date : la question précise la période cochée (intersection) ; si les
@@ -662,7 +676,7 @@ def merge_with_filters(understanding: Understanding, *, public: str | None, zone
       question l'emporte : c'est ce que l'utilisateur vient d'écrire.
     - Lieu : une commune nommée l'emporte sur la zone cochée.
     - Public, gratuit : la case cochée d'abord, sinon la question.
-    - Soir : coché ou écrit ; « en journée » dans la question l'emporte.
+    - Moment (le soir, le matin, l'après-midi, en journée) : seulement écrit.
     """
 
     start, end = period_bounds
@@ -702,13 +716,11 @@ def merge_with_filters(understanding: Understanding, *, public: str | None, zone
         from_question.add("budget")
     if understanding.setting:
         from_question.add("setting")
-    plan_evening = evening and not understanding.daytime
-    if understanding.evening and not plan_evening:
-        plan_evening = True
-        from_question.add("evening")
+    if understanding.evening or understanding.moment:
+        from_question.add("moment")
     return QueryPlan(
         start=start, end=end, period_label=label, public=plan_public, zone=plan_zone, cities=cities,
-        free_only=plan_free, evening=plan_evening, daytime=understanding.daytime,
+        free_only=plan_free, evening=understanding.evening, moment=understanding.moment,
         period_from_question=understanding.period is not None, categories=understanding.categories,
         keywords=understanding.keywords, from_question=from_question,
         max_price=None if plan_free else understanding.max_price, setting=understanding.setting, near=near,

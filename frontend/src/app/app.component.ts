@@ -191,9 +191,6 @@ export class AppComponent implements OnInit {
 
     readonly freeOnly = signal(false);
 
-    /** « Le soir » : un moment de la journée, pas le public « Soirée » (17/10/2026). */
-    readonly selectedEvening = signal(false);
-
     /** Date précise lue dans la question (« sam. 18 oct. »), affichée dans « Quand ». */
     readonly questionDate = signal<string | null>(null);
 
@@ -269,9 +266,6 @@ export class AppComponent implements OnInit {
             ZONES.find(choice => choice.value === this.selectedZone())?.label ?? 'Partout',
             this.questionDate() ?? PERIODS.find(choice => choice.value === this.selectedPeriod())?.label ?? ''
         ];
-        if (this.selectedEvening()) {
-            parts.push('Le soir');
-        }
         if (this.freeOnly()) {
             parts.push('Gratuit');
         }
@@ -341,10 +335,6 @@ export class AppComponent implements OnInit {
         this.freeOnly.update(value => !value);
     }
 
-    toggleEvening(): void {
-        this.selectedEvening.update(value => !value);
-    }
-
     onQuestionInput(event: Event): void {
         this.question.set((event.target as HTMLTextAreaElement).value);
     }
@@ -404,7 +394,6 @@ export class AppComponent implements OnInit {
             zone: this.selectedZone(),
             period: this.selectedPeriod(),
             free_only: this.freeOnly(),
-            evening: this.selectedEvening(),
             context,
             follow_up: isFollowUp
         }).subscribe({
@@ -462,10 +451,6 @@ export class AppComponent implements OnInit {
         }
         if (checked?.zone) {
             this.selectedZone.set(checked.zone);
-        }
-        // « en soirée » coche « Le soir », « en journée » le décoche.
-        if (typeof checked?.evening === 'boolean') {
-            this.selectedEvening.set(checked.evening);
         }
         this.questionDate.set(checked?.date ?? null);
 

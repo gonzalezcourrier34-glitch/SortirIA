@@ -146,13 +146,19 @@ $pastille: 999px;
 }
 
 .filters {
-    // Une ligne en paysage ; si la fenêtre est trop étroite, ce qui ne tient
-    // pas passe à la ligne au lieu de sortir du cadre (17/10/2026 : « Gratuit
-    // seulement » était coupé depuis l'ajout de « Le soir »).
+    // Une ligne en paysage ; si la fenêtre est vraiment trop étroite, ce qui
+    // ne tient pas passe à la ligne au lieu de sortir du cadre (17/10/2026).
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px 12px;
+    gap: 8px 0;
+
+    // Fine barre légère entre Public, Zone, Quand et Gratuit.
+    > * + * {
+        margin-left: 12px;
+        padding-left: 12px;
+        border-left: 1px solid var(--bordure-legere);
+    }
 }
 
 // Filtres repliés (téléphone, après une recherche) : une ligne de résumé.
@@ -1209,6 +1215,13 @@ $pastille: 999px;
         flex: 1 1 100%;
         flex-wrap: wrap;
         min-width: 0;
+    }
+
+    // Une ligne par groupe : pas de barre de séparation.
+    .filters > * + * {
+        margin-left: 0;
+        padding-left: 0;
+        border-left: 0;
     }
 
     .page {

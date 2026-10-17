@@ -69,11 +69,6 @@
                                 [attr.aria-pressed]="selectedPeriod() === choice.value"
                                 (click)="selectPeriod(choice.value)">{{ choice.label }}</button>
                         }
-                        <!-- « Le soir » : un moment de la journée ; « Soirée » reste un public (17/10/2026). -->
-                        <button type="button" class="chip"
-                            [class.chip-on]="selectedEvening()"
-                            [attr.aria-pressed]="selectedEvening()"
-                            (click)="toggleEvening()">Le soir</button>
                         @if (questionDate(); as date) {
                             <!-- Date précise lue dans la question : affichée, pas cochable. -->
                             <span class="chip chip-read" title="Date lue dans votre question">
@@ -82,10 +77,12 @@
                         }
                     </div>
 
-                    <button type="button" class="chip"
-                        [class.chip-on]="freeOnly()"
-                        [attr.aria-pressed]="freeOnly()"
-                        (click)="toggleFree()">Gratuit seulement</button>
+                    <div class="filter-group">
+                        <button type="button" class="chip"
+                            [class.chip-on]="freeOnly()"
+                            [attr.aria-pressed]="freeOnly()"
+                            (click)="toggleFree()">Gratuit seulement</button>
+                    </div>
                 </div>
                 }
 

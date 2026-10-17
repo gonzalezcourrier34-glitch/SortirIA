@@ -73,10 +73,11 @@ Server-Sent Events, comme l'analyse d'une position dans Chess Agent.
 - **La question coche les cases** : un public ou un lieu écrit l'emporte sur
   la case cochée, et l'interface la coche (« avec les enfants » → Famille,
   « à Sète » → Thau) ; la date lue (« samedi ») s'affiche dans « Quand ».
-- **« Le soir » n'est pas « Soirée »** (17/10/2026) : « Le soir », dans
-  « Quand », est un moment de la journée (séances à partir de 17 h) ;
-  « Soirée » reste un public (bars, fêtes). « en soirée » écrit coche « Le
-  soir », « en journée » ou « le matin » le décoche.
+- **Le moment de la journée se lit dans la phrase** (17/10/2026), pas dans
+  une case : « le soir », « en soirée » (séances à partir de 17 h), « le
+  matin » (avant midi), « l'après-midi » (de 12 h à 18 h), « en journée »
+  (avant 18 h). « en soirée » n'est donc plus le public « Soirée » (bars,
+  fêtes). Une relance « plutôt en matinée ? » remplace le soir demandé avant.
 - **Synonymes appris** (`config/synonymes.yaml`) : « zumba » cherche aussi
   « fitness » une fois le synonyme validé (voir « Ce qui a manqué » plus bas).
 

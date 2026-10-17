@@ -218,21 +218,30 @@ def test_in_the_evening_is_a_time_not_the_evening_public() -> None:
     assert "soiree" not in understood.keywords
     assert understand("une soirée dans un bar", NOW).public == "soiree"          # le public reste
     plan = plan_search("Plutôt en soirée ?", SearchFilters(), NOW, "un spectacle à Sète", follow_up=True)[0]
-    assert plan.evening and plan.public is None
-    assert checked_by_question(plan) == {"evening": True, "zone": "thau"}
-    assert not plan.period_from_question
+    assert plan.evening and plan.public is None and "moment" in plan.from_question
+    assert checked_by_question(plan) == {"zone": "thau"}                        # aucune case : lu dans la phrase
+    assert not plan.relaxed().evening
 
 
-def test_the_evening_box_and_the_daytime_question() -> None:
-    """« Le soir » coché filtre ; « en journée » écrit (ou relancé) l'annule et décoche."""
-    from app.search_service import SearchFilters, checked_by_question, plan_search
+@pytest.mark.parametrize(("question", "moment"), [
+    ("un atelier samedi matin", "matin"),
+    ("une balade en matinée", "matin"),
+    ("un spectacle l'après-midi", "apres-midi"),
+    ("une expo en journée", "journee"),
+    ("un concert", None),
+])
+def test_the_moment_of_the_day_is_read_in_the_sentence(question: str, moment: str | None) -> None:
+    understood = understand(question, NOW)
+    assert understood.moment == moment and not understood.evening
 
-    plan = plan_search("un concert à Sète", SearchFilters(evening=True), NOW)[0]
-    assert plan.evening and checked_by_question(plan) == {"zone": "thau"}
-    assert plan.relaxed().evening                                               # coché : gardé
-    plan = plan_search("un concert en journée", SearchFilters(evening=True), NOW)[0]
-    assert not plan.evening and checked_by_question(plan) == {"evening": False}
+
+def test_a_daytime_follow_up_replaces_the_evening() -> None:
+    from app.search_service import SearchFilters, plan_search
+
     plan = plan_search("Plutôt en matinée ?", SearchFilters(), NOW, "un concert le soir", follow_up=True)[0]
-    assert not plan.evening
-    plan = plan_search("un concert le soir", SearchFilters(), NOW)[0]
-    assert not plan.relaxed().evening                                           # écrit : relâché
+    assert not plan.evening and plan.moment == "matin"
+    assert "(le matin)" in plan.describe()
+    plan = plan_search("Plutôt le soir ?", SearchFilters(), NOW, "une balade le matin", follow_up=True)[0]
+    assert plan.evening and plan.moment is None
+    plan = plan_search("et à Mèze ?", SearchFilters(), NOW, "une balade le matin")[0]
+    assert plan.moment == "matin"                                               # gardé par la relance

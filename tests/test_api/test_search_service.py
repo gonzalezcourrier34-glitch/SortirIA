@@ -565,7 +565,8 @@ def test_type_written_in_the_title_counts_as_the_type() -> None:
 
 def test_default_suggestions_offer_the_evening_as_a_time() -> None:
     assert "Plutôt le soir ?" in service.default_suggestions(service.SearchFilters())
-    assert "Plutôt en journée ?" in service.default_suggestions(service.SearchFilters(evening=True))
+    plan = service.plan_search("un concert ce soir", service.SearchFilters(), NOW)[0]
+    assert "Plutôt en journée ?" in service.default_suggestions(plan)
 
 
 def test_a_suggestion_is_a_single_choice() -> None:
@@ -580,3 +581,15 @@ def test_a_suggestion_is_a_single_choice() -> None:
     raw = json.dumps({"reponse": "Ok.", "suggestions": ["En intérieur ou en extérieur ?", "Plutôt en soirée ?"]})
     assert service.parse_answer(raw, 1)[1] == ["En intérieur\u00a0?", "En extérieur\u00a0?", "Plutôt en soirée\u00a0?"]
 
+
+
+def test_the_moment_of_the_day_filters_the_start_hour() -> None:
+    """17/10/2026 : « le matin », « l'après-midi » écrits filtrent l'heure de début."""
+
+    def sql_for(question: str) -> str:
+        return service.build_search_query(service.plan_search(question, SearchFilters(), NOW)[0], None)[0]
+
+    assert "BETWEEN 0 AND 11" in sql_for("un atelier samedi matin")
+    assert "BETWEEN 12 AND 17" in sql_for("un spectacle l'après-midi")
+    assert ">= 17" in sql_for("un concert en soirée")
+    assert "BETWEEN" not in sql_for("un concert")

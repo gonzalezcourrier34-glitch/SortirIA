@@ -37,6 +37,8 @@ from zoneinfo import ZoneInfo
 from agent.watch import DEFAULT_PRICE, PRICES_USD_PER_MILLION
 from app.query_understanding import (
     CATEGORY_LABELS,
+    MOMENT_HOURS,
+    MOMENT_LABELS,
     PRECISE_SUBJECTS,
     QUESTION_CATEGORIES,
     QueryPlan,
@@ -53,7 +55,7 @@ from app.query_understanding import (
 )
 
 PARIS = ZoneInfo("Europe/Paris")
-PROMPT_VERSION = "2026-10-17.2"  # « le soir » (moment) distinct du public « Soirée »
+PROMPT_VERSION = "2026-10-17.3"  # moment de la journée (soir, matin, après-midi) lu dans la phrase seulement
 DEFAULT_SEARCH_MODEL = "mistral-small-latest"
 CANDIDATES = 80          # séances comparées à la question (regroupées ensuite par événement)
 MAX_PROPOSALS = 8        # événements montrés et donnés à Mistral (2 rangées de 4 cartes, 15/10)
@@ -119,7 +121,6 @@ class SearchFilters:
     zone: str | None = None
     period: str = "3mois"
     free_only: bool = False
-    evening: bool = False        # « Le soir » coché dans « Quand » (17/10/2026)
 
     def __post_init__(self) -> None:
         if self.public not in (None, *PUBLICS):
@@ -132,7 +133,7 @@ class SearchFilters:
     def describe(self) -> str:
         """Résumé lisible, affiché à l'étape « comprendre »."""
 
-        parts = [PERIOD_LABELS[self.period] + (" (le soir)" if self.evening else "")]
+        parts = [PERIOD_LABELS[self.period]]
         if self.public:
             parts.append(PUBLIC_LABELS[self.public])
         if self.zone:
@@ -361,7 +362,7 @@ def best_match(rows: Sequence[Mapping[str, Any]]) -> tuple[int, int]:
 def plan_can_widen(plan: QueryPlan) -> bool:
     """Le plan a des contraintes que `widen_for_subject` peut relâcher."""
 
-    return bool(plan.public or plan.free_only or plan.max_price is not None or plan.evening or plan.setting
+    return bool(plan.public or plan.free_only or plan.max_price is not None or plan.evening or plan.moment or plan.setting
                 or plan.zone or plan.cities or plan.near or plan.end < plan.start + WIDER_PERIOD)
 
 
@@ -385,8 +386,8 @@ def widen_for_subject(connection: Any, plan: QueryPlan, vector: str | None,
         dropped.append(f"pour le public « {PUBLIC_LABELS.get(plan.public, plan.public)} »")
     if plan.free_only or plan.max_price is not None:
         dropped.append("gratuit" if plan.free_only else f"à moins de {plan.max_price:g} €")
-    if plan.evening:
-        dropped.append("le soir")
+    if plan.evening or plan.moment:
+        dropped.append(MOMENT_LABELS["soir" if plan.evening else str(plan.moment)])
     if plan.setting:
         dropped.append({"interieur": "en intérieur", "exterieur": "en plein air"}[plan.setting])
     steps: list[tuple[QueryPlan, list[str]]] = []
@@ -394,7 +395,8 @@ def widen_for_subject(connection: Any, plan: QueryPlan, vector: str | None,
         # « à Montpellier » : d'abord la métropole, avec toutes les autres
         # contraintes (un spectacle gratuit à Castelnau plutôt qu'un payant).
         steps.append((replace(plan, cities=(), from_question=set()), ["dans la commune même"]))
-    steps.append((replace(plan, public=None, free_only=False, max_price=None, evening=False, setting=None,
+    steps.append((replace(plan, public=None, free_only=False, max_price=None, evening=False, moment=None,
+                          setting=None,
                           from_question=set()), list(dropped)))
     longer = replace(steps[-1][0], end=max(plan.end, plan.start + WIDER_PERIOD), period_label="3 prochains mois")
     steps.append((longer, [*dropped, f"pour « {plan.period_label} »"]))
@@ -415,8 +417,7 @@ def plan_from_filters(filters: SearchFilters, now: datetime, categories: Sequenc
 
     return merge_with_filters(Understanding(categories=tuple(categories)), public=filters.public,
                               zone=filters.zone, period_bounds=period_bounds(filters.period, now),
-                              period_label=PERIOD_LABELS[filters.period], free_only=filters.free_only,
-                              evening=filters.evening)
+                              period_label=PERIOD_LABELS[filters.period], free_only=filters.free_only)
 
 
 def build_search_query(plan: QueryPlan | SearchFilters, vector: str | None, now: datetime | None = None,
@@ -472,6 +473,10 @@ def build_search_query(plan: QueryPlan | SearchFilters, vector: str | None, now:
         conditions.append(OUTDOOR_CONDITION)
     if plan.evening:
         conditions.append("(NOT e.time_known OR EXTRACT(HOUR FROM e.start_at AT TIME ZONE 'Europe/Paris') >= 17)")
+    elif plan.moment in MOMENT_HOURS:
+        first, last = MOMENT_HOURS[plan.moment]
+        conditions.append("(NOT e.time_known OR EXTRACT(HOUR FROM e.start_at AT TIME ZONE 'Europe/Paris') "
+                          f"BETWEEN {first} AND {last - 1})")
 
     lexical = lexical_query(plan.keywords)
     ctes = [f"""base AS (
@@ -1284,7 +1289,8 @@ def fallback_answer(cards: Sequence[Mapping[str, Any]], filters: QueryPlan | Sea
 def default_suggestions(filters: QueryPlan | SearchFilters) -> list[str]:
     """Relances proposées si Mistral n'en donne pas."""
 
-    suggestions = ["Et s'il pleut ?", "Plutôt en journée ?" if filters.evening else "Plutôt le soir ?"]
+    evening = isinstance(filters, QueryPlan) and filters.evening
+    suggestions = ["Et s'il pleut ?", "Plutôt en journée ?" if evening else "Plutôt le soir ?"]
     suggestions.append("Seulement gratuit ?" if not filters.free_only else "Sur 3 mois ?")
     return suggestions
 
@@ -1443,10 +1449,6 @@ def checked_by_question(plan: QueryPlan) -> dict[str, Any]:
     checked: dict[str, Any] = {}
     if "public" in plan.from_question and plan.public:
         checked["public"] = plan.public
-    if "evening" in plan.from_question:
-        checked["evening"] = True
-    elif plan.daytime:
-        checked["evening"] = False
     if plan.period_from_question:
         checked["date"] = plan.period_label
     places = plan.from_question & {"cities", "zone", "near"}
@@ -1491,8 +1493,7 @@ def plan_search(question: str, filters: SearchFilters, now: datetime,
         embed_text = f"{context} {question}"
     plan = merge_with_filters(current, public=public, zone=zone,
                               period_bounds=period_bounds(filters.period, now),
-                              period_label=PERIOD_LABELS[filters.period], free_only=filters.free_only,
-                              evening=filters.evening)
+                              period_label=PERIOD_LABELS[filters.period], free_only=filters.free_only)
     return plan, embed_text
 
 
@@ -1731,7 +1732,7 @@ def plan_summary(plan: QueryPlan) -> dict[str, Any]:
     """Le plan en JSON pour `rag_requests.constraints`."""
 
     return {"periode": [plan.start.isoformat(), plan.end.isoformat()], "public": plan.public,
-            "zone": plan.zone, "communes": list(plan.cities), "gratuit": plan.free_only, "soir": plan.evening,
+            "zone": plan.zone, "communes": list(plan.cities), "gratuit": plan.free_only, "soir": plan.evening, "moment": plan.moment,
             "categories": list(plan.categories), "mots_cles": list(plan.keywords),
             "lus_dans_la_question": sorted(plan.from_question)}
 

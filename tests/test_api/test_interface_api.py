@@ -98,11 +98,6 @@ def test_search_stream_passes_a_clicked_follow_up(client: TestClient) -> None:
     assert events[1][1]["message"] == "suite de : un spectacle à Sète (relance cliquée)"
 
 
-def test_search_stream_passes_the_evening_box(client: TestClient) -> None:
-    events = events_of(client.post("/api/v1/recherche/stream", json={"question": "un concert", "evening": True}).text)
-    assert "(le soir)" in events[0][1]["message"]
-
-
 def test_search_error_is_sent_in_the_stream(client: TestClient) -> None:
     events = events_of(client.post("/api/v1/recherche/stream", json={"question": "panne"}).text)
     assert events[-1][0] == "error" and "Réessayez" in events[-1][1]["message"]

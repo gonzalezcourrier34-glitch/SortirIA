@@ -18,8 +18,6 @@ export interface SearchRequest {
     context: string;
     /** Relance cliquée sous la réponse : toujours une suite de la demande précédente. */
     follow_up?: boolean;
-    /** « Le soir » coché dans « Quand » (distinct du public « Soirée »). */
-    evening?: boolean;
 }
 
 
@@ -120,9 +118,9 @@ export interface SearchResult {
     /** Rien d'exact : offres de nos partenaires les plus proches de la demande
      *  (absent d'une réponse mise en cache avant le 15/10 après-midi). */
     partner_offers?: EventCard[];
-    /** Ce que la question a fixé (« avec les enfants » → Famille, « en soirée » →
-     *  Le soir, « samedi » → date lue) ; absent d'une réponse mise en cache avant le 17/10. */
-    checked?: { public?: Public; zone?: Zone; evening?: boolean; date?: string };
+    /** Ce que la question a fixé (« avec les enfants » → Famille, « samedi » →
+     *  date lue) ; absent d'une réponse mise en cache avant le 17/10. */
+    checked?: { public?: Public; zone?: Zone; date?: string };
 }
 
 
