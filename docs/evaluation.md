@@ -62,25 +62,47 @@ doivent pas changer. Contrôle de plus : `pas_types`, un concert n'est pas une
 réponse à « je veux chanter », sauf si son titre dit qu'on y participe
 (« Stage de chant »).
 
-Mesure **avant / après** sur la base figée de la CI (export du 16/10, sans
-vecteur ni Mistral), la règle retirée par `--sans-pratique` (ablation) :
+Mesure **avant / après**, la règle retirée par `--sans-pratique` (ablation :
+tout le reste identique), sur deux bases :
 
-| Mesure | Avant | Après |
-| --- | --- | --- |
-| Compréhension (pratique, période, public) | 35 % (7 / 20 : les témoins seuls) | **100 %** |
-| Cartes correctes, tout le jeu (réponses exactes) | 70 % (50 / 71) | **95,5 %** (85 / 89) |
-| Cartes correctes, recherches de pratique seules | 54 % (21 / 39) | **98 %** (56 / 57) |
-| Recherches de pratique avec une réponse exacte | 8 / 13 | 12 / 13 |
-| Idées voisines | 5 | 1 (« où chanter ce week-end » : rien ce week-end-là) |
-| Témoins (7 recherches) | mêmes cartes avant et après | |
-| 125 recherches courtes, 50 questions | 98,2 % et 98 % | **identiques** (mêmes cartes) |
+- la **vraie base** (17/10, 19 h, avec la recherche par le sens), lancée sur
+  le poste : `uv run python -m scripts.eval_recherche --fichier
+  config/eval_pratique.yaml`, puis avec `--sans-pratique` ; rapports
+  `benchmarks/recherche/2026-10-17_19h04.json` (avant) et `_19h05.json` (après) ;
+- la **base figée de la CI** (export du 16/10, sans vecteur ni Mistral).
 
-Une erreur reste : « apprendre à dessiner » propose une visite des hôtels
-particuliers (le mot « dessin » est dans sa description, pas dans le titre).
-Rejoué en CI à chaque push, avec un seuil de 90 % : le jeu est petit (89 cartes),
-une seule carte fausse de plus ferait passer 95,5 % à 94,4 %. Sur la vraie base
-(avec le sens) : `uv run python -m scripts.eval_recherche --fichier
-config/eval_pratique.yaml`, puis la même commande avec `--sans-pratique`.
+| Mesure | Vraie base, avant | Vraie base, après | Base figée, avant | Base figée, après |
+| --- | --- | --- | --- | --- |
+| Compréhension (pratique, période, public) | 35 % | **100 %** | 35 % | **100 %** |
+| Cartes correctes, recherches de pratique seules | 61 % (20 / 33) | **98 %** (61 / 62) | 54 % (21 / 39) | **98 %** (56 / 57) |
+| Recherches de pratique avec une réponse exacte | 7 / 13 | 11 / 13 | 8 / 13 | 12 / 13 |
+| Cartes correctes, tout le jeu | 69 % | **93 %** | 73 % | **97,8 %** |
+| Témoins (7 recherches) | mêmes cartes avant et après | | mêmes cartes avant et après | |
+
+Sur la base figée, les 125 recherches courtes et les 50 questions donnent
+**exactement les mêmes cartes** avant et après (98,2 % et 98 %) : aucune
+régression.
+
+Avant, « je veux chanter » proposait « Une censure sachant chanter » et
+« Chant choral » (des spectacles et concerts) ; après, le Karaoké géant et une
+scène ouverte. Sans réponse exacte, la recherche le dit : « où chanter ce
+week-end » (rien ce week-end-là), « où danser samedi soir » (lancé un samedi
+à 19 h : les bals trouvés sont d'autres jours, annoncés comme idées voisines).
+
+Ce qui reste faux, dit franchement :
+
+- « apprendre à dessiner » : une carte sans le mot dans son titre ou son
+  résumé (une visite des hôtels particuliers sur la base figée) ;
+- le témoin « un spectacle de danse » (5 / 8, avant comme après) propose un
+  bal folk et une soirée salsa : le cas inverse de « je veux chanter »
+  (regarder, et non faire), à corriger ensuite ;
+- le témoin « jouer au théâtre » attendait le seul type « théâtre » ; aligné
+  sur les 50 questions (théâtre ou spectacle) après la mesure sur la vraie
+  base, ce qui fait passer la base figée de 95,5 % à 97,8 %. Les chiffres de
+  la vraie base ci-dessus sont ceux d'avant cet alignement.
+
+Rejoué en CI à chaque push, avec un seuil de 90 % : le jeu est petit (89
+cartes), une carte fausse de plus fait perdre plus d'un point.
 
 **Historique** (`benchmarks/recherche/historique.csv`), le 15/10/2026 :
 

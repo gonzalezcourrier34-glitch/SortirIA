@@ -90,7 +90,7 @@ questions:
     compris: {pratique: null}
     mots: [danse]
   - question: "jouer au théâtre"
-    compris: {pratique: null, types: [theatre]}
+    compris: {pratique: null, types: [theatre, spectacle]}   # comme les 50 questions : théâtre ou spectacle
   - question: "une exposition de peinture"
     compris: {pratique: null, types: [exposition]}
   - question: "karaoké"
