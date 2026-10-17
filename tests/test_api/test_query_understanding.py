@@ -245,3 +245,29 @@ def test_a_daytime_follow_up_replaces_the_evening() -> None:
     assert plan.evening and plan.moment is None
     plan = plan_search("et à Mèze ?", SearchFilters(), NOW, "une balade le matin")[0]
     assert plan.moment == "matin"                                               # gardé par la relance
+
+
+@pytest.mark.parametrize(("question", "practice"), [
+    ("je veux chanter", "chanter"),
+    ("où danser ce soir à Sète", "danser"),
+    ("jouer aux jeux de société", "jouer"),
+    ("apprendre à dessiner", "dessiner"),
+    ("cuisiner avec les enfants", "cuisiner"),
+    ("jouer au théâtre", None),                       # un autre type nommé : recherche habituelle
+    ("un concert", None),
+])
+def test_practice_verbs(question: str, practice: str | None) -> None:
+    """17/10/2026 : « je veux chanter », c'est chanter soi-même, pas écouter un concert."""
+    understood = understand(question, NOW)
+    assert understood.practice == practice
+    if practice:
+        assert understood.keywords == (practice,) and understood.categories == ()
+
+
+def test_a_follow_up_keeps_the_practice_until_a_new_subject() -> None:
+    from app.search_service import SearchFilters, plan_search
+
+    plan = plan_search("et à Sète ?", SearchFilters(), NOW, "je veux chanter")[0]
+    assert plan.practice == "chanter" and "pour chanter soi-même" in plan.describe()
+    plan = plan_search("un concert de jazz", SearchFilters(), NOW, "je veux chanter")[0]
+    assert plan.practice is None

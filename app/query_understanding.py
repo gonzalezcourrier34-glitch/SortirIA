@@ -87,6 +87,32 @@ PRECISE_SUBJECTS = frozenset({
     "brocante", "conte", "randonnee", "musee", "match", "foire",
 })
 SHORT_SUBJECTS = frozenset({"dj", "bd", "vr"})   # sujets de 2 lettres (« soirée DJ »)
+# Verbes de pratique (17/10/2026) : « je veux chanter », c'est chanter soi-même
+# (karaoké, cours ou stage de chant), pas écouter un concert. Le verbe devient
+# le sujet ; app/search_service.py (PRACTICES) dit ce qui y répond. Types qui
+# vont avec (« jouer aux jeux ») ; un autre type nommé (« jouer au théâtre »,
+# « danser à un concert ») garde la recherche habituelle.
+PRACTICE_VERBS: dict[str, frozenset[str]] = {
+    "chanter": frozenset({"atelier"}),
+    "danser": frozenset({"atelier", "danse", "soiree"}),
+    "jouer": frozenset({"jeux", "soiree"}),
+    "peindre": frozenset({"atelier"}),
+    "dessiner": frozenset({"atelier"}),
+    "sculpter": frozenset({"atelier"}),
+    "cuisiner": frozenset({"atelier"}),
+}
+PRACTICE_LABELS = {"chanter": "pour chanter", "danser": "pour danser", "jouer": "pour jouer",
+                   "peindre": "pour peindre", "dessiner": "pour dessiner", "sculpter": "pour sculpter",
+                   "cuisiner": "pour cuisiner"}
+
+
+def find_practice(padded: str, categories: tuple[str, ...]) -> str | None:
+    """« je veux chanter » -> « chanter » ; rien si la question nomme un autre type."""
+
+    for verb, allowed in PRACTICE_VERBS.items():
+        if f" {verb} " in padded and set(categories) <= allowed:
+            return verb
+    return None
 CATEGORY_LABELS = {"theatre": "théâtre", "cinema": "cinéma", "conference": "conférence",
                    "marche": "marché", "soiree": "soirée", "fete": "fête"}
 
@@ -462,6 +488,7 @@ class QueryPlan:
     period_from_question: bool = False       # la date vient de la question (« samedi »)
     categories: tuple[str, ...] = ()
     keywords: tuple[str, ...] = ()
+    practice: str | None = None              # « chanter » : le faire soi-même (PRACTICE_VERBS)
     max_price: float | None = None           # « moins de 15 € » : gratuit ou prix minimum sous ce seuil
     setting: str | None = None               # « interieur » (s'il pleut) ou « exterieur » (plein air)
     near: tuple[str, float] | None = None    # (commune, rayon en km) : « près de Sète »
@@ -488,7 +515,9 @@ class QueryPlan:
             parts.append(f"moins de {self.max_price:g} €")
         if self.setting:
             parts.append({"interieur": "en intérieur", "exterieur": "en plein air"}[self.setting])
-        if self.categories:
+        if self.practice:
+            parts.append(PRACTICE_LABELS[self.practice] + " soi-même")
+        elif self.categories:
             parts.append(category_label(self.categories))
         return " · ".join(parts)
 
@@ -502,7 +531,7 @@ class QueryPlan:
             zone=None if "zone" in self.from_question else self.zone,
             cities=(), free_only=False if "free" in self.from_question else self.free_only,
             evening=False, categories=self.categories, keywords=self.keywords, from_question=set(),
-            max_price=None, setting=None, near=None,
+            max_price=None, setting=None, near=None, practice=self.practice,
         )
 
 
@@ -522,6 +551,7 @@ class Understanding:
     max_price: float | None = None
     setting: str | None = None
     near: tuple[str, float] | None = None
+    practice: str | None = None
 
     def is_empty(self) -> bool:
         return not (self.period or self.public or self.zone or self.cities or self.free_only
@@ -598,6 +628,7 @@ def understand(question: str, now: datetime) -> Understanding:
     free = any(f" {word} " in padded for word in FREE_WORDS)
     consumed |= {"gratuit", "gratuite", "gratuits", "gratuites", "gratos", "payer", "libre", "entree"}
     categories = wanted_categories(question)
+    practice = find_practice(padded, categories)
     max_price = None if free else find_budget(text)
     if max_price is not None:
         consumed |= {"cher", "chere", "budget", "prix", "euro", "euros", "eur", "max", "maximum", "economique",
@@ -617,11 +648,14 @@ def understand(question: str, now: datetime) -> Understanding:
         # « marché nocturne » : le soir aussi (pas « nuit » : « boîte de nuit », « Nuit des musées »).
         evening=evening_phrase or any(f" {word} " in padded for word in (*EVENING_WORDS[:2], "nocturne")),
         moment=moment,
-        categories=categories,
-        keywords=keywords_of(text, consumed),
+        # Pratique : le verbe est le sujet (les autres mots, « apprendre »,
+        # « envie », n'en disent pas plus).
+        categories=() if practice else categories,
+        keywords=(practice,) if practice else keywords_of(text, consumed),
         max_price=max_price,
         setting=setting,
         near=near,
+        practice=practice,
     )
 
 
@@ -638,8 +672,11 @@ def combine(previous: Understanding, current: Understanding) -> Understanding:
         evening=current.evening or (previous.evening and not current.period and not current.moment),
         moment=current.moment or (None if current.evening else previous.moment),
         categories=current.categories or previous.categories,
-        keywords=current.keywords if (current.categories or len(current.keywords) >= 2) else
+        keywords=current.keywords if (current.categories or current.practice or len(current.keywords) >= 2) else
         tuple(dict.fromkeys((*previous.keywords, *current.keywords)))[:8],
+        # Une relance sans nouveau sujet garde la pratique (« et à Sète ? ») ;
+        # un nouveau sujet (« un concert », « du jazz et du rock ») la remplace.
+        practice=current.practice or (None if (current.categories or current.keywords) else previous.practice),
         max_price=current.max_price if current.max_price is not None else
         (None if current.free_only else previous.max_price),
         setting=current.setting or previous.setting,
@@ -724,4 +761,5 @@ def merge_with_filters(understanding: Understanding, *, public: str | None, zone
         period_from_question=understanding.period is not None, categories=understanding.categories,
         keywords=understanding.keywords, from_question=from_question,
         max_price=None if plan_free else understanding.max_price, setting=understanding.setting, near=near,
+        practice=understanding.practice,
     )

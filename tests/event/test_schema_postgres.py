@@ -1365,3 +1365,25 @@ def test_low_rated_events_refused_comments_and_human_review(db: Any) -> None:
     # Masqué par un humain : pas relisté comme « refusé par la modération ».
     assert repository.review_comment(db, refused_id, "refuse") == 1
     assert repository.ratings_summary(db)["refused_comments"] == []
+
+
+def test_singing_finds_where_to_sing_not_concerts(db: Any) -> None:
+    """17/10/2026 : « je veux chanter » proposait des concerts de chant ; c'est
+    chanter soi-même : karaoké, cours ou stage de chant (même rangé en concert)."""
+
+    from app import search_service as service
+    from app.search_service import SearchFilters, SearchServices
+
+    for event_id, title, category in (
+            ("concert", "Concert de chants corses", "concert"),
+            ("chanteuse", "La chanteuse Lenaïg en concert", "concert"),
+            ("karaoke", "Karaoké géant", "soiree"),
+            ("stage", "Stage de chant polyphonique", "concert"),
+            ("jeudi", "Soirée du jeudi", "soiree")):
+        insert_event(db, event_id=event_id, title=title, category_norm=category)
+    services = SearchServices(embed=None, write=None, now=lambda: datetime.now(PARIS), cache=False)
+    result = list(service.run_search(db, "je veux chanter", SearchFilters(), services))[-1]["result"]
+    assert {card["event_id"] for card in result["events"]} == {"karaoke", "stage"}
+    assert result["exact"] is True
+    games = list(service.run_search(db, "on aimerait jouer", SearchFilters(), services))[-1]["result"]
+    assert "jeudi" not in {card["event_id"] for card in games["events"] if games["exact"]}

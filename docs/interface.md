@@ -79,6 +79,16 @@ Server-Sent Events, comme l'analyse d'une position dans Chess Agent.
   matin » (avant midi), « l'après-midi » (de 12 h à 18 h), « en journée »
   (avant 18 h). « en soirée » n'est donc plus le public « Soirée » (bars,
   fêtes). Une relance « plutôt en matinée ? » remplace le soir demandé avant.
+- **Faire soi-même** (17/10/2026) : un verbe de pratique change ce qui est
+  cherché. « Je veux chanter » cherche karaoké, cours ou stage de chant,
+  chorale, scène ouverte, pas des concerts ; « danser » : bal, guinguette,
+  soirée dansante, cours ou stage de danse, pas des spectacles ; « jouer » :
+  jeux, tournoi, ludothèque, escape game ; « peindre », « dessiner »,
+  « sculpter » : ateliers et stages, pas des expositions ; « cuisiner » :
+  ateliers et cours, pas des marchés. Un concert reste une réponse si son
+  titre dit qu'on y participe (« Stage de chant »). Rien de tel trouvé : des
+  idées voisines, annoncées comme telles. Règles dans `PRACTICE_VERBS`
+  (`app/query_understanding.py`) et `PRACTICES` (`app/search_service.py`).
 - **Synonymes appris** (`config/synonymes.yaml`) : « zumba » cherche aussi
   « fitness » une fois le synonyme validé (voir « Ce qui a manqué » plus bas).
 

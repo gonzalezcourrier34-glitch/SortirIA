@@ -55,7 +55,7 @@ from app.query_understanding import (
 )
 
 PARIS = ZoneInfo("Europe/Paris")
-PROMPT_VERSION = "2026-10-17.3"  # moment de la journée (soir, matin, après-midi) lu dans la phrase seulement
+PROMPT_VERSION = "2026-10-17.4"  # verbes de pratique (« je veux chanter » : karaoké, cours de chant)
 DEFAULT_SEARCH_MODEL = "mistral-small-latest"
 CANDIDATES = 80          # séances comparées à la question (regroupées ensuite par événement)
 MAX_PROPOSALS = 8        # événements montrés et donnés à Mistral (2 rangées de 4 cartes, 15/10)
@@ -211,6 +211,38 @@ NEAR_CONDITION = """(sortiria.normalize_city(e.city) = %(near_city)s OR (
             e.latitude, e.longitude) <= %(radius)s))"""
 RRF_K = 60               # fusion des rangs (Reciprocal Rank Fusion) : 1 / (60 + rang)
 POOL = 200               # rangs gardés par chaque recherche avant fusion
+
+
+# Verbes de pratique (17/10/2026) : « je veux chanter » cherche où chanter
+# soi-même. Pour chaque verbe (app/query_understanding.py, PRACTICE_VERBS) :
+# - ce qui y répond, au format to_tsquery (texte sans accents, racines) ;
+# - les types qui ne comptent pas comme réponse, sauf si le titre dit qu'on y
+#   participe (« Stage de chant », rangé en concert, reste une réponse) ;
+# - des mots ajoutés au texte vectorisé, pour que le sens aille vers la pratique.
+LEARN = "(cours | stage:* | atelier:* | initiation:* | apprendr:*)"
+PRACTICES: dict[str, tuple[str, tuple[str, ...], str]] = {
+    "chanter": (f"karaoke:* | chorale:* | (chant:* & {LEARN}) | (scene & ouverte) | (open & mic)",
+                ("concert", "spectacle", "theatre"),
+                "karaoké, cours de chant, stage de chant, chorale, scène ouverte"),
+    "danser": ((f"bal | guinguette:* | (soiree & dansante) | milonga:* | "
+                f"({LEARN} & (danse:* | salsa | tango | bachata | swing | country | flamenco))"),
+               ("concert", "spectacle", "theatre"),
+               "bal, guinguette, soirée dansante, cours de danse, stage de danse"),
+    # « jeu » sans préfixe : « jeu:* » trouverait « jeudi ».
+    "jouer": ("jeu | jeux | tournoi:* | ludotheque:* | (escape & game) | quiz:* | (blind & test)",
+              ("theatre", "spectacle", "concert", "cinema"),
+              "jeux de société, tournoi, ludothèque, escape game"),
+    "peindre": (f"{LEARN} & (peintur:* | aquarell:* | acryliqu:*)", ("exposition",),
+                "atelier de peinture, stage d'aquarelle"),
+    "dessiner": (f"{LEARN} & (dessin:* | croquis | manga:* | illustration:* | carnet:*)", ("exposition",),
+                 "atelier de dessin, croquis, illustration"),
+    "sculpter": (f"{LEARN} & (sculptur:* | modelag:* | poterie:* | ceramiqu:* | argile)", ("exposition",),
+                 "atelier de sculpture, modelage, poterie"),
+    "cuisiner": (f"{LEARN} & (cuisin:* | culinair:* | patisseri:* | recette:*)",
+                 ("marche", "degustation", "fete"),
+                 "atelier de cuisine, cours de cuisine, pâtisserie"),
+}
+PARTICIPATION = f"{LEARN} | karaoke:* | (scene & ouverte) | bal | guinguette:* | tournoi:*"
 
 
 def lexical_query(keywords: Sequence[str]) -> str:
@@ -481,7 +513,8 @@ def build_search_query(plan: QueryPlan | SearchFilters, vector: str | None, now:
         conditions.append("(NOT e.time_known OR EXTRACT(HOUR FROM e.start_at AT TIME ZONE 'Europe/Paris') "
                           f"BETWEEN {first} AND {last - 1})")
 
-    lexical = lexical_query(plan.keywords)
+    practice = PRACTICES.get(plan.practice or "")
+    lexical = practice[0] if practice else lexical_query(plan.keywords)
     ctes = [f"""base AS (
     SELECT e.event_id, e.embedding, {LEXICAL_DOCUMENT} AS document
     FROM sortiria.v_upcoming_events AS e
@@ -531,6 +564,14 @@ def build_search_query(plan: QueryPlan | SearchFilters, vector: str | None, now:
         params[f"word{index}"] = word
         hits.append(f"(b.document @@ to_tsquery('french', %(word{index})s))::int")
         visible.append(f"({visible_text} @@ to_tsquery('french', %(word{index})s))::int")
+    if practice:
+        # Pratique : une seule condition (le verbe), au lieu des mots un par un.
+        title = (f"to_tsvector('french', translate(lower(e.title), '{ACCENTS_FROM}', '{ACCENTS_TO}'))")
+        params.update(practice=practice[0], practice_excluded=list(practice[1]), participation=PARTICIPATION)
+        kept = (f"({EVENT_CATEGORY} <> ALL (%(practice_excluded)s) "
+                f"OR {title} @@ to_tsquery('french', %(participation)s))")
+        hits = [f"(b.document @@ to_tsquery('french', %(practice)s) AND {kept})::int"]
+        visible = [f"({visible_text} @@ to_tsquery('french', %(practice)s) AND {kept})::int"]
     hits_sql = " + ".join(hits) or "0"
     visible_sql = " + ".join(visible) or "0"
     sql = (
@@ -1545,7 +1586,9 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
     vector = None
     if embed_text and services.embed is not None:
         try:
-            vector = services.embed(embed_text)
+            # Pratique : le sens va vers ce qui permet de la faire (pas vers les concerts).
+            hint = f" ({PRACTICES[plan.practice][2]})" if plan.practice in PRACTICES else ""
+            vector = services.embed(embed_text + hint)
         except Exception:  # noqa: BLE001 (sans vecteur, mots-clés et date : la recherche continue)
             degraded = True
     candidates, params = fetch_candidates(connection, plan, vector)
