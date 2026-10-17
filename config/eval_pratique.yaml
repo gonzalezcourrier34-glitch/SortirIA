@@ -1,4 +1,4 @@
-# Recherches « faire soi-même » (17/10/2026) : 20 questions.
+# Recherches « faire soi-même » et « regarder » (17/10/2026) : 23 questions.
 #
 # Troisième jeu d'évaluation de la recherche, à côté des 50 questions
 # (config/eval_recherche.yaml) et des 125 recherches courtes
@@ -17,7 +17,9 @@
 #   compris   pratique attendue (pratique: null = pas de pratique : témoin) ;
 #   mots      au moins un de ces mots dans chaque proposition (titre, résumé, lieu) ;
 #   pas_types types qui ne sont pas une réponse (un concert pour « chanter »),
-#             sauf si le titre dit qu'on y participe (« Stage de chant »).
+#             sauf si le titre dit qu'on y participe (« Stage de chant ») ;
+#   regarder  la question demande à regarder (« un spectacle de danse ») ;
+#   pas_pratique  un bal, un cours, un stage ne sont pas une réponse.
 
 questions:
 
@@ -83,12 +85,24 @@ questions:
     mots: [cuisine, culinaire, patisserie, recette]
     pas_types: [marche, fete]
 
+  # --- Regarder (17/10/2026), l'inverse : un bal n'est pas un spectacle ---
+  - question: "voir un spectacle de danse ce week-end"
+    compris: {pratique: null, regarder: true, quand: "ce week-end", types: [danse]}
+    pas_pratique: true
+  - question: "regarder un ballet"
+    compris: {pratique: null, regarder: true, types: [danse]}
+    pas_pratique: true
+  - question: "assister à un spectacle de cirque"
+    compris: {pratique: null, regarder: true}
+    mots: [cirque]
+    pas_pratique: true
+
   # --- Témoins : pas de pratique, la recherche habituelle ne doit pas changer ---
   - question: "un concert de chant"
     compris: {pratique: null, types: [concert]}
   - question: "un spectacle de danse"
-    compris: {pratique: null}
-    mots: [danse]
+    compris: {pratique: null, regarder: true, types: [danse]}
+    pas_pratique: true      # un bal, un cours, une soirée dansante ne sont pas des spectacles
   - question: "jouer au théâtre"
     compris: {pratique: null, types: [theatre, spectacle]}   # comme les 50 questions : théâtre ou spectacle
   - question: "une exposition de peinture"

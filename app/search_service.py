@@ -55,7 +55,7 @@ from app.query_understanding import (
 )
 
 PARIS = ZoneInfo("Europe/Paris")
-PROMPT_VERSION = "2026-10-17.4"  # verbes de pratique (« je veux chanter » : karaoké, cours de chant)
+PROMPT_VERSION = "2026-10-17.5"  # « regarder » : un bal n'est pas un spectacle de danse
 DEFAULT_SEARCH_MODEL = "mistral-small-latest"
 CANDIDATES = 80          # séances comparées à la question (regroupées ensuite par événement)
 MAX_PROPOSALS = 8        # événements montrés et donnés à Mistral (2 rangées de 4 cartes, 15/10)
@@ -243,6 +243,10 @@ PRACTICES: dict[str, tuple[str, tuple[str, ...], str]] = {
                  "atelier de cuisine, cours de cuisine, pâtisserie"),
 }
 PARTICIPATION = f"{LEARN} | karaoke:* | (scene & ouverte) | bal | guinguette:* | tournoi:*"
+# Ce qui se pratique, pour « regarder » (titre et catégorie de la source) :
+# « Bal folk », « Soirée dansante », « Cours de salsa » ne sont pas des spectacles.
+# « dansant » a la même racine que « danse » (« dans ») : seulement après soirée, repas, thé.
+PRACTISED = f"{PARTICIPATION} | ((soiree | repas | the) & dansant) | baleti:* | milonga:*"
 
 
 def lexical_query(keywords: Sequence[str]) -> str:
@@ -545,10 +549,15 @@ def build_search_query(plan: QueryPlan | SearchFilters, vector: str | None, now:
     # la description : « après le concert » ne fait pas un concert. Racines
     # exactes, sans préfixe : « jeux » ne doit pas trouver « jeudi ».
     type_words = type_query([*type_keywords(plan.keywords), *plan.categories])
+    title_and_category = (f"to_tsvector('french', translate(lower(concat_ws(' ', e.title, e.category)), "
+                          f"'{ACCENTS_FROM}', '{ACCENTS_TO}'))")
     if type_words:
         params["type_words"] = type_words
-        category_sql = (f"({category_sql} OR to_tsvector('french', translate(lower(concat_ws(' ', e.title, "
-                        f"e.category)), '{ACCENTS_FROM}', '{ACCENTS_TO}')) @@ to_tsquery('french', %(type_words)s))")
+        category_sql = f"({category_sql} OR {title_and_category} @@ to_tsquery('french', %(type_words)s))"
+    if plan.watch and plan.categories:
+        # Regarder (17/10/2026) : un bal, un cours ou un stage n'est pas du type demandé.
+        params["practised"] = PRACTISED
+        category_sql = f"({category_sql} AND NOT {title_and_category} @@ to_tsquery('french', %(practised)s))"
     # Mots précis trouvés dans l'événement, comptés un par un (15/10/2026) :
     # « blind test » ne doit pas garder tout ce qui contient « tester » (une
     # dictée, une dégustation). `keep_exact_matches` garde ceux qui en ont le plus.
@@ -852,10 +861,10 @@ def partner_fits(row: Mapping[str, Any], plan: QueryPlan, main: Sequence[str]) -
         return False
     if row.get("keyword_match") or not main:
         return True
-    # Seul cas refusé : l'offre n'a que le type voisin accepté en plus
-    # (« spectacle » pour « théâtre ») et ne nomme pas le type visé.
+    # Seul cas refusé : l'offre n'est pas du type visé (« spectacle » pour
+    # « théâtre », pour « un spectacle de danse ») et ne le nomme pas.
     category = str(row.get("category_norm") or row.get("category") or "").strip().lower()
-    secondary = category in plan.categories and category not in main
+    secondary = category not in main
     return not secondary or any(f" {plain(CATEGORY_LABELS.get(item, item))} " in title for item in main)
 
 

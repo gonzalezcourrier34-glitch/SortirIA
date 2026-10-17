@@ -89,6 +89,10 @@ Server-Sent Events, comme l'analyse d'une position dans Chess Agent.
   titre dit qu'on y participe (« Stage de chant »). Rien de tel trouvé : des
   idées voisines, annoncées comme telles. Règles dans `PRACTICE_VERBS`
   (`app/query_understanding.py`) et `PRACTICES` (`app/search_service.py`).
+- **Regarder**, l'inverse (17/10/2026) : avec « spectacle », « voir »,
+  « regarder », « assister à », un bal, un cours, un stage ou une soirée
+  dansante ne compte plus comme du type demandé ; et « spectacle » s'efface
+  devant un type précis (« un spectacle de danse » cherche de la danse).
 - **Synonymes appris** (`config/synonymes.yaml`) : « zumba » cherche aussi
   « fitness » une fois le synonyme validé (voir « Ce qui a manqué » plus bas).
 

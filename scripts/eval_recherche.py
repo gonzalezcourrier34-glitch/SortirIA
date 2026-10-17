@@ -77,6 +77,8 @@ OUTDOOR = {"nature", "marche", "sport", "fete", "festival"}
 # Titre qui dit qu'on participe (17/10/2026) : « Stage de chant », rangé en
 # concert, reste une réponse à « je veux chanter ».
 PARTICIPATION = re.compile(r"\b(cours|stage|atelier|initiation|karaoke|scene ouverte|bal|guinguette|tournoi)\b")
+# Ce qui se pratique, pour « regarder » (« un spectacle de danse » : pas un bal).
+PRACTISED = re.compile(rf"{PARTICIPATION.pattern}|\bdansant|\bbaleti|\bmilonga")
 DAY_LABEL = re.compile(r"^(lun|mar|mer|jeu|ven|sam|dim)\. \d+ ")
 TARGET = 0.95
 
@@ -114,6 +116,8 @@ def understanding_errors(plan: QueryPlan, expected: Mapping[str, Any]) -> list[s
         errors.append(f"repère {plan.near} au lieu de {expected['pres_de']}")
     if "pratique" in expected and plan.practice != expected["pratique"]:
         errors.append(f"pratique {plan.practice} au lieu de {expected['pratique']}")
+    if "regarder" in expected and plan.watch != expected["regarder"]:
+        errors.append(f"regarder {plan.watch} au lieu de {expected['regarder']}")
     return errors
 
 
@@ -169,6 +173,10 @@ def card_errors(card: Mapping[str, Any], plan: QueryPlan, expected: Mapping[str,
     if str(card.get("category", "")).lower() in excluded_types \
             and not PARTICIPATION.search(plain(str(card.get("title", "")))):
         errors.append("type exclu")
+    # « un spectacle de danse » : un bal ou un cours n'est pas une réponse.
+    if expected.get("pas_pratique") and PRACTISED.search(
+            plain(f"{card.get('title', '')} {card.get('category_label', '')}")):
+        errors.append("pratique au lieu de spectacle")
     return errors
 
 
@@ -185,6 +193,8 @@ def evaluate(connection: Any, questions: Sequence[Mapping[str, Any]], services: 
         question = str(item["question"])
         filters = SearchFilters(**(item.get("filtres") or {}))
         expected = item.get("compris") or {}
+        if item.get("pas_pratique"):
+            expected = {**expected, "pas_pratique": True}
         words = [plain(word) for word in item.get("mots") or []]
         excluded = [plain(kind) for kind in item.get("pas_types") or []]
         plan, _ = plan_search(question, filters, services.now())
@@ -314,6 +324,8 @@ def main() -> None:
                         help="Base de test figée (CI) : horloge à l'instant de l'export, sans vecteur ni historique.")
     parser.add_argument("--sans-pratique", action="store_true",
                         help="Retire la règle des verbes de pratique (mesure « avant », 17/10/2026).")
+    parser.add_argument("--sans-regarder", action="store_true",
+                        help="Retire la règle « regarder » (un bal n'est pas un spectacle) : mesure « avant ».")
     parser.add_argument("--seuil", type=float, default=None,
                         help="Échoue (code 1) si la précision ou la compréhension passe sous ce seuil (ex. 0.95).")
     args = parser.parse_args()
@@ -327,6 +339,12 @@ def main() -> None:
 
         query_understanding.PRACTICE_VERBS.clear()
         args.note = f"{args.note} (sans verbes de pratique)".strip()
+    if args.sans_regarder:
+        from app import query_understanding
+
+        query_understanding.WATCH_WORDS = ()
+        query_understanding.SPECTACLE_YIELDS = False
+        args.note = f"{args.note} (sans « regarder »)".strip()
 
     questions = yaml.safe_load(args.fichier.read_text(encoding="utf-8"))["questions"]
     services = SearchServices(embed=embed_question, write=write_with_mistral if args.avec_redaction else None,

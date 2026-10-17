@@ -106,6 +106,14 @@ PRACTICE_LABELS = {"chanter": "pour chanter", "danser": "pour danser", "jouer": 
                    "cuisiner": "pour cuisiner"}
 
 
+# Regarder (17/10/2026), l'inverse de la pratique : « un spectacle de danse »
+# proposait un bal folk et une soirée salsa, rangés comme lui en « danse ».
+# Avec ces mots, ce qui se pratique (bal, cours, stage, atelier) n'est plus du
+# type demandé (app/search_service.py, PARTICIPATION).
+WATCH_WORDS = ("spectacle", "spectacles", "voir", "regarder", "assister", "representation", "representations",
+               "show", "ballet", "ballets")
+
+
 def find_practice(padded: str, categories: tuple[str, ...]) -> str | None:
     """« je veux chanter » -> « chanter » ; rien si la question nomme un autre type."""
 
@@ -117,16 +125,23 @@ CATEGORY_LABELS = {"theatre": "théâtre", "cinema": "cinéma", "conference": "c
                    "marche": "marché", "soiree": "soirée", "fete": "fête"}
 
 
+SPECTACLE_YIELDS = True     # « spectacle » s'efface devant un type précis (désactivable pour mesurer)
+
+
 def wanted_categories(question: str) -> tuple[str, ...]:
     """Catégories désignées par la question : « j'aimerais aller au théâtre »
     -> ("theatre", "spectacle"). Vide si la question n'en nomme aucune."""
 
     # Dans l'ordre des mots : le type nommé d'abord (« théâtre ou spectacle »).
+    # « Spectacle » s'efface devant un autre mot de type (17/10/2026) : « un
+    # spectacle de danse » cherche de la danse, pas n'importe quel spectacle.
     found: dict[str, None] = {}
+    generic: dict[str, None] = {}
     for word in plain(question).split():
         for key in (word, word.rstrip("sx")):
-            found.update(dict.fromkeys(QUESTION_CATEGORIES.get(key, ())))
-    return tuple(found)
+            target = generic if key == "spectacle" and SPECTACLE_YIELDS else found
+            target.update(dict.fromkeys(QUESTION_CATEGORIES.get(key, ())))
+    return tuple(found or generic)
 
 
 # Types trop larges pour désigner seuls ce qu'on cherche quand la question en
@@ -489,6 +504,7 @@ class QueryPlan:
     categories: tuple[str, ...] = ()
     keywords: tuple[str, ...] = ()
     practice: str | None = None              # « chanter » : le faire soi-même (PRACTICE_VERBS)
+    watch: bool = False                      # « un spectacle de danse » : regarder, pas pratiquer
     max_price: float | None = None           # « moins de 15 € » : gratuit ou prix minimum sous ce seuil
     setting: str | None = None               # « interieur » (s'il pleut) ou « exterieur » (plein air)
     near: tuple[str, float] | None = None    # (commune, rayon en km) : « près de Sète »
@@ -531,7 +547,7 @@ class QueryPlan:
             zone=None if "zone" in self.from_question else self.zone,
             cities=(), free_only=False if "free" in self.from_question else self.free_only,
             evening=False, categories=self.categories, keywords=self.keywords, from_question=set(),
-            max_price=None, setting=None, near=None, practice=self.practice,
+            max_price=None, setting=None, near=None, practice=self.practice, watch=self.watch,
         )
 
 
@@ -552,6 +568,7 @@ class Understanding:
     setting: str | None = None
     near: tuple[str, float] | None = None
     practice: str | None = None
+    watch: bool = False
 
     def is_empty(self) -> bool:
         return not (self.period or self.public or self.zone or self.cities or self.free_only
@@ -651,11 +668,17 @@ def understand(question: str, now: datetime) -> Understanding:
         # Pratique : le verbe est le sujet (les autres mots, « apprendre »,
         # « envie », n'en disent pas plus).
         categories=() if practice else categories,
-        keywords=(practice,) if practice else keywords_of(text, consumed),
+        keywords=(practice,) if practice else keywords_of(
+            # « spectacle » effacé par un type précis (« un spectacle de danse ») :
+            # pas un mot à chercher non plus.
+            text, consumed | ({"spectacle", "spectacles"} if "spectacle" not in categories else set())
+            # « regarder », « assister à » disent comment, pas quoi : pas des mots à chercher.
+            | (set(WATCH_WORDS) - {"spectacle", "spectacles", "ballet", "ballets"})),
         max_price=max_price,
         setting=setting,
         near=near,
         practice=practice,
+        watch=not practice and any(f" {word} " in padded for word in WATCH_WORDS),
     )
 
 
@@ -677,6 +700,7 @@ def combine(previous: Understanding, current: Understanding) -> Understanding:
         # Une relance sans nouveau sujet garde la pratique (« et à Sète ? ») ;
         # un nouveau sujet (« un concert », « du jazz et du rock ») la remplace.
         practice=current.practice or (None if (current.categories or current.keywords) else previous.practice),
+        watch=current.watch or (previous.watch and not current.practice and not current.categories),
         max_price=current.max_price if current.max_price is not None else
         (None if current.free_only else previous.max_price),
         setting=current.setting or previous.setting,
@@ -761,5 +785,5 @@ def merge_with_filters(understanding: Understanding, *, public: str | None, zone
         period_from_question=understanding.period is not None, categories=understanding.categories,
         keywords=understanding.keywords, from_question=from_question,
         max_price=None if plan_free else understanding.max_price, setting=understanding.setting, near=near,
-        practice=understanding.practice,
+        practice=understanding.practice, watch=understanding.watch,
     )

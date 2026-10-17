@@ -50,7 +50,7 @@ mesure aussi ce que la base **ne couvre pas** : 19 recherches sur 125 sont des
 lieux ouverts toute l'année (bowling, padel…), absents d'un agenda
 d'événements ([Évolutions](evolutions.md)).
 
-**Troisième jeu : « faire soi-même »** (`config/eval_pratique.yaml`,
+**Troisième jeu : « faire soi-même » et « regarder »** (`config/eval_pratique.yaml`,
 17/10/2026). Constat : « je veux chanter » proposait des concerts (« Lyrica »,
 « Chant choral ») : le mot « chant » est partout dans les concerts, et le sens
 rapproche « chanter » de « concert ». Correction : un verbe de pratique
@@ -93,16 +93,39 @@ Ce qui reste faux, dit franchement :
 
 - « apprendre à dessiner » : une carte sans le mot dans son titre ou son
   résumé (une visite des hôtels particuliers sur la base figée) ;
-- le témoin « un spectacle de danse » (5 / 8, avant comme après) propose un
-  bal folk et une soirée salsa : le cas inverse de « je veux chanter »
-  (regarder, et non faire), à corriger ensuite ;
 - le témoin « jouer au théâtre » attendait le seul type « théâtre » ; aligné
   sur les 50 questions (théâtre ou spectacle) après la mesure sur la vraie
   base, ce qui fait passer la base figée de 95,5 % à 97,8 %. Les chiffres de
   la vraie base ci-dessus sont ceux d'avant cet alignement.
 
-Rejoué en CI à chaque push, avec un seuil de 90 % : le jeu est petit (89
-cartes), une carte fausse de plus fait perdre plus d'un point.
+**L'inverse : regarder** (17/10/2026, même soir). « Un spectacle de danse »
+proposait un bal folk et une soirée salsa (5 / 8 sur la vraie base) : les bals
+sont rangés en « danse », comme les spectacles. Deux causes, deux corrections :
+
+- **regarder** : avec « spectacle », « voir », « regarder », « assister à »,
+  ce qui se pratique (bal, cours, stage, atelier, soirée ou repas dansant)
+  ne compte plus comme du type demandé (`WATCH_WORDS`, `PRACTISED`) ;
+- **« spectacle » s'efface** devant un type précis : « un spectacle de
+  danse » cherche de la danse, pas n'importe quel spectacle (« Lyrica »
+  prenait la place du bal) ; « regarder », « assister » ne sont plus des
+  mots à trouver dans l'événement.
+
+Quatre recherches « regarder » ajoutées au jeu (contrôle `pas_pratique` : un
+bal, un cours, un stage ne sont pas une réponse). Mesure sur la base figée,
+les deux règles retirées par `--sans-regarder` :
+
+| Recherches « regarder » (4) | Avant | Après |
+| --- | --- | --- |
+| Réponse exacte | 2 / 4 | **4 / 4** |
+| Cartes correctes | 75 % (18 / 24 : un bal folk, deux stages de cirque, un stage de flamenco, un speed dating) | **100 %** (16 / 16) |
+| Tout le jeu (23 recherches) | 95 % | **99 %** (96 / 97) |
+
+Non-régression sur la base figée : 125 recherches courtes 98,2 % → 98,4 %,
+50 questions 98,0 % → 98,3 % (« un spectacle de danse » y passe aussi de
+7 / 8 à 8 / 8).
+
+Rejoué en CI à chaque push, avec un seuil de 90 % : le jeu est petit (97
+cartes), une carte fausse de plus fait perdre un point.
 
 **Historique** (`benchmarks/recherche/historique.csv`), le 15/10/2026 :
 

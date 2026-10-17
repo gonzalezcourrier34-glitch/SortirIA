@@ -23,8 +23,9 @@ NOW = datetime(2026, 10, 15, 18, tzinfo=PARIS)
 
 def test_practice_set_has_questions_and_controls() -> None:
     questions = [item["question"].lower() for item in QUESTIONS]
-    assert len(questions) == len(set(questions)) == 20
-    assert sum(1 for item in QUESTIONS if item["compris"].get("pratique") is None) == 7      # témoins
+    assert len(questions) == len(set(questions)) == 23
+    assert sum(1 for item in QUESTIONS if item["compris"].get("pratique") is None) == 10     # témoins et « regarder »
+    assert sum(1 for item in QUESTIONS if item["compris"].get("regarder")) == 4
 
 
 @pytest.mark.parametrize("item", QUESTIONS, ids=[item["question"] for item in QUESTIONS])
@@ -41,6 +42,15 @@ def test_a_concert_is_not_a_place_to_sing_unless_you_take_part() -> None:
     assert card_errors(card, plan, {}, words, excluded) == ["type exclu"]
     assert card_errors({**card, "title": "Stage de chant polyphonique"}, plan, {}, words, excluded) == []
     assert card_errors({**card, "title": "Karaoké géant", "category": "soiree"}, plan, {}, words, excluded) == []
+
+
+def test_a_ball_is_not_a_dance_show() -> None:
+    plan, _ = plan_search("un spectacle de danse", SearchFilters(), NOW)
+    assert plan.watch and plan.categories == ("danse",) and "spectacle" not in plan.keywords
+    card = {"title": "Bal folk", "category": "danse", "category_label": "Bal", "summary": "", "place": "",
+            "start_at": NOW.isoformat(), "end_at": None, "audiences": [], "price": "5 €"}
+    assert card_errors(card, plan, {"pas_pratique": True}, []) == ["pratique au lieu de spectacle"]
+    assert card_errors({**card, "title": "Ballet de l'Opéra", "category_label": "Danse"}, plan, {"pas_pratique": True}, []) == []
 
 
 def test_without_the_practice_rule_singing_is_not_understood(monkeypatch: pytest.MonkeyPatch) -> None:
