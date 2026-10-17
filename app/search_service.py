@@ -52,7 +52,7 @@ from app.query_understanding import (
 )
 
 PARIS = ZoneInfo("Europe/Paris")
-PROMPT_VERSION = "2026-10-16.3"  # vouvoiement, prix seulement si demandé, relances = questions courtes
+PROMPT_VERSION = "2026-10-17.1"  # relances : un seul choix chacune (pas de « A ou B ? »)
 DEFAULT_SEARCH_MODEL = "mistral-small-latest"
 CANDIDATES = 80          # séances comparées à la question (regroupées ensuite par événement)
 MAX_PROPOSALS = 8        # événements montrés et donnés à Mistral (2 rangées de 4 cartes, 15/10)
@@ -100,7 +100,8 @@ Règles :
 - propose 3 questions de relance courtes (moins de 6 mots chacune, finies par
   un point d'interrogation) que l'utilisateur pourrait te poser ensuite
   (« Et s'il pleut ? », « Plutôt en soirée ? ») : jamais une phrase sur les
-  événements de la liste.
+  événements de la liste. Chaque relance est un seul choix, cliquable tel
+  quel : « En intérieur ? », jamais « En intérieur ou en extérieur ? » ;
 
 Réponds uniquement en JSON : {"reponse": "...", "suggestions": ["...", "...", "..."]}"""
 
@@ -1199,15 +1200,39 @@ def clean_suggestions(items: Sequence[Any]) -> list[str]:
     (« Ce concert familial a lieu ce soir… [2] »), qui se contredisaient.
     Une relance trop longue, sans point d'interrogation ou citant une carte
     est écartée ; s'il n'en reste aucune, les relances par défaut servent.
+
+    17/10/2026 : une relance est un bouton, donc un seul choix. « En intérieur
+    ou en extérieur ? » est séparée en « En intérieur ? » et « En extérieur ? ».
     """
 
-    kept = []
-    for item in items:
-        text = french_spacing(" ".join(str(item).split()))
+    kept: list[str] = []
+    for item in (part for raw in items for part in single_choices(str(raw))):
+        text = french_spacing(" ".join(item.split()))
         if (text.endswith("?") and len(text.split()) <= MAX_SUGGESTION_WORDS
                 and not CITATION.search(text) and text not in kept):
             kept.append(text)
     return kept[:3]
+
+
+CHOICE = re.compile(r"\s+ou\s+", re.IGNORECASE)   # « ou » (choix), pas « où » (lieu)
+
+
+def single_choices(text: str) -> list[str]:
+    """« En intérieur ou en extérieur ? » → « En intérieur ? », « En extérieur ? ».
+
+    Seule une relance faite de deux choix courts est séparée ; si un morceau
+    est trop long pour être un choix, la relance est gardée telle quelle et
+    `clean_suggestions` la jugera.
+    """
+
+    text = " ".join(text.split())
+    if not text.endswith("?"):
+        return [text]
+    parts = CHOICE.split(text.rstrip(" ?\u00a0"))
+    if len(parts) != 2 or not all(0 < len(part.split()) <= 4 for part in parts):
+        return [text]
+    first, second = (part.strip(" ,") for part in parts)
+    return [f"{first} ?", f"{second[:1].upper()}{second[1:]} ?"]
 
 
 def order_cards(cards: list[dict[str, Any]], answer: str) -> tuple[list[dict[str, Any]], str]:
@@ -1327,7 +1352,8 @@ def progress(step: str, status: str, message: str = "") -> dict[str, Any]:
     return {"event": "progress", "step": step, "status": status, "message": message}
 
 
-def cache_key(question: str, context: str, filters: SearchFilters, now: datetime, version: str) -> str:
+def cache_key(question: str, context: str, filters: SearchFilters, now: datetime, version: str,
+              follow_up: bool = False) -> str:
     """Empreinte de la demande : question et contexte normalisés, cases cochées,
     jour, version du prompt et de la base, synonymes appris (un synonyme
     validé sert dès la question suivante, sans attendre la fin du cache)."""
@@ -1338,6 +1364,8 @@ def cache_key(question: str, context: str, filters: SearchFilters, now: datetime
 
     parts = [PROMPT_VERSION, version, now.astimezone(PARIS).date().isoformat(), plain(question), plain(context),
              json.dumps(asdict(filters), sort_keys=True), json.dumps(learned_synonyms(), sort_keys=True)]
+    if follow_up:
+        parts.append("relance")
     return hashlib.sha256("|".join(parts).encode("utf-8")).hexdigest()
 
 
@@ -1397,17 +1425,21 @@ def index_version(connection: Any) -> str:
 
 
 def plan_search(question: str, filters: SearchFilters, now: datetime,
-                context: str = "") -> tuple[QueryPlan, str]:
+                context: str = "", follow_up: bool = False) -> tuple[QueryPlan, str]:
     """Plan de recherche et texte à vectoriser.
 
     `context` est la question précédente de la conversation : pour une relance
     (« et pour les enfants ? »), ses contraintes sont gardées et complétées, et
     le sens cherché est celui des deux questions réunies.
+
+    `follow_up` : le visiteur a cliqué une relance proposée sous la réponse
+    (17/10/2026). C'est toujours une suite, même longue ou avec un sujet
+    (« Des spectacles en intérieur ? ») : la demande précédente est gardée.
     """
 
     current = understand(question, now)
     embed_text = question
-    if context and is_follow_up(question):
+    if context and (follow_up or is_follow_up(question)):
         current = combine(understand(context, now), current)
         embed_text = f"{context} {question}"
     plan = merge_with_filters(current, public=filters.public, zone=filters.zone,
@@ -1417,7 +1449,8 @@ def plan_search(question: str, filters: SearchFilters, now: datetime,
 
 
 def run_search(connection: Any, question: str, filters: SearchFilters,
-               services: SearchServices | None = None, context: str = "") -> Iterator[dict[str, Any]]:
+               services: SearchServices | None = None, context: str = "",
+               follow_up: bool = False) -> Iterator[dict[str, Any]]:
     """Recherche complète. Produit les étapes une à une, puis le résultat.
 
     Dernier élément : {"event": "completed", "result": {...}}. Une panne de
@@ -1432,14 +1465,14 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
     degraded = False
 
     yield progress(STEP_UNDERSTAND, "running")
-    plan, embed_text = plan_search(question, filters, now, context)
+    plan, embed_text = plan_search(question, filters, now, context, follow_up)
     yield progress(STEP_UNDERSTAND, "completed", plan.describe())
 
     # Même demande, même jour, même base : la réponse déjà rédigée, sans Mistral.
     key = version = ""
     if services.cache and question:
         version = index_version(connection)
-        key = cache_key(question, context, filters, now, version)
+        key = cache_key(question, context, filters, now, version, follow_up)
         cached = read_cache(connection, key)
         if cached is not None:
             for step in (STEP_SEARCH, STEP_FILTER, STEP_WRITE):

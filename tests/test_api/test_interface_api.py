@@ -19,10 +19,11 @@ def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
 
     for limiter in rate_limit.ALL_LIMITERS:        # chaque test part de zéro
         limiter.reset()
-    def fake_search(connection, question, filters, services=None, context=""):
+    def fake_search(connection, question, filters, services=None, context="", follow_up=False):
         yield search_service.progress("comprendre", "completed", filters.describe())
         if context:
-            yield search_service.progress("comprendre", "completed", f"suite de : {context}")
+            relance = " (relance cliquée)" if follow_up else ""
+            yield search_service.progress("comprendre", "completed", f"suite de : {context}{relance}")
         if question == "panne":
             raise RuntimeError("base indisponible")
         yield {"event": "completed", "result": {"answer": f"Pour : {question}", "events": []}}
@@ -88,6 +89,13 @@ def test_search_stream_passes_the_conversation_context(client: TestClient) -> No
     events = events_of(client.post("/api/v1/recherche/stream",
                                    json={"question": "et pour les enfants ?", "context": "concert samedi"}).text)
     assert events[1][1]["message"] == "suite de : concert samedi"
+
+
+def test_search_stream_passes_a_clicked_follow_up(client: TestClient) -> None:
+    events = events_of(client.post("/api/v1/recherche/stream",
+                                   json={"question": "Des spectacles en intérieur ?", "context": "un spectacle à Sète",
+                                         "follow_up": True}).text)
+    assert events[1][1]["message"] == "suite de : un spectacle à Sète (relance cliquée)"
 
 
 def test_search_error_is_sent_in_the_stream(client: TestClient) -> None:

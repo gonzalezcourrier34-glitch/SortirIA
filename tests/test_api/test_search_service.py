@@ -561,3 +561,15 @@ def test_type_written_in_the_title_counts_as_the_type() -> None:
     assert "NULLIF(e.category_norm, '')" in sql
     sql, params = service.build_search_query(plan_for("une sortie demain"), None)
     assert "type_words" not in params
+
+
+def test_a_suggestion_is_a_single_choice() -> None:
+    """17/10/2026 : une relance est un bouton, donc un seul choix."""
+
+    assert service.single_choices("En intérieur ou en extérieur ?") == ["En intérieur ?", "En extérieur ?"]
+    assert service.single_choices("Plutôt samedi ou dimanche ?") == ["Plutôt samedi ?", "Dimanche ?"]
+    assert service.single_choices("Où manger après ?") == ["Où manger après ?"]          # « où » : un lieu
+    assert service.single_choices("Et s'il pleut ?") == ["Et s'il pleut ?"]
+    raw = json.dumps({"reponse": "Ok.", "suggestions": ["En intérieur ou en extérieur ?", "Plutôt en soirée ?"]})
+    assert service.parse_answer(raw, 1)[1] == ["En intérieur\u00a0?", "En extérieur\u00a0?", "Plutôt en soirée\u00a0?"]
+

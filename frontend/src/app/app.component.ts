@@ -337,7 +337,7 @@ export class AppComponent implements OnInit {
 
     // # Recherche
 
-    search(question = this.question()): void {
+    search(question = this.question(), followUp = false): void {
         const text = question.trim();
 
         if (this.loading()) {
@@ -347,8 +347,12 @@ export class AppComponent implements OnInit {
         // Fil de la conversation : la demande comprise précédente accompagne
         // la nouvelle question (« et pour les enfants ? »).
         const context = this.result()?.context ?? '';
-        this.question.set(text);
-        this.askedQuestion.set(text);
+        // Relance cliquée (17/10/2026) : la recherche affichée est complétée
+        // (« … près de Sète, plutôt en matinée ? ») au lieu d'être remplacée.
+        const isFollowUp = followUp && !!context && !!this.askedQuestion();
+        const shown = isFollowUp ? completeQuestion(this.askedQuestion(), text) : text;
+        this.question.set(shown);
+        this.askedQuestion.set(shown);
         this.error.set(null);
         this.steps.set(this.emptySteps());
         this.showSteps.set(true);
@@ -366,7 +370,8 @@ export class AppComponent implements OnInit {
             zone: this.selectedZone(),
             period: this.selectedPeriod(),
             free_only: this.freeOnly(),
-            context
+            context,
+            follow_up: isFollowUp
         }).subscribe({
             next: event => this.onStreamEvent(event),
             error: () => this.fail('Le serveur ne répond pas. Vérifiez que l’API SortirIA est lancée.'),
@@ -375,7 +380,8 @@ export class AppComponent implements OnInit {
     }
 
     askSuggestion(suggestion: string): void {
-        this.search(suggestion);
+        // Avant la première réponse (idées d'accueil), c'est une nouvelle demande.
+        this.search(suggestion, !!this.result());
     }
 
     showFilters(): void {
@@ -698,4 +704,16 @@ export class AppComponent implements OnInit {
     stepStatusLabel(status: StepStatus): string {
         return status === 'completed' ? 'Fait' : status === 'running' ? 'En cours…' : 'À venir';
     }
+}
+
+
+/** « Un truc avec les enfants près de Sète » + « Plutôt en matinée ? »
+ *  → « Un truc avec les enfants près de Sète, plutôt en matinée ? ». */
+export function completeQuestion(previous: string, followUp: string): string {
+    const base = previous.trim().replace(/[\s\u00a0]*[?!.…]+$/u, '');
+    const suite = followUp.trim();
+    if (!base) {
+        return suite;
+    }
+    return `${base}, ${suite.charAt(0).toLocaleLowerCase('fr-FR')}${suite.slice(1)}`;
 }

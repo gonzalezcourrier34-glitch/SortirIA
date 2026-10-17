@@ -45,6 +45,9 @@ class SearchRequest(BaseModel):
     # Demande précédente de la conversation (renvoyée par l'API dans `context`) :
     # une relance (« et pour les enfants ? ») garde ce qui avait été demandé.
     context: str = Field(default="", max_length=1000)
+    # Vrai quand la question vient d'une relance cliquée sous la réponse :
+    # c'est toujours une suite de la demande précédente.
+    follow_up: bool = False
 
 
 def get_connection() -> Iterator[Any]:
@@ -86,7 +89,8 @@ def search_stream(
         try:
             with connect() as connection:
                 for event in search_service.run_search(connection, payload.question, filters, services,
-                                                          context=payload.context):
+                                                          context=payload.context,
+                                                          follow_up=payload.follow_up):
                     yield search_service.sse(event)
         except Exception:  # noqa: BLE001 (le flux est déjà ouvert : l'erreur part dans le flux)
             yield search_service.sse({"event": "error",

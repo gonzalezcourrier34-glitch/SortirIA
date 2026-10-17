@@ -168,3 +168,24 @@ def test_a_montpellier_keeps_the_metropolis_for_widening() -> None:
     assert plan.cities == ("montpellier",) and plan.zone == "montpellier"
     plan = plan_search("un concert à Mèze", SearchFilters(), NOW)[0]
     assert plan.cities == ("meze",) and plan.zone is None
+
+
+def test_a_clicked_follow_up_keeps_the_previous_request() -> None:
+    """17/10/2026 : « Des spectacles en intérieur ? » cliqué après « un spectacle
+    à Sète » perdait Sète (relance longue avec un sujet : nouvelle demande)."""
+    from app.search_service import SearchFilters, plan_search
+
+    typed = plan_search("Des spectacles en intérieur ?", SearchFilters(), NOW, "un spectacle à Sète")[0]
+    assert typed.cities == ()
+    clicked, embed = plan_search("Des spectacles en intérieur ?", SearchFilters(), NOW, "un spectacle à Sète",
+                                 follow_up=True)
+    assert clicked.cities == ("sete",) and clicked.setting == "interieur"
+    assert "Sète" in embed
+    short = plan_search("Plutôt en matinée ?", SearchFilters(), NOW, "un atelier à Sète samedi", follow_up=True)[0]
+    assert short.cities == ("sete",)
+
+
+def test_the_cache_tells_a_clicked_follow_up_apart() -> None:
+    from app.search_service import SearchFilters, cache_key
+
+    assert cache_key("x ?", "y", SearchFilters(), NOW, "v") != cache_key("x ?", "y", SearchFilters(), NOW, "v", True)

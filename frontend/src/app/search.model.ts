@@ -16,6 +16,8 @@ export interface SearchRequest {
     free_only: boolean;
     /** Demande précédente (SearchResult.context) : une relance garde le fil. */
     context: string;
+    /** Relance cliquée sous la réponse : toujours une suite de la demande précédente. */
+    follow_up?: boolean;
 }
 
 
