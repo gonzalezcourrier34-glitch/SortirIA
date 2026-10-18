@@ -114,8 +114,10 @@ def test_every_evaluation_run_is_kept(tmp_path) -> None:
     save_run({**report, "date": "2026-10-15T13:00:00+02:00"}, mode="recherche", question_file=questions,
              note="", folder=tmp_path)
     assert first.name == "2026-10-15_12h30.json"
+    same_minute = save_run(report, mode="recherche", question_file=questions, note="sans la règle", folder=tmp_path)
+    assert same_minute.name == "2026-10-15_12h30_2.json" and first.exists()     # le premier n'est pas écrasé
     lines = (tmp_path / "historique.csv").read_text(encoding="utf-8-sig").splitlines()
-    assert len(lines) == 3 and lines[0].startswith("date;mode;jeu;") and ";0.99;" in lines[1]
+    assert len(lines) == 4 and lines[0].startswith("date;mode;jeu;") and ";0.99;" in lines[1]
 
 
 # --- Budget, cadre, distance (15/10/2026) -----------------------------------

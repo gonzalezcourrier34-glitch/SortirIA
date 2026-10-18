@@ -297,6 +297,10 @@ def save_run(report: dict[str, Any], *, mode: str, question_file: Path, note: st
     report = {**report, "mode": mode, "jeu": question_set_id(question_file), "prompt_version": PROMPT_VERSION,
               "note": note}
     path = folder / f"{stamp}.json"
+    number = 2
+    while path.exists():        # deux lancements dans la même minute : ne pas écraser le premier
+        path = folder / f"{stamp}_{number}.json"
+        number += 1
     path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     history = folder / "historique.csv"
     is_new = not history.exists()

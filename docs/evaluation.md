@@ -117,6 +117,14 @@ deux stages y passaient en tête. Mesure sur la base figée, règle retirée par
 | Compréhension (25 recherches) | 40 % | **100 %** |
 | Tout le jeu (cartes correctes, réponses exactes) | 74 % | **98 %** |
 
+Sur la vraie base (18/10/2026, 16 h 28 ; rapport `2026-10-18_16h28.json`),
+tout le jeu : compréhension **100 %**, cartes correctes **96 %**.
+« Jouer au théâtre » et « faire de l'impro » : 12 / 16, l'Atelier impro
+adulte, une initiation théâtre ados, les stages du théâtre Tabard en tête ;
+deux cartes par recherche n'ont pas le mot dans leur titre ou leur résumé
+(des stages d'ados dont le programme n'est pas détaillé). « Une pièce de
+théâtre » : 8 / 8, que des pièces.
+
 125 recherches courtes et 50 questions : **mêmes cartes**, à la carte près,
 qu'avant ces changements (lancés à la même date ; lancés un autre jour, les
 dates relatives comme « ce week-end » visent d'autres jours et les listes
@@ -168,13 +176,21 @@ phrase : « le matin » (avant midi), « l'après-midi » (12 h à 18 h), « en
 journée » (avant 18 h), « le soir », « en soirée » (17 h ou après). 11
 questions et un témoin ; chaque carte dont l'heure est affichée doit
 commencer dans le créneau (contrôle « heure » ; une carte sans heure n'est pas
-contrôlée). Mesure sur la base figée, la règle retirée par `--sans-moment` :
+contrôlée). Mesure la règle retirée par `--sans-moment`, sur la base figée
+et sur la vraie base (18/10/2026, 16 h 27 ; rapport `2026-10-18_16h27.json`,
+celui « après » écrasé par celui « avant » lancé dans la même minute : défaut
+corrigé, un rapport n'en écrase plus un autre) :
 
-| Mesure | Avant | Après |
-| --- | --- | --- |
-| Compréhension | 17 % (2 / 12) | **100 %** |
-| Cartes correctes | 88 % | **99 %** |
-| Cartes hors du créneau | 10 (des concerts du soir pour « le matin », des séances du matin pour « l'après-midi ») | **0** |
+| Mesure | Base figée, avant | Base figée, après | Vraie base, avant | Vraie base, après |
+| --- | --- | --- | --- | --- |
+| Compréhension | 17 % (2 / 12) | **100 %** | 17 % | **100 %** |
+| Cartes correctes | 88 % | **99 %** | 91 % | **99 %** |
+| Cartes hors du créneau | 10 | **0** | 7 | **0** |
+
+Sur la vraie base, avant : la « Matinée des bébés » pour « une activité
+l'après-midi », des concerts et ateliers du soir pour « le matin » ; « une
+sortie en début de soirée à Sète » sans réponse exacte (une sortie voile, une
+visite d'exposition). Après : trois soirées à Sète.
 
 Avant, « un concert en soirée » cherchait aussi le public « Soirée » (bars,
 fêtes). Une carte reste fausse après : un concert en soirée dont le type

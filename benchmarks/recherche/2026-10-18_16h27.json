@@ -1,0 +1,1194 @@
+{
+  "date": "2026-10-18T16:27:42+02:00",
+  "questions": 12,
+  "comprehension": 0.167,
+  "precision": 0.909,
+  "sans_resultat": 0,
+  "idees_voisines": 1,
+  "latence_mediane_s": 1.77,
+  "latence_p95_s": 2.38,
+  "detail": [
+    {
+      "question": "un concert le matin",
+      "compris": "les 3 prochains mois · concert",
+      "ecarts_comprehension": [
+        "moment None au lieu de matin"
+      ],
+      "propositions": 8,
+      "correctes": 6,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "heure"
+      ],
+      "titres": [
+        "Concert jazz au port (exemple)",
+        "Concert rock (exemple)",
+        "CONCERT HARMONIE",
+        "SAISON DE CONCERTS D’ORGUE 2026-2027",
+        "CONCERT BRAHMS",
+        "CANDLELIGHT: JEAN-JACQUES GOLDMAN",
+        "CONCERT ACOUSTIQUE LIVE DE YANIN SAAVEDRA",
+        "LE MINI CONCERT DE NOEL"
+      ],
+      "cartes": [
+        {
+          "titre": "Concert jazz au port (exemple)",
+          "type": "concert",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Concert de jazz manouche en ouverture d'un festival.",
+          "partenaire": true,
+          "ecarts": [
+            "heure"
+          ]
+        },
+        {
+          "titre": "Concert rock (exemple)",
+          "type": "concert",
+          "publics": [
+            "famille",
+            "soirée"
+          ],
+          "resume": "Soirée musicale avec plusieurs groupes locaux dans un bar.",
+          "partenaire": true,
+          "ecarts": [
+            "heure"
+          ]
+        },
+        {
+          "titre": "CONCERT HARMONIE",
+          "type": "concert",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Concert de fin d'année des classes d'orchestre harmonie avec des jeunes musiciens.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SAISON DE CONCERTS D’ORGUE 2026-2027",
+          "type": "concert",
+          "publics": [],
+          "resume": "Série de récitals d'orgue avec des interprètes internationaux et répertoire varié.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT BRAHMS",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Concert symphonique interprétant des œuvres de Brahms, entre puissance dramatique et grâce mélancolique.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CANDLELIGHT: JEAN-JACQUES GOLDMAN",
+          "type": "concert",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Concert hommage à un artiste célèbre interprété par un ensemble instrumental.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT ACOUSTIQUE LIVE DE YANIN SAAVEDRA",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Concert acoustique live de musique jazz, latin et folk avec participation du public.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LE MINI CONCERT DE NOEL",
+          "type": "concert",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Mini-concert musical doux et joyeux pour enfants avec chansons et histoires rigolotes.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une balade samedi matin",
+      "compris": "sam. 24 oct. · nature",
+      "ecarts_comprehension": [
+        "moment None au lieu de matin"
+      ],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Marche Nationale pour la vue",
+        "EXPOSITION PHOTOGRAPHIQUE - MAISON DE LA NATURE",
+        "SOIRÉE ASTRONOMIE",
+        "PRÉSENTATION EXPOSITION HORIZON MER : VIVRE, DÉCOUVRIR, PROTÉGER",
+        "EXPOSITION : HORIZON MER : VIVRE, DÉCOUVRIR, PROTÉGER",
+        "SAVE THE DATE - FÊTE DE LA SOUPE !",
+        "ASTRONOMIE : OBSERVEZ LA LUNE, JUPITER… AU TÉLESCOPE !",
+        "ASTRONOMIE : OBSERVEZ LE SOLEIL AU TÉLESCOPE !"
+      ],
+      "cartes": [
+        {
+          "titre": "Marche Nationale pour la vue",
+          "type": "nature",
+          "publics": [
+            "famille",
+            "seniors"
+          ],
+          "resume": "Randonnée solidaire en pleine nature pour soutenir une cause médicale.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "EXPOSITION PHOTOGRAPHIQUE - MAISON DE LA NATURE",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Exposition photographique accessible gratuitement dans un lieu dédié à la nature et à l'environnement.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SOIRÉE ASTRONOMIE",
+          "type": "nature",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Observation du ciel nocturne à l'œil nu et avec télescopes, accessible à tous.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "PRÉSENTATION EXPOSITION HORIZON MER : VIVRE, DÉCOUVRIR, PROTÉGER",
+          "type": "exposition",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Découverte des enjeux écologiques liés aux océans à travers une exposition interactive et une présentation.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "EXPOSITION : HORIZON MER : VIVRE, DÉCOUVRIR, PROTÉGER",
+          "type": "exposition",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Immersion en trois dimensions sur les enjeux écologiques et géographiques des littoraux.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SAVE THE DATE - FÊTE DE LA SOUPE !",
+          "type": "fete",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Fête conviviale autour de la soupe avec cuisine collective et partage dans un jardin.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ASTRONOMIE : OBSERVEZ LA LUNE, JUPITER… AU TÉLESCOPE !",
+          "type": "nature",
+          "publics": [],
+          "resume": "Observation du ciel et des astres au télescope avec animations ludiques.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ASTRONOMIE : OBSERVEZ LE SOLEIL AU TÉLESCOPE !",
+          "type": "atelier",
+          "publics": [],
+          "resume": "Observation du soleil en toute sécurité avec un télescope adapté.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un atelier en matinée",
+      "compris": "les 3 prochains mois · atelier",
+      "ecarts_comprehension": [
+        "moment None au lieu de matin"
+      ],
+      "propositions": 8,
+      "correctes": 6,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "heure"
+      ],
+      "titres": [
+        "Atelier cuisine parents-enfants (exemple)",
+        "Atelier jeux en famille (exemple)",
+        "Stage de cirque vacances (exemple)",
+        "Initiation escalade enfants (exemple)",
+        "ATELIERS DU MIAM - SAMEDI EN FAMILLE",
+        "Les ateliers du mercredi | Pousses d'Archi",
+        "Atelier pour enfants | La méridionalité à hauteur d'enfant",
+        "ATELIER CINÉMA - DOUBLAGE"
+      ],
+      "cartes": [
+        {
+          "titre": "Atelier cuisine parents-enfants (exemple)",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier culinaire pour préparer un goûter en famille.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Atelier jeux en famille (exemple)",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier de jeux de société et de construction pour enfants et adultes dans une ludothèque.",
+          "partenaire": true,
+          "ecarts": [
+            "heure"
+          ]
+        },
+        {
+          "titre": "Stage de cirque vacances (exemple)",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Stage de cirque pour enfants avec jonglage, équilibre et acrobatie.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Initiation escalade enfants (exemple)",
+          "type": "atelier",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Initiation à l'escalade pour enfants avec encadrement et matériel fourni.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIERS DU MIAM - SAMEDI EN FAMILLE",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier d'arts plastiques en famille dans un musée avec une enseignante.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Les ateliers du mercredi | Pousses d'Archi",
+          "type": "atelier",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Ateliers ludiques pour enfants de 6 à 11 ans sur l'architecture, l'urbanisme et l'écologie.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Atelier pour enfants | La méridionalité à hauteur d'enfant",
+          "type": "atelier",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Atelier pour enfants sur l'architecture méridionale et ses particularités.",
+          "partenaire": false,
+          "ecarts": [
+            "heure"
+          ]
+        },
+        {
+          "titre": "ATELIER CINÉMA - DOUBLAGE",
+          "type": "atelier",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Atelier de doublage de film pour enfants avec projection du résultat.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un marché le matin",
+      "compris": "les 3 prochains mois · marché",
+      "ecarts_comprehension": [
+        "moment None au lieu de matin"
+      ],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "MARCHÉ TRADITIONNEL DE BALARUC-LES-BAINS",
+        "MARCHÉ TRADITIONNEL DU MERCREDI À SÈTE",
+        "MARCHÉ TRADITIONNEL DU JEUDI À SÈTE",
+        "MARCHÉ TRADITIONNEL DE POUSSAN",
+        "MARCHÉ TRADITIONNEL DE MONTBAZIN",
+        "MARCHÉ TRADITIONNEL DE L'ÎLE DE THAU",
+        "MARCHÉ TRADITIONNEL DU VENDREDI À SÈTE",
+        "MARCHÉ DE POMÉROLS"
+      ],
+      "cartes": [
+        {
+          "titre": "MARCHÉ TRADITIONNEL DE BALARUC-LES-BAINS",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Marché en plein air proposant produits locaux, fleurs et ambiance colorée dans un cadre ombragé.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ TRADITIONNEL DU MERCREDI À SÈTE",
+          "type": "marche",
+          "publics": [],
+          "resume": "Grand marché de plein air avec produits locaux, fruits, légumes et plats prêts à emporter.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ TRADITIONNEL DU JEUDI À SÈTE",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Marché paysan bio avec produits du terroir face à la mer, privilégiant circuits courts.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ TRADITIONNEL DE POUSSAN",
+          "type": "marche",
+          "publics": [],
+          "resume": "Deux marchés hebdomadaires distincts avec produits locaux et architecture remarquable.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ TRADITIONNEL DE MONTBAZIN",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Marché dominical de produits locaux et artisanaux, convivial et citoyen.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ TRADITIONNEL DE L'ÎLE DE THAU",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Marché matinal proposant des produits typiques et une ambiance authentique.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ TRADITIONNEL DU VENDREDI À SÈTE",
+          "type": "marche",
+          "publics": [],
+          "resume": "Marché alimentaire et textile en plein air avec des produits frais et variés.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ DE POMÉROLS",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Marché matinal offrant des produits frais et de terroir.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une activité l'après-midi",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [
+        "moment None au lieu de apres-midi"
+      ],
+      "propositions": 8,
+      "correctes": 7,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "heure"
+      ],
+      "titres": [
+        "MATINÉE DES BÉBÉS : Éveil musical «La pluie»",
+        "LA BONNE FRANQUETTE",
+        "LE TEMPS DES LIVRES",
+        "APÉRO LITTÉRAIRE !",
+        "APÉRO LUDO",
+        "CINÉ-DÉBAT : CHAMPIONNES, MAMANS, ET ALORS?",
+        "STAGE LOISIRS CRÉATIFS POUR LES 6-10 ANS / VACANCES D'AUTOMNE À LA HUNE",
+        "LA MÉRIDIONALITÉ À HAUTEUR D'ENFANT"
+      ],
+      "cartes": [
+        {
+          "titre": "MATINÉE DES BÉBÉS : Éveil musical «La pluie»",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier d'éveil musical pour les tout-petits.",
+          "partenaire": false,
+          "ecarts": [
+            "heure"
+          ]
+        },
+        {
+          "titre": "LA BONNE FRANQUETTE",
+          "type": "soiree",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Repas convivial avec animations culinaires et musique pour un après-midi festif en groupe.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LE TEMPS DES LIVRES",
+          "type": "lecture",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Lectures d'albums jeunesse accompagnées d'un goûter pour enfants et adultes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "APÉRO LITTÉRAIRE !",
+          "type": "lecture",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Rencontre littéraire avec découverte de livres et animations musicales.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "APÉRO LUDO",
+          "type": "jeux",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Moment convivial autour de jeux de société.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CINÉ-DÉBAT : CHAMPIONNES, MAMANS, ET ALORS?",
+          "type": "cinema",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Projection et débat sur les défis des sportives combinant performance et maternité.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "STAGE LOISIRS CRÉATIFS POUR LES 6-10 ANS / VACANCES D'AUTOMNE À LA HUNE",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Semaine d'activités créatives pour enfants avec bricolage, peinture et laine.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LA MÉRIDIONALITÉ À HAUTEUR D'ENFANT",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier pour enfants explorant l'architecture locale à travers jeux et observations.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une expo l'après-midi",
+      "compris": "les 3 prochains mois · exposition",
+      "ecarts_comprehension": [
+        "moment None au lieu de apres-midi"
+      ],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Exposition photo de l'étang (exemple)",
+        "EXPOSITION «CLAIR OBSCUR: EXPEDITION 33 – LA TOILE AUX RÊVES »",
+        "EXPOSITION \"MÉRIDIONALITÉ ?\"",
+        "Exposition photos \"TOUT DOIT DISPARAITRE\"",
+        "Exposition A+Art \"La Part de l'Art #1\"",
+        "EXPO-CONCOURS : Instantanés de bonheur",
+        "Méridionalité ? | Exposition des AJAP et autres voies de l’Architecture en Occitanie",
+        "LES AS DE LA PREMIÈRE GUERRE MONDIALE"
+      ],
+      "cartes": [
+        {
+          "titre": "Exposition photo de l'étang (exemple)",
+          "type": "exposition",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Exposition de photographies capturant un paysage naturel emblématique.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "EXPOSITION «CLAIR OBSCUR: EXPEDITION 33 – LA TOILE AUX RÊVES »",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Exposition immersive mêlant art et rêve, accessible gratuitement aux horaires d'ouverture.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "EXPOSITION \"MÉRIDIONALITÉ ?\"",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Exposition d'architecture contemporaine mettant en avant des projets locaux.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Exposition photos \"TOUT DOIT DISPARAITRE\"",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Exposition interrogeant la sobriété foncière et l'adaptation au changement climatique à travers une fiction.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Exposition A+Art \"La Part de l'Art #1\"",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Exposition rétrospective sur l'intégration d'art dans l'architecture et les réalisations urbaines.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "EXPO-CONCOURS : Instantanés de bonheur",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Exposition de photographies amateurs issues d’un concours.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Méridionalité ? | Exposition des AJAP et autres voies de l’Architecture en Occitanie",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Exposition présentant des projets architecturaux primés et leur évolution en région.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LES AS DE LA PREMIÈRE GUERRE MONDIALE",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Exposition rendant hommage aux aviateurs de la Première Guerre mondiale à travers des panneaux illustrés et des données techniques.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un spectacle pour enfants l'après-midi",
+      "compris": "les 3 prochains mois · famille · spectacle ou théâtre",
+      "ecarts_comprehension": [
+        "moment None au lieu de apres-midi"
+      ],
+      "propositions": 8,
+      "correctes": 6,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "heure"
+      ],
+      "titres": [
+        "Spectacle de marionnettes (exemple)",
+        "SPECTACLE JEUNE PUBLIC : POUR BIEN DORMIR",
+        "PITCHOUN ET LES MONDES CÉLESTES",
+        "SPECTACLE : UN CHOU EN HIVER",
+        "SPECTACLE « LE PETIT CHAT MAGICIEN »",
+        "SPECTACLE JEUNE PUBLIC : POUR Y CUEILLIR DU ROMARIN",
+        "CHAUSSONS !",
+        "MES PETITES HISTOIRES DE KAMISHIBAÏ"
+      ],
+      "cartes": [
+        {
+          "titre": "Spectacle de marionnettes (exemple)",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle de marionnettes avec conte en musique pour les tout-petits.",
+          "partenaire": true,
+          "ecarts": [
+            "heure"
+          ]
+        },
+        {
+          "titre": "SPECTACLE JEUNE PUBLIC : POUR BIEN DORMIR",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle visuel et poétique pour enfants abordant les peurs nocturnes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "PITCHOUN ET LES MONDES CÉLESTES",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle de danse poétique et interactive pour les tout-petits avec des objets et des mouvements.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SPECTACLE : UN CHOU EN HIVER",
+          "type": "theatre",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Pièce de théâtre drôle et poétique sur deux jardinières confrontées à des surprises hivernales.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SPECTACLE « LE PETIT CHAT MAGICIEN »",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle de marionnettes et magie mettant en scène un chat confronté à la solitude.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SPECTACLE JEUNE PUBLIC : POUR Y CUEILLIR DU ROMARIN",
+          "type": "theatre",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle musical et théâtral pour jeunes enfants avec comptines, musique classique et marionnettes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CHAUSSONS !",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle musical et poétique autour des chaussures pour enfants.",
+          "partenaire": false,
+          "ecarts": [
+            "heure"
+          ]
+        },
+        {
+          "titre": "MES PETITES HISTOIRES DE KAMISHIBAÏ",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle d'images animées pour émerveiller les tout-petits avec des histoires tendres et drôles.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "que faire en journée ce week-end",
+      "compris": "ce week-end",
+      "ecarts_comprehension": [
+        "moment None au lieu de journee"
+      ],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Atelier Levez les Yeux \"TOUT DOIT DISPARAITRE\"",
+        "STAGE LOISIRS CRÉATIFS POUR LES 6-10 ANS / VACANCES D'AUTOMNE À LA HUNE",
+        "SOIRÉE ASTRONOMIE",
+        "FÊTE DU FILM D’ANIMATION",
+        "APÉRO LITTÉRAIRE !",
+        "MATINÉE DES BÉBÉS",
+        "FESTIVAL DE L'ÉVEIL DES TOUT-PETITS",
+        "Cours d'aquarelle avec Valfantasy"
+      ],
+      "cartes": [
+        {
+          "titre": "Atelier Levez les Yeux \"TOUT DOIT DISPARAITRE\"",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier pédagogique autour d'une exposition sur l'aménagement des territoires pour les scolaires.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "STAGE LOISIRS CRÉATIFS POUR LES 6-10 ANS / VACANCES D'AUTOMNE À LA HUNE",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Semaine d'activités créatives pour enfants avec bricolage, peinture et laine.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SOIRÉE ASTRONOMIE",
+          "type": "nature",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Observation du ciel nocturne à l'œil nu et avec télescopes, accessible à tous.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "FÊTE DU FILM D’ANIMATION",
+          "type": "festival",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Célébration du cinéma d'animation avec projections, rencontres et ateliers créatifs.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "APÉRO LITTÉRAIRE !",
+          "type": "lecture",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Rencontre littéraire avec découverte de livres et animations musicales.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MATINÉE DES BÉBÉS",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Espace d’exploration sensorielle pour les tout-petits et leurs accompagnants.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "FESTIVAL DE L'ÉVEIL DES TOUT-PETITS",
+          "type": "festival",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Festival d'animations créatives et gratuites pour les tout-petits et leurs familles.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Cours d'aquarelle avec Valfantasy",
+          "type": "atelier",
+          "publics": [],
+          "resume": "Cours d'aquarelle pour expérimenter librement les fusions et transparences des pigments.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un concert en soirée",
+      "compris": "les 3 prochains mois · soirée · concert ou soirée",
+      "ecarts_comprehension": [
+        "public soiree au lieu de None",
+        "soir non compris"
+      ],
+      "propositions": 8,
+      "correctes": 7,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "type"
+      ],
+      "titres": [
+        "Concert rock (exemple)",
+        "Soirée DJ électro (exemple)",
+        "CONCERT SYMPHONIQUE",
+        "CONCERT BRAHMS",
+        "SAISON DE CONCERTS D’ORGUE 2026-2027",
+        "CANDLELIGHT : LES QUATRE SAISONS DE VIVALDI",
+        "CONCERT DU NOUVEL AN MADE IN USA",
+        "CANDLELIGHT : DISNEY CHANSONS D'AMOUR"
+      ],
+      "cartes": [
+        {
+          "titre": "Concert rock (exemple)",
+          "type": "concert",
+          "publics": [
+            "famille",
+            "soirée"
+          ],
+          "resume": "Soirée musicale avec plusieurs groupes locaux dans un bar.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Soirée DJ électro (exemple)",
+          "type": "soiree",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée électro avec deux DJ résidents et entrée réduite avant minuit.",
+          "partenaire": true,
+          "ecarts": [
+            "type"
+          ]
+        },
+        {
+          "titre": "CONCERT SYMPHONIQUE",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Concert d'un orchestre et d'un ensemble à cordes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT BRAHMS",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Concert symphonique interprétant des œuvres de Brahms, entre puissance dramatique et grâce mélancolique.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SAISON DE CONCERTS D’ORGUE 2026-2027",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Série de concerts d'orgue avec des interprètes variés et des styles musicaux divers.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CANDLELIGHT : LES QUATRE SAISONS DE VIVALDI",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Concert de musique classique interprété par un quatuor à cordes dans un lieu éclairé aux bougies.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT DU NOUVEL AN MADE IN USA",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Concert symphonique célébrant la musique américaine avec voix lyriques et chorale pour fêter la nouvelle année.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CANDLELIGHT : DISNEY CHANSONS D'AMOUR",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Concert romantique avec des chansons d'amour interprétées en direct à la lueur de bougies.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un spectacle le soir",
+      "compris": "les 3 prochains mois (le soir) · spectacle ou théâtre",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "SPECTACLE CABARET « DEUX BRÉSILIENS À PARIS »",
+        "ÉCLIPSE — SPECTACLE DE JONGLAGE ET ILLUSION",
+        "SPECTACLE : L’ART D’ACCOMMODER LES RESTES",
+        "BALLET OF LIGHTS : LA BELLE AU BOIS DORMANT DANS UN SPECTACLE ÉTINCELANT",
+        "SPECTACLE D’IMPROVISATION : DESTINATION LE BONHEUR",
+        "SPECTACLE JEUNE PUBLIC : POUR BIEN DORMIR",
+        "SPECTACLE MUSICAL \"MON RENAUD PRÉFÉRÉ\"",
+        "LA NUIT DES CAPUCINES"
+      ],
+      "cartes": [
+        {
+          "titre": "SPECTACLE CABARET « DEUX BRÉSILIENS À PARIS »",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle carnavalesque mêlant danses, musiques brésiliennes et costumes flamboyants.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ÉCLIPSE — SPECTACLE DE JONGLAGE ET ILLUSION",
+          "type": "spectacle",
+          "publics": [],
+          "resume": "Spectacle de jonglage et illusion explorant la réalité à travers des objets simples.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SPECTACLE : L’ART D’ACCOMMODER LES RESTES",
+          "type": "spectacle",
+          "publics": [],
+          "resume": "Spectacle de marionnettes humoristique et émouvant célébrant l'amitié et la joie de vivre.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "BALLET OF LIGHTS : LA BELLE AU BOIS DORMANT DANS UN SPECTACLE ÉTINCELANT",
+          "type": "spectacle",
+          "publics": [],
+          "resume": "Spectacle de danse classique revisité avec des costumes lumineux et une chorégraphie époustouflante.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SPECTACLE D’IMPROVISATION : DESTINATION LE BONHEUR",
+          "type": "spectacle",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Spectacle d'improvisation humoristique et poétique dans un cadre festif.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SPECTACLE JEUNE PUBLIC : POUR BIEN DORMIR",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle visuel et poétique pour enfants abordant les peurs nocturnes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SPECTACLE MUSICAL \"MON RENAUD PRÉFÉRÉ\"",
+          "type": "concert",
+          "publics": [],
+          "resume": "Spectacle musical rendant hommage aux chansons d'un artiste français à travers une relecture poétique et tendre.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LA NUIT DES CAPUCINES",
+          "type": "spectacle",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée festive mêlant cabaret et clubbing avec performances queer et inclusives.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une sortie en début de soirée à Sète",
+      "compris": "les 3 prochains mois · Sète · soirée · soirée",
+      "ecarts_comprehension": [
+        "soir non compris"
+      ],
+      "propositions": 2,
+      "correctes": 2,
+      "elargie": false,
+      "exact": false,
+      "erreurs": [],
+      "titres": [
+        "FAIRE DE LA VOILE A SETE",
+        "VISITE DE L’EXPOSITION \"MAISON-MAIN\" AVEC LES COMMISSAIRES CHRISTIAN RIZZO & ANNE-LAURE LESTAGE"
+      ],
+      "cartes": [
+        {
+          "titre": "FAIRE DE LA VOILE A SETE",
+          "type": "sport",
+          "publics": [],
+          "resume": "Activité de navigation et de voile pour tous niveaux.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "VISITE DE L’EXPOSITION \"MAISON-MAIN\" AVEC LES COMMISSAIRES CHRISTIAN RIZZO & ANNE-LAURE LESTAGE",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Visite commentée d'une exposition avec des commissaires pour découvrir des œuvres et des réflexions sur le geste et la matière.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un concert",
+      "compris": "les 3 prochains mois · concert",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Concert jazz au port (exemple)",
+        "Concert rock (exemple)",
+        "CONCERT HARMONIE",
+        "CONCERTI POUR PIANOS",
+        "CONCERT BRAHMS",
+        "CONCERT HARMONIE",
+        "CONCERT SYMPHONIQUE",
+        "CONCERT SYMPHONIQUE"
+      ],
+      "cartes": [
+        {
+          "titre": "Concert jazz au port (exemple)",
+          "type": "concert",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Concert de jazz manouche en ouverture d'un festival.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Concert rock (exemple)",
+          "type": "concert",
+          "publics": [
+            "famille",
+            "soirée"
+          ],
+          "resume": "Soirée musicale avec plusieurs groupes locaux dans un bar.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT HARMONIE",
+          "type": "concert",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Concert de fin d'année des classes d'orchestre harmonie avec des jeunes musiciens.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERTI POUR PIANOS",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert de concertos pour piano et orchestre réduits pour deux pianos.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT BRAHMS",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Concert symphonique interprétant des œuvres de Brahms, entre puissance dramatique et grâce mélancolique.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT HARMONIE",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert d'un orchestre d'élèves en formation musicale.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT SYMPHONIQUE",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert symphonique interprété par des musiciens en formation, ouvert à tous.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT SYMPHONIQUE",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Concert d'un orchestre et d'un ensemble à cordes.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    }
+  ],
+  "mode": "recherche",
+  "jeu": "88d71458",
+  "prompt_version": "2026-10-18.1",
+  "note": "(sans moment de la journée)"
+}
