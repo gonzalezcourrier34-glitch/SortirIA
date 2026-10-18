@@ -162,6 +162,10 @@ jobs:
       # pas redevenir une liste de concerts. Seuil 90 % : petit jeu (89 cartes).
       - name: Évaluation « faire soi-même » (échoue sous 90 %)
         run: uv run python -m scripts.eval_recherche --jeu-test --fichier config/eval_pratique.yaml --seuil 0.90 --json eval_pratique.json
+      # Moment de la journée (18/10/2026) : « ce matin » ne doit pas proposer
+      # une soirée. Seuil 90 % : petit jeu (12 recherches).
+      - name: Évaluation « moment de la journée » (échoue sous 90 %)
+        run: uv run python -m scripts.eval_recherche --jeu-test --fichier config/eval_moments.yaml --seuil 0.90 --json eval_moments.json
       - uses: actions/upload-artifact@v6
         if: always()
         with:
@@ -169,4 +173,5 @@ jobs:
           path: |
             eval_recherche.json
             eval_pratique.json
+            eval_moments.json
           if-no-files-found: ignore
