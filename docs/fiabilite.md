@@ -12,7 +12,7 @@ de favorable**.
 
 | Information | Ce qui est affiché | Ce que font les filtres |
 | --- | --- | --- |
-| **Prix** inconnu | « Prix non communiqué » | « Gratuit seulement » ne garde que les événements **déclarés** gratuits ; « moins de 15 € » ne garde que les gratuits ou ceux dont le prix d'entrée **connu** est sous le seuil. Un prix inconnu n'est jamais pris pour gratuit. |
+| **Prix** inconnu | « Prix non communiqué » | « Gratuit » ne garde que les événements **déclarés** gratuits ; « moins de 15 € » ne garde que les gratuits ou ceux dont le prix d'entrée **connu** est sous le seuil. Un prix inconnu n'est jamais pris pour gratuit. |
 | **Heure** inconnue (« le samedi ») | la date seule, sans heure inventée (`time_known = false`) | « ce soir » garde aussi les événements sans heure : la journée entière peut convenir, la réponse ne promet pas d'heure |
 | **Âges** | affichés seulement s'ils sont dans la source | le public « famille » vient de la source, de mots-clés du texte ou de l'enrichissement par Mistral ; chez un partenaire, « tout public » vaut « famille », sauf âge minimal de 18 ans |
 | **Lieu** sans coordonnées GPS (PDF, partenaires) | la commune | rangé par sa commune pour la zone (Montpellier, bassin de Thau) |

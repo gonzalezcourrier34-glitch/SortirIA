@@ -58,7 +58,11 @@ interface AnswerPart {
     ref: number | null;
 }
 
-const PUBLICS: Choice<Public>[] = [
+// « Tout public » (18/10/2026, retour des premiers testeurs) : aucun filtre de
+// public, comme « Les deux » pour la zone ; pas « seulement les événements
+// marqués tout public ».
+const PUBLICS: Choice<Public | null>[] = [
+    { value: null, label: 'Tout public' },
     { value: 'famille', label: 'Famille' },
     { value: 'soiree', label: 'Soirée' },
     { value: 'ados', label: 'Ados' },
@@ -68,7 +72,7 @@ const PUBLICS: Choice<Public>[] = [
 const ZONES: Choice<Zone | null>[] = [
     { value: 'montpellier', label: 'Montpellier' },
     { value: 'thau', label: 'Thau' },
-    { value: null, label: 'Partout' }
+    { value: null, label: 'Les deux' }
 ];
 
 const PERIODS: Choice<Period>[] = [
@@ -87,7 +91,8 @@ const STEP_TITLES: Record<SearchStep, string> = {
 
 const STEPS: SearchStep[] = ['comprendre', 'rechercher', 'filtrer', 'rediger'];
 
-const DEFAULT_SOURCES = ['OpenAgenda', 'DATAtourisme', 'Agglopôle Sète', 'Partenaires'];
+// Affichées le temps que l'API réponde (mêmes noms que /api/v1/sources).
+const DEFAULT_SOURCES = ['DATAtourisme', 'Programmes publiés par les collectivités', 'OpenAgenda', 'Partenaires SortirIA'];
 
 const WELCOME_IDEAS = [
     'Un truc à faire avec les enfants samedi près de Sète',
@@ -199,7 +204,16 @@ export class AppComponent implements OnInit {
 
     /** Téléphone : filtres repliés en une ligne après une recherche (16/10/2026),
      *  pour que la réponse soit visible sans faire défiler. */
-    readonly filtersCollapsed = signal(false);
+    readonly filtersCollapsed = signal(isPhone());
+
+    /** Cases cochées par la question (18/10/2026), et non par le visiteur : elles
+     *  ne valent que pour cette question. La suivante repart sans elles ; une
+     *  relance les retrouve par le contexte. */
+    private readonly publicFromQuestion = signal(false);
+    private readonly zoneFromQuestion = signal(false);
+
+    /** « À ne pas manquer » a répondu (vide ou non) : avant, « Chargement… ». */
+    readonly highlightsLoaded = signal(false);
 
     readonly sources = signal<string[]>(DEFAULT_SOURCES);
 
@@ -262,8 +276,8 @@ export class AppComponent implements OnInit {
     /** Résumé des filtres, affiché quand ils sont repliés. */
     readonly filtersSummary = computed(() => {
         const parts = [
-            PUBLICS.find(choice => choice.value === this.selectedPublic())?.label ?? 'Tous publics',
-            ZONES.find(choice => choice.value === this.selectedZone())?.label ?? 'Partout',
+            PUBLICS.find(choice => choice.value === this.selectedPublic())?.label ?? 'Tout public',
+            ZONES.find(choice => choice.value === this.selectedZone())?.label ?? 'Les deux',
             this.questionDate() ?? PERIODS.find(choice => choice.value === this.selectedPeriod())?.label ?? ''
         ];
         if (this.freeOnly()) {
@@ -271,6 +285,22 @@ export class AppComponent implements OnInit {
         }
         return parts.filter(Boolean).join(' · ');
     });
+
+    /** « À ne pas manquer », à droite (18/10/2026) : sans les offres déjà à
+     *  l'écran (cartes, encadré des offres proches) ; vide, il disparaît. */
+    readonly sideHighlights = computed(() => {
+        const answer = this.result();
+        const shown = new Set([
+            ...(answer?.events ?? []).map(card => card.event_id),
+            ...(answer?.partner_offers ?? []).map(card => card.event_id)
+        ]);
+        return this.highlights().filter(item => !shown.has(item.event_id)).slice(0, 4);
+    });
+
+    /** Des offres de démonstration sont affichées : le bandeau le dit. */
+    readonly showsDemo = computed(() => this.highlights().some(item => item.demo)
+        || !!this.result()?.partner_offers?.some(item => item.demo)
+        || !!this.result()?.events.some(item => item.demo));
 
     readonly progressPercent = computed(() => {
         const done = this.steps().filter(step => step.status === 'completed').length;
@@ -319,15 +349,19 @@ export class AppComponent implements OnInit {
 
     // # Filtres
 
-    togglePublic(value: Public): void {
-        this.selectedPublic.update(current => current === value ? null : value);
+    togglePublic(value: Public | null): void {
+        this.publicFromQuestion.set(false);
+        this.selectedPublic.update(current => value === null || current === value ? null : value);
     }
 
     selectZone(value: Zone | null): void {
+        this.zoneFromQuestion.set(false);
         this.selectedZone.set(value);
     }
 
     selectPeriod(value: Period): void {
+        // Choisir une période remplace la date lue dans la question.
+        this.questionDate.set(null);
         this.selectedPeriod.set(value);
     }
 
@@ -375,6 +409,18 @@ export class AppComponent implements OnInit {
                 }))
             }].slice(-5));
         }
+        // Une case cochée par la question précédente ne vaut pas pour celle-ci
+        // (18/10/2026 : « avec les enfants » puis « un concert ce soir »
+        // cherchait encore pour les familles). Une relance la retrouve par le
+        // contexte, et l'interface la recoche.
+        if (this.publicFromQuestion()) {
+            this.selectedPublic.set(null);
+            this.publicFromQuestion.set(false);
+        }
+        if (this.zoneFromQuestion()) {
+            this.selectedZone.set(null);
+            this.zoneFromQuestion.set(false);
+        }
         this.question.set(shown);
         this.askedQuestion.set(shown);
         this.error.set(null);
@@ -414,13 +460,21 @@ export class AppComponent implements OnInit {
 
     newConversation(): void {
         this.searchSubscription?.unsubscribe();
-        this.filtersCollapsed.set(false);
+        this.filtersCollapsed.set(isPhone());
         this.loading.set(false);
         this.question.set('');
         this.askedQuestion.set('');
         this.result.set(null);
         this.history.set([]);
         this.questionDate.set(null);
+        if (this.publicFromQuestion()) {
+            this.selectedPublic.set(null);
+            this.publicFromQuestion.set(false);
+        }
+        if (this.zoneFromQuestion()) {
+            this.selectedZone.set(null);
+            this.zoneFromQuestion.set(false);
+        }
         this.error.set(null);
         this.selectedId.set(null);
         this.detail.set(null);
@@ -446,11 +500,13 @@ export class AppComponent implements OnInit {
         // La question l'emporte sur les cases (17/10/2026) : « avec les enfants »
         // coche « Famille », « à Sète » coche « Thau ».
         const checked = event.result.checked;
-        if (checked?.public) {
+        if (checked?.public && checked.public !== this.selectedPublic()) {
             this.selectedPublic.set(checked.public);
+            this.publicFromQuestion.set(true);
         }
-        if (checked?.zone) {
+        if (checked?.zone && checked.zone !== this.selectedZone()) {
             this.selectedZone.set(checked.zone);
+            this.zoneFromQuestion.set(true);
         }
         this.questionDate.set(checked?.date ?? null);
 
@@ -561,8 +617,14 @@ export class AppComponent implements OnInit {
     /** « À ne pas manquer » : les offres partenaires mises en avant. */
     private loadHighlights(): void {
         this.searchService.getPartnerHighlights(6).subscribe({
-            next: highlights => this.highlights.set(highlights),
-            error: () => this.highlights.set([])
+            next: highlights => {
+                this.highlights.set(highlights);
+                this.highlightsLoaded.set(true);
+            },
+            error: () => {
+                this.highlights.set([]);
+                this.highlightsLoaded.set(true);
+            }
         });
     }
 

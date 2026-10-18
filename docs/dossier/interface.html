@@ -74,7 +74,7 @@
 <rect x="480" y="178" width="46" height="24" rx="12" fill="#111a22" stroke="#98a8ad" stroke-width="1"/>
 <text x="503" y="194" fill="#edf4f4" font-size="12" text-anchor="middle">Thau</text>
 <rect x="532" y="178" width="62" height="24" rx="12" fill="#48c9b0"/>
-<text x="563" y="194" fill="#111a22" font-size="12" font-weight="700" text-anchor="middle">Partout</text>
+<text x="563" y="194" fill="#111a22" font-size="12" font-weight="700" text-anchor="middle">Les deux</text>
 <!-- Critères, ligne 2 -->
 <text x="36" y="227" fill="#98a8ad" font-size="12">Quand</text>
 <rect x="84" y="210" width="86" height="24" rx="12" fill="#111a22" stroke="#98a8ad" stroke-width="1"/>
@@ -86,7 +86,7 @@
 <rect x="338" y="210" width="58" height="24" rx="12" fill="#48c9b0"/>
 <text x="367" y="226" fill="#111a22" font-size="12" font-weight="700" text-anchor="middle">3 mois</text>
 <rect x="416" y="210" width="128" height="24" rx="12" fill="#111a22" stroke="#98a8ad" stroke-width="1"/>
-<text x="480" y="226" fill="#edf4f4" font-size="12" text-anchor="middle">Gratuit seulement</text>
+<text x="480" y="226" fill="#edf4f4" font-size="12" text-anchor="middle">Gratuit</text>
 
 <!-- Question -->
 <rect x="36" y="246" width="500" height="56" rx="10" fill="#111a22" stroke="#2f9e8a" stroke-width="1.2"/>
@@ -215,7 +215,7 @@
 <text x="754" y="650" fill="#48c9b0" font-size="12">date</text>
 <text x="754" y="670" fill="#edf4f4" font-size="13" font-weight="700">Offre d'un partenaire · lieu</text>
 </g>
-</svg><figcaption>Maquette de l'écran, d'après <code>frontend/src/app/app.component.html</code>. Aucun public n'est coché par défaut, la zone est « Partout » et la période « 3 mois » : la question décide (16/10/2026 ; avant, « Famille » et « Ce week-end » cochés faisaient répondre « rien pour un public familial » à « un concert ce soir ») ; sur téléphone, les critères se replient en une ligne après la recherche ; les offres partenaires sont encadrées et étiquetées partout (pointillés ici, encadré terracotta dans l'interface).</figcaption></figure>
+</svg><figcaption>Maquette de l'écran, d'après <code>frontend/src/app/app.component.html</code>. Aucun public n'est coché par défaut, la zone est « Les deux » (« Partout » avant le 18/10) et la période « 3 mois » : la question décide (16/10/2026 ; avant, « Famille » et « Ce week-end » cochés faisaient répondre « rien pour un public familial » à « un concert ce soir ») ; sur téléphone, les critères se replient en une ligne après la recherche ; les offres partenaires sont encadrées et étiquetées partout (pointillés ici, encadré terracotta dans l'interface).</figcaption></figure>
 
 <div class="about-grid">
 <div class="large-text">Un écran, pas un site : la question, la réponse et l'événement restent visibles ensemble.</div>
@@ -234,7 +234,7 @@
 <h2>Le parcours d'une recherche</h2>
 <p class="section-intro">Ce qui se passe à l'écran, dans l'ordre, et ce que fait le code à chaque moment.</p>
 <div class="timeline">
-<div class="timeline-item"><span>01 • Critères</span><h3>Cocher Public, Zone, Quand, Gratuit</h3><p>Des boutons à bascule, pas des listes déroulantes : Famille, Soirée, Ados, Seniors (un second clic décoche) ; Montpellier, Thau ou Partout ; Aujourd'hui, Ce week-end, 7 jours ou 3 mois ; « Gratuit seulement ». Une fine barre sépare les groupes. Ils sont envoyés avec la question, et la question les précise : « samedi » écrit l'emporte sur « Aujourd'hui » coché et s'affiche dans « Quand » ; « avec les enfants » coche Famille. Le moment de la journée (le soir, le matin, l'après-midi) se lit seulement dans la phrase : « en soirée » n'est plus le public Soirée.</p></div>
+<div class="timeline-item"><span>01 • Critères</span><h3>Cocher Public, Zone, Quand, Gratuit</h3><p>Des boutons à bascule, pas des listes déroulantes : Tout public, Famille, Soirée, Ados, Seniors (un second clic revient à Tout public) ; Montpellier, Thau ou Les deux ; Aujourd'hui, Ce week-end, 7 jours ou 3 mois ; « Gratuit » (libellés revus le 18/10 après les premiers retours). Une fine barre sépare les groupes. Ils sont envoyés avec la question, et la question les précise : « samedi » écrit l'emporte sur « Aujourd'hui » coché et s'affiche dans « Quand » ; « avec les enfants » coche Famille, pour cette question seulement (la suivante repart sans, une relance la retrouve). Le moment de la journée (le soir, le matin, l'après-midi) se lit seulement dans la phrase : « en soirée » n'est plus le public Soirée.</p></div>
 <div class="timeline-item"><span>02 • Question</span><h3>Écrire son envie, sur deux lignes</h3><p>Une zone de texte de 500 caractères au plus. Entrée lance la recherche, Maj + Entrée passe à la ligne. « Nouvelle conversation » efface le fil ; sinon, la demande comprise précédente (<code>context</code>, renvoyée par l'API) accompagne la question suivante, et « et pour les enfants ? » complète la recherche d'avant.</p></div>
 <div class="timeline-item"><span>03 • Étapes en direct</span><h3>« SortirIA cherche pour vous »</h3><p>Un clic sur « Chercher » ouvre une fenêtre : les 4 étapes (compréhension, recherche dans la base, filtres, rédaction) passent de « À venir » à « En cours… » puis « Fait », avec le message de l'API (« n séances (sens + mots-clés) », « n retenus, dont n de type concert »…) et une barre d'avancement. La fenêtre se referme 0,7 s après la réponse ; « Voir comment j'ai cherché » la rouvre, Échap la ferme.</p></div>
 <div class="timeline-item"><span>04 • Réponse</span><h3>Une réponse qui cite ses sources</h3><p>La réponse arrive en entier avec le message final du flux (<code>event: completed</code>) : ce sont les étapes qui sont diffusées au fil de l'eau, pas le texte mot à mot. Chaque renvoi [n] devient un bouton qui ouvre la carte correspondante. Si Mistral n'a pas répondu, une mention le dit : « Réponse simplifiée : l'assistant Mistral n'a pas répondu, les événements restent exacts. » Dessous, « Pour continuer » propose trois relances cliquables.</p></div>

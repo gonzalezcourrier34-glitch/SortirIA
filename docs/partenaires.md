@@ -169,7 +169,12 @@ de dire si un paiement influence ce classement ; à faire vérifier avant une
 ouverture commerciale.
 
 Partenaires d'exemple (fictifs) : Festival Exemple en premium, Ludothèque
-Exemple mise en avant, Bar Exemple gratuit.
+Exemple mise en avant, Bar Exemple gratuit. En ligne, leurs offres sont
+annoncées comme **démonstration** (18/10/2026) : étiquette « Démonstration »,
+une phrase au-dessus des offres, et pas de lien vers example.org dans le
+détail (une offre dont le lien est sur example.org est reconnue comme telle,
+`is_demo_link`). Vérifié le 18/10 au matin : le Festival (premium) passe en
+tête de « À ne pas manquer ».
 
 Chaque lundi, le bilan de l'agent peut suggérer un sujet à proposer aux
 partenaires (« kitesurf : cherché 3 fois, absent de la base et des agendas

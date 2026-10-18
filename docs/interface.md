@@ -73,7 +73,24 @@ Server-Sent Events, comme l'analyse d'une position dans Chess Agent.
   (17/10/2026).
 - **La question coche les cases** : un public ou un lieu écrit l'emporte sur
   la case cochée, et l'interface la coche (« avec les enfants » → Famille,
-  « à Sète » → Thau) ; la date lue (« samedi ») s'affiche dans « Quand ».
+  « à Sète » → Thau) ; la date lue (« samedi ») s'affiche dans « Quand », et
+  la période cochée s'efface (pointillés) ; choisir une période remplace la
+  date lue. Une case cochée **par la question** ne vaut que pour elle
+  (18/10/2026) : « avec les enfants » puis « un concert ce soir » ne cherche
+  plus pour les familles ; une relance la retrouve par le contexte. Une case
+  cochée à la main reste.
+- **Les cases** (18/10/2026, retours des premiers testeurs) : « Tout public »
+  (aucun filtre de public, pas « seulement les événements marqués tout
+  public ») en plus de Famille, Soirée, Ados, Seniors ; « Les deux » au lieu de
+  « Partout » pour la zone ; « Gratuit » au lieu de « Gratuit seulement ».
+- **Offres de démonstration** (18/10/2026) : les partenaires d'exemple sont
+  fictifs (liens example.org) ; leurs offres portent « Démonstration » au lieu
+  de « Offre partenaire », une phrase le dit au-dessus des offres, et le détail
+  ne renvoie pas vers le faux lien (`demo` dans la carte, `is_demo_link`).
+- **« À ne pas manquer »**, à droite, ne reprend pas les offres déjà affichées
+  dans la réponse (cartes, encadré des offres proches) ; vide, il disparaît.
+- **Téléphone** : critères repliés en une ligne dès l'arrivée ; le cadre
+  « L'événement » n'apparaît qu'une fois une proposition choisie.
 - **Le moment de la journée se lit dans la phrase** (17/10/2026), pas dans
   une case : « le soir », « en soirée » (séances à partir de 17 h), « le
   matin » (avant midi), « l'après-midi » (de 12 h à 18 h), « en journée »

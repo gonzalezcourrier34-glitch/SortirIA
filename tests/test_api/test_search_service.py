@@ -601,3 +601,10 @@ def test_the_moment_of_the_day_filters_the_start_hour() -> None:
     assert "BETWEEN 12 AND 17" in sql_for("un spectacle l'après-midi")
     assert ">= 17" in sql_for("un concert en soirée")
     assert "BETWEEN" not in sql_for("un concert")
+
+
+def test_demo_offers_are_marked() -> None:
+    """18/10/2026 : partenaires fictifs annoncés comme démonstration, sans faux lien."""
+    assert service.to_card(row(url="https://example.org/bar"))["demo"] is True
+    assert service.to_card(row(url="https://www.sete.fr/agenda"))["demo"] is False
+    assert service.is_demo_link("https://sub.example.com/x") and not service.is_demo_link("https://notexample.org")

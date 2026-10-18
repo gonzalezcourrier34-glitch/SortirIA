@@ -47,6 +47,8 @@ export interface EventCard {
     source_attribution: string;
     partner: boolean;
     partner_name: string;
+    /** Offre de démonstration (partenaire fictif, lien example.org) : annoncée comme telle. */
+    demo?: boolean;
     venue_rating: number | null;
     venue_rating_count: number;
     /** Autres dates du même événement : une seule carte, sur sa date la plus proche. */

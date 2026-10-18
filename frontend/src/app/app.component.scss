@@ -213,6 +213,25 @@ $pastille: 999px;
     }
 }
 
+// Période cochée mais remplacée par la date lue dans la question (18/10/2026).
+.chip-faded {
+    border-color: var(--vert);
+    border-style: dashed;
+    color: var(--texte-leger);
+}
+
+// Partenaires fictifs (18/10/2026) : dit clairement, sans faux lien.
+.demo-note {
+    margin: 4px 0 8px;
+    font-size: 12px;
+    font-style: italic;
+    color: var(--texte-leger);
+}
+
+.demo-link {
+    font-style: italic;
+}
+
 // Date lue dans la question : une étiquette, pas un bouton.
 .chip-read {
     display: inline-flex;
@@ -1278,6 +1297,11 @@ $pastille: 999px;
 
     .back-to-results {
         display: inline-flex;
+    }
+
+    // Rien de choisi : pas de cadre vide sous les résultats (18/10/2026).
+    .panel-detail.panel-empty {
+        display: none;
     }
 
     .overlay {

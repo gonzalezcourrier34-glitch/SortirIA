@@ -997,6 +997,18 @@ def category_display(row: Mapping[str, Any]) -> str:
     return CATEGORY_LABELS.get(category.lower(), category)
 
 
+DEMO_HOSTS = ("example.org", "example.com", "example.net")
+
+
+def is_demo_link(url: str) -> bool:
+    """Lien d'une offre de démonstration (partenaires fictifs : example.org)."""
+
+    from urllib.parse import urlparse
+
+    host = (urlparse(url).hostname or "").lower()
+    return any(host == demo or host.endswith(f".{demo}") for demo in DEMO_HOSTS)
+
+
 def to_card(row: Mapping[str, Any], ref: int | None = None) -> dict[str, Any]:
     """Un événement tel que l'interface l'affiche (carte et détail)."""
 
@@ -1028,6 +1040,9 @@ def to_card(row: Mapping[str, Any], ref: int | None = None) -> dict[str, Any]:
         # Passée en tête parce qu'elle répond au type et au public demandés.
         "partner_ahead": bool(row.get("partner_ahead")),
         "partner_name": str(row.get("partner_name") or ""),
+        # Offre de démonstration (18/10/2026) : partenaire fictif, lien example.org.
+        # L'interface l'annonce comme telle et n'envoie pas vers le faux lien.
+        "demo": is_demo_link(str(row.get("url") or "")),
         "venue_rating": float(rating) if rating is not None else None,
         "venue_rating_count": int(row.get("venue_rating_count") or 0),
         "other_dates": [],

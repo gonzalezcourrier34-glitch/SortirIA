@@ -43,7 +43,7 @@
                 <div class="filters">
                     <div class="filter-group" role="group" aria-label="Public">
                         <span class="filter-label">Public</span>
-                        @for (choice of publics; track choice.value) {
+                        @for (choice of publics; track choice.label) {
                             <button type="button" class="chip"
                                 [class.chip-on]="selectedPublic() === choice.value"
                                 [attr.aria-pressed]="selectedPublic() === choice.value"
@@ -64,8 +64,11 @@
                     <div class="filter-group" role="group" aria-label="Quand">
                         <span class="filter-label">Quand</span>
                         @for (choice of periods; track choice.value) {
+                            <!-- Une date lue dans la question l'emporte : la période cochée s'efface. -->
                             <button type="button" class="chip"
-                                [class.chip-on]="selectedPeriod() === choice.value"
+                                [class.chip-on]="selectedPeriod() === choice.value && !questionDate()"
+                                [class.chip-faded]="selectedPeriod() === choice.value && !!questionDate()"
+                                [attr.title]="selectedPeriod() === choice.value && questionDate() ? 'La date de votre question s’applique' : null"
                                 [attr.aria-pressed]="selectedPeriod() === choice.value"
                                 (click)="selectPeriod(choice.value)">{{ choice.label }}</button>
                         }
@@ -81,7 +84,7 @@
                         <button type="button" class="chip"
                             [class.chip-on]="freeOnly()"
                             [attr.aria-pressed]="freeOnly()"
-                            (click)="toggleFree()">Gratuit seulement</button>
+                            (click)="toggleFree()">Gratuit</button>
                     </div>
                 </div>
                 }
@@ -229,7 +232,7 @@
                                                 </span>
                                             }
                                             @if (card.partner) {
-                                                <span class="badge-partner">Offre partenaire</span>
+                                                <span class="badge-partner">{{ card.demo ? 'Démonstration' : 'Offre partenaire' }}</span>
                                             }
                                         </div>
 
@@ -263,6 +266,9 @@
                                     <span class="badge-partner">Offres partenaires</span>
                                     Pas exactement ce que vous cherchiez ? Nos partenaires proposent aussi :
                                 </div>
+                                @if (showsDemo()) {
+                                    <p class="demo-note">Offres de démonstration : partenaires fictifs, pour montrer le fonctionnement.</p>
+                                }
                                 <div class="partner-offers-list">
                                     @for (offer of answer.partner_offers; track offer.event_id) {
                                         <button type="button" class="partner-offer"
@@ -304,6 +310,9 @@
                         @if (highlights().length) {
                             <div class="welcome-offers">
                                 <div class="eyebrow">À ne pas manquer · nos partenaires</div>
+                                @if (showsDemo()) {
+                                    <p class="demo-note">Offres de démonstration : partenaires fictifs, pour montrer le fonctionnement.</p>
+                                }
                                 <div class="welcome-offers-grid">
                                     @for (item of highlights(); track item.event_id) {
                                         <button type="button" class="offer-tile"
@@ -328,7 +337,9 @@
 
         <aside class="side">
 
+            <!-- Téléphone : caché tant que rien n'est choisi (18/10/2026). -->
             <section class="panel panel-detail" id="detail" [class.panel-partner]="detail()?.partner"
+                [class.panel-empty]="!detail() && !detailLoading() && !detailError()"
                 aria-live="polite" aria-label="Détail de l’événement">
                 <div class="panel-top">
                     <div class="eyebrow">L’événement</div>
@@ -339,7 +350,7 @@
                         </button>
                     }
                     @if (detail()?.partner) {
-                        <span class="badge-partner">Offre partenaire</span>
+                        <span class="badge-partner">{{ detail()?.demo ? 'Démonstration' : 'Offre partenaire' }}</span>
                     }
                 </div>
 
@@ -394,13 +405,18 @@
                         @if (event.source_attribution) {
                             <span class="small">{{ event.source_attribution }}</span>
                         }
-                        <a [href]="event.url" target="_blank" rel="noopener noreferrer" class="detail-link">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path>
-                            </svg>
-                            Voir la page de l’organisateur
-                        </a>
+                        @if (event.demo) {
+                            <!-- Partenaire fictif : pas de lien vers example.org. -->
+                            <span class="small demo-link">Offre de démonstration (partenaire fictif) : pas de page à visiter.</span>
+                        } @else {
+                            <a [href]="event.url" target="_blank" rel="noopener noreferrer" class="detail-link">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path>
+                                </svg>
+                                Voir la page de l’organisateur
+                            </a>
+                        }
                     </div>
 
                     <div class="detail-block">
@@ -489,7 +505,7 @@
                         }
                     </div>
                 } @else {
-                    <p class="muted">Cliquez sur une proposition pour l’afficher ici.</p>
+                    <p class="muted">Choisissez une proposition pour l’afficher ici.</p>
                 }
             </section>
 
@@ -515,16 +531,20 @@
             }
 
             <!-- Après la première question seulement (17/10/2026) : avant, les mêmes
-                 offres sont déjà en tuiles au centre, pas de doublon. -->
-            @if (result() || error()) {
+                 offres sont déjà en tuiles au centre. Sans les offres déjà affichées
+                 dans la réponse (18/10/2026) ; vide, il disparaît. -->
+            @if ((result() || error()) && (sideHighlights().length || !highlightsLoaded())) {
                 <section class="panel">
                     <div>
                         <div class="eyebrow">À ne pas manquer</div>
                         <span class="small">Proposé par nos partenaires</span>
                     </div>
+                    @if (showsDemo()) {
+                        <p class="demo-note">Offres de démonstration : partenaires fictifs, pour montrer le fonctionnement.</p>
+                    }
 
                     <ul class="offer-list">
-                        @for (item of highlights().slice(0, 4); track item.event_id) {
+                        @for (item of sideHighlights(); track item.event_id) {
                             <li>
                                 <button type="button" class="offer-tile"
                                     [class.card-on]="selectedId() === item.event_id"
@@ -536,7 +556,7 @@
                                 </button>
                             </li>
                         } @empty {
-                            <li class="muted">Pas de proposition de partenaire pour le moment.</li>
+                            <li class="muted">Chargement…</li>
                         }
                     </ul>
                 </section>
