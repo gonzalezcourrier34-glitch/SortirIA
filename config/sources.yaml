@@ -130,6 +130,7 @@ api_sources:
       - "70214399"   # 1
       - "10455523"   # 1
       - "67871262"   # 1 (repéré par la collecte du 14/10 à 11 h)
+      - "889555"     # 7 (découverte du 2026-10-18)
     max_agendas: 50
     page_size: 100
     max_pages: 10
