@@ -253,7 +253,8 @@ def test_a_daytime_follow_up_replaces_the_evening() -> None:
     ("jouer aux jeux de société", "jouer"),
     ("apprendre à dessiner", "dessiner"),
     ("cuisiner avec les enfants", "cuisiner"),
-    ("jouer au théâtre", None),                       # un autre type nommé : recherche habituelle
+    ("jouer au théâtre", "theatre"),                  # en faire soi-même (18/10/2026)
+    ("aller au théâtre", None),                       # en voir : recherche habituelle
     ("un concert", None),
 ])
 def test_practice_verbs(question: str, practice: str | None) -> None:
@@ -261,7 +262,7 @@ def test_practice_verbs(question: str, practice: str | None) -> None:
     understood = understand(question, NOW)
     assert understood.practice == practice
     if practice:
-        assert understood.keywords == (practice,) and understood.categories == ()
+        assert understood.keywords == ({"theatre": "theatral"}.get(practice, practice),) and understood.categories == ()
 
 
 def test_a_follow_up_keeps_the_practice_until_a_new_subject() -> None:

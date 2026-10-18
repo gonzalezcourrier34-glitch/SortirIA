@@ -101,7 +101,13 @@ PRACTICE_VERBS: dict[str, frozenset[str]] = {
     "sculpter": frozenset({"atelier"}),
     "cuisiner": frozenset({"atelier"}),
 }
-PRACTICE_LABELS = {"chanter": "pour chanter", "danser": "pour danser", "jouer": "pour jouer",
+# Expressions de pratique sans verbe propre (18/10/2026) : « jouer au théâtre »,
+# c'est le plus souvent en faire soi-même (cours, atelier d'impro).
+PRACTICE_PHRASES = {"faire du theatre": "theatre", "jouer au theatre": "theatre", "faire de l impro": "theatre",
+                    "faire de l improvisation": "theatre", "jouer la comedie": "theatre",
+                    "apprendre le theatre": "theatre"}
+PRACTICE_LABELS = {"theatre": "pour faire du théâtre", "chanter": "pour chanter", "danser": "pour danser",
+                   "jouer": "pour jouer",
                    "peindre": "pour peindre", "dessiner": "pour dessiner", "sculpter": "pour sculpter",
                    "cuisiner": "pour cuisiner"}
 
@@ -111,12 +117,15 @@ PRACTICE_LABELS = {"chanter": "pour chanter", "danser": "pour danser", "jouer": 
 # Avec ces mots, ce qui se pratique (bal, cours, stage, atelier) n'est plus du
 # type demandé (app/search_service.py, PARTICIPATION).
 WATCH_WORDS = ("spectacle", "spectacles", "voir", "regarder", "assister", "representation", "representations",
-               "show", "ballet", "ballets")
+               "show", "ballet", "ballets", "piece", "pieces")
 
 
 def find_practice(padded: str, categories: tuple[str, ...]) -> str | None:
     """« je veux chanter » -> « chanter » ; rien si la question nomme un autre type."""
 
+    for phrase, practice in PRACTICE_PHRASES.items():
+        if f" {phrase} " in padded:
+            return practice
     for verb, allowed in PRACTICE_VERBS.items():
         if f" {verb} " in padded and set(categories) <= allowed:
             return verb
@@ -668,7 +677,8 @@ def understand(question: str, now: datetime) -> Understanding:
         # Pratique : le verbe est le sujet (les autres mots, « apprendre »,
         # « envie », n'en disent pas plus).
         categories=() if practice else categories,
-        keywords=(practice,) if practice else keywords_of(
+        # « theatre » est aussi un type de sortie : son mot de recherche est « theatral ».
+        keywords=({"theatre": "theatral"}.get(practice, practice),) if practice else keywords_of(
             # « spectacle » effacé par un type précis (« un spectacle de danse ») :
             # pas un mot à chercher non plus.
             text, consumed | ({"spectacle", "spectacles"} if "spectacle" not in categories else set())

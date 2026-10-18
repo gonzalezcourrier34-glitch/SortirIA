@@ -22,6 +22,11 @@ l'eau (du plus récent au plus ancien). Version illustrée :
 
 | Date | Domaine | Incident | Vu par |
 | --- | --- | --- | --- |
+| 18/10/2026 | Agent | Deux propositions de l'agent en conflit | GitHub : « This branch has conflicts » sur la pull request de la proposition 2 |
+| 18/10/2026 | Recherche | Le bouton « Enfant » gardait une exposition de peintres | Mesure du nouveau bouton : 6 recherches, 90 cartes jugées « pour l'enfant » oui, limite ou non |
+| 18/10/2026 | Interface | Les retours des premiers testeurs | Tests d'usage : des amis sur ordinateur et téléphone |
+| 17/10/2026 | Recherche | « Un spectacle de danse » proposait un bal folk | Un témoin du jeu d'évaluation « faire soi-même », sur la vraie base |
+| 17/10/2026 | Recherche | « Je veux chanter » proposait des concerts | Essai du site par l'utilisateur |
 | 17/10/2026 | Documentation | Le calendrier de la feuille de route en erreur | Lecture de la doc publiée sur GitHub Pages |
 | 17/10/2026 | Collecte | Une nuit sans bilan ni mail | Workflow GitHub « Surveillance » à 6 h 17 |
 | 16/10/2026 | Code | Relecture indépendante du code de la journée | Relecture par une seconde instance qui n'avait pas écrit le code |
@@ -43,7 +48,73 @@ l'eau (du plus récent au plus ancien). Version illustrée :
 | 14/10/2026 | Mistral | Erreurs 429 à la lecture des PDF | Journal de la collecte |
 | 14/10/2026 | Enrichissement | Plus de la moitié des lots d'enrichissement perdus | Bilan de l'enrichissement |
 
+## Retours des tests d'usage
+
+Ce que disent les premiers visiteurs, et ce qui en est fait. Les recherches
+ratées et les pouces bas arrivent aussi, chaque lundi, dans le bilan de
+l'agent.
+
+| Date | Qui | Retour | Suite |
+| --- | --- | --- | --- |
+| 17/10/2026 | Moi, au téléphone | Toucher une carte ne mène pas au détail | Le détail défile sous la carte touchée ; « Retour aux résultats » |
+| 17/10/2026 | Moi | « Je veux chanter » propose des concerts | Verbes de pratique, mesurés (61 % → 98 %) |
+| 18/10/2026 | Amis testeurs | « Partout » peu clair | « Les deux » |
+| 18/10/2026 | Amis testeurs | Pas de choix « Tout public » | Bouton « Tout public », puis Qui ? : Tout public, Famille, Enfant, Ado, Senior |
+| 18/10/2026 | Amis testeurs | Offres partenaires en double sur ordinateur | « À ne pas manquer » sans les offres déjà affichées |
+| 18/10/2026 | Amis testeurs | Changer le nom du site pour « sortiria-thau » | Gardé pour l'instant : le site couvre Montpellier et Thau ; décision à prendre |
+| 18/10/2026 | Moi | Offres fictives prises pour de vraies | Étiquette « Démonstration », sans faux lien |
+
 ## Le détail
+
+### 18/10/2026 · Deux propositions de l'agent en conflit
+
+- **Domaine** : Agent
+- **Détection** : GitHub : « This branch has conflicts » sur la pull request de la proposition 2
+- **Symptôme** : La pull request ne peut pas être fusionnée : `config/sources.yaml` montre les marques `<<<<<<<` et `>>>>>>>`.
+- **Cause** : Deux propositions de découverte d'agendas OpenAgenda, ouvertes le même matin, ajoutent chacune une ligne à la même liste (`agenda_uids`). La première fusionnée, Git ne sait pas s'il faut garder l'une, l'autre ou les deux.
+- **Résolution** : Les deux lignes gardées (« 889555 », 7 événements ; « 4243496 », 3 événements) dans l'éditeur de conflits de GitHub, CI verte, puis fusion.
+- **Pour que ça ne revienne pas** : Procédure : fusionner les propositions une par une, `git pull` entre deux ; un conflit sur cette liste se résout toujours en gardant les deux lignes.
+- **Trace** : pull requests #5 et #6
+
+### 18/10/2026 · Le bouton « Enfant » gardait une exposition de peintres
+
+- **Domaine** : Recherche
+- **Détection** : Mesure du nouveau bouton : 6 recherches, 90 cartes jugées « pour l'enfant » oui, limite ou non
+- **Symptôme** : « Joyeux enfants de la Bourgogne, exposent » (une exposition de peintres) et « La confession d'un enfant du siècle » (une pièce) proposés avec « Enfant » coché.
+- **Cause** : La règle « Enfant » acceptait le mot « enfant » dans le titre, au singulier et dans une exposition.
+- **Résolution** : Le mot au pluriel seulement, pas d'exposition sans âge (« de 0 à 6 ans »), pas de « gratuit pour les enfants ». Après : 38 cartes sur 42 pour l'enfant, 4 limites (« pour enfants et adultes »), aucune erreur.
+- **Pour que ça ne revienne pas** : Un test sur une vraie base garde le stage 4-11 ans et écarte l'exposition et le concert « gratuit pour les enfants » ; grille de mesure dans `benchmarks/recherche/2026-10-18_grille_enfant.csv`.
+- **Trace** : `app/search_service.py` (`CHILD_CONDITION`), `docs/evaluation.md`
+
+### 18/10/2026 · Les retours des premiers testeurs
+
+- **Domaine** : Interface
+- **Détection** : Tests d'usage : des amis sur ordinateur et téléphone
+- **Symptôme** : Une case cochée par une question restait cochée pour la suivante (« avec les enfants » puis « un concert ce soir » cherchait encore pour les familles) ; offres partenaires en double (« Offres partenaires » et « À ne pas manquer ») ; « Partout » peu clair ; pas de « Tout public » ; offres fictives prises pour de vraies ; « Gratuit seulement » coupé ; au téléphone, 4 lignes de filtres et un cadre vide.
+- **Cause** : L'interface ne distinguait pas une case cochée par le visiteur d'une case cochée par sa question ; le reste : libellés et mise en page pensés par le développeur, pas par un visiteur.
+- **Résolution** : Une case cochée par la question ne vaut que pour elle ; Qui ? (Tout public, Famille, Enfant, Ado, Senior), Où ? (Les deux), Quand ?, Gratuit ; offres fictives annoncées « Démonstration », sans faux lien ; « À ne pas manquer » sans les offres déjà affichées ; téléphone : filtres repliés, pas de cadre vide.
+- **Pour que ça ne revienne pas** : Les retours sont notés ci-dessous (« Retours des tests d'usage ») avec leur suite ; offres de démonstration reconnues par l'API (`is_demo_link`, testé).
+- **Trace** : commits b0a6087 et 9b2b7a2
+
+### 17/10/2026 · « Un spectacle de danse » proposait un bal folk
+
+- **Domaine** : Recherche
+- **Détection** : Un témoin du jeu d'évaluation « faire soi-même », sur la vraie base
+- **Symptôme** : Pour « un spectacle de danse » : le Bal folk en tête ; pour « voir un spectacle de danse ce week-end » : un stage de théâtre, un atelier d'impro et une exposition, annoncés comme réponse exacte.
+- **Cause** : Les bals sont rangés en « danse », comme les spectacles ; et « spectacle » acceptait n'importe quel spectacle (« Lyrica »).
+- **Résolution** : « Regarder » : avec « spectacle », « voir », « assister à », un bal, un cours, un stage ne sont plus du type demandé ; « spectacle » s'efface devant un type précis. Vraie base : 67 % → 93 % de cartes correctes sur ces recherches.
+- **Pour que ça ne revienne pas** : 4 recherches « regarder » dans `config/eval_pratique.yaml`, rejoué en CI ; 125 recherches et 50 questions sans régression.
+- **Trace** : commits 579ba71 et 917ebb7 ; `docs/evaluation.md`
+
+### 17/10/2026 · « Je veux chanter » proposait des concerts
+
+- **Domaine** : Recherche
+- **Détection** : Essai du site par l'utilisateur
+- **Symptôme** : Concerts de chant, chorales en concert, spectacles lyriques : rien pour chanter soi-même.
+- **Cause** : « chanter » n'était qu'un mot-clé : sa racine « chant » est partout dans les concerts, et le sens rapproche « chanter » de « concert ». Rien ne distinguait faire et regarder.
+- **Résolution** : Verbes de pratique (chanter, danser, jouer, peindre, dessiner, sculpter, cuisiner, faire du théâtre) : le verbe devient le sujet, ce qui y répond est défini (karaoké, cours ou stage de chant…), les concerts ne comptent plus sauf « Stage de chant ». Vraie base : 61 % → 98 % de cartes correctes sur ces recherches, compréhension 35 % → 100 %.
+- **Pour que ça ne revienne pas** : Jeu d'évaluation `config/eval_pratique.yaml` (avant / après par ablation, `--sans-pratique`), rejoué en CI à chaque push.
+- **Trace** : commits f452b7d et d529606 ; `docs/evaluation.md`
 
 ### 17/10/2026 · Le calendrier de la feuille de route en erreur
 
@@ -64,6 +135,7 @@ l'eau (du plus récent au plus ancien). Version illustrée :
 - **Résolution** : Fourchette inversée remise dans l'ordre avant l'écriture (`event_validator.conform_to_schema`, avec la fin avant le début). `load_events` rattrape toute erreur d'écriture : la nuit continue jusqu'au bilan, notée « échec », avec l'alerte « Écriture en base impossible » et sa cause dans le mail.
 - **Pour que ça ne revienne pas** : Un test rejoue la panne (base qui refuse l'écriture : statut « échec », alerte, mail envoyé). Cause trouvée en deux minutes dans Log Analytics.
 - **Trace** : commit 38d4df2 ; `tests/test_agent_collecte/test_agent.py`
+- **Suite** : rattrapée ; les collectes suivantes (nuits du 18/10) ont réussi, `/api/v1/sante` dit « success ».
 
 ### 16/10/2026 · Relecture indépendante du code de la journée
 

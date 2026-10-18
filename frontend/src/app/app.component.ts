@@ -50,6 +50,11 @@ interface StepView {
 interface PastExchange {
     question: string;
     answer: string;
+    /** La réponse découpée : ses renvois [n] restent cliquables (18/10/2026). */
+    parts: AnswerPart[];
+    /** Renvoi [n] -> événement, pour toutes les cartes de cette réponse. */
+    refs: Record<number, string>;
+    /** Les 4 premières cartes, rappelées sous la réponse. */
     events: { event_id: string; ref: number | null; title: string; date: string }[];
 }
 
@@ -312,18 +317,7 @@ export class AppComponent implements OnInit {
     });
 
     readonly answerParts = computed<AnswerPart[]>(() => {
-        const answer = this.result()?.answer ?? '';
-
-        return answer
-            .split(/(\[\d+\])/)
-            .filter(part => part !== '')
-            .map(part => {
-                const match = /^\[(\d+)\]$/.exec(part);
-
-                return match
-                    ? { text: part, ref: Number(match[1]) }
-                    : { text: part, ref: null };
-            });
+        return splitAnswer(this.result()?.answer ?? '');
     });
 
 
@@ -407,6 +401,9 @@ export class AppComponent implements OnInit {
             this.history.update(past => [...past, {
                 question: this.askedQuestion(),
                 answer: previous.answer,
+                parts: splitAnswer(previous.answer),
+                refs: Object.fromEntries(previous.events.filter(card => card.ref !== null)
+                    .map(card => [card.ref as number, card.event_id])),
                 events: previous.events.slice(0, 4).map(card => ({
                     event_id: card.event_id, ref: card.ref, title: card.title, date: card.date
                 }))
@@ -829,6 +826,20 @@ export class AppComponent implements OnInit {
 
 /** « Un truc avec les enfants près de Sète » + « Plutôt en matinée ? »
  *  → « Un truc avec les enfants près de Sète, plutôt en matinée ? ». */
+/** Réponse découpée en texte et renvois [n] (réponse en cours et historique). */
+function splitAnswer(answer: string): AnswerPart[] {
+    return answer
+        .split(/(\[\d+\])/)
+        .filter(part => part !== '')
+        .map(part => {
+            const match = /^\[(\d+)\]$/.exec(part);
+
+            return match
+                ? { text: part, ref: Number(match[1]) }
+                : { text: part, ref: null };
+        });
+}
+
 /** Écran étroit (téléphone, mise en page sur une colonne). */
 function isPhone(): boolean {
     return typeof window !== 'undefined' && !!window.matchMedia?.('(max-width: 900px)').matches;

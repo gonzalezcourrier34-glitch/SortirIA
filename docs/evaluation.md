@@ -92,11 +92,35 @@ week-end » (rien ce week-end-là), « où danser samedi soir » (lancé un same
 Ce qui reste faux, dit franchement :
 
 - « apprendre à dessiner » : une carte sans le mot dans son titre ou son
-  résumé (une visite des hôtels particuliers sur la base figée) ;
+  résumé (une visite des hôtels particuliers sur la base figée). **Corrigé le
+  18/10** : la racine de « cours » est « cour », et « Hôtels particuliers et
+  cours intérieures » passait pour un cours de dessin. Pour peindre, dessiner
+  et sculpter, on cherche stage, atelier, initiation ou « apprendre » ;
 - le témoin « jouer au théâtre » attendait le seul type « théâtre » ; aligné
   sur les 50 questions (théâtre ou spectacle) après la mesure sur la vraie
   base, ce qui fait passer la base figée de 95,5 % à 97,8 %. Les chiffres de
   la vraie base ci-dessus sont ceux d'avant cet alignement.
+
+**Faire du théâtre** (18/10/2026). « Jouer au théâtre » et « faire de
+l'impro » cherchaient des pièces à voir (« The Jury Experience », un
+spectacle d'humour). Ce sont des expressions, pas un verbe seul : elles sont
+lues d'abord (`PRACTICE_PHRASES`), puis on cherche cours, atelier, stage de
+théâtre, d'impro, de clown. « Impro » doit être le mot entier : « Atelier de
+poterie : improvisations » n'est pas du théâtre. « Une pièce de théâtre »
+reste une sortie à regarder (« pièce » rejoint les mots « regarder ») : avant,
+deux stages y passaient en tête. Mesure sur la base figée, règle retirée par
+`--sans-pratique` :
+
+| Base figée | Sans la règle | Avec |
+| --- | --- | --- |
+| « jouer au théâtre », « faire de l'impro » | 1 / 7 | **10 / 12** |
+| Compréhension (25 recherches) | 40 % | **100 %** |
+| Tout le jeu (cartes correctes, réponses exactes) | 74 % | **98 %** |
+
+125 recherches courtes et 50 questions : **mêmes cartes**, à la carte près,
+qu'avant ces changements (lancés à la même date ; lancés un autre jour, les
+dates relatives comme « ce week-end » visent d'autres jours et les listes
+changent, ce qui n'est pas une régression).
 
 **L'inverse : regarder** (17/10/2026, même soir). « Un spectacle de danse »
 proposait un bal folk et une soirée salsa (5 / 8 sur la vraie base) : les bals
@@ -128,7 +152,8 @@ stage de théâtre, un atelier d'impro et une exposition (0 / 3). Après : des
 spectacles de danse, et pour ce week-end, rien d'exact (aucun spectacle de
 danse ce week-end-là), donc des idées voisines annoncées comme telles plutôt
 qu'une réponse fausse. Reste une carte : « Nuit orange au musée Fabre »
-proposée pour « un spectacle de danse ».
+proposée pour « un spectacle de danse ». La source la range en « Danse » et la
+soirée comporte des performances dansées : cas limite, laissé tel quel.
 
 Non-régression sur la base figée : 125 recherches courtes 98,2 % → 98,4 %,
 50 questions 98,0 % → 98,3 % (« un spectacle de danse » y passe aussi de
@@ -136,6 +161,47 @@ Non-régression sur la base figée : 125 recherches courtes 98,2 % → 98,4 %,
 
 Rejoué en CI à chaque push, avec un seuil de 90 % : le jeu est petit (97
 cartes), une carte fausse de plus fait perdre un point.
+
+**Quatrième jeu : le moment de la journée** (`config/eval_moments.yaml`,
+18/10/2026). Le 17/10, le moment a quitté les cases pour être lu dans la
+phrase : « le matin » (avant midi), « l'après-midi » (12 h à 18 h), « en
+journée » (avant 18 h), « le soir », « en soirée » (17 h ou après). 11
+questions et un témoin ; chaque carte dont l'heure est affichée doit
+commencer dans le créneau (contrôle « heure » ; une carte sans heure n'est pas
+contrôlée). Mesure sur la base figée, la règle retirée par `--sans-moment` :
+
+| Mesure | Avant | Après |
+| --- | --- | --- |
+| Compréhension | 17 % (2 / 12) | **100 %** |
+| Cartes correctes | 88 % | **99 %** |
+| Cartes hors du créneau | 10 (des concerts du soir pour « le matin », des séances du matin pour « l'après-midi ») | **0** |
+
+Avant, « un concert en soirée » cherchait aussi le public « Soirée » (bars,
+fêtes). Une carte reste fausse après : un concert en soirée dont le type
+n'est pas « concert ». Les 88 % d'avant sont flatteurs : beaucoup de cartes
+n'affichent pas d'heure et ne sont pas contrôlées.
+
+**Le bouton « Enfant »** (18/10/2026). « Famille » garde ce qui se fait
+ensemble ; « Enfant » ce qui est pour l'enfant, par une règle, sans nouveau
+public en base (âge maximal ≤ 14 ans, un âge ou « jeune public » dans le titre
+ou le résumé, ou le mot « enfants » hors expositions et hors prix :
+`CHILD_CONDITION`). Mesure sur la base figée : 6 recherches (« un atelier »,
+« un spectacle », « que faire mercredi après-midi », « une sortie gratuite »,
+« à Sète », « ce week-end »), lancées avec « Famille » puis avec « Enfant »
+coché ; chaque carte jugée « pour l'enfant » oui, limite ou non (grille
+`benchmarks/recherche/2026-10-18_grille_enfant.csv`, **annotée par
+l'assistant, à relire**).
+
+| Case cochée | Cartes | Pour l'enfant | Limite | Non |
+| --- | --- | --- | --- | --- |
+| Famille | 48 | 17 (35 %) | 5 | 26 (marchés, expositions, cabaret…) |
+| Enfant | 42 | **38 (90 %)** | 4 (« pour enfants et adultes ») | **0** |
+
+La première version gardait une exposition de peintres, « Joyeux enfants de
+la Bourgogne » (le mot « enfants » dans le titre) et « La confession d'un
+enfant du siècle » : d'où le mot au pluriel seulement, et pas d'exposition
+sans âge. « Famille » à 35 % n'est pas une erreur : c'est ce qui se fait
+ensemble, et la mesure montre ce que « Enfant » ajoute.
 
 **Historique** (`benchmarks/recherche/historique.csv`), le 15/10/2026 :
 

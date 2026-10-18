@@ -1,4 +1,4 @@
-# Recherches « faire soi-même » et « regarder » (17/10/2026) : 23 questions.
+# Recherches « faire soi-même » et « regarder » (17-18/10/2026) : 25 questions.
 #
 # Troisième jeu d'évaluation de la recherche, à côté des 50 questions
 # (config/eval_recherche.yaml) et des 125 recherches courtes
@@ -75,6 +75,16 @@ questions:
     mots: [sculpture, modelage, poterie, ceramique, argile]
     pas_types: [exposition]
 
+  # --- Faire du théâtre (18/10/2026) ---
+  - question: "jouer au théâtre"
+    compris: {pratique: theatre}
+    mots: [theatre, "impro ", comedie, clown]   # « impro » suivi d'une espace : pas « improvisations » de potier
+    pas_types: [spectacle, theatre, concert]
+  - question: "faire de l'impro"
+    compris: {pratique: theatre}
+    mots: [theatre, "impro ", comedie, clown]   # « impro » suivi d'une espace : pas « improvisations » de potier
+    pas_types: [spectacle, theatre, concert]
+
   # --- Cuisiner ---
   - question: "cuisiner avec les enfants"
     compris: {pratique: cuisiner, public: famille}
@@ -103,8 +113,9 @@ questions:
   - question: "un spectacle de danse"
     compris: {pratique: null, regarder: true, types: [danse]}
     pas_pratique: true      # un bal, un cours, une soirée dansante ne sont pas des spectacles
-  - question: "jouer au théâtre"
-    compris: {pratique: null, types: [theatre, spectacle]}   # comme les 50 questions : théâtre ou spectacle
+  - question: "une pièce de théâtre"
+    compris: {pratique: null, regarder: true, types: [theatre, spectacle]}   # comme les 50 questions : théâtre ou spectacle
+    pas_pratique: true      # une pièce se regarde : un stage ou un atelier n'est pas une réponse
   - question: "une exposition de peinture"
     compris: {pratique: null, types: [exposition]}
   - question: "karaoké"

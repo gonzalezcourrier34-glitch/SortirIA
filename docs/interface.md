@@ -110,7 +110,11 @@ Server-Sent Events, comme l'analyse d'une position dans Chess Agent.
   soirée dansante, cours ou stage de danse, pas des spectacles ; « jouer » :
   jeux, tournoi, ludothèque, escape game ; « peindre », « dessiner »,
   « sculpter » : ateliers et stages, pas des expositions ; « cuisiner » :
-  ateliers et cours, pas des marchés. Un concert reste une réponse si son
+  ateliers et cours, pas des marchés ; « faire du théâtre », « jouer au
+  théâtre », « faire de l'impro » (18/10) : cours, ateliers, stages de
+  théâtre ou d'improvisation, pas des pièces. À l'inverse, « une pièce de
+  théâtre » ou « un spectacle de danse » se regardent : pas de stage ni de
+  bal. Un concert reste une réponse si son
   titre dit qu'on y participe (« Stage de chant »). Rien de tel trouvé : des
   idées voisines, annoncées comme telles. Règles dans `PRACTICE_VERBS`
   (`app/query_understanding.py`) et `PRACTICES` (`app/search_service.py`).

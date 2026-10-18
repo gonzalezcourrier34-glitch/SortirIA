@@ -1,0 +1,42 @@
+# Moment de la journée (18/10/2026) : 12 questions.
+#
+# Quatrième jeu d'évaluation de la recherche. Le 17/10, le moment de la
+# journée a quitté les cases pour être lu dans la phrase : « le soir », « en
+# soirée » (début à 17 h ou après), « le matin » (avant midi), « l'après-midi »
+# (de 12 h à 18 h), « en journée » (avant 18 h) ; « en soirée » n'est plus le
+# public « Soirée ».
+#
+# Lancement :
+#     uv run python -m scripts.eval_recherche --fichier config/eval_moments.yaml
+#     uv run python -m scripts.eval_recherche --fichier config/eval_moments.yaml --sans-moment   # « avant »
+#
+# Champs : compris.moment (matin, apres-midi, journee) ou compris.soir ; chaque
+# carte dont l'heure est affichée doit commencer dans le créneau (contrôle
+# « heure ») ; compris.public: null pour « en soirée » (pas le public Soirée).
+
+questions:
+  - question: "un concert le matin"
+    compris: {moment: matin, types: [concert]}
+  - question: "une balade samedi matin"
+    compris: {moment: matin, quand: jour}
+  - question: "un atelier en matinée"
+    compris: {moment: matin, types: [atelier]}
+  - question: "un marché le matin"
+    compris: {moment: matin, types: [marche]}
+  - question: "une activité l'après-midi"
+    compris: {moment: apres-midi}
+  - question: "une expo l'après-midi"
+    compris: {moment: apres-midi, types: [exposition]}
+  - question: "un spectacle pour enfants l'après-midi"
+    compris: {moment: apres-midi, public: famille}
+  - question: "que faire en journée ce week-end"
+    compris: {moment: journee, quand: "ce week-end"}
+  - question: "un concert en soirée"
+    compris: {soir: true, types: [concert], public: null}     # pas le public « Soirée »
+  - question: "un spectacle le soir"
+    compris: {soir: true}
+  - question: "une sortie en début de soirée à Sète"
+    compris: {soir: true, communes: [sete]}
+  # Témoin : pas de moment, la recherche ne doit pas filtrer l'heure.
+  - question: "un concert"
+    compris: {types: [concert]}

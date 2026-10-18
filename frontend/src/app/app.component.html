@@ -122,7 +122,17 @@
                 @for (past of history(); track $index) {
                     <div class="past-exchange">
                         <div class="past-question">« {{ past.question }} »</div>
-                        <p class="past-answer">{{ past.answer }}</p>
+                        <p class="past-answer">
+                            @for (part of past.parts; track $index) {
+                                @if (part.ref !== null && past.refs[part.ref]) {
+                                    <button type="button" class="citation"
+                                        [attr.aria-label]="'Voir l’événement ' + part.ref"
+                                        (click)="openEvent(past.refs[part.ref])">{{ part.text }}</button>
+                                } @else {
+                                    {{ part.text }}
+                                }
+                            }
+                        </p>
                         @if (past.events.length) {
                             <div class="past-events">
                                 @for (card of past.events; track card.event_id) {

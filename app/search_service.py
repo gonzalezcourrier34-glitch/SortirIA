@@ -55,7 +55,7 @@ from app.query_understanding import (
 )
 
 PARIS = ZoneInfo("Europe/Paris")
-PROMPT_VERSION = "2026-10-17.5"  # « regarder » : un bal n'est pas un spectacle de danse
+PROMPT_VERSION = "2026-10-18.1"  # Enfant, moments, faire du théâtre, une pièce se regarde
 DEFAULT_SEARCH_MODEL = "mistral-small-latest"
 CANDIDATES = 80          # séances comparées à la question (regroupées ensuite par événement)
 MAX_PROPOSALS = 8        # événements montrés et donnés à Mistral (2 rangées de 4 cartes, 15/10)
@@ -198,18 +198,24 @@ OUTDOOR_CATEGORIES = "ARRAY['nature', 'marche', 'sport', 'fete', 'festival']"
 OUTDOOR_TEXT = "'plein air|balade|randonn|plage|jardin|en exterieur|a l exterieur|sentier|kayak|velo'"
 EVENT_TEXT = (f"translate(lower(concat_ws(' ', e.title, e.summary, left(e.description, 600))), "
               f"'{ACCENTS_FROM}', '{ACCENTS_TO}')")
-# « Enfant » (18/10/2026) : un événement familial pour l'enfant lui-même : âge
-# maximal de 14 ans, ou le texte le dit (« jeune public », « dès 6 ans »,
-# « 4-11 ans », « stage enfants »). Texte sans accents, en minuscules.
-CHILD_TEXT = (r"\m(enfants|jeune public|jeunesse|tout petits?|bebes?|kids|maternelle"
-              r"|(des|a partir de) ([2-9]|1[0-2]) ans|([0-9]|1[0-4]) ?(-|a|/) ?([0-9]|1[0-4]) ans)\M")
-# Titre et résumé seulement : la description dit souvent « gratuit pour les enfants ».
-CHILD_TITLE_SUMMARY = f"translate(lower(concat_ws(' ', e.title, e.summary)), '{ACCENTS_FROM}', '{ACCENTS_TO}')"
-# « Gratuit pour les enfants », « tarif enfants » parlent du prix, pas du public.
+# « Enfant » (18/10/2026) : un événement familial pour l'enfant lui-même :
+# âge maximal de 14 ans, ou un âge ou « jeune public » dans le titre ou le
+# résumé (« dès 6 ans », « 4-11 ans »), ou le mot « enfants » (pas dans une
+# exposition : « Joyeux enfants de la Bourgogne » est une exposition de
+# peintres, ni pour un prix : « gratuit pour les enfants »). Titre et résumé
+# seulement, sans accents, en minuscules : la description dit souvent
+# « gratuit pour les enfants ».
+CHILD_AGES = (r"\m(jeune public|tout petits?|bebes?|(des|a partir de) ([2-9]|1[0-2]) ans"
+              r"|([0-9]|1[0-4]) ?(-|a|/) ?([0-9]|1[0-4]) ans)\M")
+CHILD_WORDS = r"\m(enfants|jeunesse|kids|maternelle)\M"
 CHILD_PRICE_TEXT = r"\m(gratuit|gratuite|tarif|reduit|entree)\M[^.]{0,25}\menfants\M"
-CHILD_CONDITION = (f"('famille' = ANY (e.audiences) AND ((e.age_max IS NOT NULL AND e.age_max <= 14) "
-                   f"OR ({CHILD_TITLE_SUMMARY} ~ '{CHILD_TEXT}' "
-                   f"AND {CHILD_TITLE_SUMMARY} !~ '{CHILD_PRICE_TEXT}')))")
+CHILD_TITLE_SUMMARY = f"translate(lower(concat_ws(' ', e.title, e.summary)), '{ACCENTS_FROM}', '{ACCENTS_TO}')"
+CHILD_CONDITION = (
+    f"('famille' = ANY (e.audiences) AND ((e.age_max IS NOT NULL AND e.age_max <= 14) "
+    f"OR {CHILD_TITLE_SUMMARY} ~ '{CHILD_AGES}' "
+    f"OR ({CHILD_TITLE_SUMMARY} ~ '{CHILD_WORDS}' AND {CHILD_TITLE_SUMMARY} !~ '{CHILD_PRICE_TEXT}' "
+    f"AND lower(COALESCE(NULLIF(e.category_norm, ''), e.category, '')) <> 'exposition')))"
+)
 # Catégorie d'un événement : l'unifiée (Mistral), sinon celle de la source.
 # category_norm vaut '' (et non NULL) tant que l'événement n'est pas classé :
 # sans NULLIF, « Lecture » ou « Sport » d'un partenaire ne comptaient pas.
@@ -236,6 +242,9 @@ POOL = 200               # rangs gardés par chaque recherche avant fusion
 #   participe (« Stage de chant », rangé en concert, reste une réponse) ;
 # - des mots ajoutés au texte vectorisé, pour que le sens aille vers la pratique.
 LEARN = "(cours | stage:* | atelier:* | initiation:* | apprendr:*)"
+# Arts plastiques (18/10/2026) : sans « cours », qui a la même racine que « cour »
+# (« les cours d'hôtels particuliers » répondait à « apprendre à dessiner »).
+LEARN_ART = "(stage:* | atelier:* | initiation:* | apprendr:*)"
 PRACTICES: dict[str, tuple[str, tuple[str, ...], str]] = {
     "chanter": (f"karaoke:* | chorale:* | (chant:* & {LEARN}) | (scene & ouverte) | (open & mic)",
                 ("concert", "spectacle", "theatre"),
@@ -248,12 +257,18 @@ PRACTICES: dict[str, tuple[str, tuple[str, ...], str]] = {
     "jouer": ("jeu | jeux | tournoi:* | ludotheque:* | (escape & game) | quiz:* | (blind & test)",
               ("theatre", "spectacle", "concert", "cinema"),
               "jeux de société, tournoi, ludothèque, escape game"),
-    "peindre": (f"{LEARN} & (peintur:* | aquarell:* | acryliqu:*)", ("exposition",),
+    "peindre": (f"{LEARN_ART} & (peintur:* | aquarell:* | acryliqu:*)", ("exposition",),
                 "atelier de peinture, stage d'aquarelle"),
-    "dessiner": (f"{LEARN} & (dessin:* | croquis | manga:* | illustration:* | carnet:*)", ("exposition",),
+    "dessiner": (f"{LEARN_ART} & (dessin:* | croquis | manga:* | illustration:* | carnet:*)", ("exposition",),
                  "atelier de dessin, croquis, illustration"),
-    "sculpter": (f"{LEARN} & (sculptur:* | modelag:* | poterie:* | ceramiqu:* | argile)", ("exposition",),
+    "sculpter": (f"{LEARN_ART} & (sculptur:* | modelag:* | poterie:* | ceramiqu:* | argile)", ("exposition",),
                  "atelier de sculpture, modelage, poterie"),
+    # « Faire du théâtre », « jouer au théâtre », « faire de l'impro » (18/10/2026) :
+    # cours, stages, ateliers d'impro ; pas les pièces à voir.
+    # « impro » seul, ou « improvisation » avec « théâtre » : pas « Atelier de poterie : improvisations ».
+    "theatre": (f"{LEARN} & (theatr:* | impro | comedi:* | clown:*)",
+                ("spectacle", "theatre", "concert"),
+                "cours de théâtre, atelier d'improvisation, stage de théâtre"),
     "cuisiner": (f"{LEARN} & (cuisin:* | culinair:* | patisseri:* | recette:*)",
                  ("marche", "degustation", "fete"),
                  "atelier de cuisine, cours de cuisine, pâtisserie"),

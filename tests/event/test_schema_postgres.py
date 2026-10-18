@@ -1400,8 +1400,12 @@ def test_child_filter_keeps_what_is_for_the_child(db: Any) -> None:
     insert_event(db, event_id="concert", title="Concert en famille", audiences=["famille"],
                  summary="Gratuit pour les enfants")
     insert_event(db, event_id="adultes", title="Stage enfants intérieurs (sophrologie)", audiences=["seniors"])
+    insert_event(db, event_id="expo", title="Joyeux enfants de la Bourgogne, exposent", audiences=["famille"],
+                 category_norm="exposition")
+    insert_event(db, event_id="expo_petits", title="Mille formes", summary="Jeux pour enfants de 0 à 6 ans",
+                 audiences=["famille"], category_norm="exposition")
     sql, params = service.build_search_query(SearchFilters(public="enfant"), None, datetime.now(PARIS))
     with db.cursor() as cursor:
         cursor.execute(sql, params)
         found = {row[0] for row in cursor.fetchall()}
-    assert found == {"stage", "ateliers"}
+    assert found == {"stage", "ateliers", "expo_petits"}      # une exposition : seulement avec un âge

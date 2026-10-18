@@ -53,7 +53,7 @@ from typing import Any
 
 import yaml
 
-from app.query_understanding import QUESTION_CATEGORIES, plain
+from app.query_understanding import MOMENT_HOURS, QUESTION_CATEGORIES, plain
 from app.search_service import (
     PARIS,
     PROMPT_VERSION,
@@ -116,6 +116,8 @@ def understanding_errors(plan: QueryPlan, expected: Mapping[str, Any]) -> list[s
         errors.append(f"repère {plan.near} au lieu de {expected['pres_de']}")
     if "pratique" in expected and plan.practice != expected["pratique"]:
         errors.append(f"pratique {plan.practice} au lieu de {expected['pratique']}")
+    if "moment" in expected and plan.moment != expected["moment"]:
+        errors.append(f"moment {plan.moment} au lieu de {expected['moment']}")
     if "regarder" in expected and plan.watch != expected["regarder"]:
         errors.append(f"regarder {plan.watch} au lieu de {expected['regarder']}")
     return errors
@@ -173,6 +175,14 @@ def card_errors(card: Mapping[str, Any], plan: QueryPlan, expected: Mapping[str,
     if str(card.get("category", "")).lower() in excluded_types \
             and not PARTICIPATION.search(plain(str(card.get("title", "")))):
         errors.append("type exclu")
+    # Moment de la journée (18/10/2026) : l'heure de début affichée sur la carte
+    # (« Sam. 24 oct. · 14:30 ») ; une carte sans heure n'est pas contrôlée.
+    shown = re.search(r"(\d{1,2}):\d{2}", str(card.get("date", "")))
+    if shown and (expected.get("soir") or expected.get("moment")):
+        hour = int(shown.group(1))
+        first, last = (17, 24) if expected.get("soir") else MOMENT_HOURS[expected["moment"]]
+        if not first <= hour < last:
+            errors.append("heure")
     # « un spectacle de danse » : un bal ou un cours n'est pas une réponse.
     if expected.get("pas_pratique") and PRACTISED.search(
             plain(f"{card.get('title', '')} {card.get('category_label', '')}")):
@@ -326,6 +336,8 @@ def main() -> None:
                         help="Retire la règle des verbes de pratique (mesure « avant », 17/10/2026).")
     parser.add_argument("--sans-regarder", action="store_true",
                         help="Retire la règle « regarder » (un bal n'est pas un spectacle) : mesure « avant ».")
+    parser.add_argument("--sans-moment", action="store_true",
+                        help="Retire le moment de la journée lu dans la phrase (mesure « avant », 18/10/2026).")
     parser.add_argument("--seuil", type=float, default=None,
                         help="Échoue (code 1) si la précision ou la compréhension passe sous ce seuil (ex. 0.95).")
     args = parser.parse_args()
@@ -338,7 +350,14 @@ def main() -> None:
         from app import query_understanding
 
         query_understanding.PRACTICE_VERBS.clear()
+        query_understanding.PRACTICE_PHRASES.clear()
         args.note = f"{args.note} (sans verbes de pratique)".strip()
+    if args.sans_moment:
+        from app import query_understanding
+
+        query_understanding.MOMENT_PHRASES = {}
+        query_understanding.EVENING_PHRASES = ()
+        args.note = f"{args.note} (sans moment de la journée)".strip()
     if args.sans_regarder:
         from app import query_understanding
 

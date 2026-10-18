@@ -23,9 +23,9 @@ NOW = datetime(2026, 10, 15, 18, tzinfo=PARIS)
 
 def test_practice_set_has_questions_and_controls() -> None:
     questions = [item["question"].lower() for item in QUESTIONS]
-    assert len(questions) == len(set(questions)) == 23
+    assert len(questions) == len(set(questions)) == 25
     assert sum(1 for item in QUESTIONS if item["compris"].get("pratique") is None) == 10     # témoins et « regarder »
-    assert sum(1 for item in QUESTIONS if item["compris"].get("regarder")) == 4
+    assert sum(1 for item in QUESTIONS if item["compris"].get("regarder")) == 5      # dont « une pièce de théâtre »
 
 
 @pytest.mark.parametrize("item", QUESTIONS, ids=[item["question"] for item in QUESTIONS])
@@ -51,6 +51,13 @@ def test_a_ball_is_not_a_dance_show() -> None:
             "start_at": NOW.isoformat(), "end_at": None, "audiences": [], "price": "5 €"}
     assert card_errors(card, plan, {"pas_pratique": True}, []) == ["pratique au lieu de spectacle"]
     assert card_errors({**card, "title": "Ballet de l'Opéra", "category_label": "Danse"}, plan, {"pas_pratique": True}, []) == []
+
+
+def test_a_play_is_watched_and_acting_is_practised() -> None:
+    watched, _ = plan_search("une pièce de théâtre", SearchFilters(), NOW)
+    assert watched.watch and watched.practice is None and "piece" not in watched.keywords
+    acting, _ = plan_search("jouer au théâtre", SearchFilters(), NOW)
+    assert acting.practice == "theatre" and not acting.watch
 
 
 def test_without_the_practice_rule_singing_is_not_understood(monkeypatch: pytest.MonkeyPatch) -> None:
