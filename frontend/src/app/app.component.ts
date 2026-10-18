@@ -61,12 +61,15 @@ interface AnswerPart {
 // « Tout public » (18/10/2026, retour des premiers testeurs) : aucun filtre de
 // public, comme « Les deux » pour la zone ; pas « seulement les événements
 // marqués tout public ».
+// Au singulier (18/10/2026). « Famille » : à faire ensemble ; « Enfant » : pour
+// l'enfant (âge, jeune public, stages et ateliers enfants). « Soirée » n'a plus
+// de bouton : « un bar », « une fête » restent compris dans la phrase.
 const PUBLICS: Choice<Public | null>[] = [
     { value: null, label: 'Tout public' },
     { value: 'famille', label: 'Famille' },
-    { value: 'soiree', label: 'Soirée' },
-    { value: 'ados', label: 'Ados' },
-    { value: 'seniors', label: 'Seniors' }
+    { value: 'enfant', label: 'Enfant' },
+    { value: 'ados', label: 'Ado' },
+    { value: 'seniors', label: 'Senior' }
 ];
 
 const ZONES: Choice<Zone | null>[] = [
@@ -500,7 +503,7 @@ export class AppComponent implements OnInit {
         // La question l'emporte sur les cases (17/10/2026) : « avec les enfants »
         // coche « Famille », « à Sète » coche « Thau ».
         const checked = event.result.checked;
-        if (checked?.public && checked.public !== this.selectedPublic()) {
+        if (checked?.public && checked.public !== 'soiree' && checked.public !== this.selectedPublic()) {
             this.selectedPublic.set(checked.public);
             this.publicFromQuestion.set(true);
         }

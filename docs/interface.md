@@ -79,10 +79,18 @@ Server-Sent Events, comme l'analyse d'une position dans Chess Agent.
   (18/10/2026) : « avec les enfants » puis « un concert ce soir » ne cherche
   plus pour les familles ; une relance la retrouve par le contexte. Une case
   cochée à la main reste.
-- **Les cases** (18/10/2026, retours des premiers testeurs) : « Tout public »
-  (aucun filtre de public, pas « seulement les événements marqués tout
-  public ») en plus de Famille, Soirée, Ados, Seniors ; « Les deux » au lieu de
-  « Partout » pour la zone ; « Gratuit » au lieu de « Gratuit seulement ».
+- **Les cases** (18/10/2026, retours des premiers testeurs) : trois groupes,
+  **Qui ?**, **Où ?**, **Quand ?**, puis **Gratuit**.
+  - Qui ? : Tout public (aucun filtre de public, pas « seulement les
+    événements marqués tout public »), Famille, Enfant, Ado, Senior, au
+    singulier. « Famille » : ce qui se fait ensemble ; « Enfant » : ce qui est
+    pour l'enfant, sans nouveau public en base : un événement familial dont
+    l'âge maximal est de 14 ans, ou dont le titre ou le résumé le dit
+    (« jeune public », « dès 6 ans », « 4-11 ans », « stage enfants »), mais pas
+    « gratuit pour les enfants » (`CHILD_CONDITION`). « Soirée » n'a plus de
+    bouton : « un bar », « une fête » restent compris dans la phrase.
+  - Où ? : Montpellier, Thau, Les deux (« Partout » avant).
+  - « Gratuit » au lieu de « Gratuit seulement ».
 - **Offres de démonstration** (18/10/2026) : les partenaires d'exemple sont
   fictifs (liens example.org) ; leurs offres portent « Démonstration » au lieu
   de « Offre partenaire », une phrase le dit au-dessus des offres, et le détail

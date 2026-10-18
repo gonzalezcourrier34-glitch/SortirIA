@@ -41,8 +41,9 @@
                     </div>
                 } @else {
                 <div class="filters">
-                    <div class="filter-group" role="group" aria-label="Public">
-                        <span class="filter-label">Public</span>
+                    <!-- Qui ? Où ? Quand ? puis Gratuit (18/10/2026, retours des premiers testeurs). -->
+                    <div class="filter-group" role="group" aria-label="Qui ?">
+                        <span class="filter-label">Qui ?</span>
                         @for (choice of publics; track choice.label) {
                             <button type="button" class="chip"
                                 [class.chip-on]="selectedPublic() === choice.value"
@@ -51,8 +52,8 @@
                         }
                     </div>
 
-                    <div class="filter-group" role="group" aria-label="Zone">
-                        <span class="filter-label">Zone</span>
+                    <div class="filter-group" role="group" aria-label="Où ?">
+                        <span class="filter-label">Où ?</span>
                         @for (choice of zones; track choice.label) {
                             <button type="button" class="chip"
                                 [class.chip-on]="selectedZone() === choice.value"
@@ -61,8 +62,8 @@
                         }
                     </div>
 
-                    <div class="filter-group" role="group" aria-label="Quand">
-                        <span class="filter-label">Quand</span>
+                    <div class="filter-group" role="group" aria-label="Quand ?">
+                        <span class="filter-label">Quand ?</span>
                         @for (choice of periods; track choice.value) {
                             <!-- Une date lue dans la question l'emporte : la période cochée s'efface. -->
                             <button type="button" class="chip"

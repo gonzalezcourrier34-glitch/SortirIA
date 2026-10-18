@@ -1387,3 +1387,21 @@ def test_singing_finds_where_to_sing_not_concerts(db: Any) -> None:
     assert result["exact"] is True
     games = list(service.run_search(db, "on aimerait jouer", SearchFilters(), services))[-1]["result"]
     assert "jeudi" not in {card["event_id"] for card in games["events"] if games["exact"]}
+
+
+def test_child_filter_keeps_what_is_for_the_child(db: Any) -> None:
+    """18/10/2026 : « Enfant » garde un stage 4-11 ans, pas un concert en famille."""
+
+    from app import search_service as service
+    from app.search_service import SearchFilters
+
+    insert_event(db, event_id="stage", title="Stage cirque 4-11 ans", audiences=["famille"])
+    insert_event(db, event_id="ateliers", title="Atelier créatif", audiences=["famille"], age_max=10)
+    insert_event(db, event_id="concert", title="Concert en famille", audiences=["famille"],
+                 summary="Gratuit pour les enfants")
+    insert_event(db, event_id="adultes", title="Stage enfants intérieurs (sophrologie)", audiences=["seniors"])
+    sql, params = service.build_search_query(SearchFilters(public="enfant"), None, datetime.now(PARIS))
+    with db.cursor() as cursor:
+        cursor.execute(sql, params)
+        found = {row[0] for row in cursor.fetchall()}
+    assert found == {"stage", "ateliers"}

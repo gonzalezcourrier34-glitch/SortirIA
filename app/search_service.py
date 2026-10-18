@@ -63,7 +63,11 @@ MAX_OTHER_DATES = 12     # autres dates gardées pour un même événement
 RATING_WINDOW_DAYS = 7   # avis possible du début de l'événement à 7 jours après sa fin
 SUMMARY_CHARS = 240
 
-PUBLICS = ("famille", "soiree", "ados", "seniors")
+# « enfant » (18/10/2026) : pas un public de la base, mais une partie de
+# « famille » : ce qui est pour l'enfant (âge, « jeune public », stage ou atelier
+# enfants), quand « Famille » est ce qui se fait ensemble. « soiree » reste
+# compris dans la phrase (« un bar », « une fête »), sans bouton.
+PUBLICS = ("famille", "enfant", "soiree", "ados", "seniors")
 ZONES = {"montpellier": "montpellier", "thau": "bassin_de_thau"}
 PERIODS = ("aujourdhui", "weekend", "7jours", "3mois")
 
@@ -75,7 +79,7 @@ STEP_WRITE = "rediger"
 
 DAYS = ("Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam.", "Dim.")
 MONTHS = ("janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc.")
-PUBLIC_LABELS = {"famille": "famille", "soiree": "soirée", "ados": "ados", "seniors": "seniors"}
+PUBLIC_LABELS = {"famille": "famille", "enfant": "enfant", "soiree": "soirée", "ados": "ados", "seniors": "seniors"}
 ZONE_LABELS = {"montpellier": "Montpellier et sa métropole", "thau": "bassin de Thau"}
 PERIOD_LABELS = {"aujourdhui": "aujourd'hui", "weekend": "ce week-end", "7jours": "les 7 prochains jours",
                  "3mois": "les 3 prochains mois"}
@@ -194,6 +198,18 @@ OUTDOOR_CATEGORIES = "ARRAY['nature', 'marche', 'sport', 'fete', 'festival']"
 OUTDOOR_TEXT = "'plein air|balade|randonn|plage|jardin|en exterieur|a l exterieur|sentier|kayak|velo'"
 EVENT_TEXT = (f"translate(lower(concat_ws(' ', e.title, e.summary, left(e.description, 600))), "
               f"'{ACCENTS_FROM}', '{ACCENTS_TO}')")
+# « Enfant » (18/10/2026) : un événement familial pour l'enfant lui-même : âge
+# maximal de 14 ans, ou le texte le dit (« jeune public », « dès 6 ans »,
+# « 4-11 ans », « stage enfants »). Texte sans accents, en minuscules.
+CHILD_TEXT = (r"\m(enfants|jeune public|jeunesse|tout petits?|bebes?|kids|maternelle"
+              r"|(des|a partir de) ([2-9]|1[0-2]) ans|([0-9]|1[0-4]) ?(-|a|/) ?([0-9]|1[0-4]) ans)\M")
+# Titre et résumé seulement : la description dit souvent « gratuit pour les enfants ».
+CHILD_TITLE_SUMMARY = f"translate(lower(concat_ws(' ', e.title, e.summary)), '{ACCENTS_FROM}', '{ACCENTS_TO}')"
+# « Gratuit pour les enfants », « tarif enfants » parlent du prix, pas du public.
+CHILD_PRICE_TEXT = r"\m(gratuit|gratuite|tarif|reduit|entree)\M[^.]{0,25}\menfants\M"
+CHILD_CONDITION = (f"('famille' = ANY (e.audiences) AND ((e.age_max IS NOT NULL AND e.age_max <= 14) "
+                   f"OR ({CHILD_TITLE_SUMMARY} ~ '{CHILD_TEXT}' "
+                   f"AND {CHILD_TITLE_SUMMARY} !~ '{CHILD_PRICE_TEXT}')))")
 # Catégorie d'un événement : l'unifiée (Mistral), sinon celle de la source.
 # category_norm vaut '' (et non NULL) tant que l'événement n'est pas classé :
 # sans NULLIF, « Lecture » ou « Sport » d'un partenaire ne comptaient pas.
@@ -485,7 +501,9 @@ def build_search_query(plan: QueryPlan | SearchFilters, vector: str | None, now:
         conditions.append("e.partner_id IS NOT NULL")
     params: dict[str, Any] = {"start": plan.start, "end": plan.end, "limit": limit, "pool": POOL,
                               "categories": list(plan.categories)}
-    if plan.public:
+    if plan.public == "enfant":
+        conditions.append(CHILD_CONDITION)
+    elif plan.public:
         conditions.append("%(public)s = ANY (e.audiences)")
         params["public"] = plan.public
     if plan.cities:
@@ -1518,7 +1536,8 @@ def checked_by_question(plan: QueryPlan) -> dict[str, Any]:
     """Cases que l'interface doit cocher pour refléter la question."""
 
     checked: dict[str, Any] = {}
-    if "public" in plan.from_question and plan.public:
+    # « soiree » n'a plus de bouton (18/10/2026) : compris, mais rien à cocher.
+    if "public" in plan.from_question and plan.public and plan.public != "soiree":
         checked["public"] = plan.public
     if plan.period_from_question:
         checked["date"] = plan.period_label

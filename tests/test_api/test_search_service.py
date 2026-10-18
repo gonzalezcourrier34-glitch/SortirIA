@@ -608,3 +608,11 @@ def test_demo_offers_are_marked() -> None:
     assert service.to_card(row(url="https://example.org/bar"))["demo"] is True
     assert service.to_card(row(url="https://www.sete.fr/agenda"))["demo"] is False
     assert service.is_demo_link("https://sub.example.com/x") and not service.is_demo_link("https://notexample.org")
+
+
+def test_child_public_is_part_of_family() -> None:
+    """18/10/2026 : « Enfant » = familial et pour l'enfant (âge ou texte), sans nouveau public en base."""
+    sql, params = service.build_search_query(SearchFilters(public="enfant"), None, NOW)
+    assert "'famille' = ANY (e.audiences)" in sql and "e.age_max <= 14" in sql and "public" not in params
+    sql, params = service.build_search_query(SearchFilters(public="famille"), None, NOW)
+    assert params["public"] == "famille"

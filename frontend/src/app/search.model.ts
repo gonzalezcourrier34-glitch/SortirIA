@@ -1,7 +1,8 @@
 // # Modèles échangés avec l'API SortirIA (app/interface_api.py, app/search_service.py)
 
 
-export type Public = 'famille' | 'soiree' | 'ados' | 'seniors';
+/** « enfant » : ce qui est pour l'enfant ; « soiree » : compris dans la phrase, sans bouton. */
+export type Public = 'famille' | 'enfant' | 'soiree' | 'ados' | 'seniors';
 
 export type Zone = 'montpellier' | 'thau';
 

@@ -38,7 +38,7 @@ class SearchRequest(BaseModel):
     """Recherche envoyée par l'interface."""
 
     question: str = Field(default="", max_length=500)
-    public: Literal["famille", "soiree", "ados", "seniors"] | None = None
+    public: Literal["famille", "enfant", "soiree", "ados", "seniors"] | None = None
     zone: Literal["montpellier", "thau"] | None = None
     period: Literal["aujourdhui", "weekend", "7jours", "3mois"] = "3mois"
     free_only: bool = False
