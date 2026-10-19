@@ -71,7 +71,7 @@ QUESTION_CATEGORIES: dict[str, tuple[str, ...]] = {
     "cirque": ("spectacle",), "humour": ("spectacle", "theatre"), "humoriste": ("spectacle", "theatre"),
     "concert": ("concert",), "musique": ("concert",), "jazz": ("concert",), "rock": ("concert",),
     "danse": ("danse",), "ballet": ("danse",), "cinema": ("cinema",), "cine": ("cinema",), "film": ("cinema",),
-    "projection": ("cinema",), "expo": ("exposition",), "exposition": ("exposition",),
+    "projection": ("cinema",), "expo": ("exposition",), "exposition": ("exposition",), "tableau": ("exposition",),
     "musee": ("exposition", "visite"), "atelier": ("atelier",), "stage": ("atelier",),
     "conference": ("conference",), "visite": ("visite",), "festival": ("festival",),
     "marche": ("marche",), "brocante": ("marche",), "foire": ("marche", "fete"), "sport": ("sport",), "match": ("sport",),
@@ -117,7 +117,7 @@ PRACTICE_LABELS = {"theatre": "pour faire du théâtre", "chanter": "pour chante
 # Avec ces mots, ce qui se pratique (bal, cours, stage, atelier) n'est plus du
 # type demandé (app/search_service.py, PARTICIPATION).
 WATCH_WORDS = ("spectacle", "spectacles", "voir", "regarder", "assister", "representation", "representations",
-               "show", "ballet", "ballets", "piece", "pieces")
+               "show", "ballet", "ballets", "piece", "pieces", "voire")      # « voire » : « voir » mal écrit
 
 
 def find_practice(padded: str, categories: tuple[str, ...]) -> str | None:
@@ -401,7 +401,13 @@ collegues couple deux seul seule guidee guidees guide commentee commentees nouve
 original originale chouette cool fun interessant interessante gens monde public publics agenda
 quand ans annee annees heure heures minute minutes cher chere chers cheres
 plutot sinon aussi mais pareil meme encore autre autres
+bonjour bonsoir salut coucou hello merci svp stp sont sera seront existe existent donner donne donnez
+proposition propositions savoir sais connaitre connais voire
 """
+# Dernière ligne (19/10/2026, bilan de la semaine) : « quels sont les
+# prochaines expositions de peinture » (9 fois) cherchait aussi « sont » dans
+# les titres, et finissait en idées voisines ; « bonjour », « propositions »,
+# « voire » (pour « voir ») faisaient de même.
 STOPWORDS = frozenset(STOPWORD_TEXT.split())
 
 

@@ -148,7 +148,9 @@ def search_report_lines(gaps: Mapping[str, Any]) -> list[str]:
              f"- questions posées : {total}",
              f"- sans réponse exacte : {not_exact} ({not_exact / total:.0%})",
              f"- sans aucune proposition sur le sujet : {gaps.get('no_answer', 0)}"]
-    words = gaps.get("unknown_words") or []
+    from agent.search_learning import subject_words
+
+    words = subject_words(gaps.get("unknown_words") or [])
     if words:
         lines.append("- mots cherchés qui ne figurent dans aucun titre (une source, un partenaire "
                      "ou un synonyme à envisager) :")

@@ -22,6 +22,7 @@ l'eau (du plus récent au plus ancien). Version illustrée :
 
 | Date | Domaine | Incident | Vu par |
 | --- | --- | --- | --- |
+| 19/10/2026 | Recherche | Des mots de la phrase pris pour des sujets | Mail de bilan du lundi 19/10 : 64 % des questions sans réponse exacte ; l'agent propose « bonjour » → « salut » et « voire » → « ou-encore » |
 | 18/10/2026 | Agent | Deux propositions de l'agent en conflit | GitHub : « This branch has conflicts » sur la pull request de la proposition 2 |
 | 18/10/2026 | Recherche | Le bouton « Enfant » gardait une exposition de peintres | Mesure du nouveau bouton : 6 recherches, 90 cartes jugées « pour l'enfant » oui, limite ou non |
 | 18/10/2026 | Interface | Les retours des premiers testeurs | Tests d'usage : des amis sur ordinateur et téléphone |
@@ -65,6 +66,16 @@ l'agent.
 | 18/10/2026 | Moi | Offres fictives prises pour de vraies | Étiquette « Démonstration », sans faux lien |
 
 ## Le détail
+
+### 19/10/2026 · Des mots de la phrase pris pour des sujets
+
+- **Domaine** : Recherche
+- **Détection** : Mail de bilan du lundi 19/10 : 64 % des questions sans réponse exacte ; l'agent propose « bonjour » → « salut » et « voire » → « ou-encore »
+- **Symptôme** : « Quels sont les prochaines expositions de peinture ? » (posée 9 fois) répondait par des idées voisines, quand « une exposition de peinture » trouvait des expositions. « Bonjour », « propositions », « voire », « savoir » apparaissaient dans les mots cherchés absents des titres.
+- **Cause** : Ces mots n'étaient pas dans la liste des mots vides : ils restaient des sujets à trouver dans les titres, aucun titre ne les contient, et la réponse n'était plus exacte. L'agent, qui apprend de ces mots absents, demandait des synonymes pour des mots de politesse.
+- **Résolution** : Mots de la phrase ajoutés aux mots vides (bonjour, sont, propositions, savoir, donner…) ; « voire » lu comme « voir » ; « tableaux » désigne une exposition. L'agent écarte ces mots des recherches passées et n'accepte que des synonymes d'un seul mot simple. Les 4 pull requests de l'agent (#7 à #10) sont à fermer.
+- **Pour que ça ne revienne pas** : Tests : les questions du bilan rejouées (« quels sont… », « voire des tableaux »), l'agent qui ignore « bonjour » et refuse « ou-encore ». Les quatre jeux d'évaluation donnent les mêmes résultats ; les 50 questions et les 125 recherches, les mêmes cartes.
+- **Trace** : `app/query_understanding.py` (`STOPWORDS`), `agent/search_learning.py` (`subject_words`)
 
 ### 18/10/2026 · Deux propositions de l'agent en conflit
 

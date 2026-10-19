@@ -136,7 +136,7 @@ def test_weekly_search_report_section() -> None:
     from agent.report import search_report_lines
 
     lines = search_report_lines({"days": 7, "questions": 40, "not_exact": 6, "no_answer": 2,
-                                 "unknown_words": [("zumba", 4), ("escalade", 2)],
+                                 "unknown_words": [("zumba", 4), ("bonjour", 3), ("escalade", 2)],
                                  "unanswered": [("de la zumba", 3)]})
     text = "\n".join(lines)
     assert "sans réponse exacte : 6 (15%)" in text and "zumba (4), escalade (2)" in text

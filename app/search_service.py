@@ -55,7 +55,7 @@ from app.query_understanding import (
 )
 
 PARIS = ZoneInfo("Europe/Paris")
-PROMPT_VERSION = "2026-10-18.1"  # Enfant, moments, faire du théâtre, une pièce se regarde
+PROMPT_VERSION = "2026-10-19.1"  # mots de la phrase ignorés (bilan du 19/10), « tableaux » = exposition
 DEFAULT_SEARCH_MODEL = "mistral-small-latest"
 CANDIDATES = 80          # séances comparées à la question (regroupées ensuite par événement)
 MAX_PROPOSALS = 8        # événements montrés et donnés à Mistral (2 rangées de 4 cartes, 15/10)

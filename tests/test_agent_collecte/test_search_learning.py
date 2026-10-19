@@ -15,7 +15,13 @@ import pytest
 from agent import nodes
 from agent.proposals import add_synonym_to_config, apply_proposal
 from agent.report import build_report_email, describe_action
-from agent.search_learning import LearningResult, WordReading, learn_from_searches, parse_readings, words_to_learn
+from agent.search_learning import (
+    LearningResult,
+    WordReading,
+    learn_from_searches,
+    parse_readings,
+    words_to_learn,
+)
 from agent.services import CollectionServices
 from app import query_understanding
 from src.event.event_normalizer import PARIS
@@ -48,6 +54,15 @@ def test_only_words_searched_several_times_are_learned() -> None:
     assert [word for word, _ in words_to_learn(GAPS)] == ["zumba", "cirqe", "escalade", "romantique", "kitesurf"]
     assert words_to_learn(GAPS, limit=2) == [("zumba", 4), ("cirqe", 3)]
     assert words_to_learn({}) == []
+
+
+def test_words_of_the_sentence_are_not_learned() -> None:
+    """Bilan du 19/10/2026 : « bonjour » -> « salut », « voire » -> « ou-encore »."""
+
+    gaps = {"unknown_words": [("bonjour", 3), ("peinture", 3), ("propositions", 3), ("voire", 3), ("sont", 9)]}
+    assert words_to_learn(gaps) == [("peinture", 3)]
+    answer = json.dumps({"mots": [{"mot": "peinture", "nature": "sujet", "equivalents": ["ou-encore", "peintre"]}]})
+    assert parse_readings(answer, ["peinture"])["peinture"].equivalents == ["peintre"]
 
 
 def test_mistral_answer_is_checked() -> None:

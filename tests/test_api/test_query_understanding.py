@@ -274,3 +274,15 @@ def test_a_follow_up_keeps_the_practice_until_a_new_subject() -> None:
     assert plan.practice == "chanter" and "pour chanter soi-même" in plan.describe()
     plan = plan_search("un concert de jazz", SearchFilters(), NOW, "je veux chanter")[0]
     assert plan.practice is None
+
+
+@pytest.mark.parametrize(("question", "keywords", "categories"), [
+    # Bilan du 19/10/2026 : des mots de la phrase cherchés dans les titres.
+    ("quels sont les prochaines expositions de peinture ?", ("expositions", "peinture"), ("exposition",)),
+    ("ou je peux voire des tableaux de peinture", ("tableaux", "peinture"), ("exposition",)),
+    ("bonjour, je voudrais des propositions de concert", ("concert",), ("concert",)),
+])
+def test_words_of_the_sentence_are_not_subjects(question: str, keywords: tuple[str, ...],
+                                                categories: tuple[str, ...]) -> None:
+    understood = understand(question, NOW)
+    assert understood.keywords == keywords and understood.categories == categories

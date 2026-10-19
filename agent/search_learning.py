@@ -26,6 +26,7 @@ Comme partout dans l'agent : il propose, un humain décide
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import date
@@ -77,10 +78,20 @@ class LearningResult:
     feedback_notes: list[str] = field(default_factory=list)
 
 
+def subject_words(words: Iterable[tuple[str, int]]) -> list[tuple[str, int]]:
+    """Sans les mots de la phrase (« bonjour », « sont », « propositions ») :
+    les recherches d'avant le 19/10/2026 les gardaient comme sujets, et l'agent
+    proposait « bonjour » -> « salut » (bilan du 19/10)."""
+
+    from app.query_understanding import STOPWORDS
+
+    return [(str(word), int(times)) for word, times in words if str(word) not in STOPWORDS]
+
+
 def words_to_learn(gaps: Mapping[str, Any], minimum: int = MIN_TIMES, limit: int = MAX_WORDS) -> list[tuple[str, int]]:
     """Mots inconnus de la base, cherchés au moins `minimum` fois (les plus cherchés d'abord)."""
 
-    words = [(str(word), int(times)) for word, times in gaps.get("unknown_words") or [] if int(times) >= minimum]
+    words = [(word, times) for word, times in subject_words(gaps.get("unknown_words") or []) if times >= minimum]
     return words[:limit]
 
 
@@ -102,7 +113,8 @@ def parse_readings(answer: str, words: Sequence[str]) -> dict[str, WordReading]:
         equivalents = []
         for candidate in reading.equivalents:
             candidate = candidate.strip().lower()
-            if candidate and " " not in candidate and candidate != word and candidate not in equivalents:
+            # Un mot simple : pas « ou-encore » (bilan du 19/10/2026).
+            if re.fullmatch(r"[a-z]+", candidate) and candidate != word and candidate not in equivalents:
                 equivalents.append(candidate)
         readings[word] = WordReading(mot=word, nature=reading.nature, equivalents=equivalents[:MAX_CANDIDATES])
     return readings
