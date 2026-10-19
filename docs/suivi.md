@@ -9,7 +9,8 @@ l'eau (du plus récent au plus ancien). Version illustrée :
 
 1. **Détecter** : mail de bilan de la nuit, workflow GitHub « Surveillance »
    toutes les 3 h, CI (tests et évaluation de la recherche à 95 %), juge de
-   qualité de la nuit, tableaux Grafana, budget Azure.
+   qualité de la nuit, rapport de dérive du lundi (questions, réponses,
+   collecte), tableaux Grafana, budget Azure.
 2. **Comprendre** : journaux Log Analytics, historique de la tâche Azure,
    rejeu en local (`uv run python -m agent --essai --source <nom>`).
 3. **Corriger** la donnée ou la configuration, puis le code pour que le cas

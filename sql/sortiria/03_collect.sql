@@ -41,7 +41,10 @@ CREATE TABLE IF NOT EXISTS sortiria.collect_runs (
     quality_score     NUMERIC(4, 3),                     -- juge Mistral (0 à 1), NULL sans contrôle
     quality           JSONB       NOT NULL DEFAULT '{}'::jsonb,
     events_capped     INTEGER     NOT NULL DEFAULT 0,  -- supprimés par le plafond (les plus lointains)
-    events_total      INTEGER                          -- taille de la base après la collecte
+    events_total      INTEGER,                         -- taille de la base après la collecte
+    -- Dérive des questions, des réponses et de la collecte (19/10/2026,
+    -- agent/drift.py) : 7 derniers jours comparés aux 28 précédents.
+    drift             JSONB       NOT NULL DEFAULT '{}'::jsonb
 );
 
 -- Mise à niveau d'une base créée avant le 14/10/2026 à 11 h.
@@ -58,7 +61,8 @@ ALTER TABLE sortiria.collect_runs
     ADD COLUMN IF NOT EXISTS quality_score NUMERIC(4, 3),
     ADD COLUMN IF NOT EXISTS quality JSONB NOT NULL DEFAULT '{}'::jsonb,
     ADD COLUMN IF NOT EXISTS events_capped INTEGER NOT NULL DEFAULT 0,
-    ADD COLUMN IF NOT EXISTS events_total INTEGER;
+    ADD COLUMN IF NOT EXISTS events_total INTEGER,
+    ADD COLUMN IF NOT EXISTS drift JSONB NOT NULL DEFAULT '{}'::jsonb;
 
 CREATE INDEX IF NOT EXISTS collect_runs_started_at_idx
     ON sortiria.collect_runs (started_at);

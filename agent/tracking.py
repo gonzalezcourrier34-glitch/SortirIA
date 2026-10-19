@@ -126,6 +126,10 @@ def run_metrics(state: Mapping[str, Any]) -> dict[str, float]:
     for node, seconds in durations.items():
         metrics[metric_key("duree", node)] = float(seconds)
     metrics["duree/total"] = float(sum(durations.values()))
+    # Dérive (19/10/2026) : PSI de chaque indicateur et valeur des mesures.
+    from agent.drift import mlflow_metrics as drift_metrics
+
+    metrics.update(drift_metrics(state.get("drift") or {}))
     return metrics
 
 

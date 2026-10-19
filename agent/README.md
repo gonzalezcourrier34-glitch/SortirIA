@@ -6,7 +6,8 @@
   dégrader la base en cas de panne, et ne prévenir que lorsqu'une
   intervention humaine est utile.
 - Chaque lundi, lire ce que les gens ont cherché sans trouver et proposer de
-  quoi y répondre : un synonyme, une correction, un agenda à lire.
+  quoi y répondre : un synonyme, une correction, un agenda à lire ; et dire
+  si les questions, les réponses ou la collecte dérivent (`drift.py`).
 
 Il propose, un humain décide : aucune configuration n'est modifiée sans
 accord. Depuis le 16/10/2026, l'agent ouvre **une pull request par
@@ -38,6 +39,7 @@ injectés, nœuds, routage séparé, tout testable sans réseau.
 | `feedback_learning.py` | Le lundi : les pouces bas rangés par cause par Mistral ; leurs mots rejoignent l'apprentissage de la recherche |
 | `commentaires.py` | La revue humaine des commentaires : `uv run python -m agent.commentaires` (refusés), `--publier N`, `--masquer N` |
 | `proposals.py` | La validation humaine en ligne de commande : `uv run python -m agent.proposals` (`--accepter N`, `--refuser N`) ; applique un agenda (`config/sources.yaml`), une adresse de PDF ou un synonyme (`config/synonymes.yaml`) |
+| `drift.py` | La dérive : chaque nuit, les 7 derniers jours comparés aux 28 précédents (questions, réponses, collecte ; PSI) ; le lundi, dans le mail, et une alerte si elle est forte. À la demande : `uv run python -m agent.drift` |
 | `report.py` | Le bilan envoyé par mail |
 | `__main__.py` | Lancement manuel : `uv run python -m agent` (`--essai` : sans écrire en base, `--source` : une source précise, `--decouverte` : avec la découverte des agendas OpenAgenda, `--bilan-recherche` : seulement le bilan de la recherche, `--apprendre` : avec les propositions qui en découlent) |
 

@@ -15,7 +15,7 @@
     "from": "now-30d",
     "to": "now"
   },
-  "description": "Ce que coûte chaque modèle, qui le consomme, quelle version de consigne est en service et ce qu'en pensent les visiteurs ; ce que l'agent propose et ce qui en a été décidé (collect_runs, rag_requests, feedback, event_ratings, agent_proposals).",
+  "description": "Ce que coûte chaque modèle, qui le consomme, quelle version de consigne est en service et ce qu'en pensent les visiteurs ; ce que l'agent propose et ce qui en a été décidé ; la dérive des questions, des réponses et de la collecte (collect_runs, rag_requests, feedback, event_ratings, agent_proposals).",
   "templating": {
     "list": [
       {
@@ -1114,6 +1114,183 @@
         "y": 70,
         "w": 24,
         "h": 7
+      }
+    },
+    {
+      "id": 24,
+      "type": "row",
+      "title": "06 / Dérive : questions, réponses, collecte (7 jours contre les 28 précédents)",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 77,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "title": "État de la dérive",
+      "description": "Dernier rapport de agent/drift.py : 0 stable, 1 à surveiller, 2 dérive forte, -1 pas assez de données (moins de 30 questions dans la semaine).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${source}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${source}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CASE drift ->> 'statut'\n         WHEN 'stable' THEN 0 WHEN 'a_surveiller' THEN 1 WHEN 'derive' THEN 2 ELSE -1 END AS \"dérive\"\nFROM sortiria.collect_runs\nWHERE drift <> '{}'::jsonb\nORDER BY started_at DESC\nLIMIT 1"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 2
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "id": 25,
+      "gridPos": {
+        "x": 0,
+        "y": 78,
+        "w": 6,
+        "h": 7
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "PSI par indicateur",
+      "description": "Population Stability Index de chaque distribution (zone, public, type de sortie, moment, gratuit, type de réponse, sources, motifs de rejet). Moins de 0,10 stable, 0,10 à 0,25 modérée, au-delà forte.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${source}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${source}"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT r.started_at AS time, (i ->> 'famille') || ' / ' || (i ->> 'nom') AS metric,\n       (i ->> 'psi')::numeric AS value\nFROM sortiria.collect_runs AS r, jsonb_array_elements(COALESCE(r.drift -> 'indicateurs', '[]'::jsonb)) AS i\nWHERE i ->> 'psi' IS NOT NULL AND $__timeFilter(r.started_at)\nORDER BY 1"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "pointSize": 5,
+            "showPoints": "always",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "id": 26,
+      "gridPos": {
+        "x": 6,
+        "y": 78,
+        "w": 18,
+        "h": 7
+      }
+    },
+    {
+      "type": "table",
+      "title": "Dernier rapport de dérive",
+      "description": "Un indicateur par ligne, les plus inquiétants d'abord ; pour une distribution, la valeur dont la part a le plus bougé. Que faire : monitoring/README.md, section « Dérive ».",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${source}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${source}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH dernier AS (\n  SELECT drift FROM sortiria.collect_runs\n  WHERE drift <> '{}'::jsonb\n  ORDER BY started_at DESC\n  LIMIT 1\n)\nSELECT i ->> 'famille' AS \"famille\", i ->> 'nom' AS \"indicateur\", i ->> 'niveau' AS \"niveau\",\n       (i ->> 'psi')::numeric AS \"PSI\",\n       (i ->> 'reference')::numeric AS \"référence (mesure)\", (i ->> 'courant')::numeric AS \"semaine (mesure)\",\n       i -> 'ecarts' -> 0 ->> 'valeur' AS \"plus grand écart\",\n       (i -> 'ecarts' -> 0 ->> 'reference')::numeric AS \"part avant\",\n       (i -> 'ecarts' -> 0 ->> 'courant')::numeric AS \"part cette semaine\"\nFROM dernier, jsonb_array_elements(dernier.drift -> 'indicateurs') AS i\nORDER BY CASE i ->> 'niveau' WHEN 'forte' THEN 0 WHEN 'moderee' THEN 1 WHEN 'stable' THEN 2 ELSE 3 END,\n         1, 2"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "id": 27,
+      "gridPos": {
+        "x": 0,
+        "y": 85,
+        "w": 24,
+        "h": 9
       }
     }
   ]

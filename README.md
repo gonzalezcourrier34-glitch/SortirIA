@@ -23,6 +23,7 @@ Le détail de ce qui a été repris, et de ce qui reste à adapter, est dans [PR
 3. Question utilisateur → compréhension (date, lieu, public, budget, type, mots-clés) → filtres SQL stricts → recherche hybride (sens + mots, fusion RRF) → élargissement au sujet si rien ne répond.
 4. Réponse rédigée par Mistral, qui cite chaque événement ; offres partenaires qui répondent en tête.
 5. Journalisation de chaque requête et de ce qui a manqué ; chaque lundi, l'agent en tire des propositions (synonymes, agendas à lire).
+6. Surveillance de la dérive (questions, réponses, collecte) : chaque nuit, la semaine comparée aux 28 jours précédents (PSI) ; le lundi dans le mail, alerte si elle est forte (`agent/drift.py`, `monitoring/README.md`).
 
 En ligne : https://www.sortiria-montpellier.fr. Déploiement sur Azure : interface Angular sur Static Web Apps,
 API FastAPI et collecte de la nuit sur Container Apps, base Azure Database for PostgreSQL ; CI/CD GitHub Actions,

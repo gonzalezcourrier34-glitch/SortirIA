@@ -61,6 +61,7 @@ class CollectionState(TypedDict, total=False):
     enrichment: dict[str, Any]            # bilan de l'enrichissement (refus, « pas une sortie »...)
     vocabulary_size: int                  # racines de mots des titres (sujets reconnus par la recherche)
     search_gaps: dict[str, Any]           # recherches de la semaine restées sans réponse exacte
+    drift: dict[str, Any]                 # dérive des questions, réponses et collecte (agent/drift.py)
 
     # Contrôle de qualité (juge Mistral sur un échantillon)
     quality: dict[str, Any]               # score, taux par question, exemples de problèmes
@@ -74,6 +75,7 @@ class CollectionState(TypedDict, total=False):
     search_learning: list[str]            # le lundi : pistes tirées des recherches ratées (mail)
     feedback_learning: list[str]          # le lundi : pouces bas rangés par cause (mail, 16/10/2026)
     refused_comments: list[dict[str, Any]]  # le lundi : commentaires refusés, contestables (mail)
+    drift_report: dict[str, Any]          # le lundi : rapport de dérive envoyé par mail (19/10/2026)
 
     # Suivi (MLflow, collect_runs)
     node_durations: dict[str, float]      # secondes passées dans chaque nœud

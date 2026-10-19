@@ -113,6 +113,10 @@ def build_report_email(report: Mapping[str, Any]) -> tuple[str, str]:
         lines += ["", "Ce que l'agent en tire (les propositions sont plus haut)"]
         lines += [f"- {note}" for note in learning]
     lines += feedback_lines(report)
+    # Le lundi : dérive des questions, des réponses et de la collecte (19/10/2026).
+    from agent.drift import report_lines as drift_lines
+
+    lines += drift_lines(report.get("drift_report") or {})
 
     coverage = report.get("coverage") or {}
     if coverage:

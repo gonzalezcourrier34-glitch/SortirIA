@@ -231,6 +231,7 @@ def write_events(state: CollectionState, config: RunnableConfig) -> dict[str, An
         purged = repository.purge_old_data(connection)
         coverage_db = repository.fetch_weekly_coverage(connection, watch.COVERAGE_DAYS)
     vocabulary_size, search_gaps = refresh_search_vocabulary(services)
+    drift = measure_drift(services)
     logger.info(
         "Base : %s enregistré(s), %s disparu(s) de leur source, %s expiré(s), %s enrichi(s) "
         "(%s réponse(s) refusée(s), %s lot(s) en échec), %s embedding(s), %s retiré(s) par le plafond, "
@@ -252,6 +253,7 @@ def write_events(state: CollectionState, config: RunnableConfig) -> dict[str, An
         "coverage_db": coverage_db,
         "vocabulary_size": vocabulary_size,
         "search_gaps": search_gaps,
+        "drift": drift,
         "ratings": ratings,
         "llm_usage": watch.merge_usage(
             state.get("llm_usage", {}), enrichment["usage"],
@@ -433,6 +435,28 @@ def judge_quality(state: CollectionState, config: RunnableConfig) -> dict[str, A
 # E. Surveillance (ajoutée le 14/10/2026, voir agent/watch.py)
 # ---------------------------------------------------------------------------
 
+def measure_drift(services: CollectionServices) -> dict[str, Any]:
+    """Dérive des questions, des réponses et de la collecte (agent/drift.py, 19/10/2026).
+
+    Calculée chaque nuit (fenêtre glissante, gardée dans `collect_runs.drift`) ;
+    envoyée et transformée en alertes le lundi seulement (`watch_collection`).
+    Transaction à part, jamais bloquante : une erreur ici ne coûte que le
+    rapport de dérive de la nuit.
+    """
+
+    from agent.drift import fetch_drift
+
+    try:
+        with services.connect() as connection:
+            report = fetch_drift(connection)
+    except Exception:
+        logger.warning("Rapport de dérive indisponible cette nuit.", exc_info=True)
+        return {}
+    logger.info("Dérive : %s (%s question(s) cette semaine, %s nuit(s)).", report.get("statut"),
+                (report.get("questions") or {}).get("courant", 0), (report.get("nuits") or {}).get("courant", 0))
+    return report
+
+
 def refresh_search_vocabulary(services: CollectionServices) -> tuple[int, dict[str, Any]]:
     """Après l'écriture : vocabulaire des titres recalculé (sujets reconnus par
     la recherche) et recherches de la semaine restées sans réponse exacte.
@@ -519,6 +543,13 @@ def watch_collection(state: CollectionState, config: RunnableConfig) -> dict[str
     feedback_notes: list[str] = []
     # Le lundi aussi : commentaires refusés par la modération, contestables.
     refused_comments = (state.get("ratings") or {}).get("refused_comments", []) if search_report else []
+    # Le lundi encore : la dérive de la semaine (agent/drift.py) ; une dérive
+    # forte devient une alerte, sans changer le statut de la nuit.
+    drift_report = (state.get("drift") or {}) if watch.search_report_due(today) else {}
+    if drift_report:
+        from agent.drift import drift_alerts
+
+        alerts += drift_alerts(drift_report)
     usage = state.get("llm_usage", {})
     if search_report and services.learn_searches is not None and not state.get("dry_run"):
         try:
@@ -536,7 +567,8 @@ def watch_collection(state: CollectionState, config: RunnableConfig) -> dict[str
                         len(learning.proposals), len(learning.notes))
     return {"coverage": counts, "cost_usd": cost, "watch_alerts": alerts, "proposals": proposals,
             "search_report": search_report, "search_learning": learning_notes, "llm_usage": usage,
-            "feedback_learning": feedback_notes, "refused_comments": refused_comments}
+            "feedback_learning": feedback_notes, "refused_comments": refused_comments,
+            "drift_report": drift_report}
 
 
 def discover_new_agendas(state: CollectionState, services: CollectionServices, inputs: Mapping[str, Any],
@@ -686,6 +718,7 @@ def write_report(state: CollectionState, config: RunnableConfig) -> dict[str, An
         "quality": state.get("quality", {}),
         "events_capped": state.get("events_capped", 0),
         "events_total": state.get("events_total"),
+        "drift": state.get("drift") or {},
     }
     run_id = None
     pull_requests: dict[str, Any] = {}
@@ -736,6 +769,7 @@ def write_report(state: CollectionState, config: RunnableConfig) -> dict[str, An
                 "search_learning": state.get("search_learning") or [],
                 "feedback_learning": state.get("feedback_learning") or [],
                 "refused_comments": state.get("refused_comments") or [],
+                "drift_report": state.get("drift_report") or {},
             })
         except Exception:
             logger.exception("Impossible d'envoyer le bilan.")

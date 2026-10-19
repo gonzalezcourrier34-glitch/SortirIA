@@ -122,9 +122,11 @@ def test_full_night_success() -> None:
     # gardent leurs statistiques ; puis taille de la base, embeddings, purge, bilan.
     # ... puis le SELECT de la couverture de la semaine (surveillance), le
     # vocabulaire des titres et le bilan de la recherche (transaction à part,
-    # la fausse base ne sait pas y répondre : la collecte continue), le bilan.
+    # la fausse base ne sait pas y répondre : la collecte continue), le rapport
+    # de dérive (transaction à part, arrêté à la 2e requête par la fausse base :
+    # la collecte continue aussi), le bilan.
     assert kinds == ["SELECT", "INSERT", "WITH", "WITH", "WITH", "SELECT", "SELECT", "UPDATE", "SELECT", "SELECT",
-                     "SELECT", "WITH", "INSERT", "INSERT"]
+                     "SELECT", "WITH", "WITH", "WITH", "INSERT", "INSERT"]
     assert state["purged"] == {"requests": 3, "cache": 1, "runs": 0}
 
 

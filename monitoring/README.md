@@ -123,12 +123,63 @@ est d'environ 10 $ par mois ([Coûts](couts.md)).
 | Pouces bas, commentaires refusés | **mail du lundi** : pouces bas rangés par cause par Mistral (leurs mots nourrissent les propositions de l'agent), commentaires refusés à revoir (`agent.commentaires`) |
 | Sortie ou partenaire mal noté | alerte dans le mail de la nuit (2/5 ou moins sur 3 notes pour une sortie, 2,5/5 sur 5 pour un partenaire) |
 | Régression de la recherche | la CI échoue sous 95 % et bloque le déploiement |
+| Dérive des questions, des réponses ou de la collecte | **mail du lundi** (section « Dérive ») ; une dérive forte devient une alerte ; tableau Grafana « Modèles et coûts », partie 06 |
 
 **Pas fait, assumé** : alertes Azure Monitor sur l'API (latence, erreurs),
-métriques Prometheus (retirées le 16/10/2026 : aucun service ne les produisait),
-rapports de dérive Evidently. Le journal `rag_requests`
-et Grafana couvrent le besoin d'un service à faible trafic
-([MVP](mvp.md)).
+métriques Prometheus (retirées le 16/10/2026 : aucun service ne les produisait).
+Le journal `rag_requests` et Grafana couvrent le besoin d'un service à faible
+trafic ([MVP](mvp.md)).
+
+## Dérive (fait le 19/10/2026)
+
+SortirIA n'entraîne pas de modèle : il appelle Mistral. Ce qui peut dériver,
+c'est ce qu'on lui **demande**, ce qu'il **répond** et ce que les sources lui
+**apportent**. `agent/drift.py` compare chaque nuit les **7 derniers jours**
+aux **28 précédents** :
+
+| Famille | Indicateur | Ce que ça détecte |
+| --- | --- | --- |
+| Questions (*data drift*) | zone, public, type de sortie, moment de la journée, gratuit | les visiteurs ne demandent plus la même chose (saison, nouveau public, autre ville) |
+| Réponses (*prediction drift*) | type de réponse : exacte, élargie, idées voisines, introuvable, erreur | la base répond moins bien aux demandes |
+| Réponses (performance) | latence P95 hors cache, part sans Mistral, part des pouces haut | service plus lent, Mistral moins disponible, visiteurs moins satisfaits |
+| Collecte (données) | part de chaque source, motifs de rejet | une source change de format ou de volume |
+| Collecte (qualité) | taux de rejet, score du juge de qualité | l'enrichissement par Mistral se dégrade (*concept drift*) |
+
+**Méthode** : PSI (Population Stability Index) pour les distributions, la
+méthode qu'Evidently applique par défaut aux variables catégorielles (code du
+projet 5 : `reference/p5_monitoring/.../evidently_service.py`). Elle est
+recodée en quelques lignes plutôt que d'ajouter Evidently à l'image de
+production. Moins de 0,10 : stable ; 0,10 à 0,25 : modérée ; au-delà : forte.
+Pour les mesures, seuils fixés à l'avance (`MEASURE_RULES`) : latence P95
++25 % / +50 %, part sans Mistral +5 / +10 points, pouces haut −8 / −15
+points, taux de rejet +5 / +10 points, juge −5 / −10 points.
+
+**Faible trafic** : sous 30 questions dans la semaine (`DERIVE_MIN_QUESTIONS`)
+ou 20 avis, l'indicateur est marqué « pas assez de données » au lieu de
+déclencher une fausse alerte. La collecte, elle, est jugée dès 3 nuits.
+
+**Où le voir** :
+
+- chaque nuit : `collect_runs.drift` (rapport complet en JSON) et métriques
+  MLflow `derive/<famille>/<indicateur>/psi` ;
+- le lundi : section « Dérive » du mail de bilan ; une dérive **forte**
+  devient une alerte ;
+- Grafana, « SortirIA - Modèles et coûts », partie 06 : état, PSI de chaque
+  indicateur dans le temps, dernier rapport ;
+- à la demande : `uv run python -m agent.drift` (`--json` pour le rapport
+  complet, `--jours-courant`, `--jours-reference`, `--minimum`).
+
+**Que faire** (rien n'est changé automatiquement, comme pour les autres
+propositions de l'agent) :
+
+| Dérive | Réaction |
+| --- | --- |
+| Questions vers une zone, un public ou un type de sortie | vérifier la couverture de cette demande (mail, partie « Sorties des 7 prochains jours ») ; chercher une source ou un partenaire ; les propositions du lundi (agendas, synonymes) vont dans ce sens |
+| Plus de réponses élargies, voisines ou introuvables | lire les questions sans réponse exacte (mail du lundi, Grafana « Recherche ») ; ajouter les questions au jeu d'évaluation (`config/eval_*.yaml`) puis corriger la compréhension ou les synonymes ; la CI vérifie qu'on ne recule pas |
+| Latence ou part sans Mistral | état de Mistral, cache, taille de la base (`events_total`) |
+| Pouces haut en baisse | pouces bas rangés par cause (mail du lundi) ; comparer les versions de consigne (Grafana, partie 03) |
+| Part d'une source, motifs de rejet | lire le bilan de la source (mail de la nuit, MLflow `source/...`) : format changé, quota, document déplacé |
+| Juge de qualité, taux de rejet | comparer les versions de consigne (`document_prompt_version`) dans MLflow, relire des fiches |
 
 ## MLflow : expériences et évaluations
 
@@ -153,7 +204,7 @@ ou injoignable, l'évaluation continue (historique CSV dans `benchmarks/`).
 | Collecte nocturne : ajoutés, rejetés, expirés, échecs par source, durée | Table `collect_runs` | nœud `H_report` de Chess Agent |
 | Tableaux de bord | Grafana | `reference/p14_observabilite/grafana-medical-triage.json` (modèle) |
 | Métriques Prometheus de l'API | non repris (voir ci-dessus) | `reference/p14_observabilite/main.py` |
-| Dérive (Evidently) | non repris | `reference/p5_monitoring/app/services/analysis_services/evidently_service.py` |
+| Dérive | PSI recodé dans `agent/drift.py` (19/10/2026, voir « Dérive ») | `reference/p5_monitoring/app/services/analysis_services/evidently_service.py` |
 
 ## CI/CD
 

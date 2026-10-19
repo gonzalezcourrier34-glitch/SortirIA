@@ -156,6 +156,35 @@ WHERE status <> 'en_attente' AND decided_at IS NOT NULL AND $__timeFilter(decide
 ORDER BY decided_at DESC
 LIMIT 50"""
 
+# Dérive (19/10/2026, agent/drift.py) : chaque nuit, la semaine écoulée est
+# comparée aux 28 jours précédents ; le rapport est gardé dans collect_runs.drift.
+DRIFT_STATUS = """SELECT CASE drift ->> 'statut'
+         WHEN 'stable' THEN 0 WHEN 'a_surveiller' THEN 1 WHEN 'derive' THEN 2 ELSE -1 END AS "dérive"
+FROM sortiria.collect_runs
+WHERE drift <> '{}'::jsonb
+ORDER BY started_at DESC
+LIMIT 1"""
+DRIFT_PSI = """SELECT r.started_at AS time, (i ->> 'famille') || ' / ' || (i ->> 'nom') AS metric,
+       (i ->> 'psi')::numeric AS value
+FROM sortiria.collect_runs AS r, jsonb_array_elements(COALESCE(r.drift -> 'indicateurs', '[]'::jsonb)) AS i
+WHERE i ->> 'psi' IS NOT NULL AND $__timeFilter(r.started_at)
+ORDER BY 1"""
+DRIFT_LATEST = """WITH dernier AS (
+  SELECT drift FROM sortiria.collect_runs
+  WHERE drift <> '{}'::jsonb
+  ORDER BY started_at DESC
+  LIMIT 1
+)
+SELECT i ->> 'famille' AS "famille", i ->> 'nom' AS "indicateur", i ->> 'niveau' AS "niveau",
+       (i ->> 'psi')::numeric AS "PSI",
+       (i ->> 'reference')::numeric AS "référence (mesure)", (i ->> 'courant')::numeric AS "semaine (mesure)",
+       i -> 'ecarts' -> 0 ->> 'valeur' AS "plus grand écart",
+       (i -> 'ecarts' -> 0 ->> 'reference')::numeric AS "part avant",
+       (i -> 'ecarts' -> 0 ->> 'courant')::numeric AS "part cette semaine"
+FROM dernier, jsonb_array_elements(dernier.drift -> 'indicateurs') AS i
+ORDER BY CASE i ->> 'niveau' WHEN 'forte' THEN 0 WHEN 'moderee' THEN 1 WHEN 'stable' THEN 2 ELSE 3 END,
+         1, 2"""
+
 #: Toutes les requêtes du tableau (les tests les exécutent sur PostgreSQL).
 QUERIES: dict[str, str] = {
     "MONTH_COST": MONTH_COST, "MONTH_PROJECTION": MONTH_PROJECTION, "NIGHT_COST": NIGHT_COST,
@@ -165,6 +194,7 @@ QUERIES: dict[str, str] = {
     "PENDING_COMMENTS": PENDING_COMMENTS, "FEEDBACK_DAILY": FEEDBACK_DAILY,
     "PROPOSALS_COUNTS": PROPOSALS_COUNTS, "PROPOSALS_PENDING": PROPOSALS_PENDING,
     "PROPOSALS_DECIDED": PROPOSALS_DECIDED,
+    "DRIFT_STATUS": DRIFT_STATUS, "DRIFT_PSI": DRIFT_PSI, "DRIFT_LATEST": DRIFT_LATEST,
 }
 
 SOURCE_VARIABLE = {
@@ -307,12 +337,25 @@ def build() -> dict[str, Any]:
         "Décisions prises", "Qui a décidé (github ou ligne de commande) et en combien de temps.",
         PROPOSALS_DECIDED)), 24, 7)
 
+    layout.row("06 / Dérive : questions, réponses, collecte (7 jours contre les 28 précédents)")
+    layout.add(stat("État de la dérive", "Dernier rapport de agent/drift.py : 0 stable, 1 à surveiller, 2 dérive "
+                    "forte, -1 pas assez de données (moins de 30 questions dans la semaine).", DRIFT_STATUS,
+                    "short", 0, [{"color": "text", "value": None}, {"color": "green", "value": 0},
+                                 {"color": "orange", "value": 1}, {"color": "red", "value": 2}]), 6, 7)
+    layout.add(series("PSI par indicateur", "Population Stability Index de chaque distribution (zone, public, "
+                      "type de sortie, moment, gratuit, type de réponse, sources, motifs de rejet). Moins de 0,10 "
+                      "stable, 0,10 à 0,25 modérée, au-delà forte.", DRIFT_PSI, "short"), 18, 7)
+    layout.add(table("Dernier rapport de dérive", "Un indicateur par ligne, les plus inquiétants d'abord ; pour une "
+                     "distribution, la valeur dont la part a le plus bougé. Que faire : monitoring/README.md, "
+                     "section « Dérive ».", DRIFT_LATEST), 24, 9)
+
     return {
         "uid": "sortiria-modeles-couts", "title": "SortirIA - Modèles et coûts", "tags": ["sortiria", "modeles", "couts"],
         "timezone": "Europe/Paris", "schemaVersion": 39, "version": 1, "editable": True, "refresh": "15m",
         "time": {"from": "now-30d", "to": "now"},
         "description": "Ce que coûte chaque modèle, qui le consomme, quelle version de consigne est en service et "
-                       "ce qu'en pensent les visiteurs ; ce que l'agent propose et ce qui en a été décidé (collect_runs, "
+                       "ce qu'en pensent les visiteurs ; ce que l'agent propose et ce qui en a été décidé ; la dérive "
+                       "des questions, des réponses et de la collecte (collect_runs, "
                        "rag_requests, feedback, event_ratings, agent_proposals).",
         "templating": {"list": [SOURCE_VARIABLE]}, "annotations": {"list": []}, "panels": layout.panels,
     }

@@ -170,7 +170,7 @@ INSERT INTO sortiria.collect_runs (
     duplicates_merged, events_upserted, events_expired, events_removed,
     rejection_reasons, failed_sources, message, events_embedded, cost_usd,
     llm_usage, coverage, node_durations, alerts, prompt_version, mlflow_run_id,
-    quality_score, quality, events_capped, events_total
+    quality_score, quality, events_capped, events_total, drift
 )
 VALUES (
     COALESCE(%(started_at)s::timestamptz, now()), clock_timestamp(), %(status)s,
@@ -179,7 +179,7 @@ VALUES (
     %(rejection_reasons)s, %(failed_sources)s, %(message)s, %(events_embedded)s,
     %(cost_usd)s, %(llm_usage)s, %(coverage)s, %(node_durations)s, %(alerts)s,
     %(prompt_version)s, %(mlflow_run_id)s, %(quality_score)s, %(quality)s,
-    %(events_capped)s, %(events_total)s
+    %(events_capped)s, %(events_total)s, %(drift)s
 )
 RETURNING run_id
 """
@@ -735,6 +735,8 @@ def record_collect_run(connection: Any, report: Mapping[str, Any]) -> int:
         "quality": json.dumps(dict(report.get("quality") or {}), ensure_ascii=False),
         "events_capped": int(report.get("events_capped") or 0),
         "events_total": report.get("events_total"),
+        # Dérive (19/10/2026, agent/drift.py) : rapport de la nuit, lu par Grafana.
+        "drift": json.dumps(dict(report.get("drift") or {}), ensure_ascii=False),
     }
     with connection.cursor() as cursor:
         cursor.execute(INSERT_COLLECT_RUN_SQL, params)
