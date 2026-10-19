@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Rapport de conduite de projet | SortirIA</title>
+<meta content="Rapport de conduite de projet data de SortirIA, en cinq parties : le besoin, l'audit des données, la solution, l'aide à la décision et le contrôle du projet." name="description"/>
+<link href="css/style.css" rel="stylesheet"/>
+<style>
+.report-meta { display: flex; flex-wrap: wrap; gap: 0.5rem 2rem; margin-top: 1.5rem; color: var(--muted); font-size: 0.95rem; }
+.report-meta strong { color: var(--text); }
+.competence { display: inline-block; margin-bottom: 1rem; padding: 0.3rem 0.8rem; border: 1px solid rgba(72, 201, 176, 0.35); border-radius: 999px; color: var(--accent); font-size: 0.85rem; }
+.report-text { max-width: 850px; }
+.report-text p { margin-top: 1rem; color: var(--muted); }
+.report-text p strong { color: var(--text); }
+.report-text ul { margin: 1rem 0 0 1.3rem; color: var(--muted); }
+.report-text li + li { margin-top: 0.4rem; }
+.section h3.report-h3 { margin: 2.5rem 0 0.5rem; font-size: 1.25rem; }
+.toc { display: grid; gap: 0.6rem; max-width: 850px; margin-top: 1.5rem; counter-reset: toc; }
+.toc a { display: flex; gap: 1rem; padding: 0.9rem 1.2rem; border: 1px solid var(--border); border-radius: 12px; }
+.toc a:hover { border-color: var(--accent); }
+.toc span { color: var(--accent); font-family: Consolas, "Courier New", monospace; }
+.toc small { display: block; color: var(--muted); }
+@media print {
+  :root { --background: #ffffff; --surface: #f4f7f7; --surface-light: #eef3f3; --text: #111a22; --muted: #3c4a50; --accent: #1b7f6e; --border: rgba(0, 0, 0, 0.15); }
+  .header, .hero-actions, .contact, .toc { display: none !important; }
+  .section, .hero-content { padding-top: 1.2rem !important; padding-bottom: 1.2rem !important; }
+  .section { break-inside: auto; }
+  .story-table, .reflection-card, .callout { break-inside: avoid; }
+  .container { width: 100% !important; }
+  .section h2, .section h3, .competence, .section-number { break-after: avoid; }
+  a { color: inherit; }
+}
+</style>
+</head>
+<body>
+<header class="header">
+<nav class="nav container">
+<a class="logo" href="index.html">Sortir<span>IA</span></a>
+<div class="nav-links"><a href="index.html">Projet</a><a class="active" href="rapport.html">Rapport</a><a href="parcours.html">Parcours</a><a href="architecture.html">Architecture</a><a href="agent.html">Agent</a><a href="recherche.html">Recherche</a><a href="modeles.html">Modèles</a><a href="interface.html">Interface</a><a href="resultats.html">Résultats</a><a href="deploiement.html">Déploiement</a><a href="procedures.html">Procédures</a><a href="suivi.html">Suivi</a><a href="limites.html">Limites</a></div>
+</nav>
+</header>
+<main>
+
+<section class="hero project-hero">
+<div class="container hero-content">
+<p class="eyebrow">SORTIRIA · RAPPORT DE CONDUITE DE PROJET DATA</p>
+<h1>Rapport de<span>conduite de projet</span></h1>
+<p class="hero-text">Ce rapport raconte comment j'ai mené SortirIA, du besoin jusqu'au service en ligne. Il suit les cinq compétences évaluées : comprendre le besoin, auditer les données, choisir une solution, aider à décider, contrôler le projet.</p>
+<div class="report-meta">
+<span><strong>Auteur</strong> : Stéphane Gonzalez</span>
+<span><strong>Formation</strong> : Ingénieur IA, OpenClassrooms</span>
+<span><strong>Version</strong> : 19/10/2026</span>
+<span><strong>Soutenance</strong> : 6/11/2026</span>
+<span><strong>Service</strong> : <a class="project-link" href="https://www.sortiria-montpellier.fr">www.sortiria-montpellier.fr</a></span>
+<span><strong>Code</strong> : <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/SortirIA">github.com/gonzalezcourrier34-glitch/SortirIA</a></span>
+</div>
+<div class="hero-actions">
+<a class="button primary" href="#synthese">Lire la synthèse</a>
+<a class="button secondary" href="SortirIA_rapport_conduite_projet.pdf">Télécharger en PDF</a>
+<a class="button secondary" href="index.html">Le dossier complet</a>
+</div>
+</div>
+</section>
+
+<!-- SYNTHÈSE -->
+<section class="section section-alt" id="synthese">
+<div class="container">
+<p class="section-number">00</p>
+<h2>Synthèse pour un décideur</h2>
+<div class="report-text">
+<p><strong>Le problème.</strong> À Montpellier et sur le bassin de Thau, les sorties sont publiées dans dix endroits différents. Pour trouver un concert samedi soir, il faut ouvrir plusieurs sites et tout croiser à la main.</p>
+<p><strong>Ce que j'ai construit.</strong> SortirIA est un assistant. On écrit sa demande en français, par exemple « un concert pas cher samedi soir ». Il répond avec de vrais événements, à venir, et donne la source de chacun. Chaque nuit, un agent met la base à jour tout seul.</p>
+<p><strong>Où j'en suis.</strong> Le service est en ligne depuis le 15/10/2026. Tous les critères que j'avais fixés avant de mesurer sont atteints. Il coûte environ 10 $ par mois.</p>
+<p><strong>Ma recommandation.</strong> Continuer, avec de vrais utilisateurs. Le moteur est fiable et mesuré. Ce qui manque maintenant, ce sont des questions réelles en nombre, pour mesurer la satisfaction et décider d'un éventuel fine-tuning.</p>
+</div>
+<div class="result-grid" style="margin-top:2rem">
+<div class="result-card"><strong>98,7 %</strong><span>des propositions respectent date, lieu, public et budget (objectif : 95 %)</span></div>
+<div class="result-card"><strong>97,8 %</strong><span>des 3 premières propositions sont pertinentes (objectif : 70 %)</span></div>
+<div class="result-card"><strong>6,4 s</strong><span>de temps de réponse au P95 (objectif : 8 s)</span></div>
+<div class="result-card"><strong>≈ 10 $</strong><span>par mois ; 0,12 $ de Mistral pour 1 000 questions</span></div>
+</div>
+<nav class="toc" aria-label="Plan du rapport">
+<a href="#s01"><span>01</span><div>Le besoin et le contexte<small>Collecter les besoins métiers et analyser le contexte</small></div></a>
+<a href="#s02"><span>02</span><div>L'audit des données<small>Auditer la solution data et son adéquation aux besoins</small></div></a>
+<a href="#s03"><span>03</span><div>La solution technique<small>Identifier une solution technique qui répond aux besoins</small></div></a>
+<a href="#s04"><span>04</span><div>L'aide à la décision<small>Apporter un appui stratégique et méthodologique</small></div></a>
+<a href="#s05"><span>05</span><div>Le contrôle du projet<small>Délais, coûts, livrables et performance</small></div></a>
+</nav>
+</div>
+</section>
+
+<!-- 01 BESOIN -->
+<section class="section" id="s01">
+<div class="container">
+<p class="section-number">01</p>
+<span class="competence">Compétence : collecter les besoins métiers et analyser le contexte</span>
+<h2>Le besoin et le contexte</h2>
+<div class="report-text">
+<h3 class="report-h3">Le contexte</h3>
+<p>Je vis dans la région. Les informations sur les sorties existent, mais elles sont éparpillées : agendas des villes, offices de tourisme, OpenAgenda, programmes en PDF, sites des lieux.</p>
+<p>Il n'y a pas d'entreprise cliente derrière ce projet. J'ai donc joué deux rôles : celui qui exprime le besoin, et celui qui y répond. Pour ne pas me contenter de mon avis, j'ai confronté le besoin à d'autres personnes (voir plus bas).</p>
+<h3 class="report-h3">Les utilisateurs</h3>
+</div>
+<table class="story-table">
+<thead><tr><th>Qui</th><th>Ce qu'il veut</th><th>Ce que ça impose</th></tr></thead>
+<tbody>
+<tr><td>Les habitants</td><td>Trouver une sortie pour ce soir ou ce week-end, sans faire le tour des sites.</td><td>Des données fraîches, chaque jour.</td></tr>
+<tr><td>Les touristes</td><td>Savoir ce qui se passe à Sète, Mèze ou Montpellier pendant leur séjour.</td><td>Couvrir deux zones : Montpellier et le bassin de Thau.</td></tr>
+<tr><td>Les familles</td><td>Des sorties pour les enfants, gratuites ou sous un budget.</td><td>Le public et le prix sont des contraintes strictes, jamais devinées.</td></tr>
+<tr><td>Les lieux partenaires</td><td>Publier leurs offres simplement.</td><td>Accepter un fichier Excel, CSV, PDF ou Word.</td></tr>
+</tbody>
+</table>
+<div class="report-text">
+<h3 class="report-h3">Comment j'ai recueilli le besoin</h3>
+<ul>
+<li>Mon propre usage : je suis l'utilisateur cible.</li>
+<li>Le pitch et la feuille de route, relus par mon mentor le 16/10. Ses remarques m'ont fait écrire un MVP clair.</li>
+<li>Des tests avec des amis le 18/10. Ils m'ont demandé un choix « Tout public », un libellé « Les deux » plus clair que « Partout », et des offres partenaires sans doublon.</li>
+<li>Le journal de chaque question posée sur le site, et le pouce haut ou bas sur chaque réponse.</li>
+</ul>
+<h3 class="report-h3">La promesse, en une phrase</h3>
+<p>« Une personne décrit son envie en français. SortirIA lui propose des événements <strong>réels, à venir, autour de Montpellier et du bassin de Thau</strong>, qui <strong>respectent sa demande</strong> et <strong>citent leur source</strong>. »</p>
+<p>Pour tenir cette promesse, il faut trois choses : des données fraîches sans intervention, des réponses justes et sourcées, et un service en production.</p>
+</div>
+</div>
+</section>
+
+<!-- 02 AUDIT -->
+<section class="section section-alt" id="s02">
+<div class="container">
+<p class="section-number">02</p>
+<span class="competence">Compétence : auditer la solution data</span>
+<h2>L'audit des données</h2>
+<div class="report-text">
+<p>Avant de construire, j'ai regardé ce que valent les données disponibles. Je me suis posé quatre questions : ai-je le droit de les utiliser ? En ai-je assez ? Sont-elles fiables ? Que manque-t-il ?</p>
+<h3 class="report-h3">Les sources et leur droit d'usage</h3>
+</div>
+<table class="story-table">
+<thead><tr><th>Source</th><th>Droit d'usage</th><th>Volume</th><th>Ce que j'ai constaté</th></tr></thead>
+<tbody>
+<tr><td>DATAtourisme (offices de tourisme)</td><td>Licence Ouverte 2.0</td><td>près de 1 000 séances</td><td>La plus riche. Peu de noms de lieux, horaires écrits en texte libre.</td></tr>
+<tr><td>OpenAgenda</td><td>API ouverte, source citée</td><td>12 agendas utiles</td><td>Mon audit du 14/10 : la recherche par mots lisait 10 000 événements de 111 agendas pour en garder 83 dans la zone, en 6 minutes. J'ai donc choisi 12 agendas précis.</td></tr>
+<tr><td>Programme PDF de Sète agglopôle</td><td>document public</td><td>434 événements</td><td>Pas de structure : il faut le lire avec un modèle de langage. Bloqué depuis les serveurs Azure, je le lis depuis mon poste.</td></tr>
+<tr><td>Fichiers des partenaires</td><td>fournis par le partenaire</td><td>exemples fictifs</td><td>Annoncés comme « Démonstration » tant qu'il n'y a pas de vrai partenaire.</td></tr>
+<tr><td>Sites des lieux (scraping)</td><td>seulement avec une autorisation écrite</td><td>0</td><td>J'ai demandé l'autorisation à Frontignan et à l'office de tourisme Archipel de Thau. Pas de réponse : je ne collecte pas.</td></tr>
+</tbody>
+</table>
+<div class="report-text">
+<p>Au total, la base contient environ <strong>2 450 événements</strong> sur les trois prochains mois.</p>
+<h3 class="report-h3">La qualité des données</h3>
+<ul>
+<li><strong>Des informations manquent souvent</strong> : le prix, l'heure, l'âge. Ma règle : ce qui manque reste absent. Un prix inconnu n'est jamais pris pour « gratuit ».</li>
+<li><strong>Certaines fiches ne sont pas des sorties</strong> : offres d'emploi, collectes de sang. Elles sont rejetées avec un motif, compté chaque nuit.</li>
+<li><strong>Les sources se recoupent</strong> : un même concert peut venir de deux sources. Je fusionne les doublons par titre, jour, heure et lieu.</li>
+<li><strong>Les sources tombent en panne</strong> : le 14/10, une erreur de pagination a fait tomber DATAtourisme à 184 séances au lieu de près de 1 000. Depuis, une baisse anormale déclenche une alerte, et les événements de la veille sont gardés.</li>
+<li><strong>Le modèle peut se tromper</strong> : chaque nuit, un second modèle juge 20 fiches enrichies tirées au hasard. Le score est passé de 89 % à 94 % après mes corrections.</li>
+</ul>
+<h3 class="report-h3">Les données personnelles</h3>
+<p>Les visiteurs sont anonymes. Je ne garde qu'un identifiant tiré au hasard, et seulement son empreinte. Le journal des questions est effacé après 90 jours.</p>
+<h3 class="report-h3">Ma conclusion de l'audit</h3>
+<p>Les données ouvertes suffisent pour un premier service, avec deux limites que j'assume. Le bassin de Thau a peu de sorties le soir. Et les lieux ouverts toute l'année (piscine, bowling) ne sont pas dans les agendas : SortirIA est un agenda d'événements, pas un annuaire de lieux.</p>
+</div>
+</div>
+</section>
+
+<!-- 03 SOLUTION -->
+<section class="section" id="s03">
+<div class="container">
+<p class="section-number">03</p>
+<span class="competence">Compétence : identifier une solution technique</span>
+<h2>La solution technique</h2>
+<div class="report-text">
+<p>Je n'ai pas tout écrit de zéro. J'ai repris des briques de mes projets de formation, puis je les ai adaptées. Pour chaque choix, je me suis posé une question simple : <strong>le résultat peut-il être vérifié par du code ?</strong> Si oui, j'écris une règle. Sinon, j'utilise un modèle, et une règle contrôle ce qu'il rend.</p>
+<h3 class="report-h3">Le fonctionnement en deux temps</h3>
+<ul>
+<li><strong>La nuit</strong>, un agent LangGraph collecte les sources, vérifie, dédoublonne, enrichit avec Mistral et enregistre dans PostgreSQL.</li>
+<li><strong>Le jour</strong>, l'API comprend la question avec des règles, filtre en SQL, cherche par le sens et par les mots, puis Mistral rédige une réponse courte qui cite ses sources.</li>
+<li><strong>Chaque lundi</strong>, l'agent relit ce que les gens ont cherché sans trouver. Il propose des corrections. Je les valide ou je les refuse.</li>
+</ul>
+<h3 class="report-h3">Mes choix, et pourquoi</h3>
+</div>
+<table class="story-table">
+<thead><tr><th>Besoin</th><th>Mon choix</th><th>Pourquoi</th><th>Ce que j'ai écarté</th></tr></thead>
+<tbody>
+<tr><td>Collecter plusieurs sources</td><td>Le moteur de CheckIt.AI (projet 12)</td><td>Une nouvelle source, c'est une configuration, pas un programme.</td><td>Un script par source</td></tr>
+<tr><td>Lire un PDF, juger la qualité</td><td>Un agent LangGraph</td><td>Ces étapes demandent de comprendre un texte. Un ETL simple ne sait pas le faire.</td><td>Un ETL seul</td></tr>
+<tr><td>Comprendre la question</td><td>Des règles</td><td>100 % de compréhension sur mon jeu de test, en 1 ms, sans coût.</td><td>Un petit modèle (Ministral)</td></tr>
+<tr><td>Chercher</td><td>PostgreSQL + pgvector</td><td>Filtres stricts et recherche par le sens dans la même requête.</td><td>FAISS (projet 6)</td></tr>
+<tr><td>Rédiger</td><td>mistral-small</td><td>Bon marché, hébergé en Europe.</td><td>ministral-8b : 17 % moins cher, mais plus lent</td></tr>
+<tr><td>Mettre en ligne</td><td>Azure, CI/CD GitHub Actions</td><td>Presque gratuit la première année ; l'API s'endort sans visiteur.</td><td>Un serveur allumé en permanence</td></tr>
+<tr><td>Surveiller</td><td>Mail chaque matin, Grafana, MLflow, suivi de la dérive</td><td>Je suis seul : le service doit me prévenir quand il a besoin de moi.</td><td>Prometheus (pas utile à ce trafic)</td></tr>
+</tbody>
+</table>
+<div class="report-text">
+<h3 class="report-h3">Les garde-fous contre les inventions</h3>
+<ul>
+<li>Mistral ne reçoit que les événements trouvés en base. Une citation qui ne renvoie à aucun d'eux est retirée.</li>
+<li>Un résumé qui cite un nom absent de la source est effacé. Exemple réel : « Cyrano de Bergerac » pour un spectacle nommé « CYRANA ».</li>
+<li>Pour un PDF, le titre doit être présent dans la page lue. Sinon, l'événement est rejeté.</li>
+<li>Aucune modification de configuration ne se fait sans mon accord. L'agent ouvre une pull request ; je la relis.</li>
+</ul>
+<p>Le détail technique : <a class="project-link" href="architecture.html">Architecture</a>, <a class="project-link" href="agent.html">Agent</a>, <a class="project-link" href="recherche.html">Recherche</a>, <a class="project-link" href="modeles.html">Modèles</a>.</p>
+</div>
+</div>
+</section>
+
+<!-- 04 DÉCISION -->
+<section class="section section-alt" id="s04">
+<div class="container">
+<p class="section-number">04</p>
+<span class="competence">Compétence : apporter un appui stratégique et méthodologique à la décision</span>
+<h2>L'aide à la décision</h2>
+<div class="report-text">
+<p>Pour décider, il faut des critères clairs. J'ai donc fixé mes seuils <strong>avant</strong> de mesurer. Sinon, on finit par choisir le seuil qui arrange.</p>
+<h3 class="report-h3">Un MVP en trois colonnes</h3>
+<ul>
+<li><strong>Indispensable</strong> : sans cela, pas de produit. Tout est fait.</li>
+<li><strong>Important</strong> : fait, mais le produit vivrait sans (l'agent qui lit les PDF, les partenaires, les avis).</li>
+<li><strong>Reporté ou abandonné</strong>, sans dommage : le scraping sans autorisation, la météo, la base de lieux, le fine-tuning.</li>
+</ul>
+<h3 class="report-h3">Les critères de réussite, et le résultat</h3>
+</div>
+<table class="story-table">
+<thead><tr><th>Critère</th><th>Seuil fixé avant</th><th>Mesuré</th><th>Décision</th></tr></thead>
+<tbody>
+<tr><td>Propositions qui respectent les contraintes</td><td>≥ 95 %</td><td>98,7 %</td><td>✅ go</td></tr>
+<tr><td>Compréhension des questions</td><td>≥ 95 %</td><td>100 %</td><td>✅ go</td></tr>
+<tr><td>Pertinence des 3 premières propositions</td><td>≥ 70 %</td><td>97,8 %</td><td>✅ go</td></tr>
+<tr><td>Accord du juge Mistral avec moi</td><td>≥ 85 %, AC1 ≥ 0,6</td><td>98,6 % ; 91,9 % sur des cartes nouvelles</td><td>✅ le juge peut rejouer la mesure</td></tr>
+<tr><td>Temps de réponse P95</td><td>≤ 8 s</td><td>6,0 à 6,4 s</td><td>✅ go</td></tr>
+<tr><td>Coût Mistral</td><td>≤ 1 $ pour 1 000 questions</td><td>0,12 $</td><td>✅ go</td></tr>
+<tr><td>Qualité des fiches (juge de la nuit)</td><td>≥ 80 %</td><td>89 à 94 %</td><td>✅ go</td></tr>
+<tr><td>Événement inventé dans une réponse</td><td>0</td><td>0</td><td>✅ go</td></tr>
+</tbody>
+</table>
+<div class="report-text">
+<h3 class="report-h3">Comment j'ai rendu la mesure fiable</h3>
+<p>Le respect des contraintes se vérifie par le code. La pertinence, c'est un jugement : j'ai donc d'abord annoté moi-même 139 cartes. Ensuite seulement, j'ai réglé un juge Mistral sur mon annotation. Il a fallu 7 versions de sa consigne pour passer de 68 % à 98,6 % d'accord. J'ai appris qu'un modèle calcule mal les dates : je lui ai retiré ce que le code vérifie mieux. Puis je l'ai testé sur 135 cartes qu'il n'avait jamais vues : 91,9 %.</p>
+<h3 class="report-h3">Les scénarios de coût</h3>
+</div>
+<table class="story-table">
+<thead><tr><th>Usage par mois</th><th>1 000 questions</th><th>10 000 questions</th><th>100 000 questions</th></tr></thead>
+<tbody>
+<tr><td>Coût la 1re année</td><td>≈ 10 $</td><td>≈ 17 $</td><td>≈ 32 à 38 $</td></tr>
+<tr><td>Coût ensuite (base payante)</td><td>≈ 28 $</td><td>≈ 35 $</td><td>≈ 50 à 56 $</td></tr>
+</tbody>
+</table>
+<div class="report-text">
+<p>Une piste de recettes : un abonnement de 10 à 20 € par mois pour un lieu partenaire. Deux à quatre partenaires couvriraient le service. C'est une hypothèse, pas une étude de marché.</p>
+<h3 class="report-h3">Les risques et mes parades</h3>
+</div>
+<table class="story-table">
+<thead><tr><th>Risque</th><th>Probabilité</th><th>Parade</th></tr></thead>
+<tbody>
+<tr><td>Une source change de format ou d'adresse</td><td>Forte</td><td>L'agent réessaie, garde la veille, diagnostique et propose une réparation.</td></tr>
+<tr><td>Mistral indisponible</td><td>Moyenne</td><td>Une réponse simple sans Mistral, signalée à l'écran.</td></tr>
+<tr><td>Un coût qui dérape (robot)</td><td>Faible</td><td>1 000 recherches par heure au plus : au pire 85 à 145 $ de Mistral par mois.</td></tr>
+<tr><td>Les demandes ou les sources changent</td><td>Moyenne</td><td>Rapport de dérive chaque nuit, alerte le lundi s'il est fort.</td></tr>
+<tr><td>Peu de sorties le soir à Thau</td><td>Réelle</td><td>Alerte de couverture ; PDF, partenaires, agendas proposés par l'agent.</td></tr>
+</tbody>
+</table>
+<div class="callout">
+<span class="eyebrow">MA RECOMMANDATION</span>
+<strong>Go pour une phase d'usage réel, pas encore pour un lancement payant.</strong>
+<p>Tous les critères techniques sont atteints. Mais mes jeux de test sont écrits par moi. Avant d'investir plus (partenaires payants, fine-tuning), il faut des questions réelles. Je propose 5 à 10 testeurs jusqu'au 26/10, puis une décision sur trois chiffres : la part des pouces haut, la part des questions sans réponse exacte, et le nombre de partenaires intéressés.</p>
+</div>
+</div>
+</section>
+
+<!-- 05 CONTRÔLE -->
+<section class="section" id="s05">
+<div class="container">
+<p class="section-number">05</p>
+<span class="competence">Compétence : contrôler le projet (délais, coûts, livrables, performance)</span>
+<h2>Le contrôle du projet</h2>
+<div class="report-text">
+<h3 class="report-h3">Les délais</h3>
+</div>
+<table class="story-table">
+<thead><tr><th>Date</th><th>Jalon</th><th>État</th></tr></thead>
+<tbody>
+<tr><td>13/10/2026</td><td>Démarrage : reprise de mes projets précédents</td><td>✅</td></tr>
+<tr><td>14/10/2026</td><td>Première collecte complète, schéma de la base, interface</td><td>✅</td></tr>
+<tr><td>15/10/2026</td><td>Recherche évaluée, <strong>mise en ligne sur Azure</strong></td><td>✅</td></tr>
+<tr><td>16/10/2026</td><td>Déploiement automatique, pertinence mesurée, évaluation rejouée en CI</td><td>✅</td></tr>
+<tr><td>17-19/10/2026</td><td>Retours des testeurs, incidents corrigés, suivi de la dérive</td><td>✅</td></tr>
+<tr><td>17-26/10/2026</td><td>Usage réel avec des testeurs</td><td>en cours</td></tr>
+<tr><td>4/11/2026</td><td>Gel du code</td><td>à venir</td></tr>
+<tr><td>6/11/2026</td><td>Soutenance</td><td>à venir</td></tr>
+</tbody>
+</table>
+<div class="report-text">
+<p>J'ai mis le service en ligne en trois jours, puis j'ai arrêté d'ajouter des fonctions. Depuis, je mesure, je fiabilise et je documente. C'est ce qui me laisse de la marge avant le gel du code.</p>
+<h3 class="report-h3">Les coûts</h3>
+<ul>
+<li>Environ <strong>10 $ par mois</strong> aujourd'hui : 9 $ pour l'interface, le reste est dans les offres gratuites d'Azure.</li>
+<li>Mistral : environ 0,005 $ par nuit de collecte, et 0,000118 $ par question.</li>
+<li>Un budget Azure de 20 € par mois m'envoie un mail à 50, 80 et 100 %.</li>
+<li>Un budget de 0,50 $ par nuit pour Mistral : au-delà, une alerte part dans le mail du matin.</li>
+</ul>
+<h3 class="report-h3">Les livrables</h3>
+</div>
+<table class="story-table">
+<thead><tr><th>Livrable</th><th>Où</th></tr></thead>
+<tbody>
+<tr><td>Le service en ligne</td><td><a class="project-link" href="https://www.sortiria-montpellier.fr">www.sortiria-montpellier.fr</a></td></tr>
+<tr><td>Le code, avec environ 3 840 tests</td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/SortirIA">github.com/gonzalezcourrier34-glitch/SortirIA</a></td></tr>
+<tr><td>La documentation technique</td><td><a class="project-link" href="https://gonzalezcourrier34-glitch.github.io/SortirIA/">gonzalezcourrier34-glitch.github.io/SortirIA</a></td></tr>
+<tr><td>Le dossier du projet (ce site)</td><td><a class="project-link" href="index.html">12 pages, dont les procédures et le suivi des incidents</a></td></tr>
+<tr><td>Les mesures, rejouables</td><td><code>benchmarks/</code>, MLflow, rapport de la CI</td></tr>
+</tbody>
+</table>
+<div class="report-text">
+<h3 class="report-h3">La performance, et comment je la surveille</h3>
+<ul>
+<li><strong>À chaque modification</strong> : la CI rejoue les tests et l'évaluation de la recherche. Sous 95 %, le déploiement est bloqué.</li>
+<li><strong>Chaque nuit</strong> : un mail me donne le statut de la collecte, les chiffres, les alertes et le coût.</li>
+<li><strong>Toutes les 3 heures</strong> : GitHub vérifie que le site, l'API, la base et la collecte répondent.</li>
+<li><strong>Chaque lundi</strong> : les recherches ratées, les pouces bas, et le rapport de dérive. Je compare les 7 derniers jours aux 28 précédents : ce que les gens demandent, ce que SortirIA répond, ce que les sources apportent.</li>
+<li><strong>Dans Grafana</strong> : trois tableaux (collecte, recherche, modèles et coûts).</li>
+</ul>
+<p>Quand un incident arrive, je le note : ce que j'ai vu, la cause, la correction, et le test qui empêche qu'il revienne. Plus de vingt-cinq incidents sont tracés dans la page <a class="project-link" href="suivi.html">Suivi</a>.</p>
+<h3 class="report-h3">Ce que je ferais différemment</h3>
+<ul>
+<li>Fixer mes jeux d'évaluation encore plus tôt.</li>
+<li>Mettre des testeurs devant le site dès le premier jour en ligne.</li>
+<li>Demander les autorisations de collecte plus tôt : les réponses prennent du temps.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="section contact">
+<div class="container">
+<p class="eyebrow">CONTINUER</p>
+<h2>Le détail de chaque partie est dans le dossier.</h2>
+<div class="hero-actions">
+<a class="button primary" href="resultats.html">Résultats</a>
+<a class="button secondary" href="limites.html">Limites</a>
+</div>
+</div>
+</section>
+</main>
+<footer>
+<div class="container footer-content">
+<span>SortirIA • Projet de fin de formation Ingénieur IA (OpenClassrooms)</span>
+<span>Montpellier et bassin de Thau • 2026 • <a class="project-link" href="https://gonzalezcourrier34-glitch.github.io/SortirIA/">Documentation technique →</a> • <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/SortirIA">Code →</a></span>
+</div>
+</footer>
+<script src="js/main.js"></script>
+</body>
+</html>
