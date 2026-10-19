@@ -64,7 +64,7 @@ l'agent.
 | 18/10/2026 | Amis testeurs | « Partout » peu clair | « Les deux » |
 | 18/10/2026 | Amis testeurs | Pas de choix « Tout public » | Bouton « Tout public », puis Qui ? : Tout public, Famille, Enfant, Ado, Senior |
 | 18/10/2026 | Amis testeurs | Offres partenaires en double sur ordinateur | « À ne pas manquer » sans les offres déjà affichées |
-| 18/10/2026 | Amis testeurs | Changer le nom du site pour « sortiria-thau » | Gardé pour l'instant : le site couvre Montpellier et Thau ; décision à prendre |
+| 18/10/2026 | Amis testeurs | Changer le nom du site pour « sortiria-thau » | Décision (19/10) : nom gardé, le site couvre Montpellier et le bassin de Thau |
 | 18/10/2026 | Moi | Offres fictives prises pour de vraies | Étiquette « Démonstration », sans faux lien |
 
 ## Le détail
@@ -85,7 +85,7 @@ l'agent.
 - **Détection** : Mail de bilan du lundi 19/10 : 64 % des questions sans réponse exacte ; l'agent propose « bonjour » → « salut » et « voire » → « ou-encore »
 - **Symptôme** : « Quels sont les prochaines expositions de peinture ? » (posée 9 fois) répondait par des idées voisines, quand « une exposition de peinture » trouvait des expositions. « Bonjour », « propositions », « voire », « savoir » apparaissaient dans les mots cherchés absents des titres.
 - **Cause** : Ces mots n'étaient pas dans la liste des mots vides : ils restaient des sujets à trouver dans les titres, aucun titre ne les contient, et la réponse n'était plus exacte. L'agent, qui apprend de ces mots absents, demandait des synonymes pour des mots de politesse.
-- **Résolution** : Mots de la phrase ajoutés aux mots vides (bonjour, sont, propositions, savoir, donner…) ; « voire » lu comme « voir » ; « tableaux » désigne une exposition. L'agent écarte ces mots des recherches passées et n'accepte que des synonymes d'un seul mot simple. Les 4 pull requests de l'agent (#7 à #10) sont à fermer.
+- **Résolution** : Mots de la phrase ajoutés aux mots vides (bonjour, sont, propositions, savoir, donner…) ; « voire » lu comme « voir » ; « tableaux » désigne une exposition. L'agent écarte ces mots des recherches passées et n'accepte que des synonymes d'un seul mot simple. Les 4 pull requests de l'agent (#7 à #10) ont été fermées.
 - **Pour que ça ne revienne pas** : Tests : les questions du bilan rejouées (« quels sont… », « voire des tableaux »), l'agent qui ignore « bonjour » et refuse « ou-encore ». Les quatre jeux d'évaluation donnent les mêmes résultats ; les 50 questions et les 125 recherches, les mêmes cartes.
 - **Trace** : `app/query_understanding.py` (`STOPWORDS`), `agent/search_learning.py` (`subject_words`)
 
