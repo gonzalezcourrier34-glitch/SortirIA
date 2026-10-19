@@ -68,6 +68,7 @@
 <tr><td>Hallucination dans la réponse ou un résumé</td><td>Moyenne</td><td>Citations limitées aux événements fournis et vérifiées, résumés contrôlés, juge de qualité chaque nuit avec un autre modèle.</td></tr>
 <tr><td>Coût qui dérape (robot, abus)</td><td>Faible</td><td>Limite de débit par visiteur et plafond global : au plus 1 000 recherches par heure (<code>app/rate_limit.py</code>).</td></tr>
 <tr><td>Couverture faible (peu de sorties en soirée sur le bassin de Thau)</td><td>Réelle</td><td>Alerte de couverture chaque nuit ; PDF, partenaires, agendas proposés par l'agent.</td></tr>
+<tr><td>Les demandes ou les sources changent avec le temps (saison, nouveau public, source modifiée)</td><td>Moyenne</td><td>Rapport de dérive chaque nuit (PSI, 7 jours contre les 28 précédents), dans le mail du lundi, alerte si elle est forte ; jugé à partir de 30 questions par semaine.</td></tr>
 <tr><td>Manque de temps avant le gel</td><td>Moyenne</td><td>MVP en production dès le 15/10 ; jusqu'au 4/11 : mesure, fiabilisation, documentation.</td></tr>
 </tbody>
 </table>

@@ -30,10 +30,10 @@ uv run pytest
 Les tests n'ont besoin d'aucune clé d'API : `tests/conftest.py` crée des secrets factices
 et tous les appels réseau sont simulés.
 
-!!! note "Tests vérifiés au 15/10/2026"
-    3 458 tests passent, dont ceux du schéma sur un vrai PostgreSQL. Les tests RSS
-    (`feedparser`) n'ont pas pu être lancés dans l'environnement de vérification ;
-    ils doivent être relancés avec `uv run pytest` après `uv sync`.
+!!! note "Tests vérifiés au 19/10/2026"
+    3 842 tests : 3 765 passent sur le poste ; les 77 autres (schéma, requêtes Grafana,
+    dérive) demandent un vrai PostgreSQL et passent en CI, ou en local avec
+    `SORTIRIA_TEST_DATABASE_URL` (une base dont le nom contient « test »).
 
 ## API et interface
 

@@ -50,7 +50,7 @@ flowchart LR
 ```mermaid
 flowchart TB
     Dev[Poste de travail<br/>code, tests, PDF de Sète] -->|git push main| GH[GitHub]
-    GH --> CI[CI : Ruff, 3 600 tests,<br/>documentation, image Docker]
+    GH --> CI[CI : Ruff, 3 840 tests,<br/>évaluation, documentation, image Docker]
     CI --> CD[CD : image sur GHCR,<br/>connexion Azure sans mot de passe]
     CD --> API[Container Apps<br/>sortiria-api]
     CD --> JOB[Container Apps Job<br/>sortiria-collecte, chaque nuit]
@@ -60,7 +60,7 @@ flowchart TB
     JOB --> PG
     API & JOB --> LA[Log Analytics]
     JOB --> MAIL[Bilan par mail]
-    PG --> GR[Grafana : collecte<br/>et recherche]
+    PG --> GR[Grafana : collecte, recherche,<br/>modèles et coûts, dérive]
     JOB -.-> ML[MLflow<br/>en local]
     Dev -->|--source document| PG
 ```
@@ -74,7 +74,7 @@ flowchart TB
 | API | FastAPI, réponse diffusée (Server-Sent Events) | l'interface affiche les étapes de la recherche au fil de l'eau |
 | Interface | Angular (Chess Agent) | écran unique : filtres, question, réponse sourcée, cartes, détail |
 | Déploiement | Azure : Static Web Apps, Container Apps, PostgreSQL Flexible Server ; GHCR ; GitHub Actions | gratuit ou presque la première année, mise en veille sans visiteur ([Coûts](couts.md)) |
-| Suivi | `rag_requests`, `collect_runs`, Grafana, MLflow, mail | chaque nuit et chaque question sont tracées |
+| Suivi | `rag_requests`, `collect_runs`, Grafana, MLflow, mail, rapport de dérive (PSI) | chaque nuit et chaque question sont tracées ; la dérive des questions, des réponses et de la collecte est mesurée chaque nuit |
 
 ## Étapes d'une question
 
@@ -102,4 +102,4 @@ recherche : [Interface](interface.md) ; la nuit : [Agent de collecte](agent.md).
 | Interface | `frontend/` (Angular) |
 | Évaluation et mesures | `scripts/eval_recherche.py`, `scripts/eval_pertinence.py`, `scripts/mesure_cout_latence.py`, `config/eval_*.yaml`, `benchmarks/` |
 | Déploiement | `docker/Dockerfile.api`, `.github/workflows/`, `frontend/public/staticwebapp.config.json` |
-| Monitoring | `monitoring/` (Grafana), `agent/tracking.py` (MLflow) |
+| Monitoring | `monitoring/` (Grafana), `agent/tracking.py` (MLflow), `agent/drift.py` (dérive) |

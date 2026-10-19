@@ -72,7 +72,7 @@
 <tr><td>4. Services Docker</td><td><code>docker compose up -d</code> puis <code>docker compose ps</code></td><td><code>sortiria_db</code> (healthy), <code>sortiria_mlflow</code>, <code>sortiria_grafana</code>. Sans profil, l'API et l'interface ne démarrent pas.</td></tr>
 <tr><td>5. Schéma</td><td><code>uv run python -m scripts.init_db</code></td><td>« appliqué : 00_extensions.sql »… jusqu'à « 07_vocabulary.sql », la liste des tables et des vues, puis « Schéma complet. »</td></tr>
 <tr><td>6. Vérifier le schéma</td><td><code>uv run python -m scripts.init_db --verifier</code></td><td>13 tables, 6 vues, « Schéma complet. » ; rien n'est modifié.</td></tr>
-<tr><td>7. Tests</td><td><code>uv run pytest</code></td><td>Tous les tests passent (environ 3 570), sans aucune clé : <code>tests/conftest.py</code> crée des secrets factices et le réseau est simulé.</td></tr>
+<tr><td>7. Tests</td><td><code>uv run pytest</code></td><td>Tous les tests passent (environ 3 840 ; ceux qui demandent un vrai PostgreSQL sont ignorés sans <code>SORTIRIA_TEST_DATABASE_URL</code>), sans aucune clé : <code>tests/conftest.py</code> crée des secrets factices et le réseau est simulé.</td></tr>
 </tbody>
 </table>
 <div class="experiment-analysis">
@@ -147,7 +147,7 @@
 <tbody>
 <tr><td>Chaque nuit, 1 h UTC</td><td>Collecte complète, validation, dédoublonnage, enrichissement, embeddings, juge sur 20 fiches, bilan dans <code>collect_runs</code> et par mail</td><td>Je lis le mail le matin ; rien à faire s'il est vert.</td></tr>
 <tr><td>Le dimanche (<code>discovery_weekday: 6</code>)</td><td>Découverte des agendas OpenAgenda : recherche complète, agendas utiles absents de <code>agenda_uids</code> proposés</td><td>Propositions <code>ajouter_agenda</code> à trancher (section 03).</td></tr>
-<tr><td>Le lundi</td><td>Bilan de la recherche : ce que les gens ont cherché sans trouver sur 7 jours ; propositions de synonymes et d'agendas</td><td>Propositions <code>ajouter_synonyme</code> et <code>ajouter_agenda</code> à trancher.</td></tr>
+<tr><td>Le lundi</td><td>Bilan de la recherche : ce que les gens ont cherché sans trouver sur 7 jours ; propositions de synonymes et d'agendas ; rapport de dérive (questions, réponses, collecte)</td><td>Propositions <code>ajouter_synonyme</code> et <code>ajouter_agenda</code> à trancher ; une dérive forte à comprendre (procédure 2.3, étape 4).</td></tr>
 <tr><td>Quand un partenaire dépose un PDF ou un Word</td><td>Lecture par Mistral, séances comptées, import proposé avec un aperçu</td><td>Proposition <code>valider_document_partenaire</code> (section 05).</td></tr>
 <tr><td>21 jours avant la fin d'un programme PDF</td><td>Rappel « chercher le prochain programme »</td><td>Trouver la nouvelle adresse, l'écrire dans <code>config/sources.yaml</code>.</td></tr>
 </tbody>
@@ -218,6 +218,7 @@
 <tr><td>1. Le bilan seul</td><td><code>uv run python -m agent --bilan-recherche</code></td><td>« Vocabulaire des titres : N mot(s) reconnus par la recherche. » puis les recherches ratées, ou « Aucune question ces 7 derniers jours. »</td></tr>
 <tr><td>2. Avec les propositions</td><td><code>uv run python -m agent --bilan-recherche --apprendre</code></td><td>En plus, « Ce que l'agent en tire » : une ligne « proposition : … » par proposition, puis « Pour décider : uv run python -m agent.proposals ».</td></tr>
 <tr><td>3. Décider</td><td>Section 03</td><td>Chaque proposition acceptée ou refusée.</td></tr>
+<tr><td>4. La dérive</td><td><code>uv run python -m agent.drift</code> (<code>--json</code> pour le rapport complet)</td><td>« Dérive : stable », « à surveiller », « DÉRIVE » ou « données insuffisantes », puis chaque indicateur. Une dérive forte : lire le tableau « Que faire » de <code>monitoring/README.md</code> (section « Dérive »).</td></tr>
 </tbody>
 </table>
 <div class="experiment-analysis">

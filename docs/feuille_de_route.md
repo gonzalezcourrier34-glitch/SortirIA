@@ -1,6 +1,6 @@
 # Feuille de route
 
-*Mise à jour le 16/10/2026.* Le détail, tâche par tâche, avec le code repris
+*Mise à jour le 19/10/2026.* Le détail, tâche par tâche, avec le code repris
 de chaque projet, est dans [Provenance du code](provenance.md).
 
 ## Jalons
@@ -12,6 +12,8 @@ de chaque projet, est dans [Provenance du code](provenance.md).
 | 15/10/2026 | Recherche évaluée (98,7 %), **mise en production sur Azure** | ✅ |
 | 16/10/2026 | Déploiement automatique, suivi de la recherche, limite de débit, mesure du coût | ✅ |
 | 16/10/2026 | Pertinence mesurée (97,8 %) et juge calibré (98,6 %, confirmé à 91,9 % sur cartes nouvelles), évaluation rejouée en CI, ménage du code hérité, alertes de sécurité corrigées, dossier du projet en site | ✅ |
+| 17-18/10/2026 | Verbes de pratique et « regarder », retours des premiers testeurs, nuit en échec rattrapée, page Suivi des incidents | ✅ |
+| 19/10/2026 | Bilan du lundi lu et corrigé ; **surveillance de la dérive** (questions, réponses, collecte) | ✅ |
 | 4/11/2026 | **Gel du code** | ⏳ |
 | 6/11/2026 | **Soutenance** | ⏳ |
 
@@ -61,12 +63,14 @@ par Mistral, cache ; interface Angular (réponse au fil de l'eau, cartes,
 détail, avis, pouce haut / bas) ; évaluation sur 50 questions et 125
 recherches courtes.
 
-### Bloc 4 : production et suivi (fait, sauf le rejeu en CI)
+### Bloc 4 : production et suivi (fait)
 
 Azure (Static Web Apps, Container Apps, PostgreSQL Flexible Server), domaine
 `www.sortiria-montpellier.fr`, CI/CD avec déploiement à chaque push, limite
-de débit, journal des questions, tableau Grafana de la recherche, mesure du
-coût et du temps de réponse. **Reste** : rejouer l'évaluation en CI.
+de débit, journal des questions, trois tableaux Grafana (collecte, recherche,
+modèles et coûts), mesure du coût et du temps de réponse, évaluation rejouée
+en CI (déploiement bloqué sous 95 %, fait le 16/10), surveillance de la
+dérive (fait le 19/10).
 
 ### Bloc 5 : sources non structurées (commencé le 16/10)
 
@@ -96,15 +100,16 @@ fonction ; seulement ce qui mesure, fiabilise ou explique.
 | 16/10 ✅ | Propositions de l'agent en **pull request** : une PR par proposition, testée par la CI, Merge = appliquée, Close = refusée ; liens dans le mail, panneau Grafana | l'agent est relu comme un contributeur |
 | 16/10 ✅ | Avis des visiteurs lus par l'agent : pouces bas rangés par cause le lundi (leurs mots deviennent des propositions), commentaires refusés contestables (`agent.commentaires`), alerte sur une sortie mal notée | l'avis des visiteurs nourrit l'amélioration |
 | 16/10 ✅ | Revue du site en ligne : aucun filtre coché par défaut (la question décide), relances contrôlées (questions courtes), vouvoiement, prix au format français, typographie, filtres repliés sur téléphone ; consigne `2026-10-16.3` ; `robots.txt` (données et robots d'entraînement d'IA exclus) et en-tête `X-Robots-Tag` sur `/api/` | site prêt pour les tests d'usage |
+| 16/10 ✅ | Dossier du projet en site HTML (`docs/dossier/`, 11 pages : besoin, parcours, architecture, agent, recherche, modèles, interface, résultats, déploiement, procédures, limites) ; base de données documentée en entier | dossier lisible par le jury |
 | 17/10 ✅ | Interface : une relance cliquée complète la recherche (un seul choix par bouton, « Plutôt » gardé) ; la question coche Public et Zone ; date lue affichée dans « Quand » ; échanges précédents gardés à l'écran ; moment de la journée lu dans la phrase (le soir, le matin, l'après-midi), « en soirée » distinct du public Soirée ; téléphone : toucher une carte descend au détail ; filtres sur une ligne avec séparateurs | relances et cases cohérentes avec la question, tests |
 | 17/10 ✅ | Verbes de pratique : « je veux chanter » cherche karaoké, cours ou stage de chant, pas des concerts (de même danser, jouer, peindre, dessiner, sculpter, cuisiner) ; consigne `2026-10-17.4` ; troisième jeu d'évaluation `eval_pratique.yaml` (20 recherches), rejoué en CI | avant / après (ablation, vraie base) : cartes correctes des recherches de pratique 61 % → 98 %, compréhension 35 % → 100 % ; 125 recherches et 50 questions inchangées |
 | 17/10 ✅ | « Regarder », l'inverse : « un spectacle de danse » ne propose plus de bals ni de stages ; « spectacle » s'efface devant un type précis ; consigne `2026-10-17.5` | recherches « regarder » 67 % → 93 % (vraie base), 75 % → 100 % (base figée) ; tout le jeu 94,5 % → 97,9 % ; 125 recherches et 50 questions sans régression |
 | 17/10 ✅ | Partenaires : formules gratuit, mis en avant, premium (`partners.formula`), classement entre offres partenaires seulement ; offres affichées une seule fois avant la première question ; pistes « agenda, itinéraire, partage, distance » dans les évolutions | modèle économique à trois niveaux, règle de classement publique |
-| 18/10 ✅ | Retours des premiers testeurs : Qui ? (Tout public, Famille, Enfant, Ado, Senior), Où ? (« Les deux »), Quand ?, « Gratuit » ; « Enfant » sans nouveau public en base (âge ou texte) ; « Soirée » compris dans la phrase seulement ; offres d'exemple annoncées comme démonstration (sans faux lien) ; « À ne pas manquer » sans les offres déjà affichées ; une case cochée par la question ne vaut que pour elle ; date lue qui remplace la période ; téléphone : critères repliés, pas de cadre vide | interface prête pour les tests d'usage |
-| 19/10 ✅ | Bilan du lundi lu : des mots de la phrase (« sont », « bonjour », « propositions », « voire ») pris pour des sujets ; mots vides complétés, « tableaux » = exposition ; l'agent ne propose plus de synonyme pour ces mots ; consigne `2026-10-19.1` | « quels sont les prochaines expositions de peinture » (9 fois) : réponse exacte ; 4 jeux d'évaluation sans régression |
-| 18/10 ✅ | Mesures et finitions : bouton « Enfant » jugé sur 90 cartes (`benchmarks/recherche/2026-10-18_grille_enfant.csv`) ; quatrième jeu d'évaluation `eval_moments.yaml` (matin, après-midi, journée, soir) ; « faire du théâtre », « faire de l'impro » ; « une pièce de théâtre » se regarde ; consigne `2026-10-18.1` ; références cliquables dans les échanges précédents ; page Suivi à jour (25 incidents, retours des testeurs) | Enfant : 90 % des cartes pour un enfant (Famille : 35 %) ; moments 91 % → 99 % (vraie base), compréhension 17 % → 100 %, 7 cartes hors créneau → 0 ; théâtre 1 / 7 → 10 / 12 (base figée), 12 / 16 (vraie base) ; 125 recherches et 50 questions : mêmes cartes |
 | 17/10 ✅ | Nuit du 17/10 en échec (fiche DATAtourisme au prix inversé) détectée par la surveillance, corrigée le matin ; l'agent finit désormais toujours par un bilan ; page **Suivi** des incidents et résolutions (doc et dossier) | 20 incidents tracés, de la détection au test |
-| 16/10 ✅ | Dossier du projet en site HTML (`docs/dossier/`, 11 pages : besoin, parcours, architecture, agent, recherche, modèles, interface, résultats, déploiement, procédures, limites) ; base de données documentée en entier | dossier lisible par le jury |
+| 18/10 ✅ | Retours des premiers testeurs : Qui ? (Tout public, Famille, Enfant, Ado, Senior), Où ? (« Les deux »), Quand ?, « Gratuit » ; « Enfant » sans nouveau public en base (âge ou texte) ; « Soirée » compris dans la phrase seulement ; offres d'exemple annoncées comme démonstration (sans faux lien) ; « À ne pas manquer » sans les offres déjà affichées ; une case cochée par la question ne vaut que pour elle ; date lue qui remplace la période ; téléphone : critères repliés, pas de cadre vide | interface prête pour les tests d'usage |
+| 18/10 ✅ | Mesures et finitions : bouton « Enfant » jugé sur 90 cartes (`benchmarks/recherche/2026-10-18_grille_enfant.csv`) ; quatrième jeu d'évaluation `eval_moments.yaml` (matin, après-midi, journée, soir) ; « faire du théâtre », « faire de l'impro » ; « une pièce de théâtre » se regarde ; consigne `2026-10-18.1` ; références cliquables dans les échanges précédents ; page Suivi à jour (25 incidents, retours des testeurs) | Enfant : 90 % des cartes pour un enfant (Famille : 35 %) ; moments 91 % → 99 % (vraie base), compréhension 17 % → 100 %, 7 cartes hors créneau → 0 ; théâtre 1 / 7 → 10 / 12 (base figée), 12 / 16 (vraie base) ; 125 recherches et 50 questions : mêmes cartes |
+| 19/10 ✅ | Bilan du lundi lu : des mots de la phrase (« sont », « bonjour », « propositions », « voire ») pris pour des sujets ; mots vides complétés, « tableaux » = exposition ; l'agent ne propose plus de synonyme pour ces mots ; consigne `2026-10-19.1` | « quels sont les prochaines expositions de peinture » (9 fois) : réponse exacte ; 4 jeux d'évaluation sans régression |
+| 19/10 ✅ | **Surveillance de la dérive** (`agent/drift.py`) : chaque nuit, les 7 derniers jours comparés aux 28 précédents par le PSI (la méthode d'Evidently, recodée) sur les questions (zone, public, type, moment, gratuit), les réponses (exactes, élargies, introuvables ; latence, part sans Mistral, avis) et la collecte (sources, motifs de rejet, taux de rejet, juge) ; rapport dans `collect_runs.drift`, MLflow et Grafana (partie 06), section du mail du lundi, alerte si forte ; colonne ajoutée sur Azure | 19 tests ; pas de jugement sous 30 questions par semaine (pas de fausse alerte à faible trafic) |
 | 17-26/10 | **Usage réel** : faire tester le site par 5 à 10 personnes ; lire les pouces bas et les recherches ratées (Grafana, bilan du lundi) ; corrections ciblées ; réponses de Frontignan et de l'Archipel de Thau (intégrer ou citer) | bilan d'usage chiffré, corrections testées |
 | 24-30/10 | Relecture du dossier et de la doc ; captures d'écran du site, de Grafana, du mail de bilan ; publication du dossier en ligne (facultatif) ; pitch et feuille de route PDF mis à jour (datés du 14/10) | dossier final |
 | 27/10-3/11 | Diapositives, scénario de démonstration, vidéo de secours, répétitions avec questions du jury ; décision sur les partenaires d'exemple (présentés comme fictifs) ; coûts Azure réels du mois relevés | support de soutenance |

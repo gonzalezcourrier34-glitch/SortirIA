@@ -25,7 +25,7 @@ le 6 novembre 2026. Plutôt que de repartir de zéro, il **industrialise deux pr
 [Évaluation](evaluation.md) · [Fiabilité des données](fiabilite.md) ·
 [Coûts et projection](couts.md) · [Déploiement](deploiement.md).
 
-!!! info "État du projet au 16/10/2026"
+!!! info "État du projet au 19/10/2026"
     - **Collecte** : 7 types de sources (OpenAgenda, DATAtourisme, RSS, iCal, PDF lus
       par Mistral, fichiers des partenaires, agendas en ligne), pilotées chaque nuit par
       l'[agent](agent.md), qui enrichit, contrôle, surveille et propose ses réparations.
@@ -38,14 +38,17 @@ le 6 novembre 2026. Plutôt que de repartir de zéro, il **industrialise deux pr
       humain.
     - **En production** sur Azure depuis le 15/10/2026 : https://www.sortiria-montpellier.fr,
       déployé à chaque push sur `main` ([Déploiement Azure](deploiement.md)).
-    - **Suivi** : pouce haut / pouce bas sur chaque réponse, tableau Grafana de la
-      recherche, limite de débit des routes publiques.
+    - **Suivi** : pouce haut / pouce bas sur chaque réponse, trois tableaux Grafana
+      (collecte, recherche, modèles et coûts), limite de débit des routes publiques ;
+      dérive des questions, des réponses et de la collecte surveillée chaque nuit
+      ([MLOps et monitoring](monitoring.md)).
     - **Mesuré** : 0,12 $ de Mistral pour 1 000 questions, réponse en 3 s (médiane),
       0,1 s depuis le cache ([Coûts et projection](couts.md)).
     - **Pertinence** : 97,8 % des 3 premières propositions jugées pertinentes
       (139 cartes, jugement humain) ; un juge Mistral d'accord à 98,6 % avec
       l'humain la rejoue sans annotation ([Évaluation](evaluation.md)).
-    - **À venir** : rejeu de l'évaluation en CI. Après la soutenance : une base de lieux
+    - **Évaluation rejouée en CI** à chaque push : le déploiement est bloqué sous 95 %.
+    - **À venir**, après la soutenance : une base de lieux
       (bowling, padel, restaurants…) et le fine-tuning d'un modèle
       ([Évolutions possibles](evolutions.md)).
 

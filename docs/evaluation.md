@@ -442,7 +442,11 @@ pour 1 000 questions passe de 0,12 $ à 0,08 $.
 - **tableau Grafana « Recherche »** : satisfaction, latence P95, coût,
   réponses exactes ou non, ce qui manque ;
 - **bilan du lundi** : l'agent lit les recherches ratées et propose synonymes
-  et agendas.
+  et agendas ;
+- **dérive** (19/10/2026) : chaque nuit, les 7 derniers jours comparés aux 28
+  précédents (PSI) : ce qui est demandé, le type de réponse, la latence, les
+  avis, ce que les sources apportent ; dans le mail du lundi, alerte si elle
+  est forte ([MLOps et monitoring](monitoring.md)).
 
 ## Ce qui reste à faire
 

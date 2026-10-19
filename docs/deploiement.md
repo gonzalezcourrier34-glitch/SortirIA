@@ -56,7 +56,8 @@ Le déploiement n'est actif que si la variable de dépôt `DEPLOY_ENABLED` vaut
 | --- | --- | --- |
 | Collecte de la nuit | mail de bilan (`agent/report.py`) | chaque matin, statut dans le sujet |
 | Site, API, base, fraîcheur de la collecte | workflow GitHub « Surveillance » toutes les 3 h (`.github/workflows/surveillance.yml`, route `/api/v1/sante`) | mail de GitHub si une vérification échoue ou si la dernière collecte réussie a plus de 26 h |
-| Modèles, coûts Mistral, versions de consigne, avis | Grafana sur le poste, qui lit la base de production avec un compte en **lecture seule** (`grafana_lecture`, `scripts/creer_lecteur_grafana.py`) | consulté (pas d'envoi) |
+| Dérive des questions, des réponses et de la collecte | rapport de chaque nuit (`agent/drift.py`, `collect_runs.drift`) | le lundi, dans le mail ; alerte si elle est forte |
+| Modèles, coûts Mistral, versions de consigne, avis, dérive | Grafana sur le poste, qui lit la base de production avec un compte en **lecture seule** (`grafana_lecture`, `scripts/creer_lecteur_grafana.py`) | consulté (pas d'envoi) |
 | Facture Azure | budget `sortiria-mensuel` sur `sortiria-rg` : 20 € par mois, mails à 50, 80 et 100 % du coût réel et à 100 % du coût prévu | mail d'Azure (8 à 24 h de retard) |
 | Pannes | journaux Log Analytics, historique des exécutions du job | consultés |
 

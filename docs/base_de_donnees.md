@@ -388,11 +388,12 @@ et la matière première de Grafana.
 | `events_expired`, `events_removed`, `events_capped` | `INTEGER` | ce qui est parti : passé, disparu de sa source, plafond |
 | `events_total` | `INTEGER` | taille de la base après la collecte |
 | `events_embedded`, `cost_usd`, `llm_usage` | `INTEGER`, `NUMERIC(10, 4)`, `JSONB` | le travail Mistral de la nuit : vecteurs calculés, coût estimé, tokens par modèle (`{modèle: {input, output}}`) |
-| `coverage` | `JSONB` | sorties famille / soirée par zone sur 7 jours (`{zone: {famille, soiree}}`) : la promesse du service, nuit après nuit |
+| `coverage` | `JSONB` | sorties par zone et par public sur 7 jours, lues en base (`{zone: {famille, soiree, ados, seniors}}` ; l'alerte porte sur famille et soirée) : la promesse du service, nuit après nuit |
 | `node_durations` | `JSONB` | secondes par nœud du graphe : où passe le temps |
 | `quality_score`, `quality` | `NUMERIC(4, 3)`, `JSONB` | le juge Mistral : score de 0 à 1 (`NULL` sans contrôle) et problèmes relevés |
 | `alerts`, `failed_sources`, `message` | `TEXT[]`, `TEXT[]`, `TEXT` | ce que le mail a dit |
 | `prompt_version`, `mlflow_run_id` | `TEXT` | la consigne de lecture des PDF et le lien vers l'exécution MLflow : on peut relier une baisse de qualité à un changement de consigne |
+| `drift` | `JSONB` | rapport de dérive de la nuit (19/10/2026, `agent/drift.py`) : 7 derniers jours contre les 28 précédents, statut, PSI et niveau de chaque indicateur (questions, réponses, collecte) ; lu par Grafana (« Modèles et coûts », partie 06) |
 
 Index : `collect_runs_started_at_idx` (`started_at`), pour Grafana.
 

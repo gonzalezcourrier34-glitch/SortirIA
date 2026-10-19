@@ -62,7 +62,7 @@
 <div class="skills-grid">
 <div class="skill-group"><h3>Des données fraîches sans intervention</h3><div class="constraint-value">Chaque nuit</div><p class="constraint-text">Collecte automatique, événements passés retirés, doublons fusionnés entre sources, pannes gérées par l'agent et signalées par mail.</p></div>
 <div class="skill-group"><h3>Des réponses justes et sourcées</h3><div class="constraint-value">98,7 %</div><p class="constraint-text">Des propositions respectent date, lieu, public et budget ; aucun événement inventé ; source et lien sur chaque carte.</p></div>
-<div class="skill-group"><h3>Un service en production</h3><div class="constraint-value">Depuis le 15/10</div><p class="constraint-text">Déployé sur Azure à chaque push, ≈ 3 570 tests automatisés, chaque question journalisée, coût mesuré.</p></div>
+<div class="skill-group"><h3>Un service en production</h3><div class="constraint-value">Depuis le 15/10</div><p class="constraint-text">Déployé sur Azure à chaque push, ≈ 3 840 tests automatisés, chaque question journalisée, coût mesuré.</p></div>
 </div>
 <p class="table-note">Sources : <code>docs/mvp.md</code>, <code>docs/evaluation.md</code>, <code>docs/deploiement.md</code>.</p>
 
@@ -148,12 +148,13 @@
 <tr><td>Agent LangGraph : enrichissement, juge, diagnostic, propositions</td><td>Important</td><td><span class="experiment-status selected">Fait</span></td><td>Les étapes qui lisent et jugent (<code>agent/</code>).</td></tr>
 <tr><td>Programme PDF lu par Mistral</td><td>Important</td><td><span class="experiment-status selected">Fait</span></td><td>Première source non structurée : 434 événements du bassin de Thau.</td></tr>
 <tr><td>Partenaires (fichiers, PDF, Word), avis, pouce haut / bas, cache, limite de débit</td><td>Important</td><td><span class="experiment-status selected">Fait</span></td><td>Piste de modèle économique, satisfaction mesurée, coût et latence bornés.</td></tr>
+<tr><td>Surveillance de la dérive : questions, réponses, collecte (19/10)</td><td>Important</td><td><span class="experiment-status selected">Fait</span></td><td>Chaque nuit, la semaine comparée aux 28 jours précédents (PSI) ; dans le mail du lundi, alerte si elle est forte.</td></tr>
 <tr><td>Scraping d'agendas en ligne, flux RSS</td><td>Hors MVP</td><td><span class="experiment-status promising">Reporté</span></td><td>Moteurs prêts ; aucun site sans autorisation écrite, flux testés vides ou interdits par leur <code>robots.txt</code>.</td></tr>
 <tr><td>Base de lieux (sport, loisirs, restaurants), fine-tuning, lecture des pages HTML ; agenda, itinéraire, partage et distance sur les cartes</td><td>Hors MVP</td><td><span class="experiment-status promising">Après soutenance</span></td><td>Un second produit ; pas encore de données réelles pour entraîner (<a class="project-link" href="limites.html">Limites →</a>).</td></tr>
 <tr><td>Extraction des contraintes par un petit modèle (Ministral), météo</td><td>Hors MVP</td><td><span class="experiment-status rejected">Abandonné</span></td><td>Les règles suffisent sur le jeu de test ; la météo sort de la promesse.</td></tr>
 </tbody>
 </table>
-<p class="table-note">D'après <code>docs/mvp.md</code> (mis à jour le 16/10/2026). Les métriques Prometheus de l'API sont aussi reportées : le journal <code>rag_requests</code> et Grafana couvrent le besoin.</p>
+<p class="table-note">D'après <code>docs/mvp.md</code> (mis à jour le 19/10/2026). Les métriques Prometheus de l'API sont aussi reportées : le journal <code>rag_requests</code> et Grafana couvrent le besoin.</p>
 <div class="callout">
 <span class="eyebrow">À RETENIR</span>
 <strong>Les onze critères d'acceptation du MVP sont atteints.</strong>
@@ -171,7 +172,7 @@
 <div class="timeline-item"><span>01 • 13-15/10</span><h3>Collecte multi-sources</h3><p>Moteur multi-sources de CheckIt.AI adapté aux événements : OpenAgenda, DATAtourisme, programme PDF de Sète agglopôle lu par Mistral, fichiers des partenaires ; moteurs iCal, RSS et agendas en ligne prêts. Validation, normalisation, déduplication, fusion entre sources. <a class="project-link" href="architecture.html">Architecture →</a></p></div>
 <div class="timeline-item"><span>02 • 14-15/10</span><h3>Base et agent nocturne</h3><p>PostgreSQL + pgvector, schéma versionné. Agent LangGraph : nouvel essai ciblé, enrichissement et juge Mistral, surveillance (fraîcheur, couverture, coût), diagnostic et réparations proposées, bilan par mail, apprentissage des recherches ratées. <a class="project-link" href="agent.html">Agent →</a></p></div>
 <div class="timeline-item"><span>03 • 14-16/10</span><h3>Recherche et interface</h3><p>Compréhension par règles, recherche hybride sous filtres SQL, élargissement au sujet plutôt que des idées sans rapport, rédaction sourcée, cache. Interface Angular : réponse au fil de l'eau, cartes, détail, avis. <a class="project-link" href="recherche.html">Recherche →</a> <a class="project-link" href="interface.html">Interface →</a></p></div>
-<div class="timeline-item"><span>04 • 15-16/10</span><h3>Production et suivi</h3><p>Azure (Static Web Apps, Container Apps, PostgreSQL Flexible Server), domaine <code>www.sortiria-montpellier.fr</code>, CI/CD à chaque push, limite de débit, journal des questions, tableau Grafana de la recherche. <a class="project-link" href="deploiement.html">Déploiement →</a></p></div>
+<div class="timeline-item"><span>04 • 15-16/10</span><h3>Production et suivi</h3><p>Azure (Static Web Apps, Container Apps, PostgreSQL Flexible Server), domaine <code>www.sortiria-montpellier.fr</code>, CI/CD à chaque push, limite de débit, journal des questions, trois tableaux Grafana, évaluation rejouée en CI ; dérive surveillée depuis le 19/10. <a class="project-link" href="deploiement.html">Déploiement →</a></p></div>
 <div class="timeline-item"><span>05 • 16/10</span><h3>Mesures</h3><p>Grille de pertinence annotée à la main, juge Mistral calibré puis vérifié sur une seconde grille, coût et temps de réponse mesurés, évaluation des contraintes rejouée en CI. <a class="project-link" href="resultats.html">Résultats →</a></p></div>
 <div class="timeline-item"><span>06 • 17/10-4/11</span><h3>Fiabilisation et gel</h3><p>Plus de nouvelle fonction : lecture des premiers retours, corrections ciblées, documentation, préparation de la soutenance ; gel du code le 4/11. <a class="project-link" href="limites.html">Limites →</a></p></div>
 </div>
@@ -268,7 +269,7 @@
 <article class="project-card">
 <div class="project-top"><span class="project-type">LA PRODUCTION</span></div>
 <h3>Déploiement</h3>
-<p>Azure, la CI/CD à chaque push, le suivi par Grafana et par mail, le coût réel et sa projection.</p>
+<p>Azure, la CI/CD à chaque push, le suivi par Grafana et par mail, la dérive, le coût réel et sa projection.</p>
 <a class="project-link" href="deploiement.html">Déploiement →</a>
 </article>
 <article class="project-card">

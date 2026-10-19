@@ -93,11 +93,12 @@ le transforment en pipeline d'**événements**.
 - [x] Tâche planifiée Azure Container Apps Job (15/10) : `sortiria-collecte`, chaque nuit ; la source PDF de Sète agglopôle, bloquée depuis Azure, est coupée sur le serveur (`SOURCES_DESACTIVEES`) et lue depuis un poste de travail
 - [x] Écrire dans `rag_requests` depuis l'API (14/10)
 - [ ] **Reporté** : métriques Prometheus de l'API (voir `monitoring/README.md`) ; le journal `rag_requests` et le tableau Grafana « Recherche » couvrent le besoin (`docs/mvp.md`)
-- [x] Tableaux de bord Grafana : « Collecte nocturne » (fraîcheur, échecs par source, coût, 14/10) et « Recherche » (questions, satisfaction, latence P95, coût, réponses exactes ou élargies, ce qui manque, 16/10)
+- [x] Tableaux de bord Grafana : « Collecte nocturne » (fraîcheur, échecs par source, coût, 14/10), « Recherche » (questions, satisfaction, latence P95, coût, réponses exactes ou élargies, ce qui manque, 16/10) et « Modèles et coûts » (coût Mistral, tokens par modèle, versions de consigne, avis, propositions de l'agent, 16/10 ; dérive, 19/10)
+- [x] Surveillance de la dérive (19/10) : `agent/drift.py`, méthode du projet 5 (`reference/p5_monitoring/.../evidently_service.py`) recodée sans Evidently : PSI sur les questions (zone, public, type, moment, gratuit), les réponses (type de réponse ; latence, part sans Mistral, avis) et la collecte (sources, motifs de rejet, taux de rejet, juge), 7 jours contre les 28 précédents ; rapport dans `collect_runs.drift`, MLflow, Grafana et le mail du lundi ; à la demande : `uv run python -m agent.drift`
 - [ ] **Abandonné pour le MVP** : météo (Open-Meteo) pour les sorties en extérieur ; « s'il pleut » est compris comme « en intérieur » (`docs/mvp.md`)
 - [x] ~~Mise à jour de `dashboard/streamlit_app.py`~~ : sans objet, Streamlit retiré le 15/10 (interface Angular et Grafana)
 
 ## Non repris
 
 - Tableau de bord KPI de CheckIt.AI (`dashboard/` d'origine), notebooks, documentation MkDocs, livrables
-- MLflow et RAGAS du projet RAG : à réintégrer si utile pour l'évaluation
+- RAGAS du projet RAG : remplacé par un juge Mistral calibré sur une annotation humaine (`scripts/eval_pertinence.py`). MLflow n'est pas repris du projet RAG mais réécrit pour SortirIA (`agent/tracking.py`, `scripts/suivi_mlflow.py`)

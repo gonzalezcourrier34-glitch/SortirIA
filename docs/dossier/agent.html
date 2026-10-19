@@ -216,7 +216,7 @@
 <div class="timeline-item"><span>03 • Règles, sans modèle</span><h3><code>prepare</code> : un seul modèle d'événement</h3><p>Convertit chaque article en <code>Event</code>, normalise (dates en Europe/Paris, prix lus dans le texte), ramène les champs libres dans les valeurs admises, valide et déduplique sur titre + jour + heure + lieu. Les rejets sont comptés par motif (<code>annule_ou_reporte</code>, <code>en_ligne_uniquement</code>, <code>pas_une_sortie</code>…). Rapide, gratuit, reproductible. <strong>Sortie</strong> : <code>events</code>, <code>preparation</code>.</p></div>
 <div class="timeline-item"><span>04 • Une transaction + Mistral</span><h3><code>load_events</code> : écrire, faire le ménage, enrichir</h3><p>Dans <strong>une seule transaction</strong> : partenaires et bilan de leurs fichiers, enregistrement, retrait des événements disparus (seulement pour une source lue en entier, sans échec ni baisse anormale), retrait des passés, plafond de 10 000, enrichissement Mistral des nouveaux ou modifiés (catégorie, publics, résumé), embeddings, modération des commentaires en attente, purge RGPD. Puis, à part : vocabulaire des titres recalculé et recherches de la semaine relues. Si une étape échoue, la base reste celle de la veille. En mode essai, rien n'est écrit.</p></div>
 <div class="timeline-item"><span>05 • Mistral medium</span><h3><code>judge_quality</code> : contrôler un échantillon</h3><p>Un autre modèle que celui qui enrichit juge 20 événements tirés au hasard : le titre, la catégorie et le résumé décrivent-ils le texte ? est-ce une sortie ? les publics sont-ils justes ? la catégorie est-elle la bonne ? Un contrôle, jamais une modification ; une panne du juge laisse simplement le score absent. <strong>Sortie</strong> : <code>quality</code>.</p></div>
-<div class="timeline-item"><span>06 • Règles, diagnostic, Mistral le lundi</span><h3><code>watch</code> : surveiller, diagnostiquer, proposer</h3><p>Programmes PDF qui expirent, partenaires à relancer, couverture famille / soirée par zone, coût, qualité, capacité, notes des clients ; diagnostic des pannes ; découverte des agendas OpenAgenda le dimanche ; documents des partenaires à valider ; le lundi, bilan et apprentissage des recherches ratées. Calculé à partir de l'état et de la configuration, il tourne aussi en mode essai et après un échec total. <strong>Sortie</strong> : <code>watch_alerts</code>, <code>proposals</code>, <code>coverage</code>, <code>cost_usd</code>, <code>search_report</code>.</p></div>
+<div class="timeline-item"><span>06 • Règles, diagnostic, Mistral le lundi</span><h3><code>watch</code> : surveiller, diagnostiquer, proposer</h3><p>Programmes PDF qui expirent, partenaires à relancer, couverture famille / soirée par zone, coût, qualité, capacité, notes des clients ; diagnostic des pannes ; découverte des agendas OpenAgenda le dimanche ; documents des partenaires à valider ; le lundi, bilan et apprentissage des recherches ratées, rapport de dérive (alerte si elle est forte). Calculé à partir de l'état et de la configuration, il tourne aussi en mode essai et après un échec total. <strong>Sortie</strong> : <code>watch_alerts</code>, <code>proposals</code>, <code>coverage</code>, <code>cost_usd</code>, <code>search_report</code>, <code>drift_report</code>.</p></div>
 <div class="timeline-item"><span>07 • Bilan</span><h3><code>write_report</code> : statut et compte rendu</h3><p>Décide le statut (<code>success</code>, <code>partial_success</code>, <code>failed</code>) et les alertes, écrit <code>collect_runs</code>, <code>collect_run_sources</code> et <code>agent_proposals</code>, envoie le mail. Un mail qui ne part pas ne fait jamais échouer la collecte ; aucun mail en mode essai. <strong>Sortie</strong> : <code>status</code>, <code>alerts</code>, <code>run_id</code>.</p></div>
 </div>
 </div>
@@ -365,9 +365,9 @@ Planification  sources, started_at, skipped_sources, disabled_sources
 Extraction     attempts, articles, failed_sources, source_attempts, extractor_stats, llm_usage
 Préparation    events, preparation
 Chargement     events_upserted, events_removed, events_expired, events_enriched, events_embedded,
-               source_drops, events_capped, events_total, coverage_db, vocabulary_size, search_gaps
+               source_drops, events_capped, events_total, coverage_db, vocabulary_size, search_gaps, drift
 Qualité        quality
-Surveillance   coverage, watch_alerts, cost_usd, proposals, search_report, search_learning
+Surveillance   coverage, watch_alerts, cost_usd, proposals, search_report, search_learning, drift_report
 Suivi          node_durations
 Bilan          status, alerts, run_id, errors</pre>
 </div>
@@ -377,7 +377,7 @@ Bilan          status, alerts, run_id, errors</pre>
 <thead><tr><th>Ce qui reste</th><th>Où</th><th>À quoi il sert la nuit suivante</th></tr></thead>
 <tbody>
 <tr><td>Les événements, leurs vecteurs et leur enrichissement</td><td>PostgreSQL + pgvector</td><td>Seuls les événements nouveaux ou modifiés sont enrichis et vectorisés à nouveau : c'est pourquoi une nuit ordinaire coûte environ 0,005 $ contre 0,14 $ la première.</td></tr>
-<tr><td>Le bilan de chaque nuit et de chaque source</td><td><code>collect_runs</code>, <code>collect_run_sources</code></td><td>Comparer une source à son meilleur total des 7 dernières nuits (alerte « baisse anormale ») ; tableaux Grafana ; lien vers l'exécution MLflow.</td></tr>
+<tr><td>Le bilan de chaque nuit et de chaque source</td><td><code>collect_runs</code>, <code>collect_run_sources</code></td><td>Comparer une source à son meilleur total des 7 dernières nuits (alerte « baisse anormale ») ; tableaux Grafana ; lien vers l'exécution MLflow ; rapport de dérive de la nuit (<code>drift</code>).</td></tr>
 <tr><td>Les propositions</td><td><code>agent_proposals</code> (<code>en_attente</code>, <code>acceptee</code>, <code>refusee</code>, <code>appliquee</code>)</td><td>Une proposition déjà en attente n'est pas dupliquée ; une proposition refusée n'est jamais reproposée.</td></tr>
 <tr><td>Les lectures de PDF par Mistral</td><td><code>data/cache/documents/</code></td><td>Clé = empreinte du PDF + version et texte de la consigne + découpage : un programme inchangé ne rappelle pas Mistral ; un paquet en échec est seul redemandé.</td></tr>
 <tr><td>Le vocabulaire des titres et le journal des recherches</td><td><code>title_vocabulary</code>, <code>rag_requests</code></td><td>La recherche sait quels mots sont des sujets ; le lundi, l'agent relit ce qui a été cherché sans être trouvé.</td></tr>
@@ -389,7 +389,7 @@ Bilan          status, alerts, run_id, errors</pre>
 <div class="callout subtle">
 <span class="eyebrow">LE LUNDI</span>
 <strong>Chaque lundi, le mail ajoute ce que les utilisateurs ont cherché sans trouver pendant 7 jours.</strong>
-<p>Questions sans réponse exacte, mots cherchés qui ne figurent dans aucun titre (« zumba (4) »). Pour chaque mot cherché au moins 2 fois (5 au plus par semaine), Mistral dit si c'est une faute, un synonyme, un sujet ou une ambiance ; l'agent en tire des propositions (section suivante). Le bilan ne compte que les questions posées depuis le 15/10/2026.</p>
+<p>Questions sans réponse exacte, mots cherchés qui ne figurent dans aucun titre (« zumba (4) »). Pour chaque mot cherché au moins 2 fois (5 au plus par semaine), Mistral dit si c'est une faute, un synonyme, un sujet ou une ambiance ; l'agent en tire des propositions (section suivante). Le bilan ne compte que les questions posées depuis le 15/10/2026. Depuis le 19/10, il dit aussi si les questions, les réponses ou la collecte dérivent (<code>agent/drift.py</code>).</p>
 </div>
 </div>
 </section>
@@ -598,6 +598,7 @@ Bilan          status, alerts, run_id, errors</pre>
 <tr><td>Fin d'un programme PDF, partenaire inactif</td><td>21 jours avant, 30 jours sans mise à jour</td><td><code>watch.DOCUMENT_EXPIRY_WARNING_DAYS</code>, <code>PARTNER_STALE_DAYS</code></td></tr>
 <tr><td>Alerte de capacité</td><td>90 % du plafond</td><td><code>watch.CAPACITY_WARNING_RATIO</code></td></tr>
 <tr><td>Bilan des recherches</td><td>le lundi, 7 derniers jours ; 5 mots au plus, cherchés au moins 2 fois</td><td><code>watch.SEARCH_REPORT_WEEKDAY</code>, <code>search_learning.MAX_WORDS</code>, <code>MIN_TIMES</code></td></tr>
+<tr><td>Dérive</td><td>7 derniers jours contre les 28 précédents ; PSI 0,10 modérée, 0,25 forte ; jugée à partir de 30 questions par semaine, 20 avis, 3 nuits</td><td><code>drift.PSI_MODERATE</code>, <code>PSI_STRONG</code>, <code>DERIVE_MIN_QUESTIONS</code>, <code>MEASURE_RULES</code></td></tr>
 <tr><td>Quota Mistral (PDF)</td><td>pause de 3 s entre appels ; sur 429, nouveaux essais après 10, 20, 40 s</td><td><code>DOCUMENT_CALL_PAUSE_S</code>, lecteur de documents</td></tr>
 </tbody>
 </table>
@@ -657,7 +658,7 @@ Bilan          status, alerts, run_id, errors</pre>
 <article class="project-card">
 <div class="project-top"><span class="project-type">EXPÉRIENCE</span></div>
 <h3>MLflow</h3>
-<p>Une nuit = une exécution de l'expérience <code>sortiria-collecte</code> : paramètres (modèles, version de consigne, seuils, sources), métriques (extraits, rejetés, enrichis, embeddings, score du juge, coût, durée par nœud, alertes) et trace des appels Mistral. Si le serveur ne répond pas, la nuit continue sans suivi.</p>
+<p>Une nuit = une exécution de l'expérience <code>sortiria-collecte</code> : paramètres (modèles, version de consigne, seuils, sources), métriques (extraits, rejetés, enrichis, embeddings, score du juge, coût, durée par nœud, alertes, PSI de chaque indicateur de dérive) et trace des appels Mistral. Si le serveur ne répond pas, la nuit continue sans suivi.</p>
 </article>
 <article class="project-card">
 <div class="project-top"><span class="project-type">EXPLOITATION</span></div>
@@ -667,7 +668,7 @@ Bilan          status, alerts, run_id, errors</pre>
 <article class="project-card">
 <div class="project-top"><span class="project-type">HUMAIN</span></div>
 <h3>Le mail du matin</h3>
-<p>Le sujet donne le statut d'un coup d'œil, par exemple « [SortirIA] Collecte PARTIEL : 1059 événement(s), 1 alerte(s) ». Le corps reprend les chiffres, le détail par source, les sources non lancées, les alertes et les propositions à valider. Les rappels de surveillance ne changent pas le statut : ce ne sont pas des pannes.</p>
+<p>Le sujet donne le statut d'un coup d'œil, par exemple « [SortirIA] Collecte PARTIEL : 1059 événement(s), 1 alerte(s) ». Le corps reprend les chiffres, le détail par source, les sources non lancées, les alertes et les propositions à valider ; le lundi, le bilan de la recherche et le rapport de dérive. Les rappels de surveillance ne changent pas le statut : ce ne sont pas des pannes.</p>
 </article>
 </div>
 <p class="table-note">Sources : <code>agent/tracking.py</code>, <code>agent/report.py</code>, <code>monitoring/README.md</code>.</p>
@@ -692,6 +693,7 @@ Bilan          status, alerts, run_id, errors</pre>
 <tr><td><code>agent/state.py</code>, <code>agent/graph.py</code>, <code>agent/routing.py</code></td><td>Écrit pour SortirIA, sur le modèle de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Chess Agent (projet 13)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Même découpage que <code>state.py</code>, <code>graph.py</code> et <code>routing.py</code> de Chess Agent : le graphe ne contient aucune logique métier, le routage est séparé et testé à part.</td></tr>
 <tr><td><code>agent/nodes.py</code>, <code>agent/services.py</code></td><td>Écrit pour SortirIA, sur le modèle de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Chess Agent (projet 13)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Un nœud = une étape, comme les nœuds <code>A_*</code> à <code>H_*</code> de Chess Agent ; services regroupés dans un objet injecté, pour tester les nœuds sans réseau ni base.</td></tr>
 <tr><td><code>agent/watch.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Programme PDF à renouveler, partenaire à relancer, couverture famille / soirée par zone, coût Mistral de la nuit : fonctions pures, alertes en français.</td></tr>
+<tr><td><code>agent/drift.py</code></td><td>Écrit pour SortirIA (19/10), méthode du projet 5</td><td><span class="experiment-status selected">Écrit</span></td><td>Dérive des questions, des réponses et de la collecte : PSI (la méthode d'Evidently, recodée), 7 jours contre les 28 précédents, rapport dans <code>collect_runs.drift</code>, MLflow, Grafana et le mail du lundi.</td></tr>
 <tr><td><code>agent/diagnosis.py</code>, <code>agent/proposals.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Diagnostic des pannes, parti du cas réel du PDF de l'Agglopôle déplacé ; réparations proposées, appliquées seulement après décision humaine.</td></tr>
 <tr><td><code>agent/search_learning.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Le lundi, lecture par Mistral des mots cherchés absents de la base ; proposition d'un synonyme ou d'un agenda OpenAgenda.</td></tr>
 <tr><td><code>agent/report.py</code>, <code>src/utils/mail_utils.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Bilan de la nuit par mail (SMTP, bibliothèque standard) : aucun des projets repris n'envoyait de mail.</td></tr>

@@ -81,7 +81,9 @@ d'exemples.
    `benchmarks/` et MLflow, permettent de comparer le modèle affiné au modèle
    actuel sur les mêmes cas.
 3. **Un gain qui vaut le coût** : entraînement, hébergement ou appel du
-   modèle affiné, et maintenance (le réentraîner quand les données changent).
+   modèle affiné, et maintenance (le réentraîner quand les données changent :
+   le rapport de dérive de chaque nuit, `agent/drift.py`, dira quand les
+   questions ou les sources ont assez changé pour le justifier).
    Le service de fine-tuning de Mistral, ses modèles et ses prix sont à
    vérifier au moment de s'y mettre.
 

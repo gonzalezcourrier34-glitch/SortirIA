@@ -27,7 +27,7 @@
 <div><strong>4</strong><span>sources branchées</span></div>
 <div><strong>3,0 à 3,3 s</strong><span>médiane d'une réponse</span></div>
 <div><strong>≈ 10 $</strong><span>par mois, 1re année</span></div>
-<div><strong>≈ 3 570</strong><span>tests automatisés</span></div>
+<div><strong>≈ 3 840</strong><span>tests automatisés</span></div>
 </div>
 <p class="table-note">Chiffres au 16/10/2026 : base Azure, <code>benchmarks/cout_latence/</code> (temps sans cache), <code>docs/couts.md</code>, suite pytest.</p>
 <div class="hero-tags"><span>LangGraph</span><span>PostgreSQL 16 + pgvector</span><span>FastAPI</span><span>Angular</span><span>Mistral</span><span>Azure</span></div>
@@ -213,7 +213,7 @@
 <tr><td>API</td><td>FastAPI, réponse diffusée (Server-Sent Events)</td><td>L'interface affiche les étapes de la recherche au fil de l'eau.</td></tr>
 <tr><td>Interface</td><td>Angular (reprise de Chess Agent)</td><td>Un écran unique : filtres, question, réponse sourcée, cartes, détail.</td></tr>
 <tr><td>Déploiement</td><td>Azure : Static Web Apps, Container Apps, PostgreSQL Flexible Server ; GHCR ; GitHub Actions</td><td>Gratuit ou presque la première année, mise en veille sans visiteur.</td></tr>
-<tr><td>Suivi</td><td><code>rag_requests</code>, <code>collect_runs</code>, Grafana, MLflow, mail</td><td>Chaque nuit et chaque question sont tracées.</td></tr>
+<tr><td>Suivi</td><td><code>rag_requests</code>, <code>collect_runs</code>, Grafana, MLflow, mail, rapport de dérive (PSI)</td><td>Chaque nuit et chaque question sont tracées ; la dérive des questions, des réponses et de la collecte est mesurée chaque nuit.</td></tr>
 </tbody>
 </table>
 <p class="table-note">D'après le tableau des choix de <code>docs/architecture.md</code> (16/10/2026). Le détail des services Azure et de leur coût est sur la page <a class="project-link" href="deploiement.html">Déploiement →</a></p>
@@ -227,7 +227,7 @@
 <tr><td>API, compréhension, recherche, rédaction, avis, limite de débit</td><td><code>app/</code></td></tr>
 <tr><td>Interface</td><td><code>frontend/</code> (Angular)</td></tr>
 <tr><td>Évaluation et mesures</td><td><code>scripts/eval_recherche.py</code>, <code>scripts/eval_pertinence.py</code>, <code>scripts/mesure_cout_latence.py</code>, <code>benchmarks/</code></td></tr>
-<tr><td>Déploiement et suivi</td><td><code>docker/Dockerfile.api</code>, <code>.github/workflows/</code>, <code>monitoring/</code>, <code>agent/tracking.py</code></td></tr>
+<tr><td>Déploiement et suivi</td><td><code>docker/Dockerfile.api</code>, <code>.github/workflows/</code>, <code>monitoring/</code>, <code>agent/tracking.py</code>, <code>agent/drift.py</code></td></tr>
 </tbody>
 </table>
 </div>
@@ -477,7 +477,7 @@
 <h2>Qualité logicielle</h2>
 <p class="section-intro">Un projet qui tourne seul chaque nuit doit se vérifier seul. Chaque push passe par cinq contrôles, et la recherche elle-même est rejouée sur une base figée.</p>
 <div class="skills-grid">
-<div class="skill-group"><h3>Tests</h3><div class="constraint-value">≈ 3 570</div><p class="constraint-text">tests pytest, sans vraie clé d'API (secrets factices, appels réseau simulés), dont ceux du schéma sur un vrai PostgreSQL.</p></div>
+<div class="skill-group"><h3>Tests</h3><div class="constraint-value">≈ 3 840</div><p class="constraint-text">tests pytest, sans vraie clé d'API (secrets factices, appels réseau simulés), dont ceux du schéma sur un vrai PostgreSQL.</p></div>
 <div class="skill-group"><h3>Intégration continue</h3><div class="constraint-value">5 jobs</div><p class="constraint-text">à chaque push ou Pull Request sur <code>main</code> et <code>develop</code> ; une CI rouge bloque la publication.</p></div>
 <div class="skill-group"><h3>Recherche rejouée</h3><div class="constraint-value">≥ 95 %</div><p class="constraint-text">50 questions sur une base figée, sans vecteur ni Mistral : aucune clé, aucun coût ; le job échoue en dessous.</p></div>
 <div class="skill-group"><h3>Dépendances de l'interface</h3><div class="constraint-value">0</div><p class="constraint-text">alerte de sécurité npm.</p></div>
@@ -522,7 +522,7 @@
 <tr><td><code>app/search_service.py</code>, <code>query_understanding.py</code>, <code>interface_api.py</code>, <code>rate_limit.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Recherche hybride PostgreSQL + pgvector sous filtres SQL, compréhension par règles, diffusion SSE sur le modèle de Chess Agent, limite de débit.</td></tr>
 <tr><td><code>frontend/</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Chess Agent (projet 13)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Configuration Angular, Dockerfile et lecture du flux SSE repris ; écran écrit d'après la maquette validée.</td></tr>
 <tr><td><code>.github/workflows/ci.yml</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Chess Agent (projet 13)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Réécrite pour SortirIA : PostgreSQL, MkDocs et rejeu de l'évaluation de la recherche.</td></tr>
-<tr><td><code>.github/workflows/cd.yml</code>, <code>docker/Dockerfile.api</code>, <code>monitoring/</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/medical_triage_agent">Triage médical (projet 14)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Déploiement SSH remplacé par Azure ; point d'entrée <code>app.main:app</code> ; Grafana branché sur PostgreSQL avec les tableaux de collecte et de recherche.</td></tr>
+<tr><td><code>.github/workflows/cd.yml</code>, <code>docker/Dockerfile.api</code>, <code>monitoring/</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/medical_triage_agent">Triage médical (projet 14)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Déploiement SSH remplacé par Azure ; point d'entrée <code>app.main:app</code> ; Grafana branché sur PostgreSQL avec les tableaux de collecte, de recherche et des modèles et coûts.</td></tr>
 <tr><td><code>tests/</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">CheckIt.AI (projet 12)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Secrets factices ; 152 tests RSS remis à leur place ; 68 tests des étiquettes retirés ; tests de SortirIA ajoutés.</td></tr>
 <tr><td><code>reference/</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/pret_a_depenser">Scoring crédit (projet 5)</a>, <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Chess Agent (projet 13)</a>, <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/medical_triage_agent">Triage médical (projet 14)</a></td><td><span class="experiment-status rejected">Repris tel quel</span></td><td>Code source copié comme modèle (suivi des prédictions, observabilité, graphe LangGraph), non importé par l'application.</td></tr>
 </tbody>
