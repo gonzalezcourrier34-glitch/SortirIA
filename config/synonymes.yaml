@@ -9,3 +9,4 @@
 # Forme : mot tapé (minuscules, sans accents) : mot connu de la base.
 # Le mot tapé est gardé ; le mot connu est cherché en plus.
 synonymes:
+  tableaux: expositions        # cherché 3 fois (proposé le 2026-10-19)
