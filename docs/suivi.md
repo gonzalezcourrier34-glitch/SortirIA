@@ -23,6 +23,7 @@ l'eau (du plus récent au plus ancien). Version illustrée :
 
 | Date | Domaine | Incident | Vu par |
 | --- | --- | --- | --- |
+| 19/10/2026 | Monitoring | La dérive ajoutée : un test et une colonne en base | Test `test_full_night_success` rouge sur le poste, avant le push |
 | 19/10/2026 | Recherche | Des mots de la phrase pris pour des sujets | Mail de bilan du lundi 19/10 : 64 % des questions sans réponse exacte ; l'agent propose « bonjour » → « salut » et « voire » → « ou-encore » |
 | 18/10/2026 | Agent | Deux propositions de l'agent en conflit | GitHub : « This branch has conflicts » sur la pull request de la proposition 2 |
 | 18/10/2026 | Recherche | Le bouton « Enfant » gardait une exposition de peintres | Mesure du nouveau bouton : 6 recherches, 90 cartes jugées « pour l'enfant » oui, limite ou non |
@@ -67,6 +68,16 @@ l'agent.
 | 18/10/2026 | Moi | Offres fictives prises pour de vraies | Étiquette « Démonstration », sans faux lien |
 
 ## Le détail
+
+### 19/10/2026 · La dérive ajoutée : un test et une colonne en base
+
+- **Domaine** : Monitoring
+- **Détection** : Test `test_full_night_success` rouge sur le poste, avant le push
+- **Symptôme** : Après l'ajout du suivi de la dérive, un test de la nuit complète échoue : il attendait 14 requêtes en base, il en voit 16. Et le code ajoute une colonne `drift` à `collect_runs`, que la base Azure n'a pas encore.
+- **Cause** : Le test vérifie la liste exacte des requêtes d'une nuit ; le rapport de dérive en ajoute deux. Pour la colonne : la CD déploie le code, mais ne touche jamais au schéma de la base. Sans la colonne, la nuit suivante n'aurait pas pu écrire son bilan.
+- **Résolution** : Liste attendue du test mise à jour (le rapport de dérive est dans une transaction à part : la collecte continue même s'il échoue). Schéma appliqué sur Azure (procédure 7.2, « Schéma complet. ») avant le push, puis CI et CD vertes.
+- **Pour que ça ne revienne pas** : L'ordre est écrit dans les procédures : d'abord le schéma sur Azure, ensuite le push. 19 tests pour la dérive, dont un sur un vrai PostgreSQL.
+- **Trace** : `agent/drift.py`, `tests/test_agent_collecte/test_agent.py`, `sql/sortiria/03_collect.sql` ; commit 13f6171
 
 ### 19/10/2026 · Des mots de la phrase pris pour des sujets
 

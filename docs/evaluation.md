@@ -1,6 +1,6 @@
 # Évaluation : comment chaque indicateur est mesuré
 
-*Mise à jour le 16/10/2026.* Chaque mesure est **rejouable** par un script, et
+*Mise à jour le 19/10/2026.* Chaque mesure est **rejouable** par un script, et
 chaque lancement est **gardé** (`benchmarks/`, MLflow quand le serveur répond).
 
 ## Vue d'ensemble

@@ -1,6 +1,6 @@
 # Coûts et projection financière
 
-*Mise à jour le 16/10/2026. Prix publics relevés le 16/10/2026, en dollars US
+*Mise à jour le 19/10/2026. Prix publics relevés le 16/10/2026, en dollars US
 (Azure facture en euros au taux du jour) ; à vérifier sur les pages officielles
 avant toute décision. Sources en bas de page.*
 
@@ -60,7 +60,7 @@ de débit (voir [Interface](interface.md)).
   de calcul.
 - **Budget de la nuit** (`MISTRAL_BUDGET_NUIT_USD`, 0,50 $) : au-delà, une
   alerte part dans le mail du matin.
-- **Alerte de budget Azure** conseillée : 20 € par mois (le coût attendu est d’environ 10 $), mail à 50, 80 et 100 % ; réglage dans le [README du monitoring](monitoring.md).
+- **Alerte de budget Azure**, en place depuis le 16/10 : 20 € par mois (le coût attendu est d’environ 10 $), mail à 50, 80 et 100 % ; réglage dans le [README du monitoring](monitoring.md).
 
 ## Les leviers pour réduire
 
