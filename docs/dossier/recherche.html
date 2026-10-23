@@ -400,6 +400,7 @@ Réponds uniquement en JSON : {"reponse": "...", "suggestions": ["...", "...", "
 <thead><tr><th>Variable</th><th>Défaut</th><th>Rôle</th></tr></thead>
 <tbody>
 <tr><td><code>SEARCH_MODEL</code></td><td><code>mistral-small-latest</code></td><td>Modèle de rédaction. <code>ministral-8b</code> a été mesuré : 17 % moins cher, plus lent, qualité non mesurée ; écarté.</td></tr>
+<tr><td><code>SEARCH_FALLBACK_MODEL</code></td><td><code>mistral-medium-latest</code></td><td>Modèle essayé si le premier échoue (panne du 23/10/2026 : 503 sur <code>mistral-small-latest</code>) ; vide : pas de secours.</td></tr>
 <tr><td><code>EMBEDDING_MODEL</code></td><td><code>mistral-embed</code></td><td>Vecteur de la question, le même modèle que pour les événements.</td></tr>
 <tr><td><code>MODERATION_MODEL</code></td><td>—</td><td>Modération des commentaires des visiteurs.</td></tr>
 <tr><td><code>LIMITE_RECHERCHES_MINUTE</code></td><td>12</td><td>Recherches par visiteur et par minute.</td></tr>

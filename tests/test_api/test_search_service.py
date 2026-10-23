@@ -649,3 +649,57 @@ def test_child_public_is_part_of_family() -> None:
     assert "'famille' = ANY (e.audiences)" in sql and "e.age_max <= 14" in sql and "public" not in params
     sql, params = search_query.build_search_query(SearchFilters(public="famille"), None, NOW)
     assert params["public"] == "famille"
+
+
+# --- Modèle de secours de la rédaction (23/10/2026) ---------------------------
+
+def test_writer_falls_back_to_a_second_model(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Le 23/10/2026, `mistral-small-latest` répondait 503 : le second modèle répond."""
+
+    from src.event import event_enrichment
+
+    asked: list[str] = []
+
+    def call(system: str, text: str, model: str) -> tuple[str, dict[str, int]]:
+        asked.append(model)
+        if model == "mistral-small-latest":
+            raise RuntimeError("503 Service unavailable")
+        return '{"reponse": "ok"}', {"input": 10, "output": 2}
+
+    monkeypatch.setattr(event_enrichment, "call_mistral_json", call)
+    monkeypatch.delenv("SEARCH_MODEL", raising=False)
+    monkeypatch.delenv("SEARCH_FALLBACK_MODEL", raising=False)
+    plan = merge_with_filters(understand("un concert", NOW), public=None, zone=None,
+                              period_bounds=search_filters.period_bounds("3mois", NOW),
+                              period_label="les 3 prochains mois", free_only=False)
+    raw, usage, model = search_answer.write_with_mistral("un concert", plan, [])
+    assert asked == ["mistral-small-latest", "mistral-medium-latest"]
+    assert model == "mistral-medium-latest" and raw == '{"reponse": "ok"}' and usage["input"] == 10
+
+
+def test_writer_raises_when_every_model_fails(monkeypatch: pytest.MonkeyPatch) -> None:
+    from src.event import event_enrichment
+
+    def call(system: str, text: str, model: str) -> tuple[str, dict[str, int]]:
+        raise RuntimeError(f"503 {model}")
+
+    monkeypatch.setattr(event_enrichment, "call_mistral_json", call)
+    monkeypatch.setenv("SEARCH_MODEL", "modele-a")
+    monkeypatch.setenv("SEARCH_FALLBACK_MODEL", "modele-b")
+    with pytest.raises(RuntimeError, match="modele-b"):
+        search_answer.write_with_mistral("un concert", SearchFilters(), [])
+
+
+@pytest.mark.parametrize(("main", "fallback", "expected"), [
+    (None, None, ["mistral-small-latest", "mistral-medium-latest"]),
+    ("mistral-medium-latest", None, ["mistral-medium-latest"]),       # secours identique : un seul essai
+    ("ministral-8b-latest", "", ["ministral-8b-latest"]),              # secours désactivé
+])
+def test_writer_models(monkeypatch: pytest.MonkeyPatch, main: str | None, fallback: str | None,
+                       expected: list[str]) -> None:
+    for name, value in (("SEARCH_MODEL", main), ("SEARCH_FALLBACK_MODEL", fallback)):
+        if value is None:
+            monkeypatch.delenv(name, raising=False)
+        else:
+            monkeypatch.setenv(name, value)
+    assert search_answer.writer_models() == expected

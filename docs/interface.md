@@ -404,6 +404,9 @@ docker compose --profile interface up -d --build
 ```
 
 Le modèle de rédaction se règle dans `.env` : `SEARCH_MODEL`
-(`mistral-small-latest` par défaut). L'ancien RAG du projet d'origine (index
+(`mistral-small-latest` par défaut). S'il échoue (panne, quota), un second essai
+est fait avec `SEARCH_FALLBACK_MODEL` (`mistral-medium-latest` par défaut, vide
+pour s'en passer) avant la réponse simplifiée (23/10/2026) ; le journal des
+demandes garde le modèle qui a répondu. L'ancien RAG du projet d'origine (index
 FAISS, routes `/ask` et `/rebuild`, tableau Streamlit) a été retiré le
 15/10/2026 : l'API démarre en une seconde, sans appels Mistral.

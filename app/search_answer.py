@@ -19,10 +19,18 @@ from typing import Any
 
 from app.query_understanding import QueryPlan, category_label, plain
 from app.search_filters import SearchFilters
+from src.logger import get_logger
+
+logger = get_logger(__name__)
 
 # Version de la consigne : mots de la phrase ignorés (bilan du 19/10), « tableaux » = exposition.
 PROMPT_VERSION = "2026-10-19.1"
 DEFAULT_SEARCH_MODEL = "mistral-small-latest"
+# Modèle de secours (23/10/2026) : ce matin-là, `mistral-small-latest` répondait
+# « 503 Service unavailable » à chaque appel ; le modèle de la collecte de nuit,
+# lui, répondait. Si le modèle principal échoue, on essaie une fois celui-ci
+# avant de passer en réponse simplifiée. Vide ou égal au principal : pas de secours.
+DEFAULT_SEARCH_FALLBACK_MODEL = "mistral-medium-latest"
 
 WRITE_PROMPT = """Tu es SortirIA, un assistant qui conseille des sorties autour de Montpellier
 et du bassin de Thau. On te donne la demande d'un utilisateur et une liste
@@ -320,7 +328,10 @@ def write_with_mistral(question: str, filters: QueryPlan | SearchFilters,
                        cards: Sequence[Mapping[str, Any]]) -> tuple[str, dict[str, int], str]:
     """Appel de rédaction. Renvoie (JSON brut, tokens, modèle).
 
-    Le modèle est lu dans `SEARCH_MODEL` (par défaut `DEFAULT_SEARCH_MODEL`).
+    Le modèle est lu dans `SEARCH_MODEL` (par défaut `DEFAULT_SEARCH_MODEL`). S'il
+    échoue (panne, quota, délai dépassé), un second essai est fait avec
+    `SEARCH_FALLBACK_MODEL` (par défaut `DEFAULT_SEARCH_FALLBACK_MODEL`) ; le modèle
+    renvoyé est celui qui a répondu, et il est écrit dans le journal des demandes.
 
     Parameters
     ----------
@@ -334,16 +345,49 @@ def write_with_mistral(question: str, filters: QueryPlan | SearchFilters,
     Returns
     -------
     tuple[str, dict[str, int], str]
-        Le JSON brut de la réponse, les tokens consommés et le nom du modèle.
+        Le JSON brut de la réponse, les tokens consommés et le nom du modèle qui
+        a répondu.
+
+    Raises
+    ------
+    Exception
+        L'erreur du dernier modèle essayé, si aucun n'a répondu (`run_search`
+        passe alors en réponse simplifiée).
     """
 
     from src.event.event_enrichment import call_mistral_json
 
-    model = os.getenv("SEARCH_MODEL", DEFAULT_SEARCH_MODEL)
+    # Préparer le texte envoyé : la demande, les contraintes, les cartes numérotées
     text = (f"Demande : {question}\nContraintes comprises : {filters.describe()}\n\n"
             f"Événements trouvés :\n{events_for_prompt(cards)}")
-    raw, usage = call_mistral_json(WRITE_PROMPT, text, model)
-    return raw, usage, model
+    # Essayer le modèle principal, puis le modèle de secours s'il est différent
+    models = writer_models()
+    for number, model in enumerate(models, start=1):
+        try:
+            raw, usage = call_mistral_json(WRITE_PROMPT, text, model)
+        except Exception:
+            if number == len(models):
+                raise
+            logger.warning("Rédaction : %s indisponible, essai avec %s.", model, models[number],
+                           exc_info=True)
+            continue
+        return raw, usage, model
+    raise RuntimeError("aucun modèle de rédaction configuré")  # pragma: no cover
+
+
+def writer_models() -> list[str]:
+    """Modèles de rédaction à essayer, dans l'ordre.
+
+    Returns
+    -------
+    list[str]
+        `SEARCH_MODEL`, puis `SEARCH_FALLBACK_MODEL` s'il est défini (non vide) et
+        différent du premier.
+    """
+
+    main = os.getenv("SEARCH_MODEL", "").strip() or DEFAULT_SEARCH_MODEL
+    fallback = os.getenv("SEARCH_FALLBACK_MODEL", DEFAULT_SEARCH_FALLBACK_MODEL).strip()
+    return [main] if not fallback or fallback == main else [main, fallback]
 
 
 def writer_question(question: str, categories: Sequence[str], matching: int, *,

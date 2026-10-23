@@ -23,6 +23,7 @@ l'eau (du plus récent au plus ancien). Version illustrée :
 
 | Date | Domaine | Incident | Vu par |
 | --- | --- | --- | --- |
+| 23/10/2026 | Recherche | Mistral indisponible pour la rédaction | Vérification du site en ligne après le déploiement : toutes les réponses « simplifiées » depuis 11 h environ |
 | 23/10/2026 | Évaluation | L'horloge de la base de test n'était pas figée | Rejeu des 4 jeux d'évaluation sur la base figée, en préparant les corrections de la relecture : « faire soi-même » à 90 % (98 % le 19/10) sans changement de code |
 | 23/10/2026 | Code | Relecture du code : défauts corrigés | Relecture complète du code pendant l'écriture des docstrings |
 | 19/10/2026 | Monitoring | La dérive ajoutée : un test et une colonne en base | Test `test_full_night_success` rouge sur le poste, avant le push |
@@ -70,6 +71,16 @@ l'agent.
 | 18/10/2026 | Moi | Offres fictives prises pour de vraies | Étiquette « Démonstration », sans faux lien |
 
 ## Le détail
+
+### 23/10/2026 · Mistral indisponible pour la rédaction
+
+- **Domaine** : Recherche
+- **Détection** : Vérification du site en ligne après le déploiement : toutes les réponses « simplifiées » depuis 11 h environ
+- **Symptôme** : La recherche trouve les bonnes cartes (8 concerts sur 8 pour « un concert ce week-end »), mais Mistral ne rédige plus : phrase toute faite, aucun token consommé. La réponse de repli disait aussi « Voici ce que j'ai trouvé » devant des idées voisines.
+- **Cause** : Panne chez Mistral : `mistral-small-latest` répond « 503 Service unavailable » (`scripts/check_mistral.py`), alors que la clé, la liste des modèles et les embeddings répondent. L'erreur était avalée sans trace : rien dans les journaux pour le voir.
+- **Résolution** : Échecs de la rédaction et du vecteur journalisés avec leur cause ; réponse de repli qui dit « Je n'ai rien trouvé d'exact » quand c'est le cas ; modèle de secours `SEARCH_FALLBACK_MODEL` (`mistral-medium-latest` par défaut) essayé une fois avant la réponse simplifiée, le modèle qui a répondu est écrit dans le journal.
+- **Pour que ça ne revienne pas** : Tests : l'échec est journalisé avec sa cause ; le second modèle répond quand le premier renvoie 503 ; erreur remontée si aucun ne répond ; réponse de repli honnête. Diagnostic en une commande : `uv run python -m scripts.check_mistral`.
+- **Trace** : `app/search_answer.py` (`write_with_mistral`, `writer_models`), `app/search_service.py`
 
 ### 23/10/2026 · L'horloge de la base de test n'était pas figée
 
