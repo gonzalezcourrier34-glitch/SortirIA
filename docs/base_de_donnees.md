@@ -28,7 +28,7 @@ Le schéma est dans `sql/sortiria/`, en fichiers numérotés exécutés dans l'o
 | `02_events.sql` | table `events`, ses contraintes et ses index |
 | `03_collect.sql` | tables `collect_runs`, `collect_run_sources`, `agent_proposals`, `deleted_event_stats` ; colonne `partner_imports.run_id` |
 | `04_rag.sql` | tables `rag_requests`, `feedback`, `query_cache`, `event_ratings` |
-| `05_views.sql` | les 6 vues |
+| `05_views.sql` | les 6 vues, fonction `reference_now` |
 | `06_retention.sql` | fonction `purge_old_data` |
 | `07_vocabulary.sql` | table `title_vocabulary`, fonctions `title_lexemes` et `refresh_title_vocabulary` |
 
@@ -435,7 +435,7 @@ commande (`uv run python -m agent.proposals`).
 | `created_at` | `TIMESTAMPTZ` | |
 | `run_id` | `BIGINT` → `collect_runs`, `ON DELETE SET NULL` | la nuit qui l'a proposée ; la proposition survit à la purge de la collecte |
 | `source_id` | `TEXT` | quelle source (pas de clé étrangère) |
-| `kind` | `TEXT` | famille de panne d'après `agent/diagnosis.py` (`document_deplace`, `acces_refuse`, `quota`, `reseau`, `format_inattendu`, `inconnue`) ou `nouvel_agenda` ; sans contrainte `CHECK` |
+| `kind` | `TEXT` | famille de panne d'après `agent/diagnosis.py` (`document_deplace`, `acces_bloque`, `acces_refuse`, `quota`, `reseau`, `format_inattendu`, `inconnue`) ou `nouvel_agenda` ; sans contrainte `CHECK` |
 | `diagnosis` | `TEXT` | l'explication lisible |
 | `action` | `JSONB` | ce qu'il faudrait faire : `{"type": "remplacer_url", "old": …, "new": …}` ou `{"type": "ajouter_agenda", "new": …, "events": …}` |
 | `status` | `TEXT`, `CHECK` | `en_attente` (par défaut), `acceptee`, `refusee`, `appliquee` |
@@ -813,7 +813,7 @@ temps](#ce-qui-vit-combien-de-temps).
 ## Tests
 
 `tests/event/test_schema_postgres.py` vérifie le schéma sur un vrai
-PostgreSQL avec pgvector (60 fonctions de test, dont une paramétrée sur six cas
+PostgreSQL avec pgvector (65 fonctions de test, dont une paramétrée sur six cas
 de refus), qui s'ajoutent aux tests Python sans base. Ils garantissent
 notamment :
 

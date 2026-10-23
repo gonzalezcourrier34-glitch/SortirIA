@@ -25,7 +25,7 @@
 <div class="metrics">
 <div><strong>1 h UTC</strong><span>collecte de chaque nuit, sur Azure</span></div>
 <div><strong>4</strong><span>types de propositions, toutes validées par un humain</span></div>
-<div><strong>≥ 95 %</strong><span>seuil de l'évaluation rejouée en CI</span></div>
+<div><strong>≥ 95 %</strong><span>seuil de l'évaluation rejouée en CI (50 questions ; 90 % pour « faire soi-même » et les moments de la journée)</span></div>
 <div><strong>1 push</strong><span>= tests, image, déploiement</span></div>
 </div>
 <p class="table-note">Sources : <code>docs/deploiement.md</code>, <code>agent/proposals.py</code>, <code>.github/workflows/ci.yml</code> et <code>cd.yml</code> (16/10/2026).</p>
@@ -72,7 +72,7 @@
 <tr><td>4. Services Docker</td><td><code>docker compose up -d</code> puis <code>docker compose ps</code></td><td><code>sortiria_db</code> (healthy), <code>sortiria_mlflow</code>, <code>sortiria_grafana</code>. Sans profil, l'API et l'interface ne démarrent pas.</td></tr>
 <tr><td>5. Schéma</td><td><code>uv run python -m scripts.init_db</code></td><td>« appliqué : 00_extensions.sql »… jusqu'à « 07_vocabulary.sql », la liste des tables et des vues, puis « Schéma complet. »</td></tr>
 <tr><td>6. Vérifier le schéma</td><td><code>uv run python -m scripts.init_db --verifier</code></td><td>13 tables, 6 vues, « Schéma complet. » ; rien n'est modifié.</td></tr>
-<tr><td>7. Tests</td><td><code>uv run pytest</code></td><td>Tous les tests passent (environ 3 840 ; ceux qui demandent un vrai PostgreSQL sont ignorés sans <code>SORTIRIA_TEST_DATABASE_URL</code>), sans aucune clé : <code>tests/conftest.py</code> crée des secrets factices et le réseau est simulé.</td></tr>
+<tr><td>7. Tests</td><td><code>uv run pytest</code></td><td>Tous les tests passent (environ 3 860 ; ceux qui demandent un vrai PostgreSQL sont ignorés sans <code>SORTIRIA_TEST_DATABASE_URL</code>), sans aucune clé : <code>tests/conftest.py</code> crée des secrets factices et le réseau est simulé.</td></tr>
 </tbody>
 </table>
 <div class="experiment-analysis">
@@ -336,7 +336,7 @@
 <thead><tr><th>Étape</th><th>Commande</th><th>Ce qu'on doit voir</th></tr></thead>
 <tbody>
 <tr><td>1. Chercher les agendas</td><td><code>uv run python -m scripts.audit_openagenda --decouverte --json audit_decouverte.json</code></td><td>Un résumé JSON : <code>agendas_utiles</code> (identifiant : événements retenus dans la zone) et <code>nouveaux_agendas</code> (utiles et absents de <code>agenda_uids</code>). Rien n'est écrit en base.</td></tr>
-<tr><td>2. L'ajouter</td><td>Dans <code>config\sources.yaml</code>, sous <code>agenda_uids</code> : <code>- "&lt;UID&gt;"    # N événements</code></td><td>Une ligne de plus dans la liste, sur le modèle des 12 existantes.</td></tr>
+<tr><td>2. L'ajouter</td><td>Dans <code>config\sources.yaml</code>, sous <code>agenda_uids</code> : <code>- "&lt;UID&gt;"    # N événements</code></td><td>Une ligne de plus dans la liste, sur le modèle des 17 existantes.</td></tr>
 <tr><td>3. Essayer</td><td><code>uv run python -m agent --essai --source openagenda</code></td><td><code>"status": "success"</code> et plus d'événements préparés qu'avant.</td></tr>
 <tr><td>4. Tests et push</td><td><code>uv run pytest tests\extractors tests\event tests\config</code> puis commit et push</td><td>Tests verts ; la configuration part en production avec l'image.</td></tr>
 </tbody>
@@ -558,7 +558,7 @@ uv run python -m agent.proposals    # rien en attente pour lui</code></pre>
 <tr><td>Recherche seule</td><td><code>uv run python -m scripts.eval_recherche --note "ce qui a changé"</code></td><td>Le rapport, puis « Lancement gardé : benchmarks/recherche/… et benchmarks/recherche/historique.csv ».</td></tr>
 <tr><td>Avec la rédaction</td><td><code>uv run python -m scripts.eval_recherche --avec-redaction</code></td><td>Même rapport, réponse de Mistral comprise (environ 0,01 $).</td></tr>
 <tr><td>Autre jeu de questions</td><td><code>uv run python -m scripts.eval_recherche --fichier config\eval_mots.yaml</code></td><td>Les 125 recherches courtes.</td></tr>
-<tr><td>Recherches « faire soi-même », avant / après</td><td><code>uv run python -m scripts.eval_recherche --fichier config\eval_pratique.yaml</code>, puis la même avec <code>--sans-pratique</code></td><td>Les 23 recherches de pratique et « regarder » ; <code>--sans-pratique</code> ou <code>--sans-regarder</code> retire la règle correspondante (mesure « avant »).</td></tr>
+<tr><td>Recherches « faire soi-même », avant / après</td><td><code>uv run python -m scripts.eval_recherche --fichier config\eval_pratique.yaml</code>, puis la même avec <code>--sans-pratique</code></td><td>Les 25 recherches de pratique et « regarder » ; <code>--sans-pratique</code> ou <code>--sans-regarder</code> retire la règle correspondante (mesure « avant »).</td></tr>
 <tr><td>Comme la CI</td><td><code>uv run python -m scripts.eval_recherche --jeu-test --seuil 0.95 --json eval_recherche.json</code></td><td>Base figée, horloge à l'instant de l'export, sans vecteur ni Mistral ; code de sortie 1 si la précision ou la compréhension passe sous 0,95. Demande la base de test chargée (6.2).</td></tr>
 </tbody>
 </table>
@@ -818,7 +818,7 @@ docker compose up -d
 <tr><td>3</td><td>Source <code>document</code> en échec sur Azure seulement : « Le document téléchargé n'est pas un PDF », en 0,1 s</td><td>Le site de Sète agglopôle sert une page web aux adresses des centres de données (protection anti-robots probable), le PDF à une box</td><td>Couper la source sur Azure : <code>az containerapp job update --name sortiria-collecte --resource-group sortiria-rg --set-env-vars SOURCES_DESACTIVEES=document --query name -o tsv</code> ; la lire depuis le poste vers la base de production : <code>uv run python -m agent --source document</code>. Ses événements ne sont plus balayés la nuit ; l'agent rappelle de chercher le programme suivant 21 jours avant la fin.</td></tr>
 <tr><td>4</td><td>CD, étape « Azure login » : <code>AADSTS700213: No matching federated identity record found for presented assertion subject</code></td><td>GitHub présente désormais un sujet avec les identifiants numériques du compte et du dépôt ; aucun identifiant fédéré ne correspond</td><td>Lire le sujet exact (« subject claim ») dans le journal de l'étape ; l'ajouter : <code>az ad app federated-credential create --id &lt;APP_ID&gt; --parameters perso\fic3.json --query name -o tsv</code> (fichier JSON avec ce <code>subject</code>, émetteur <code>https://token.actions.githubusercontent.com</code>, audience <code>api://AzureADTokenExchange</code>) ; puis Actions &gt; CD &gt; « Re-run failed jobs ».</td></tr>
 <tr><td>5</td><td>Le premier appel au site est lent, ou le « Healthcheck » de la CD réessaie</td><td>L'API est mise en veille sans visiteur (de 0 à 1 copie) et met quelques secondes à se réveiller</td><td>Normal : la CD réessaie 6 fois à 10 s d'intervalle. Avant une démonstration, ouvrir le site une minute avant.</td></tr>
-<tr><td>6</td><td>CI rouge sur « Évaluation de la recherche (≥ 95 %) »</td><td>Précision ou compréhension sous 0,95 sur la base figée, après un changement de la recherche</td><td>La CD ne part pas : la production est intacte. Télécharger l'artefact <code>eval-recherche</code> (rapport JSON), rejouer en local (6.2), corriger le code. Réexporter la base de test seulement si la base a vraiment changé, jamais pour faire passer la CI.</td></tr>
+<tr><td>6</td><td>CI rouge sur « Évaluation de la recherche (≥ 95 %) »</td><td>Précision ou compréhension sous 0,95 (50 questions) ou sous 0,90 (« faire soi-même », moments de la journée) sur la base figée, après un changement de la recherche</td><td>La CD ne part pas : la production est intacte. Télécharger l'artefact <code>eval-recherche</code> (rapport JSON), rejouer en local (6.2), corriger le code. Réexporter la base de test seulement si la base a vraiment changé, jamais pour faire passer la CI.</td></tr>
 <tr><td>7</td><td>Alerte Dependabot ou <code>npm audit</code> sur l'interface</td><td>Une dépendance npm vulnérable</td><td>Dans <code>frontend</code> : <code>npm audit</code>, mettre à jour la dépendance (c'est ainsi qu'Angular est passé en 21.2.25), <code>npm install</code>, <code>npx ng build</code>, <code>npm test</code>, puis push : la CD recompile et redéploie l'interface. État au 16/10 : 0 alerte.</td></tr>
 <tr><td>8</td><td>Connexion refusée ou délai dépassé vers la base Azure depuis le poste</td><td>L'adresse IP de la box a changé : le pare-feu ne la connaît plus</td><td>Ajouter la nouvelle adresse (procédure 7.2, deuxième bloc).</td></tr>
 <tr><td>9</td><td>Des visiteurs reçoivent 429 de SortirIA</td><td>La limite de débit de l'API (par visiteur, ou 1 000 recherches par heure pour tout le service)</td><td>Voulu : l'en-tête <code>Retry-After</code> dit combien attendre. Si la limite est trop basse pour un usage légitime, la relever (procédure 9.3).</td></tr>

@@ -33,7 +33,7 @@ Trois conditions la rendent tenable, et ce sont elles que le MVP doit prouver :
 | Réponse rédigée qui cite ses événements, sans en inventer | **Fait** | citations vérifiées, repli sans Mistral ([Fiabilité](fiabilite.md)) |
 | Interface web | **Fait** | https://www.sortiria-montpellier.fr |
 | Source et lien de chaque événement affichés | **Fait** | carte et détail |
-| Tests automatiques et CI | **Fait** | 3 840 tests environ, CI GitHub Actions, évaluation de la recherche rejouée à chaque push |
+| Tests automatiques et CI | **Fait** | 3 863 tests, CI GitHub Actions, évaluation de la recherche rejouée à chaque push |
 | Déploiement | **Fait** | Azure, déployé à chaque push sur `main` ([Déploiement](deploiement.md)) |
 | Mesure de la qualité et des coûts | **Fait** | [Évaluation](evaluation.md), [Coûts](couts.md) |
 

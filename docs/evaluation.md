@@ -1,6 +1,6 @@
 # Évaluation : comment chaque indicateur est mesuré
 
-*Mise à jour le 19/10/2026.* Chaque mesure est **rejouable** par un script, et
+*Mise à jour le 23/10/2026.* Chaque mesure est **rejouable** par un script, et
 chaque lancement est **gardé** (`benchmarks/`, MLflow quand le serveur répond).
 
 ## Vue d'ensemble
@@ -8,7 +8,7 @@ chaque lancement est **gardé** (`benchmarks/`, MLflow quand le serveur répond)
 | Indicateur | Objectif | Résultat | Outil |
 | --- | --- | --- | --- |
 | Compréhension des questions | ≥ 95 % | **100 %** (50 questions) | `scripts/eval_recherche.py` |
-| Respect des contraintes par les propositions | ≥ 95 % | **98,7 %** (50 questions) ; **97,6 %** (125 recherches courtes) | `scripts/eval_recherche.py` |
+| Respect des contraintes par les propositions | ≥ 95 % | **98,7 %** (50 questions) ; **97,6 %** (125 recherches courtes, vraie base, 15/10 ; 98,6 % sur la base figée le 23/10) | `scripts/eval_recherche.py` |
 | Pertinence des 3 premières propositions (sujet et public) | ≥ 70 % | **97,8 %** (50 questions, 139 cartes, jugées à la main) ; **83,7 %** sur 50 recherches courtes tirées au hasard (sport et loisirs en lieux : limite voulue) | `scripts/eval_pertinence.py` |
 | Accord du juge Mistral avec l'humain | ≥ 85 % et AC1 ≥ 0,6 | **98,6 %**, AC1 0,985 (grille de calibrage) ; **91,9 %**, AC1 0,889 sur 135 cartes nouvelles | `scripts/eval_pertinence.py --juge` |
 | Temps de réponse (sans cache) | P95 ≤ 8 s | médiane 3,0 à 3,3 s, P95 6,0 à 6,4 s | `scripts/mesure_cout_latence.py` |
@@ -280,6 +280,11 @@ Mesures sur la base figée :
 Les 50 questions perdent 0,6 point : des sorties sont revenues dans la vue, et
 certaines ne respectent pas toutes les contraintes. Ce sont des écarts de
 données, pas de code.
+
+Rapports : `benchmarks/recherche/2026-10-23_base_figee_avant_horloge_<jeu>.json`
+et `…_apres_horloge_<jeu>.json` (jeux `questions`, `mots`, `pratique`,
+`moments`). Le rapport « après » est rejoué une fois toutes les corrections du
+23/10 faites : les mêmes cartes qu'avant ces corrections, à l'horloge près.
 
 ## 2. Pertinence des propositions (jugement humain, puis juge calibré)
 

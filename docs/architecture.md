@@ -1,6 +1,6 @@
 # Architecture
 
-*Mise à jour le 16/10/2026.*
+*Mise à jour le 23/10/2026.*
 
 La collecte tourne chaque nuit ; la recherche répond en direct. Les deux
 partagent une même base PostgreSQL avec l'extension pgvector. Une boucle les
@@ -50,7 +50,7 @@ flowchart LR
 ```mermaid
 flowchart TB
     Dev[Poste de travail<br/>code, tests, PDF de Sète] -->|git push main| GH[GitHub]
-    GH --> CI[CI : Ruff, 3 840 tests,<br/>évaluation, documentation, image Docker]
+    GH --> CI[CI : Ruff, 3 863 tests,<br/>évaluation, documentation, image Docker]
     CI --> CD[CD : image sur GHCR,<br/>connexion Azure sans mot de passe]
     CD --> API[Container Apps<br/>sortiria-api]
     CD --> JOB[Container Apps Job<br/>sortiria-collecte, chaque nuit]
@@ -70,7 +70,7 @@ flowchart TB
 | Collecte | moteur multi-sources de CheckIt.AI (projet 12) | un moteur par type de source, un adaptateur et une configuration YAML par fournisseur : une source de plus = une configuration, pas un programme |
 | Orchestration de la nuit | LangGraph (Chess Agent, projet 13) ; Airflow en local, Container Apps Job en production | décisions qui demandent un modèle de langage, état partagé, routage, trace ([Agent](agent.md)) |
 | Base | PostgreSQL 16 + pgvector | une seule base pour les données, les vecteurs, le journal et les avis ; filtres SQL et recherche par le sens dans la même requête |
-| Modèles | Mistral : `mistral-small` (enrichissement, rédaction), `mistral-medium` (juge de qualité de la nuit), `mistral-large` (juge de pertinence, lancé à la main), `mistral-embed`, Mistral Moderation | hébergement européen, coût bas, un seul fournisseur |
+| Modèles | Mistral : `mistral-small` (enrichissement, rédaction), `mistral-medium` (juge de qualité de la nuit, secours de la rédaction), `mistral-large` (juge de pertinence, lancé à la main), `mistral-embed`, Mistral Moderation | hébergement européen, coût bas, un seul fournisseur |
 | API | FastAPI, réponse diffusée (Server-Sent Events) | l'interface affiche les étapes de la recherche au fil de l'eau |
 | Interface | Angular (Chess Agent) | écran unique : filtres, question, réponse sourcée, cartes, détail |
 | Déploiement | Azure : Static Web Apps, Container Apps, PostgreSQL Flexible Server ; GHCR ; GitHub Actions | gratuit ou presque la première année, mise en veille sans visiteur ([Coûts](couts.md)) |

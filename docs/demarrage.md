@@ -30,8 +30,8 @@ uv run pytest
 Les tests n'ont besoin d'aucune clé d'API : `tests/conftest.py` crée des secrets factices
 et tous les appels réseau sont simulés.
 
-!!! note "Tests vérifiés au 19/10/2026"
-    3 842 tests : 3 765 passent sur le poste ; les 77 autres (schéma, requêtes Grafana,
+!!! note "Tests vérifiés au 23/10/2026"
+    3 863 tests : 3 785 passent sur le poste ; les 78 autres (schéma, requêtes Grafana,
     dérive) demandent un vrai PostgreSQL et passent en CI, ou en local avec
     `SORTIRIA_TEST_DATABASE_URL` (une base dont le nom contient « test »).
 
@@ -45,7 +45,7 @@ cd frontend && npm start                       # interface (http://localhost:421
 ## Agent de collecte
 
 ```bash
-uv run python -m agent                     # collecte complète (chaque nuit à 2 h en production)
+uv run python -m agent                     # collecte complète (en production : chaque nuit à 1 h UTC, 3 h à Paris en été)
 uv run python -m agent --essai             # sans écrire en base
 uv run python -m agent --bilan-recherche   # ce que les gens ont cherché sans trouver (7 jours)
 uv run python -m agent --bilan-recherche --apprendre   # + propositions de l'agent

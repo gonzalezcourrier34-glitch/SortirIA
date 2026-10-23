@@ -39,7 +39,7 @@
 <div class="container">
 <p class="section-number">01</p>
 <h2>Les critères d'acceptation du MVP</h2>
-<p class="section-intro">Avant de mesurer, j'ai écrit les seuils. Les onze critères sont atteints au 16/10/2026.</p>
+<p class="section-intro">Avant de mesurer, j'ai écrit les seuils. Les onze critères du MVP sont atteints au 16/10/2026 ; les deux jeux ajoutés le 17/10 (« faire soi-même », « regarder ») aussi.</p>
 <table class="story-table params-table">
 <thead><tr><th>Critère</th><th>Seuil</th><th>Mesuré</th><th>État</th></tr></thead>
 <tbody>
@@ -88,7 +88,7 @@
 <div class="experiment-metrics">
 <div><strong>100 %</strong><span>compréhension (50 questions)</span></div>
 <div><strong>98,7 %</strong><span>cartes sans erreur (50 questions)</span></div>
-<div><strong>97,6 %</strong><span>cartes sans erreur (125 recherches courtes)</span></div>
+<div><strong>97,6 %</strong><span>cartes sans erreur (125 recherches courtes, vraie base, 15/10)</span></div>
 <div><strong>19 / 125</strong><span>recherches de lieux ouverts toute l'année (bowling, padel…)</span></div>
 </div>
 <p class="table-note">Source : <code>docs/evaluation.md</code> § 1, mesures des 15 et 16/10/2026.</p>
@@ -405,7 +405,7 @@ uv run python -m scripts.mesure_cout_latence --n 1000 --oui</code></pre></div>
 <tr><td>Contraintes et compréhension</td><td><code>benchmarks/recherche/historique.csv</code> (une ligne par lancement) et un rapport JSON question par question ; MLflow, expérience <code>sortiria-evaluation-recherche</code>, quand le serveur répond</td></tr>
 <tr><td>Pertinence et juge</td><td><code>benchmarks/pertinence/</code> : grilles annotées, verdicts et raisons du juge (<code>…_juge.csv</code>), <code>historique.csv</code> du juge v1 au v7</td></tr>
 <tr><td>Temps de réponse et coût</td><td><code>benchmarks/cout_latence/</code> : rapport JSON (temps par étape, coût selon la part de questions répétées) et <code>historique.csv</code></td></tr>
-<tr><td>CI</td><td>rapport <code>eval_recherche.json</code> attaché au job « Évaluation de la recherche » ; environ 3 840 tests pytest sur un vrai PostgreSQL</td></tr>
+<tr><td>CI</td><td>rapports <code>eval_recherche.json</code>, <code>eval_pratique.json</code> et <code>eval_moments.json</code> attachés au job « Évaluation de la recherche » (seuils 95 %, 90 %, 90 %) ; environ 3 860 tests pytest sur un vrai PostgreSQL</td></tr>
 </tbody>
 </table>
 <p class="table-note">Source : <code>benchmarks/README.md</code>, docstrings de <code>scripts/eval_recherche.py</code>, <code>scripts/eval_pertinence.py</code>, <code>scripts/mesure_cout_latence.py</code>, <code>scripts/jeu_test_recherche.py</code>, et <code>.github/workflows/ci.yml</code>. Le juge (<code>--juge</code>) coûte environ 0,03 $ par passage ; il est lancé à la main, jamais pendant une démonstration.</p>

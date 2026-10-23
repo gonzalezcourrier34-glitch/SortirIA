@@ -66,7 +66,7 @@ minimale du texte).
 
 ## OpenAgenda
 
-- **Agendas lus** : la nuit ne lit que les 12 agendas choisis dans
+- **Agendas lus** : la nuit ne lit que les 17 agendas choisis dans
   `agenda_uids`. L'audit du 14/10/2026 a montré que la recherche par termes
   (`search_terms` : Montpellier, Hérault, Sète, Thau…) lisait environ 10 000
   événements de 111 agendas, souvent nationaux, pour en garder 83 dans la

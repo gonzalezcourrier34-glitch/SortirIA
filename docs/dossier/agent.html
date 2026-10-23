@@ -527,7 +527,7 @@ Bilan          status, alerts, run_id, errors</pre>
 <table class="story-table params-table">
 <thead><tr><th>Source</th><th>Moteur</th><th>État</th><th>Ce qu'elle apporte, et ses garde-fous</th></tr></thead>
 <tbody>
-<tr><td>OpenAgenda</td><td>API JSON</td><td><span class="experiment-status selected">Chaque nuit</span></td><td>≈ 80 événements, lus dans 12 agendas choisis (<code>agenda_uids</code>) : la recherche par termes lisait environ 10 000 événements pour en garder 83. Découverte des nouveaux agendas le dimanche.</td></tr>
+<tr><td>OpenAgenda</td><td>API JSON</td><td><span class="experiment-status selected">Chaque nuit</span></td><td>≈ 80 événements, lus dans 12 agendas choisis (<code>agenda_uids</code> ; 17 depuis le 18/10) : la recherche par termes lisait environ 10 000 événements pour en garder 83. Découverte des nouveaux agendas le dimanche.</td></tr>
 <tr><td>DATAtourisme</td><td>API JSON</td><td><span class="experiment-status selected">Chaque nuit</span></td><td>≈ 1 900 séances, la source la plus riche (Licence Ouverte 2.0) ; avec OpenAgenda, environ 1 980 événements par nuit.</td></tr>
 <tr><td>Programme PDF de Sète agglopôle</td><td>Fichiers, lu par Mistral</td><td><span class="experiment-status promising">Depuis mon PC</span></td><td>434 événements de l'« Agenda Culture ». Pages choisies, paquets de 4 pages avec une page de recouvrement, consigne versionnée, température 0, réponse JSON ; titre présent dans la page, date dans la période ; cache par empreinte. Coupé sur Azure (page web reçue au lieu du PDF).</td></tr>
 <tr><td>Fichiers des partenaires (Excel, CSV, JSON)</td><td>Datasets</td><td><span class="experiment-status selected">Chaque nuit</span></td><td>Un fichier par partenaire dans <code>data/partenaires/</code>, colonnes du modèle ; 15 séances fictives pour la démonstration. Rapport de vérification ligne par ligne avec motifs.</td></tr>
@@ -557,7 +557,7 @@ Bilan          status, alerts, run_id, errors</pre>
 <div class="config-grid">
 <div class="config-card"><span>Fenêtre de lecture</span><strong>90 jours</strong></div>
 <div class="config-card"><span>Plafond par source (défaut)</span><strong>500 articles</strong></div>
-<div class="config-card"><span>Agendas OpenAgenda lus</span><strong>12</strong></div>
+<div class="config-card"><span>Agendas OpenAgenda lus</span><strong>17</strong></div>
 <div class="config-card"><span>Découverte des agendas</span><strong>dimanche (6)</strong></div>
 <div class="config-card"><span>PDF : pages par paquet</span><strong>4 (+ 1 de recouvrement)</strong></div>
 <div class="config-card"><span>Scraper</span><strong>enabled: false</strong></div>

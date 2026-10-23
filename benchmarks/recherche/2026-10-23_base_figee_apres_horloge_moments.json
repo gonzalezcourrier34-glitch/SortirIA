@@ -1,0 +1,1183 @@
+{
+  "date": "2026-10-23T10:28:02+02:00",
+  "questions": 12,
+  "comprehension": 1.0,
+  "precision": 0.989,
+  "sans_resultat": 0,
+  "idees_voisines": 0,
+  "latence_mediane_s": 1.82,
+  "latence_p95_s": 2.4,
+  "detail": [
+    {
+      "question": "un concert le matin",
+      "compris": "les 3 prochains mois (le matin) · concert",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "CANDLELIGHT : LES QUATRE SAISONS DE VIVALDI",
+        "CONCERT BRAHMS",
+        "SAISON DE CONCERTS D’ORGUE 2026-2027",
+        "CONCERT HARMONIE",
+        "SALON DE MUSIQUE",
+        "CANDLELIGHT : LES CLASSIQUES DE NOËL",
+        "CONCERT DE L’AVENT BRITTEN • DOHNÁNYI • COPLAND",
+        "MUSE - THE WOW! SIGNAL EUROPA TOUR 2026"
+      ],
+      "cartes": [
+        {
+          "titre": "CANDLELIGHT : LES QUATRE SAISONS DE VIVALDI",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Concert de musique classique en intérieur éclairé aux bougies, avec interprétation d'une œuvre célèbre.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT BRAHMS",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert symphonique interprétant des œuvres de Brahms.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SAISON DE CONCERTS D’ORGUE 2026-2027",
+          "type": "concert",
+          "publics": [],
+          "resume": "Série de récitals d’orgue avec des interprètes internationaux et variétés musicales.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT HARMONIE",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert de fin d'année des classes d'orchestre harmonie, interprété par des jeunes musiciens.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SALON DE MUSIQUE",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert intimiste pour piano et violon inspiré des salons musicaux du XIXe siècle.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CANDLELIGHT : LES CLASSIQUES DE NOËL",
+          "type": "concert",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Concert de classiques de Noël dans une ambiance chaleureuse et lumineuse.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT DE L’AVENT BRITTEN • DOHNÁNYI • COPLAND",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert de musique classique et chorale pour célébrer l'approche de Noël.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MUSE - THE WOW! SIGNAL EUROPA TOUR 2026",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Concert d'un groupe de rock international dans une grande salle.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une balade samedi matin",
+      "compris": "sam. 17 oct. (le matin) · nature",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "SEMAINE DE LA RÉSILIENCE - BALADE SUR LE LITTORAL",
+        "BALADE INÉDITE AUTOUR DES PORTS ANCIENS",
+        "LA BALADE DES CÉPAGES AU DOMAINE SAINT-ANDRÉ",
+        "BALADES BIO GOURMANDES D’OCCITANIE",
+        "SEMAINE DE LA RÉSILIENCE - CLOTURE",
+        "ASTRONOMIE : OBSERVEZ LE SOLEIL AU TÉLESCOPE !",
+        "ASTRONOMIE : OBSERVEZ LA LUNE, JUPITER… AU TÉLESCOPE !",
+        "EXPOSITION DU DUO : XOLO CUINTLE"
+      ],
+      "cartes": [
+        {
+          "titre": "SEMAINE DE LA RÉSILIENCE - BALADE SUR LE LITTORAL",
+          "type": "nature",
+          "publics": [],
+          "resume": "Balade et ateliers pour comprendre les enjeux du littoral et du changement climatique.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "BALADE INÉDITE AUTOUR DES PORTS ANCIENS",
+          "type": "visite",
+          "publics": [],
+          "resume": "Balade guidée autour des ports anciens avec visite d'un musée et vélo électrique.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LA BALADE DES CÉPAGES AU DOMAINE SAINT-ANDRÉ",
+          "type": "nature",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Balade dans un vignoble pour découvrir les différents cépages et leurs caractéristiques.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "BALADES BIO GOURMANDES D’OCCITANIE",
+          "type": "nature",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Parcours gourmand avec dégustations de produits bio locaux dans la ville.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SEMAINE DE LA RÉSILIENCE - CLOTURE",
+          "type": "nature",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Animations et spectacle pour sensibiliser aux risques naturels et au climat.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ASTRONOMIE : OBSERVEZ LE SOLEIL AU TÉLESCOPE !",
+          "type": "nature",
+          "publics": [],
+          "resume": "Observation du soleil en toute sécurité avec un télescope adapté.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ASTRONOMIE : OBSERVEZ LA LUNE, JUPITER… AU TÉLESCOPE !",
+          "type": "nature",
+          "publics": [],
+          "resume": "Observation du ciel et des astres avec télescope, animations ludiques et découverte des planètes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "EXPOSITION DU DUO : XOLO CUINTLE",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Exposition de sculptures explorant les interactions entre sol, végétal et vivant dans un jardin botanique.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un atelier en matinée",
+      "compris": "les 3 prochains mois (le matin) · atelier",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Atelier cuisine parents-enfants (exemple)",
+        "Stage de cirque vacances (exemple)",
+        "Initiation escalade enfants (exemple)",
+        "LES ATELIERS DE LA CABANE : PLIAGE ET PAPOTAGE",
+        "JOURNÉES NATIONALES DE LA RÉPARATION",
+        "ATELIER SCIENTIFIQUE SPÉCIAL HALLOWEEN — LES KURIONAUTES",
+        "ATELIER CRIC CRAC - POUR LES ENFANTS DE 7 À 12 ANS",
+        "MES VACANCES AVEC LES ARTISTES MAÏA AMIEL ET CLAIRE SCHNEIDER - ATELIERS TEXTILE"
+      ],
+      "cartes": [
+        {
+          "titre": "Atelier cuisine parents-enfants (exemple)",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier culinaire pour préparer un goûter en famille.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Stage de cirque vacances (exemple)",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Stage de cirque pour enfants avec jonglage, équilibre et acrobatie.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Initiation escalade enfants (exemple)",
+          "type": "atelier",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Initiation à l'escalade pour enfants avec encadrement et matériel fourni.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "LES ATELIERS DE LA CABANE : PLIAGE ET PAPOTAGE",
+          "type": "atelier",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Atelier créatif de pliage de papier pour transformer un objet abîmé en création à emporter.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "JOURNÉES NATIONALES DE LA RÉPARATION",
+          "type": "atelier",
+          "publics": [],
+          "resume": "Ateliers gratuits pour apprendre à réparer vêtements, électroménager ou objets du quotidien et éviter le gaspillage.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER SCIENTIFIQUE SPÉCIAL HALLOWEEN — LES KURIONAUTES",
+          "type": "atelier",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Atelier scientifique ludique et interactif pour enfants, mêlant magie et expériences.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER CRIC CRAC - POUR LES ENFANTS DE 7 À 12 ANS",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Enfants de 7 à 12 ans découvrent et expérimentent la transformation des matières après une visite ludique.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MES VACANCES AVEC LES ARTISTES MAÏA AMIEL ET CLAIRE SCHNEIDER - ATELIERS TEXTILE",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier textile collaboratif pour confectionner un drapeau avec des artistes.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un marché le matin",
+      "compris": "les 3 prochains mois (le matin) · marché",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "MARCHÉ TRADITIONNEL DU JEUDI À SÈTE",
+        "MARCHÉ TRADITIONNEL DE POUSSAN",
+        "MARCHÉ TRADITIONNEL DU MERCREDI À SÈTE",
+        "MARCHÉ TRADITIONNEL DU VENDREDI À SÈTE",
+        "MARCHÉ TRADITIONNEL DE BALARUC-LES-BAINS",
+        "MARCHÉ TRADITIONNEL DE MONTBAZIN",
+        "MARCHÉ TRADITIONNEL DE GIGEAN",
+        "MARCHÉ DES HALLES DE MÈZE"
+      ],
+      "cartes": [
+        {
+          "titre": "MARCHÉ TRADITIONNEL DU JEUDI À SÈTE",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Marché paysan bio et local en bord de mer, mettant en avant des produits frais et des artisans.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ TRADITIONNEL DE POUSSAN",
+          "type": "marche",
+          "publics": [],
+          "resume": "Marché traditionnel offrant produits locaux et architecture remarquable.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ TRADITIONNEL DU MERCREDI À SÈTE",
+          "type": "marche",
+          "publics": [],
+          "resume": "Marché alimentaire et textile en centre-ville avec produits locaux et artisanat.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ TRADITIONNEL DU VENDREDI À SÈTE",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Marché alimentaire et textile animant le centre-ville chaque vendredi matin.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ TRADITIONNEL DE BALARUC-LES-BAINS",
+          "type": "marche",
+          "publics": [],
+          "resume": "Marché en plein air avec produits locaux et ambiance conviviale dans un parc ombragé.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ TRADITIONNEL DE MONTBAZIN",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Marché dominical de produits locaux et bio, convivial et citoyen.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ TRADITIONNEL DE GIGEAN",
+          "type": "marche",
+          "publics": [],
+          "resume": "Marché local proposant des produits du terroir de l'Archipel de Thau.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ DES HALLES DE MÈZE",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Marché couvert historique proposant produits locaux et dégustations.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une activité l'après-midi",
+      "compris": "les 3 prochains mois (l'après-midi)",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Stage de cirque vacances (exemple)",
+        "Atelier jeux en famille (exemple)",
+        "Contes au jardin (exemple)",
+        "Exposition photo de l'étang (exemple)",
+        "Marché de Saint-Clément-de-Rivière",
+        "EXPOSITION GUIMET+ MONTPELLIER / CHINE",
+        "VISITE COMMENTÉE DE SÈTE AVEC DIVERS UNI VERS",
+        "VISITE COMMENTÉE DE FRONTIGNAN-PLAGE AVEC DIVERS UNI VERS"
+      ],
+      "cartes": [
+        {
+          "titre": "Stage de cirque vacances (exemple)",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Stage de cirque pour enfants avec jonglage, équilibre et acrobatie.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Atelier jeux en famille (exemple)",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier de jeux de société et de construction pour enfants et adultes dans une ludothèque.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Contes au jardin (exemple)",
+          "type": "lecture",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Contes de saison racontés en plein air pour les jeunes enfants.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Exposition photo de l'étang (exemple)",
+          "type": "exposition",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Exposition de photographies capturant un paysage naturel emblématique.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Marché de Saint-Clément-de-Rivière",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Découverte de produits artisanaux et locaux dans un marché dominical.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "EXPOSITION GUIMET+ MONTPELLIER / CHINE",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Œuvres asiatiques exposées dans une scénographie immersive au musée.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "VISITE COMMENTÉE DE SÈTE AVEC DIVERS UNI VERS",
+          "type": "visite",
+          "publics": [],
+          "resume": "Exploration culturelle et naturelle d'une ville portuaire et de son bassin.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "VISITE COMMENTÉE DE FRONTIGNAN-PLAGE AVEC DIVERS UNI VERS",
+          "type": "visite",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Balade guidée entre mer, espaces salés et observation d'oiseaux.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une expo l'après-midi",
+      "compris": "les 3 prochains mois (l'après-midi) · exposition",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Exposition photo de l'étang (exemple)",
+        "VISITE DE L’EXPOSITION \"MAISON-MAIN\" AVEC LES COMMISSAIRES CHRISTIAN RIZZO & ANNE-LAURE LESTAGE",
+        "VERNISSAGE DE L’EXPOSITION-RESTITUTION \"DES DRAPEAUX POUR MA VILLE\"",
+        "MÉDIATION EXPOSITION HORIZON MER",
+        "EXPOSITION : DES SPECTRES À LA PLAGE",
+        "Méridionalité ? | Exposition des AJAP et autres voies de l’Architecture en Occitanie",
+        "EXPOSITION ROCK ECANTO - LA DISTILLERIE",
+        "EXPOSITION \"DUBOUT 50 ANS, DÉJÀ !\""
+      ],
+      "cartes": [
+        {
+          "titre": "Exposition photo de l'étang (exemple)",
+          "type": "exposition",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Exposition de photographies capturant un paysage naturel emblématique.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "VISITE DE L’EXPOSITION \"MAISON-MAIN\" AVEC LES COMMISSAIRES CHRISTIAN RIZZO & ANNE-LAURE LESTAGE",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Visite commentée d'une exposition avec les commissaires.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "VERNISSAGE DE L’EXPOSITION-RESTITUTION \"DES DRAPEAUX POUR MA VILLE\"",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Exposition collective de créations textiles issues d'ateliers participatifs avec des habitants.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MÉDIATION EXPOSITION HORIZON MER",
+          "type": "exposition",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Exposition interactive sur la mer, son écosystème et sa protection avec médiation.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "EXPOSITION : DES SPECTRES À LA PLAGE",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Exposition artistique mêlant photographie et chorégraphie autour de la Méditerranée.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Méridionalité ? | Exposition des AJAP et autres voies de l’Architecture en Occitanie",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Exposition présentant des projets architecturaux primés et leur évolution en région.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "EXPOSITION ROCK ECANTO - LA DISTILLERIE",
+          "type": "exposition",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Exposition de photographies de concerts rock et métal dans un bar, avec ambiance musicale.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "EXPOSITION \"DUBOUT 50 ANS, DÉJÀ !\"",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Rétrospective de l'œuvre d'un dessinateur de presse et illustrateur au style humoristique et dynamique.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un spectacle pour enfants l'après-midi",
+      "compris": "les 3 prochains mois (l'après-midi) · famille · spectacle ou théâtre",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "JUVI'RIRE PREMIÈRE ÉDITION",
+        "\"LE CHANT DES LUMIERES\", SPECTACLE DE CONTES",
+        "SPECTACLE : UN CHOU EN HIVER",
+        "GUSTAVE PARKING",
+        "PITCHOUN ET LES MONDES CÉLESTES",
+        "Lyrica",
+        "RODEO CAMARGUAIS - PALAVAS 21 OCTOBRE",
+        "SPECTACLE MANOIR AUX FANTÔMES » DANS LE CADRE DU FIRN. AVEC LA COMPAGNIE TERRE PLATE"
+      ],
+      "cartes": [
+        {
+          "titre": "JUVI'RIRE PREMIÈRE ÉDITION",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Festival d'humour avec spectacles variés et ambiance festive.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "\"LE CHANT DES LUMIERES\", SPECTACLE DE CONTES",
+          "type": "lecture",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle de contes et musique mettant en scène des oiseaux et des récits traditionnels.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SPECTACLE : UN CHOU EN HIVER",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle théâtral drôle et poétique sur l'amitié et les surprises de l'hiver.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "GUSTAVE PARKING",
+          "type": "spectacle",
+          "publics": [
+            "ados",
+            "famille",
+            "seniors"
+          ],
+          "resume": "Spectacle humoristique mêlant poésie, jeux de mots et bricolages décalés.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "PITCHOUN ET LES MONDES CÉLESTES",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle de danse poétique et interactive pour les tout-petits, mêlant jeu et émotion.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Lyrica",
+          "type": "spectacle",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Spectacle mêlant chant lyrique, piano et claquettes dans une mise en scène dynamique.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "RODEO CAMARGUAIS - PALAVAS 21 OCTOBRE",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle équestre traditionnel camarguais avec jeux de gardians et participation du public.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SPECTACLE MANOIR AUX FANTÔMES » DANS LE CADRE DU FIRN. AVEC LA COMPAGNIE TERRE PLATE",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle immersif et humoristique autour de chasseurs de fantômes dans un manoir hanté.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "que faire en journée ce week-end",
+      "compris": "ce week-end (en journée)",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Exposition photo de l'étang (exemple)",
+        "Marché de Saint-Clément-de-Rivière",
+        "EXPOSITION GUIMET+ MONTPELLIER / CHINE",
+        "VISITE COMMENTÉE DE SÈTE AVEC DIVERS UNI VERS",
+        "MARCHÉ HEBDOMADAIRE DE MARSEILLAN",
+        "JEU DE PISTE : LE PETIT CRABE DE MARSEILLAN CHERCHE SON AMI LE POISSON",
+        "ASTRONOMIE : OBSERVEZ LE SOLEIL AU TÉLESCOPE !",
+        "VISITE COMMENTÉE DE FRONTIGNAN-PLAGE AVEC DIVERS UNI VERS"
+      ],
+      "cartes": [
+        {
+          "titre": "Exposition photo de l'étang (exemple)",
+          "type": "exposition",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Exposition de photographies capturant un paysage naturel emblématique.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Marché de Saint-Clément-de-Rivière",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Découverte de produits artisanaux et locaux dans un marché dominical.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "EXPOSITION GUIMET+ MONTPELLIER / CHINE",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Œuvres asiatiques exposées dans une scénographie immersive au musée.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "VISITE COMMENTÉE DE SÈTE AVEC DIVERS UNI VERS",
+          "type": "visite",
+          "publics": [],
+          "resume": "Exploration culturelle et naturelle d'une ville portuaire et de son bassin.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ HEBDOMADAIRE DE MARSEILLAN",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Marché hebdomadaire proposant produits alimentaires et artisanaux.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "JEU DE PISTE : LE PETIT CRABE DE MARSEILLAN CHERCHE SON AMI LE POISSON",
+          "type": "jeux",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Jeu de piste ludique pour enfants à la découverte d'une station balnéaire.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ASTRONOMIE : OBSERVEZ LE SOLEIL AU TÉLESCOPE !",
+          "type": "nature",
+          "publics": [],
+          "resume": "Observation du soleil en toute sécurité avec un télescope adapté.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "VISITE COMMENTÉE DE FRONTIGNAN-PLAGE AVEC DIVERS UNI VERS",
+          "type": "visite",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Balade guidée entre mer, espaces salés et observation d'oiseaux.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un concert en soirée",
+      "compris": "les 3 prochains mois (le soir) · concert ou soirée",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 7,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "type"
+      ],
+      "titres": [
+        "Concert jazz au port (exemple)",
+        "Concert rock (exemple)",
+        "Soirée DJ électro (exemple)",
+        "CANDLELIGHT : LES QUATRE SAISONS DE VIVALDI",
+        "CONCERT BRAHMS",
+        "CONCERT HARMONIE",
+        "SAISON DE CONCERTS D’ORGUE 2026-2027",
+        "CANDLELIGHT : LES CLASSIQUES DE NOËL"
+      ],
+      "cartes": [
+        {
+          "titre": "Concert jazz au port (exemple)",
+          "type": "concert",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Concert de jazz manouche en ouverture d'un festival.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Concert rock (exemple)",
+          "type": "concert",
+          "publics": [
+            "famille",
+            "soirée"
+          ],
+          "resume": "Soirée musicale avec plusieurs groupes locaux dans un bar.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Soirée DJ électro (exemple)",
+          "type": "soiree",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée électro avec deux DJ résidents et entrée réduite avant minuit.",
+          "partenaire": true,
+          "ecarts": [
+            "type"
+          ]
+        },
+        {
+          "titre": "CANDLELIGHT : LES QUATRE SAISONS DE VIVALDI",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Concert de musique classique en intérieur éclairé aux bougies, avec interprétation d'une œuvre célèbre.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT BRAHMS",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert symphonique interprétant des œuvres de Brahms.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT HARMONIE",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert de fin d'année des classes d'orchestre harmonie, interprété par des jeunes musiciens.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SAISON DE CONCERTS D’ORGUE 2026-2027",
+          "type": "concert",
+          "publics": [],
+          "resume": "Série de récitals d’orgue avec des interprètes internationaux et variétés musicales.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CANDLELIGHT : LES CLASSIQUES DE NOËL",
+          "type": "concert",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Concert de classiques de Noël dans une ambiance chaleureuse et lumineuse.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un spectacle le soir",
+      "compris": "les 3 prochains mois (le soir) · spectacle ou théâtre",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "BALLET OF LIGHTS : LA BELLE AU BOIS DORMANT DANS UN SPECTACLE ÉTINCELANT",
+        "SPECTACLE CABARET « DEUX BRÉSILIENS À PARIS »",
+        "JUVI'RIRE PREMIÈRE ÉDITION",
+        "SPECTACLE : UN CHOU EN HIVER",
+        "\"LE CHANT DES LUMIERES\", SPECTACLE DE CONTES",
+        "PITCHOUN ET LES MONDES CÉLESTES",
+        "SPECTACLE HUMOUR DE TOM BALDETTI \"TOME 1\"",
+        "SPECTACLE : L’ART D’ACCOMMODER LES RESTES"
+      ],
+      "cartes": [
+        {
+          "titre": "BALLET OF LIGHTS : LA BELLE AU BOIS DORMANT DANS UN SPECTACLE ÉTINCELANT",
+          "type": "spectacle",
+          "publics": [],
+          "resume": "Spectacle de ballet mêlant danse classique et effets lumineux pour un conte revisité.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SPECTACLE CABARET « DEUX BRÉSILIENS À PARIS »",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle de cabaret brésilien mêlant musique, danse et costumes colorés dans une ambiance festive.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "JUVI'RIRE PREMIÈRE ÉDITION",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Festival d'humour avec spectacles variés et ambiance festive.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SPECTACLE : UN CHOU EN HIVER",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle théâtral drôle et poétique sur l'amitié et les surprises de l'hiver.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "\"LE CHANT DES LUMIERES\", SPECTACLE DE CONTES",
+          "type": "lecture",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle de contes et musique mettant en scène des oiseaux et des récits traditionnels.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "PITCHOUN ET LES MONDES CÉLESTES",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle de danse poétique et interactive pour les tout-petits, mêlant jeu et émotion.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SPECTACLE HUMOUR DE TOM BALDETTI \"TOME 1\"",
+          "type": "spectacle",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Spectacle d'humour où un artiste aborde sa vie familiale, ses peurs et ses questionnements avec autodérision.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SPECTACLE : L’ART D’ACCOMMODER LES RESTES",
+          "type": "spectacle",
+          "publics": [],
+          "resume": "Deux marionnettes incarnent des chanteuses siciliennes, mêlant musique et humour dans un spectacle drôle et émouvant.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une sortie en début de soirée à Sète",
+      "compris": "les 3 prochains mois (le soir) · Sète · soirée",
+      "ecarts_comprehension": [],
+      "propositions": 7,
+      "correctes": 7,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "SOIRÉE ASTRONOMIE",
+        "Quand Les Filles Chantent - La Cetta 16/10",
+        "SOIRÉE CONTES \"L'ÂNE ET LE GOUVERNEMENT ET AUTRES CONTES\"",
+        "MODERN RAVE : HARD DOCK EDITION w/ SKÖNE & KODAMAN (18.10)",
+        "SOIREE RESTO LIVE AVEC LE DUO \"UP RISE\" AVEC FABIEN & ALBAN",
+        "LA NUIT DES CAPUCINES",
+        "1 SOIRÉE, 3 FILMS — MIAM"
+      ],
+      "cartes": [
+        {
+          "titre": "SOIRÉE ASTRONOMIE",
+          "type": "nature",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée d'observation du ciel à l'œil nu et avec télescopes pour découvrir constellations et astres.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Quand Les Filles Chantent - La Cetta 16/10",
+          "type": "soiree",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée musicale et festive réservée aux femmes pour chanter et danser entre amies.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SOIRÉE CONTES \"L'ÂNE ET LE GOUVERNEMENT ET AUTRES CONTES\"",
+          "type": "lecture",
+          "publics": [
+            "famille",
+            "soirée"
+          ],
+          "resume": "Soirée de contes animée par des conteuses, mêlant humour et poésie.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MODERN RAVE : HARD DOCK EDITION w/ SKÖNE & KODAMAN (18.10)",
+          "type": "soiree",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "🔥 MODERN RAVE - HARD DOCK EDITION 🏭️ NOUVEAU LIEU - WAREHOUSE & OPEN AIR DIMANCHE 18 OCTOBRE Notre nouvelle édition HARD DOCK se déroulera dans un tout nouveau lieu exceptionnel, classé patrimoine historique, à 25 mn de Montpellier. Un…",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SOIREE RESTO LIVE AVEC LE DUO \"UP RISE\" AVEC FABIEN & ALBAN",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Concert live de pop rock revisitant des classiques pour un public adulte.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LA NUIT DES CAPUCINES",
+          "type": "soiree",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée festive mêlant cabaret et clubbing avec spectacle inclusif et bienveillant.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "1 SOIRÉE, 3 FILMS — MIAM",
+          "type": "soiree",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée avec projection de courts métrages et rencontre autour d'un livre.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un concert",
+      "compris": "les 3 prochains mois · concert",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Concert jazz au port (exemple)",
+        "Concert rock (exemple)",
+        "CANDLELIGHT : LES QUATRE SAISONS DE VIVALDI",
+        "SAISON DE CONCERTS D’ORGUE 2026-2027",
+        "CONCERT HARMONIE",
+        "CONCERT BRAHMS",
+        "CANDLELIGHT: JEAN-JACQUES GOLDMAN",
+        "CANDLELIGHT : HOMMAGE À ABBA ET PLUS ENCORE"
+      ],
+      "cartes": [
+        {
+          "titre": "Concert jazz au port (exemple)",
+          "type": "concert",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Concert de jazz manouche en ouverture d'un festival.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Concert rock (exemple)",
+          "type": "concert",
+          "publics": [
+            "famille",
+            "soirée"
+          ],
+          "resume": "Soirée musicale avec plusieurs groupes locaux dans un bar.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "CANDLELIGHT : LES QUATRE SAISONS DE VIVALDI",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Concert de musique classique en intérieur éclairé aux bougies, avec interprétation d'une œuvre célèbre.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SAISON DE CONCERTS D’ORGUE 2026-2027",
+          "type": "concert",
+          "publics": [],
+          "resume": "Série de récitals d’orgue avec des interprètes internationaux et variétés musicales.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT HARMONIE",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert de fin d'année des classes d'orchestre harmonie, interprété par des jeunes musiciens.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT BRAHMS",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert symphonique interprétant des œuvres de Brahms.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CANDLELIGHT: JEAN-JACQUES GOLDMAN",
+          "type": "concert",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Concert hommage à un chanteur célèbre interprété par un quatuor à cordes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CANDLELIGHT : HOMMAGE À ABBA ET PLUS ENCORE",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Concert hommage à des groupes musicaux célèbres dans un lieu éclairé aux bougies.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    }
+  ]
+}

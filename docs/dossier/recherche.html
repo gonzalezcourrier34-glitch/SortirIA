@@ -36,7 +36,7 @@
 <div class="result-grid">
 <div class="result-card"><strong>100 %</strong><span>Questions comprises (50 questions)</span></div>
 <div class="result-card"><strong>98,7 %</strong><span>Propositions qui respectent les contraintes (50 questions)</span></div>
-<div class="result-card"><strong>97,6 %</strong><span>Même mesure sur 125 recherches courtes</span></div>
+<div class="result-card"><strong>97,6 %</strong><span>Même mesure sur 125 recherches courtes (vraie base, 15/10)</span></div>
 <div class="result-card"><strong>97,8 %</strong><span>Pertinence des 3 premières cartes (139 cartes, jugement humain)</span></div>
 <div class="result-card"><strong>3 s</strong><span>Temps de réponse médian sans cache (3,0 à 3,3 s)</span></div>
 <div class="result-card"><strong>6,4 s</strong><span>P95 sans cache (6,0 à 6,4 s)</span></div>
@@ -402,7 +402,7 @@ Réponds uniquement en JSON : {"reponse": "...", "suggestions": ["...", "...", "
 <tr><td><code>SEARCH_MODEL</code></td><td><code>mistral-small-latest</code></td><td>Modèle de rédaction. <code>ministral-8b</code> a été mesuré : 17 % moins cher, plus lent, qualité non mesurée ; écarté.</td></tr>
 <tr><td><code>SEARCH_FALLBACK_MODEL</code></td><td><code>mistral-medium-latest</code></td><td>Modèle essayé si le premier échoue (panne du 23/10/2026 : 503 sur <code>mistral-small-latest</code>) ; vide : pas de secours.</td></tr>
 <tr><td><code>EMBEDDING_MODEL</code></td><td><code>mistral-embed</code></td><td>Vecteur de la question, le même modèle que pour les événements.</td></tr>
-<tr><td><code>MODERATION_MODEL</code></td><td>—</td><td>Modération des commentaires des visiteurs.</td></tr>
+<tr><td><code>MODERATION_MODEL</code></td><td><code>mistral-moderation-latest</code></td><td>Modération des commentaires des visiteurs.</td></tr>
 <tr><td><code>LIMITE_RECHERCHES_MINUTE</code></td><td>12</td><td>Recherches par visiteur et par minute.</td></tr>
 <tr><td><code>LIMITE_RECHERCHES_HEURE</code></td><td>120</td><td>Recherches par visiteur et par heure.</td></tr>
 <tr><td><code>LIMITE_RECHERCHES_HEURE_TOTAL</code></td><td>1 000</td><td>Recherches par heure pour tout le service : borne le coût Mistral, même face à un robot qui change d'adresse.</td></tr>
@@ -436,7 +436,7 @@ Réponds uniquement en JSON : {"reponse": "...", "suggestions": ["...", "...", "
 <h2>L'évaluation en bref</h2>
 <p class="section-intro">Chaque mesure est rejouable par un script et gardée dans <code>benchmarks/</code>. Le détail est sur la page Résultats.</p>
 <div class="reflection-grid">
-<div class="reflection-card"><h3>Contraintes : rejouées à chaque push</h3><p>50 questions écrites à la main (<code>config/eval_recherche.yaml</code>), 125 recherches courtes (<code>config/eval_mots.yaml</code>) et 23 recherches « faire soi-même » et « regarder » (<code>config/eval_pratique.yaml</code>, 61 % → 98 % de cartes correctes avec les verbes de pratique, 67 % → 93 % pour « regarder », sur la vraie base) passent par la vraie recherche. Chaque carte est contrôlée : date, lieu, public, gratuit, budget, type, mots visibles. En CI, sur une base figée et sans Mistral, le job échoue sous 95 %.</p></div>
+<div class="reflection-card"><h3>Contraintes : rejouées à chaque push</h3><p>50 questions écrites à la main (<code>config/eval_recherche.yaml</code>), 125 recherches courtes (<code>config/eval_mots.yaml</code>) et 25 recherches « faire soi-même » et « regarder » (<code>config/eval_pratique.yaml</code>, 61 % → 98 % de cartes correctes avec les verbes de pratique, 67 % → 93 % pour « regarder », sur la vraie base) passent par la vraie recherche. Chaque carte est contrôlée : date, lieu, public, gratuit, budget, type, mots visibles. En CI, sur une base figée et sans Mistral, le job échoue sous 95 %.</p></div>
 <div class="reflection-card"><h3>Pertinence : un humain, puis un juge calibré</h3><p>139 cartes jugées à la main sur le sujet et le public : 97,8 %. Un juge Mistral Large, calibré sur cette grille (98,6 % d'accord, AC1 0,985), garde 91,9 % d'accord (AC1 0,889) sur 135 cartes qu'il n'avait jamais vues.</p></div>
 <div class="reflection-card"><h3>Temps et coût</h3><p>175 questions avec rédaction : médiane 3,0 à 3,3 s, P95 6,0 à 6,4 s, 0,12 $ pour 1 000 questions ; 0,11 s et 0 $ avec le cache. En production, le tableau Grafana « Recherche » suit la latence réelle.</p></div>
 </div>
