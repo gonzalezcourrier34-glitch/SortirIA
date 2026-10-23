@@ -43,9 +43,22 @@ def timed(name: str, node: Callable[..., dict[str, Any]]) -> Callable[..., dict[
     """Mesure la durée d'un nœud et l'ajoute à `node_durations` (suivi de l'agent).
 
     Un nœud joué plusieurs fois (nouvel essai d'extraction) cumule ses durées.
+
+    Parameters
+    ----------
+    name : str
+        Nom du nœud, clé dans `node_durations`.
+    node : Callable[..., dict[str, Any]]
+        Le nœud à mesurer, appelé avec `(state, config)`.
+
+    Returns
+    -------
+    Callable[..., dict[str, Any]]
+        Le nœud enveloppé, qui renvoie sa mise à jour plus `node_durations`.
     """
 
     def run(state: CollectionState, config: RunnableConfig) -> dict[str, Any]:
+        """Jouer le nœud et ajouter sa durée à la mise à jour de l'état."""
         started = perf_counter()
         update = dict(node(state, config) or {})
         durations = dict(state.get("node_durations", {}))
@@ -57,8 +70,15 @@ def timed(name: str, node: Callable[..., dict[str, Any]]) -> Callable[..., dict[
 
 
 def build_graph():
-    """Assemble les nœuds et les transitions, puis compile le graphe."""
+    """Assemble les nœuds et les transitions, puis compile le graphe.
 
+    Returns
+    -------
+    CompiledStateGraph
+        Le graphe LangGraph compilé, prêt pour `invoke`.
+    """
+
+    # Déclarer les nœuds, chacun chronométré sauf le bilan
     builder = StateGraph(CollectionState)
     builder.add_node(PLAN, timed(PLAN, nodes.plan_sources))
     builder.add_node(EXTRACT, timed(EXTRACT, nodes.extract_sources))
@@ -68,6 +88,7 @@ def build_graph():
     builder.add_node(WATCH, timed(WATCH, nodes.watch_collection))
     builder.add_node(REPORT, nodes.write_report)   # il enregistre les durées : pas mesuré lui-même
 
+    # Enchaîner les nœuds ; après l'extraction, le routage décide de la suite
     builder.add_edge(START, PLAN)
     builder.add_edge(PLAN, EXTRACT)
     builder.add_conditional_edges(
@@ -95,14 +116,35 @@ def run_nightly_collection(
 
     La nuit est suivie de bout en bout par le traceur des services (MLflow en
     production) : ouvert avant le graphe, fermé avec l'état final.
+
+    Parameters
+    ----------
+    services : CollectionServices | None
+        Services injectés (base, extracteurs, traceur, horloge) ; `None` pour
+        ceux de production (`build_default_services`).
+    sources : list[str] | None
+        Identifiants des sources à collecter ; `None` pour toutes.
+    dry_run : bool
+        Si vrai, rien n'est écrit en base. Par défaut faux.
+    max_attempts : int
+        Nombre maximal d'essais d'extraction. Par défaut `DEFAULT_MAX_ATTEMPTS` (2).
+    discover_agendas : bool
+        Si vrai, cherche aussi les nouveaux agendas OpenAgenda. Par défaut faux.
+
+    Returns
+    -------
+    CollectionState
+        L'état final de la collecte.
     """
 
+    # Préparer l'état initial à partir des options
     services = services or build_default_services()
     initial: CollectionState = {"dry_run": dry_run, "max_attempts": max_attempts}
     if sources:
         initial["sources"] = sources
     if discover_agendas:
         initial["discover_agendas"] = True
+    # Ouvrir le suivi, jouer le graphe, fermer le suivi avec l'état final
     services.tracker.start({
         **run_params(services, dry_run=dry_run, max_attempts=max_attempts),
         "started_at": services.now().isoformat(timespec="minutes"),

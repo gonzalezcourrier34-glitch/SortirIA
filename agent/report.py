@@ -35,7 +35,21 @@ STATUS_LABELS = {
 
 
 def should_send(report: Mapping[str, Any], when: str | None = None) -> bool:
-    """Décide s'il faut envoyer le bilan (voir `REPORT_EMAIL_WHEN`)."""
+    """Décide s'il faut envoyer le bilan (voir `REPORT_EMAIL_WHEN`).
+
+    Parameters
+    ----------
+    report : Mapping[str, Any]
+        Le bilan de la nuit (`status`, `alerts`).
+    when : str | None
+        `toujours` ou `alertes` ; `None` par défaut pour lire `REPORT_EMAIL_WHEN`
+        (`toujours` si elle n'est pas réglée).
+
+    Returns
+    -------
+    bool
+        Vrai s'il faut envoyer le mail.
+    """
 
     when = (when or os.getenv("REPORT_EMAIL_WHEN", "toujours")).strip().lower()
     if when == "alertes":
@@ -44,8 +58,24 @@ def should_send(report: Mapping[str, Any], when: str | None = None) -> bool:
 
 
 def build_report_email(report: Mapping[str, Any]) -> tuple[str, str]:
-    """(sujet, corps) du mail de bilan."""
+    """(sujet, corps) du mail de bilan.
 
+    Le corps enchaîne les chiffres, les sources, les alertes, les propositions,
+    les notes des clients, la qualité, les bilans du lundi (recherche, pouces
+    bas, dérive), la couverture, le coût Mistral et les références du suivi.
+
+    Parameters
+    ----------
+    report : Mapping[str, Any]
+        Le bilan de la nuit, tel qu'écrit par le nœud de bilan.
+
+    Returns
+    -------
+    tuple[str, str]
+        Le sujet du mail et son corps en texte brut.
+    """
+
+    # Rédiger le sujet : statut, nombre d'événements, alertes, PR à relire
     status = str(report.get("status") or "")
     label = STATUS_LABELS.get(status, status or "inconnu")
     started = str(report.get("started_at") or "")[:16].replace("T", " à ")
@@ -59,6 +89,7 @@ def build_report_email(report: Mapping[str, Any]) -> tuple[str, str]:
     if new_pulls:
         subject += f", {new_pulls} proposition(s) à relire"
 
+    # Chiffres de la nuit
     preparation = report.get("preparation") or {}
     lines = [
         f"Collecte du {started}" if started else "Collecte nocturne",
@@ -78,6 +109,7 @@ def build_report_email(report: Mapping[str, Any]) -> tuple[str, str]:
     ]
     if report.get("vocabulary_size"):
         lines.append(f"- vocabulaire des titres : {report['vocabulary_size']} mot(s) reconnus par la recherche")
+    # Détail par source, y compris les sources non lancées ou coupées
     lines += ["", "Sources"]
     for row in report.get("source_rows") or []:
         lines.append(f"- {row['source_id']} : {row['status']}, {row['events_kept']} événement(s), {row['attempts']} essai(s)")
@@ -88,11 +120,13 @@ def build_report_email(report: Mapping[str, Any]) -> tuple[str, str]:
     if disabled:
         lines.append(f"- coupées sur ce serveur (SOURCES_DESACTIVEES) : {', '.join(disabled)}")
 
+    # Alertes et propositions de l'agent
     lines += ["", "Alertes"]
     lines += [f"- {alert}" for alert in alerts] or ["- aucune"]
 
     lines += proposal_lines(report)
 
+    # Retours des visiteurs et qualité jugée par Mistral
     ratings = report.get("ratings") or {}
     if ratings.get("total"):
         average = ratings.get("average_24h")
@@ -107,6 +141,7 @@ def build_report_email(report: Mapping[str, Any]) -> tuple[str, str]:
         lines += ["", heading]
         lines += [f"- {problem}" for problem in quality.get("problems", [])]
 
+    # Bilans du lundi : recherche, apprentissage, pouces bas
     lines += search_report_lines(report.get("search_report") or {})
     learning = report.get("search_learning") or []
     if learning:
@@ -118,6 +153,7 @@ def build_report_email(report: Mapping[str, Any]) -> tuple[str, str]:
 
     lines += drift_lines(report.get("drift_report") or {})
 
+    # Couverture des 7 prochains jours, coût, purge et références du suivi
     coverage = report.get("coverage") or {}
     if coverage:
         lines += ["", "Sorties des 7 prochains jours (famille / soirée)"]
@@ -142,9 +178,25 @@ def build_report_email(report: Mapping[str, Any]) -> tuple[str, str]:
 
 
 def search_report_lines(gaps: Mapping[str, Any]) -> list[str]:
-    """Bilan hebdomadaire de la recherche : ce que les utilisateurs ont cherché
-    sans trouver. Des pistes à examiner, rien n'est changé automatiquement."""
+    """Rédiger le bilan hebdomadaire de la recherche pour le mail.
 
+    Bilan hebdomadaire de la recherche : ce que les utilisateurs ont cherché
+    sans trouver. Des pistes à examiner, rien n'est changé automatiquement.
+
+    Parameters
+    ----------
+    gaps : Mapping[str, Any]
+        Bilan de `fetch_search_gaps` (`questions`, `not_exact`, `no_answer`,
+        `unknown_words`, `unanswered`, `days`).
+
+    Returns
+    -------
+    list[str]
+        Les lignes du bilan (commençant par une ligne vide), ou une liste vide
+        s'il n'y a eu aucune question.
+    """
+
+    # Chiffres globaux de la période
     if not gaps or not gaps.get("questions"):
         return []
     total, not_exact = int(gaps["questions"]), int(gaps.get("not_exact", 0))
@@ -154,6 +206,7 @@ def search_report_lines(gaps: Mapping[str, Any]) -> list[str]:
              f"- sans aucune proposition sur le sujet : {gaps.get('no_answer', 0)}"]
     from agent.search_learning import subject_words
 
+    # Mots inconnus de la base (sans les mots vides), puis questions sans réponse exacte
     words = subject_words(gaps.get("unknown_words") or [])
     if words:
         lines.append("- mots cherchés qui ne figurent dans aucun titre (une source, un partenaire "
@@ -170,6 +223,17 @@ def send_report_by_email(report: Mapping[str, Any]) -> bool:
     """Envoie le bilan si l'envoi est configuré et voulu. Renvoie True si envoyé.
 
     Un échec d'envoi est journalisé mais ne fait jamais échouer la collecte.
+
+    Parameters
+    ----------
+    report : Mapping[str, Any]
+        Le bilan de la nuit.
+
+    Returns
+    -------
+    bool
+        Vrai si le mail est parti ; faux s'il n'est pas configuré, pas voulu,
+        ou si l'envoi a échoué.
     """
 
     settings = EmailSettings.from_env()
@@ -194,8 +258,19 @@ def proposal_lines(report: Mapping[str, Any]) -> list[str]:
     Avec les pull requests (16/10/2026, agent/pull_requests.py) : le lien de
     chaque PR à relire, et les décisions prises depuis la veille. Sans jeton
     GitHub : la commande à lancer, comme avant.
+
+    Parameters
+    ----------
+    report : Mapping[str, Any]
+        Le bilan de la nuit (`proposals`, `pull_requests`).
+
+    Returns
+    -------
+    list[str]
+        Les lignes de la section, ou une liste vide s'il n'y a rien à décider.
     """
 
+    # Sans pull requests : la liste des propositions et la commande à lancer
     pulls = report.get("pull_requests") or {}
     proposals = report.get("proposals") or []
     command_line = ["", "Propositions de l'agent (à valider)",
@@ -207,6 +282,7 @@ def proposal_lines(report: Mapping[str, Any]) -> list[str]:
     # GitHub injoignable cette nuit : les propositions restent listées, avec la commande.
     if proposals and not (pulls.get("en_attente") or pulls.get("a_la_main")):
         lines += command_line
+    # PR à relire (les nouvelles de la nuit sont signalées)
     waiting = pulls.get("en_attente") or []
     opened = {item["proposal_id"] for item in pulls.get("ouvertes") or []}
     if waiting:
@@ -215,6 +291,7 @@ def proposal_lines(report: Mapping[str, Any]) -> list[str]:
             new = " (nouvelle)" if item["proposal_id"] in opened else ""
             lines += [f"- {item['title']}{new}", f"  {item['url']}"]
         lines.append("  Merge pour accepter, Close pour refuser : la décision est notée la nuit suivante.")
+    # Décisions prises, propositions sans PR possible, erreurs GitHub
     decided = pulls.get("decisions") or []
     if decided:
         lines += ["", "Décisions prises sur GitHub depuis la dernière nuit"]
@@ -232,13 +309,26 @@ def proposal_lines(report: Mapping[str, Any]) -> list[str]:
 
 
 def feedback_lines(report: Mapping[str, Any]) -> list[str]:
-    """Le lundi : pouces bas rangés par cause, commentaires refusés à revoir (16/10/2026)."""
+    """Le lundi : pouces bas rangés par cause, commentaires refusés à revoir (16/10/2026).
 
+    Parameters
+    ----------
+    report : Mapping[str, Any]
+        Le bilan de la nuit (`feedback_learning`, `refused_comments`).
+
+    Returns
+    -------
+    list[str]
+        Les lignes des deux sections, ou une liste vide si rien n'est à signaler.
+    """
+
+    # Pouces bas : résumé par cause, puis le détail
     lines: list[str] = []
     thumbs = report.get("feedback_learning") or []
     if thumbs:
         lines += ["", "Pouces bas de la semaine (cause lue par Mistral)", f"- {thumbs[0]}"]
         lines += [f"  {note}" for note in thumbs[1:]]
+    # Commentaires refusés par la modération, raccourcis, avec la commande pour les publier
     refused = report.get("refused_comments") or []
     if refused:
         lines += ["", f"Commentaires refusés par la modération (7 jours) : {len(refused)}"]
@@ -253,7 +343,18 @@ def feedback_lines(report: Mapping[str, Any]) -> list[str]:
 
 
 def describe_action(proposal: Mapping[str, Any]) -> str:
-    """Une proposition en une ligne (mail de bilan et `agent.proposals`)."""
+    """Une proposition en une ligne (mail de bilan et `agent.proposals`).
+
+    Parameters
+    ----------
+    proposal : Mapping[str, Any]
+        La proposition (`source_id`, `action` en dictionnaire ou en JSON).
+
+    Returns
+    -------
+    str
+        La description selon le type d'action ; par défaut, un remplacement d'adresse.
+    """
 
     action = proposal.get("action") or {}
     if isinstance(action, str):

@@ -29,7 +29,81 @@ REQUIRED_EVENT_FIELDS: tuple[str, ...] = ("title", "start_at", "url")
 
 @dataclass(slots=True)
 class Event:
-    """Un événement (concert, spectacle, exposition...) prêt à être stocké."""
+    """Un événement (concert, spectacle, exposition...) prêt à être stocké.
+
+    Attributes
+    ----------
+    event_id : str
+        Identifiant stable tiré de la clé de déduplication (16 caractères hexadécimaux).
+    source : str
+        Nom de la source (« openagenda », « datatourisme », un partenaire...).
+    source_event_id : str
+        Identifiant de l'événement chez la source.
+    title : str
+        Titre de l'événement.
+    description : str
+        Texte de présentation, nettoyé.
+    category : str
+        Catégorie d'origine, telle que donnée par la source.
+    keywords : list[str]
+        Mots-clés de la source.
+    language : str
+        Langue du texte. Par défaut « fr ».
+    start_at : str
+        Début, chaîne ISO 8601 avec fuseau.
+    end_at : str
+        Fin, chaîne ISO 8601 avec fuseau (vide si inconnue).
+    time_known : bool
+        Faux quand la source ne donne qu'un jour sans heure.
+    venue_name : str
+        Nom du lieu.
+    address : str
+        Adresse postale.
+    city : str
+        Commune.
+    postal_code : str
+        Code postal.
+    latitude : float or None
+        Latitude du lieu.
+    longitude : float or None
+        Longitude du lieu.
+    price_text : str
+        Tarif tel qu'écrit par la source.
+    price_min : float or None
+        Prix le plus bas, en euros.
+    price_max : float or None
+        Prix le plus haut, en euros.
+    is_free : bool or None
+        Gratuité (None si inconnue).
+    status : str
+        Statut : programme, complet, annule, reporte... Par défaut « programme ».
+    attendance : str
+        Présence : sur_place, en_ligne ou mixte. Par défaut « sur_place ».
+    age_min : int or None
+        Âge minimal conseillé.
+    age_max : int or None
+        Âge maximal conseillé.
+    audiences : list[str]
+        Publics visés (« famille », « soiree », « ados », « seniors »).
+    accessibility : list[str]
+        Handicaps pris en charge (« moteur », « visuel »...).
+    partner_id : int or None
+        Identifiant du partenaire, s'il y en a un.
+    is_sponsored : bool
+        Vrai si l'événement est mis en avant (toujours signalé comme tel).
+    partner_info : dict[str, Any]
+        Informations sur le fichier partenaire d'origine ; pas une colonne de `events`.
+    url : str
+        Lien vers la page de l'événement.
+    image_url : str
+        Lien vers une image.
+    extracted_at : str
+        Date de l'extraction.
+    source_credit : str
+        Producteur de la fiche, à citer avec la source (ex. « ADT34 »).
+    source_updated_at : str
+        Date de mise à jour de la fiche chez la source.
+    """
 
     # Identité
     event_id: str
@@ -90,13 +164,30 @@ class Event:
     source_updated_at: str = ""
 
     def to_dict(self) -> dict[str, Any]:
-        """Convertit l'événement en dictionnaire sérialisable en JSON."""
+        """Convertit l'événement en dictionnaire sérialisable en JSON.
+
+        Returns
+        -------
+        dict[str, Any]
+            Tous les champs de l'événement.
+        """
 
         return asdict(self)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Event:
-        """Recrée un événement à partir d'un dictionnaire (champs inconnus ignorés)."""
+        """Recrée un événement à partir d'un dictionnaire (champs inconnus ignorés).
+
+        Parameters
+        ----------
+        data : dict[str, Any]
+            Les champs de l'événement, par exemple issus de `to_dict`.
+
+        Returns
+        -------
+        Event
+            L'événement reconstruit.
+        """
 
         known = {name for name in cls.__dataclass_fields__}
         return cls(**{key: value for key, value in data.items() if key in known})

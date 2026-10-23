@@ -102,7 +102,16 @@ TOKEN_USAGE: dict[str, dict[str, int]] = {}
 
 
 def record_token_usage(model: str, usage: Mapping[str, int]) -> None:
-    """Ajoute la consommation d'un appel au relevé en cours."""
+    """Ajoute la consommation d'un appel au relevé en cours.
+
+    Parameters
+    ----------
+    model : str
+        Nom du modèle Mistral appelé (clé du relevé).
+    usage : Mapping[str, int]
+        Consommation de l'appel, avec les clés `input_tokens` et `output_tokens`
+        (une clé absente compte pour 0).
+    """
 
     slot = TOKEN_USAGE.setdefault(model, {"input": 0, "output": 0})
     slot["input"] += int(usage.get("input_tokens", 0))
@@ -110,7 +119,13 @@ def record_token_usage(model: str, usage: Mapping[str, int]) -> None:
 
 
 def take_token_usage() -> dict[str, dict[str, int]]:
-    """Rend le relevé depuis le dernier appel, puis le remet à zéro."""
+    """Rend le relevé depuis le dernier appel, puis le remet à zéro.
+
+    Returns
+    -------
+    dict[str, dict[str, int]]
+        Copie du relevé : pour chaque modèle, les tokens `input` et `output`.
+    """
 
     usage = {model: dict(tokens) for model, tokens in TOKEN_USAGE.items()}
     TOKEN_USAGE.clear()
@@ -128,7 +143,26 @@ def take_token_usage() -> dict[str, dict[str, int]]:
     reraise=True,
 )
 def fetch_document(url: str) -> bytes:
-    """Télécharge le PDF (trois essais en cas de coupure réseau)."""
+    """Télécharge le PDF (trois essais en cas de coupure réseau).
+
+    Parameters
+    ----------
+    url : str
+        Adresse du PDF, lue dans `config/sources.yaml`.
+
+    Returns
+    -------
+    bytes
+        Contenu du PDF (commence par `%PDF`).
+
+    Raises
+    ------
+    ValueError
+        Si le PDF est introuvable (404) ou si le contenu reçu n'est pas un PDF
+        (page web servie à la place, par exemple par une protection anti-robots).
+    httpx.HTTPStatusError
+        Pour toute autre réponse HTTP en erreur.
+    """
 
     response = httpx.get(url, headers=dict(HTTP_HEADERS), timeout=REQUEST_TIMEOUT_S, follow_redirects=True)
     if response.status_code == 404:
@@ -157,7 +191,18 @@ def fetch_document(url: str) -> bytes:
 
 
 def extract_pages_text(pdf_bytes: bytes) -> list[str]:
-    """Texte de chaque page, extrait localement (gratuit, sans OCR)."""
+    """Texte de chaque page, extrait localement (gratuit, sans OCR).
+
+    Parameters
+    ----------
+    pdf_bytes : bytes
+        Contenu du PDF.
+
+    Returns
+    -------
+    list[str]
+        Texte de chaque page, dans l'ordre ; chaîne vide pour une page sans texte.
+    """
 
     from pypdf import PdfReader
 
@@ -171,6 +216,19 @@ def parse_page_selection(selection: Any, page_count: int) -> list[int]:
     Sans sélection : toutes les pages. Le sommaire, l'édito et les pages
     pratiques (horaires d'ouverture) n'apportent pas d'événement mais coûtent
     des tokens et risquent d'être lus comme tels.
+
+    Parameters
+    ----------
+    selection : Any
+        Valeur de `pages` dans la configuration : plages et numéros séparés par
+        des virgules (« 4-59,63 »). Vide : toutes les pages.
+    page_count : int
+        Nombre de pages du PDF ; les numéros hors du document sont ignorés.
+
+    Returns
+    -------
+    list[int]
+        Numéros de pages retenus, triés et sans doublon.
     """
 
     if not selection:
@@ -195,6 +253,24 @@ def chunk_pages(
     ensuite la page d'un événement. `overlap` pages sont répétées d'un paquet
     au suivant : une liste de séances qui continue sur la page d'après garde
     ainsi son titre (les doublons sont retirés à la lecture).
+
+    Parameters
+    ----------
+    pages : list[str]
+        Texte de chaque page du PDF.
+    pages_per_chunk : int
+        Nombre de pages par paquet.
+    selected : list[int] | None
+        Numéros des pages à lire (à partir de 1). Par défaut toutes ; les pages
+        sans texte sont toujours écartées.
+    overlap : int
+        Nombre de pages répétées d'un paquet au suivant. Par défaut 0.
+
+    Returns
+    -------
+    list[tuple[int, str]]
+        Pour chaque paquet, le numéro de sa première page et son texte, tronqué
+        à `MAX_CHUNK_CHARS` caractères.
     """
 
     numbers = [n for n in (selected or range(1, len(pages) + 1)) if pages[n - 1]]
@@ -213,7 +289,24 @@ def chunk_pages(
 # ---------------------------------------------------------------------------
 
 def call_mistral(system_prompt: str, text: str) -> tuple[str, dict[str, int]]:
-    """Appelle Mistral en mode JSON. Renvoie (réponse, tokens consommés)."""
+    """Appelle Mistral en mode JSON. Renvoie (réponse, tokens consommés).
+
+    Le modèle est lu dans la variable d'environnement `DOCUMENT_EXTRACTION_MODEL`
+    (par défaut `mistral-small-latest`), avec une température nulle.
+
+    Parameters
+    ----------
+    system_prompt : str
+        Consigne d'extraction (message système).
+    text : str
+        Texte du paquet de pages à lire.
+
+    Returns
+    -------
+    tuple[str, dict[str, int]]
+        La réponse brute (JSON en texte) et la consommation, avec les clés
+        `input_tokens` et `output_tokens`.
+    """
 
     from langchain_mistralai import ChatMistralAI
 
@@ -228,7 +321,18 @@ def call_mistral(system_prompt: str, text: str) -> tuple[str, dict[str, int]]:
 
 
 def is_rate_limited(error: Exception) -> bool:
-    """Vrai si Mistral a refusé l'appel pour cause de quota (HTTP 429)."""
+    """Vrai si Mistral a refusé l'appel pour cause de quota (HTTP 429).
+
+    Parameters
+    ----------
+    error : Exception
+        Erreur levée par l'appel ; seul son message est examiné.
+
+    Returns
+    -------
+    bool
+        Vrai si le message mentionne « 429 » ou « rate limit ».
+    """
 
     return "429" in str(error) or "rate limit" in str(error).lower()
 
@@ -239,7 +343,32 @@ def call_with_rate_limit(
     text: str,
     sleep: Callable[[float], None] = time.sleep,
 ) -> tuple[str, dict[str, int]]:
-    """Appelle Mistral ; en cas de 429, attend (10 s, 20 s, 40 s...) et réessaie."""
+    """Appelle Mistral ; en cas de 429, attend (10 s, 20 s, 40 s...) et réessaie.
+
+    Au plus `RATE_LIMIT_ATTEMPTS` essais ; toute autre erreur remonte aussitôt.
+
+    Parameters
+    ----------
+    llm : LlmCall
+        Fonction d'appel au modèle (consigne, texte) -> (réponse, tokens).
+    prompt : str
+        Consigne d'extraction.
+    text : str
+        Texte du paquet de pages.
+    sleep : Callable[[float], None]
+        Fonction d'attente, remplaçable dans les tests. Par défaut `time.sleep`.
+
+    Returns
+    -------
+    tuple[str, dict[str, int]]
+        La réponse du modèle et sa consommation de tokens.
+
+    Raises
+    ------
+    Exception
+        L'erreur de l'appel si ce n'est pas un quota, ou si le dernier essai
+        échoue encore.
+    """
 
     wait = RATE_LIMIT_FIRST_WAIT_S
     for attempt in range(1, RATE_LIMIT_ATTEMPTS + 1):
@@ -265,6 +394,20 @@ def cache_path(pdf_bytes: bytes, prompt: str = "", chunking: str = "") -> Path:
     lues, taille, recouvrement) entrent dans l'empreinte : changer la période
     dans `sources.yaml` ou la consigne sans toucher à `PROMPT_VERSION` ne
     réutilise plus une extraction faite avec d'autres réglages (15/10/2026).
+
+    Parameters
+    ----------
+    pdf_bytes : bytes
+        Contenu du PDF.
+    prompt : str
+        Consigne complète envoyée à Mistral. Par défaut vide.
+    chunking : str
+        Description du découpage (pages lues, taille, recouvrement). Par défaut vide.
+
+    Returns
+    -------
+    Path
+        Chemin du fichier JSON de cache dans `CACHE_DIR`.
     """
 
     digest = hashlib.sha256(pdf_bytes).hexdigest()[:16]
@@ -274,7 +417,19 @@ def cache_path(pdf_bytes: bytes, prompt: str = "", chunking: str = "") -> Path:
 
 
 def load_cache(path: Path) -> dict[str, dict[str, Any]]:
-    """Paquets en cache, par première page. Un cache illisible (écriture coupée) est ignoré."""
+    """Paquets en cache, par première page. Un cache illisible (écriture coupée) est ignoré.
+
+    Parameters
+    ----------
+    path : Path
+        Fichier de cache (voir `cache_path`).
+
+    Returns
+    -------
+    dict[str, dict[str, Any]]
+        Paquets en cache, indexés par le numéro (en texte) de leur première page ;
+        vide si le fichier n'existe pas ou est illisible.
+    """
 
     if not path.exists():
         return {}
@@ -287,7 +442,15 @@ def load_cache(path: Path) -> dict[str, dict[str, Any]]:
 
 
 def save_cache(path: Path, cached: Mapping[str, Mapping[str, Any]]) -> None:
-    """Écrit le cache en entier, de façon atomique (fichier temporaire puis remplacement)."""
+    """Écrit le cache en entier, de façon atomique (fichier temporaire puis remplacement).
+
+    Parameters
+    ----------
+    path : Path
+        Fichier de cache à écrire ; son dossier est créé au besoin.
+    cached : Mapping[str, Mapping[str, Any]]
+        Paquets à enregistrer, indexés par première page.
+    """
 
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(".tmp")
@@ -313,8 +476,30 @@ def read_document(
     première version mettait aussi en cache les paquets en échec, d'où un
     document « vide » pour toujours.) Si aucun paquet n'a pu être lu, la
     source est déclarée en échec.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Entrée de `document_sources` (période, pages, taille des paquets...).
+    pdf_bytes : bytes
+        Contenu du PDF.
+    llm : LlmCall
+        Fonction d'appel au modèle (consigne, texte) -> (réponse, tokens).
+    sleep : Callable[[float], None]
+        Fonction d'attente entre deux appels. Par défaut `time.sleep`.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Un élément par paquet lu (en cache ou nouvellement), dans l'ordre des pages.
+
+    Raises
+    ------
+    RuntimeError
+        Si le document a des paquets mais qu'aucun n'a pu être lu.
     """
 
+    # Préparer la consigne (période comprise) et le découpage en paquets
     period = parse_period(source)
     prompt = EXTRACTION_PROMPT.format(periode=describe_period(period))
     pages_per_chunk = max(parse_non_negative_integer(source.get("pages_per_chunk"), DEFAULT_PAGES_PER_CHUNK), 1)
@@ -323,11 +508,13 @@ def read_document(
     selected = parse_page_selection(source.get("pages"), len(pages))
     chunks = chunk_pages(pages, pages_per_chunk, selected, overlap)
     pause = float(os.getenv("DOCUMENT_CALL_PAUSE_S", DEFAULT_CALL_PAUSE_S))
+    # Charger le cache correspondant exactement à ces réglages
     path = cache_path(pdf_bytes, prompt, f"{source.get('pages', '')}|{pages_per_chunk}|{overlap}")
     cached = load_cache(path)
     if pages and not chunks:
         logger.warning("%s : aucune page avec du texte (PDF scanné ?) ; rien à lire.", source.get("name"))
 
+    # Lire chaque paquet : depuis le cache, sinon par Mistral (cache écrit à chaque succès)
     results, failures, calls, tokens_in, tokens_out = [], 0, 0, 0, 0
     for first_page, text in chunks:
         if str(first_page) in cached:
@@ -355,6 +542,7 @@ def read_document(
         cached[str(first_page)] = chunk
         save_cache(path, cached)
 
+    # Faire le bilan (appels, échecs, tokens) et échouer si rien n'a été lu
     if calls:
         logger.info(
             "%s : %s paquet(s) envoyés à Mistral (%s en échec), %s en cache ; %s tokens en entrée, %s en sortie.",
@@ -368,7 +556,20 @@ def read_document(
 
 
 def page_of(title: str, chunk: Mapping[str, Any]) -> int:
-    """Page où le titre apparaît dans le paquet (sinon la première du paquet)."""
+    """Page où le titre apparaît dans le paquet (sinon la première du paquet).
+
+    Parameters
+    ----------
+    title : str
+        Titre de l'événement.
+    chunk : Mapping[str, Any]
+        Paquet lu, avec son texte balisé « [Page N] » et sa `first_page`.
+
+    Returns
+    -------
+    int
+        Numéro de la page où le titre est retrouvé.
+    """
 
     for block in str(chunk["text"]).split("[Page ")[1:]:
         number, _, text = block.partition("]")
@@ -382,8 +583,22 @@ def iter_document_items(source: Mapping[str, Any], llm: LlmCall | None = None) -
 
     Les événements rejetés par les garde-fous sont renvoyés aussi, avec leur
     motif : le moteur les compte dans les rejets du bilan.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Entrée de `document_sources` (url, période, vacances, `days_forward`...).
+    llm : LlmCall | None
+        Fonction d'appel au modèle. Par défaut `call_mistral`.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Éléments `{"event", "page", "document_url"}` pour les séances retenues, et
+        `{"rejected", "title"}` pour les événements écartés par les garde-fous.
     """
 
+    # Télécharger et lire le document, puis fixer la fenêtre de collecte
     url = normalize_value(source.get("url"))
     pdf_bytes = fetch_document(url)
     chunks = read_document(source, pdf_bytes, llm or call_mistral)
@@ -392,6 +607,7 @@ def iter_document_items(source: Mapping[str, Any], llm: LlmCall | None = None) -
     today = datetime.now(PARIS).date()
     horizon = today + timedelta(days=parse_non_negative_integer(source.get("days_forward"), DEFAULT_DAYS_FORWARD))
 
+    # Valider chaque événement : schéma, titre présent dans la page, période
     items: list[dict[str, Any]] = []
     accepted: list[DocumentEvent] = []
     pages: list[Any] = []
@@ -425,7 +641,20 @@ def iter_document_items(source: Mapping[str, Any], llm: LlmCall | None = None) -
 
 
 def validate_document_item(item: Any, source: Mapping[str, Any]) -> tuple[bool, str]:
-    """Les rejets des garde-fous remontent au moteur avec leur motif."""
+    """Les rejets des garde-fous remontent au moteur avec leur motif.
+
+    Parameters
+    ----------
+    item : Any
+        Élément produit par `iter_document_items`.
+    source : Mapping[str, Any]
+        Source du document (inutilisée, imposée par l'adaptateur).
+
+    Returns
+    -------
+    tuple[bool, str]
+        Vrai et motif vide si l'élément est retenu, sinon faux et le motif du rejet.
+    """
 
     del source
     if not isinstance(item, Mapping):
@@ -436,7 +665,20 @@ def validate_document_item(item: Any, source: Mapping[str, Any]) -> tuple[bool, 
 
 
 def build_document_article(item: Mapping[str, Any], source: Mapping[str, Any]) -> dict[str, Any]:
-    """Transforme un événement validé en « article » du moteur, événement inclus."""
+    """Transforme un événement validé en « article » du moteur, événement inclus.
+
+    Parameters
+    ----------
+    item : Mapping[str, Any]
+        Élément retenu par `iter_document_items` (événement, page, url du PDF).
+    source : Mapping[str, Any]
+        Source du document (nom, rôle, crédit...).
+
+    Returns
+    -------
+    dict[str, Any]
+        Article standard ; l'événement normalisé est dans `metadata["event"]`.
+    """
 
     event = map_document_event(
         item["event"], source, page=item["page"], document_url=item["document_url"],
@@ -468,18 +710,40 @@ DOCUMENT_EXTRACTOR = FileSourceExtractor(adapter=DOCUMENT_ADAPTER, source_type=S
 
 
 def extract_articles_from_sources(sources: list[Mapping[str, Any]]) -> ExtractorResult:
-    """Lit une liste de documents déjà chargée."""
+    """Lit une liste de documents déjà chargée.
+
+    Parameters
+    ----------
+    sources : list[Mapping[str, Any]]
+        Entrées de type `document_sources`.
+
+    Returns
+    -------
+    ExtractorResult
+        Articles extraits, statut et bilan des rejets.
+    """
 
     return extract_file_sources(sources, DOCUMENT_ADAPTER, SOURCE_TYPE_DOCUMENT)
 
 
 def extract_all_articles() -> ExtractorResult:
-    """Lit tous les documents de `document_sources`."""
+    """Lit tous les documents de `document_sources`.
+
+    Returns
+    -------
+    ExtractorResult
+        Articles extraits, statut et bilan des rejets.
+    """
 
     return DOCUMENT_EXTRACTOR.run()
 
 
 def main() -> None:
+    """Point d'entrée en ligne de commande.
+
+    Avec `--texte FICHIER`, écrit le texte extrait du premier document sans
+    appeler Mistral ; sinon lance l'extraction complète et affiche le bilan.
+    """
     parser = argparse.ArgumentParser(description="Programmes PDF lus par Mistral.")
     parser.add_argument("--texte", type=Path, help="N'appelle pas Mistral : écrit le texte extrait du premier document.")
     args = parser.parse_args()

@@ -25,7 +25,17 @@ router = APIRouter(prefix="/events", tags=["notes des clients"], dependencies=[D
 
 
 class RatingRequest(BaseModel):
-    """Note envoyée par un service partenaire (site, application)."""
+    """Note envoyée par un service partenaire (site, application).
+
+    Attributes
+    ----------
+    session_id : str
+        Identifiant de session du client (8 caractères au moins), anonymisé avant stockage.
+    stars : int
+        Nombre d'étoiles, de 1 à 5.
+    comment : str
+        Commentaire facultatif, 300 caractères au plus.
+    """
 
     session_id: str = Field(min_length=8, description="Identifiant de session du client (anonymisé avant stockage)")
     stars: int = Field(ge=1, le=5)
@@ -33,7 +43,13 @@ class RatingRequest(BaseModel):
 
 
 def get_connection() -> Iterator[Any]:
-    """Connexion PostgreSQL pour une requête (validée à la fin, annulée en cas d'erreur)."""
+    """Connexion PostgreSQL pour une requête (validée à la fin, annulée en cas d'erreur).
+
+    Yields
+    ------
+    Any
+        La connexion ouverte, fermée après la réponse.
+    """
 
     from agent.services import connect_postgres
 
@@ -43,7 +59,28 @@ def get_connection() -> Iterator[Any]:
 
 @router.post("/{event_id}/notes", status_code=status.HTTP_201_CREATED)
 def rate_event(event_id: str, payload: RatingRequest, connection: Any = Depends(get_connection)) -> dict[str, Any]:  # noqa: B008
-    """Enregistre ou met à jour la note d'un client sur un événement."""
+    """Enregistre ou met à jour la note d'un client sur un événement.
+
+    Parameters
+    ----------
+    event_id : str
+        Identifiant de l'événement noté.
+    payload : RatingRequest
+        La note : session du client, étoiles, commentaire.
+    connection : Any
+        Connexion PostgreSQL fournie par `get_connection`.
+
+    Returns
+    -------
+    dict[str, Any]
+        Le résultat de `submit_rating` (statut de l'enregistrement).
+
+    Raises
+    ------
+    HTTPException
+        Code 409 si la notation n'est pas ouverte (avant le début, ou plus de
+        7 jours après la fin).
+    """
 
     from src.event.event_ratings import submit_rating
 
@@ -58,7 +95,20 @@ def rate_event(event_id: str, payload: RatingRequest, connection: Any = Depends(
 
 @router.get("/{event_id}/notes")
 def event_ratings(event_id: str, connection: Any = Depends(get_connection)) -> dict[str, Any]:  # noqa: B008
-    """Moyenne, nombre de notes et commentaires publiés d'un événement."""
+    """Renvoie la moyenne, le nombre de notes et les commentaires publiés d'un événement.
+
+    Parameters
+    ----------
+    event_id : str
+        Identifiant de l'événement.
+    connection : Any
+        Connexion PostgreSQL fournie par `get_connection`.
+
+    Returns
+    -------
+    dict[str, Any]
+        `event_id` suivi du résumé calculé par `summarize_ratings`.
+    """
 
     from src.event import event_repository as repository
     from src.event.event_ratings import summarize_ratings

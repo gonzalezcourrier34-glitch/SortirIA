@@ -58,7 +58,23 @@ def call_api(api_key: str, params: dict[str, Any], url: str | None = None) -> tu
     """Appelle l'API. Renvoie (code HTTP, JSON) ou (code HTTP, message d'erreur).
 
     `url` sert à suivre les liens `meta.next` (qui contiennent déjà leurs
-    paramètres) ; sinon on appelle API_URL avec `params`.
+    paramètres) ; sinon on appelle API_URL avec `params`. Une erreur HTTP ne lève
+    pas d'exception : son code et le début du message (500 caractères) sont renvoyés.
+
+    Parameters
+    ----------
+    api_key : str
+        Clé DATAtourisme, envoyée dans l'en-tête `X-API-Key`.
+    params : dict[str, Any]
+        Paramètres de requête, ignorés si `url` est fourni.
+    url : str | None
+        Adresse complète à appeler (lien `meta.next`). Par défaut None : on
+        construit l'adresse à partir de API_URL et de `params`.
+
+    Returns
+    -------
+    tuple[int, dict[str, Any] | str]
+        Le code HTTP, puis le JSON décodé (succès) ou le texte de l'erreur.
     """
 
     full_url = url or f"{API_URL}?{urllib.parse.urlencode(params)}"
@@ -74,8 +90,26 @@ def call_api(api_key: str, params: dict[str, Any], url: str | None = None) -> tu
 
 
 def explore_area(api_key: str, area: dict[str, float]) -> tuple[int, list[dict[str, Any]], int]:
-    """Lit les événements d'une zone. Renvoie (total annoncé, objets lus, code HTTP)."""
+    """Lit les événements d'une zone. Renvoie (total annoncé, objets lus, code HTTP).
 
+    Suit la pagination `meta.next` jusqu'à MAX_PAGES_PER_AREA pages ; une erreur sur
+    une page suivante arrête la lecture sans perdre ce qui a déjà été lu.
+
+    Parameters
+    ----------
+    api_key : str
+        Clé DATAtourisme.
+    area : dict[str, float]
+        La zone : `latitude`, `longitude` et `radius_km` de son cercle.
+
+    Returns
+    -------
+    tuple[int, list[dict[str, Any]], int]
+        Le total annoncé par l'API, les événements bruts lus, et le code HTTP de
+        la première page (0 et liste vide si elle a échoué).
+    """
+
+    # Interroger la première page autour du centre de la zone
     params = {
         "geo_distance": f"{area['latitude']},{area['longitude']},{area['radius_km']:g}km",
         "page_size": PAGE_SIZE,
@@ -85,6 +119,7 @@ def explore_area(api_key: str, area: dict[str, float]) -> tuple[int, list[dict[s
     if status != 200 or not isinstance(data, dict):
         print(f"Erreur {status} : {data}")
         return 0, [], status
+    # Suivre les pages suivantes, dans la limite fixée pour l'exploration
     objects = list(data.get("objects") or [])
     total = int((data.get("meta") or {}).get("total") or 0)
     next_url = (data.get("meta") or {}).get("next")
@@ -100,6 +135,18 @@ def explore_area(api_key: str, area: dict[str, float]) -> tuple[int, list[dict[s
 
 
 def main() -> int:
+    """Explore l'API sur toutes les zones et enregistre la synthèse.
+
+    Lit les arguments `--json` et `--echantillon`, interroge chaque zone, calcule la
+    fréquence des champs, fait les deux essais non documentés, puis affiche un
+    résumé et l'écrit en JSON si demandé.
+
+    Returns
+    -------
+    int
+        Code de sortie du script : 0 si tout s'est bien passé, 1 si la clé manque.
+    """
+    # Lire les arguments et la clé d'API
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--json", type=Path, help="Enregistre le résultat dans ce fichier JSON.")
     parser.add_argument("--echantillon", type=int, default=5, help="Nombre d'événements bruts à garder.")
@@ -111,6 +158,7 @@ def main() -> int:
         print("DATATOURISME_API_KEY absente du fichier .env.")
         return 1
 
+    # Lire les événements de chaque zone, dédoublonnés par identifiant
     areas = get_areas(OPENAGENDA_EXTRACTOR.source)  # mêmes zones qu'OpenAgenda
     names = [area.get("name", f"zone {i}") for i, area in enumerate(OPENAGENDA_EXTRACTOR.source.get("areas") or [])]
 
@@ -123,6 +171,7 @@ def main() -> int:
         for obj in objects:
             all_objects[str(obj.get("uuid") or obj.get("uri") or len(all_objects))] = obj
 
+    # Mesurer la fréquence de chaque champ sur l'ensemble des événements
     paths: Counter[str] = Counter()
     for obj in all_objects.values():
         paths.update(set(field_paths(obj)))
@@ -142,6 +191,7 @@ def main() -> int:
         "total": (data.get("meta") or {}).get("total") if isinstance(data, dict) else data,
     }
 
+    # Assembler la synthèse, l'afficher (sans les parties longues) et l'enregistrer
     summary = {
         "api": API_URL,
         "zones": by_area,

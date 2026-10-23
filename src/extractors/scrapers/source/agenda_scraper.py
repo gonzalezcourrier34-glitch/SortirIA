@@ -63,7 +63,21 @@ DEFAULT_MAX_PAGES = 10
 # ---------------------------------------------------------------------------
 
 def page_urls(source: Mapping[str, Any]) -> list[str]:
-    """Pages à lire : `start_urls`, puis `page_url_template` (« .../page/{n}/ ») de 2 à `max_pages`."""
+    """Pages à lire : `start_urls`, puis `page_url_template` de 2 à `max_pages`.
+
+    Le modèle de pagination a la forme « .../page/{n}/ ».
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Configuration de la source (`start_urls`, `page_url_template`,
+        `max_pages`, par défaut `DEFAULT_MAX_PAGES`, soit 10).
+
+    Returns
+    -------
+    list[str]
+        Les URL des pages, dans l'ordre de lecture.
+    """
 
     urls = [str(url) for url in source.get("start_urls") or []]
     template = normalize_value(source.get("page_url_template"))
@@ -74,10 +88,27 @@ def page_urls(source: Mapping[str, Any]) -> list[str]:
 
 
 def iter_agenda_cards(source: Mapping[str, Any]) -> Iterator[dict[str, str]]:
-    """Fiches de toutes les pages, page par page ; s'arrête à la première page vide ou absente.
+    """Fiches de toutes les pages, page par page.
 
-    Le robots.txt et la pause entre deux pages sont gérés par `get_html`
-    (CheckIt.AI) d'après `respect_robots_txt` et `request_delay_seconds`.
+    S'arrête à la première page vide ou absente. Le robots.txt et la pause
+    entre deux pages sont gérés par `get_html` (CheckIt.AI) d'après
+    `respect_robots_txt` et `request_delay_seconds`.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Configuration de la source (pages, sélecteurs, options HTTP).
+
+    Yields
+    ------
+    dict[str, str]
+        Une fiche d'événement brute lue par `parse_agenda_page`.
+
+    Raises
+    ------
+    ScraperPageError
+        Si la première page ne peut pas être lue (vraie panne) ; pour les
+        pages suivantes, l'erreur marque simplement la fin de la pagination.
     """
 
     respect_robots, delay = get_scraper_http_options(source)
@@ -103,7 +134,24 @@ def iter_agenda_cards(source: Mapping[str, Any]) -> Iterator[dict[str, str]]:
 # ---------------------------------------------------------------------------
 
 def map_card(card: Mapping[str, Any], source: Mapping[str, Any]):
-    """Fiche -> (Event | None, motif), dans la fenêtre de collecte de la source."""
+    """Fiche -> (Event | None, motif), dans la fenêtre de collecte de la source.
+
+    La fenêtre va d'aujourd'hui (heure de Paris) à `days_forward` jours
+    (par défaut `DEFAULT_DAYS_FORWARD`, soit 60).
+
+    Parameters
+    ----------
+    card : Mapping[str, Any]
+        Fiche brute lue sur la page.
+    source : Mapping[str, Any]
+        Configuration de la source.
+
+    Returns
+    -------
+    tuple[Event | None, str]
+        L'événement construit par `map_agenda_card`, ou `None` avec le motif
+        du refus.
+    """
 
     now = datetime.now(PARIS)
     horizon = now.date() + timedelta(days=parse_non_negative_integer(source.get("days_forward"), DEFAULT_DAYS_FORWARD))
@@ -111,7 +159,23 @@ def map_card(card: Mapping[str, Any], source: Mapping[str, Any]):
 
 
 def validate_agenda_card(card: Any, source: Mapping[str, Any]) -> tuple[bool, str]:
-    """Rejette les fiches sans titre, sans date... ; « hors_fenetre » pour le passé ou le lointain."""
+    """Rejette les fiches sans titre, sans date...
+
+    Le motif est « hors_fenetre » pour le passé ou le lointain quand
+    `map_agenda_card` n'en donne pas d'autre.
+
+    Parameters
+    ----------
+    card : Any
+        Élément produit par `iter_agenda_cards`.
+    source : Mapping[str, Any]
+        Configuration de la source.
+
+    Returns
+    -------
+    tuple[bool, str]
+        Validité de la fiche et motif du rejet le cas échéant.
+    """
 
     if not isinstance(card, Mapping):
         return False, "fiche_invalide"
@@ -122,7 +186,24 @@ def validate_agenda_card(card: Any, source: Mapping[str, Any]) -> tuple[bool, st
 
 
 def build_agenda_article(card: Mapping[str, Any], source: Mapping[str, Any]) -> dict[str, Any]:
-    """Transforme une fiche validée en « article » du moteur, événement inclus."""
+    """Transforme une fiche validée en « article » du moteur, événement inclus.
+
+    L'événement complet est rangé dans `metadata["event"]` ; aucune image
+    n'est reprise.
+
+    Parameters
+    ----------
+    card : Mapping[str, Any]
+        Fiche déjà validée par `validate_agenda_card`.
+    source : Mapping[str, Any]
+        Configuration de la source (nom, rôle, fenêtre).
+
+    Returns
+    -------
+    dict[str, Any]
+        L'article standard, ou un dictionnaire vide si la fiche ne donne plus
+        d'événement.
+    """
 
     event, _ = map_card(card, source)
     if event is None:
@@ -156,23 +237,47 @@ AGENDA_ADAPTER = ScraperAdapter(
 # ---------------------------------------------------------------------------
 
 def load_agenda_sources() -> list[dict[str, Any]]:
-    """Sources actives de `scraper_sources` (celles en attente d'accord sont `enabled: false`)."""
+    """Sources actives de `scraper_sources`.
+
+    Celles en attente d'accord sont `enabled: false` et ne sont pas renvoyées.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        La configuration de chaque source scraper active.
+    """
 
     registry = load_source_registry(SOURCES_FILE, require_secrets=False)
     return [source.to_dict() for source in registry.by_type(SOURCE_TYPE_SCRAPER) if source.enabled]
 
 
 def extract_agenda_sources(sources: Sequence[Mapping[str, Any]]) -> ExtractorResult:
-    """Lit chaque site avec le moteur scraper ; un site en panne n'arrête pas les autres."""
+    """Lit chaque site avec le moteur scraper ; un site en panne n'arrête pas les autres.
 
+    Parameters
+    ----------
+    sources : Sequence[Mapping[str, Any]]
+        Configurations des sites à lire.
+
+    Returns
+    -------
+    ExtractorResult
+        Le résultat cumulé : partiel si au moins un site a échoué mais que des
+        événements ont été lus, échec s'il n'y a que des pannes, vide ou
+        succès sinon.
+    """
+
+    # Lire chaque site et cumuler ses résultats
     batch = FileBatchContext()
     for source in sources:
         batch.add_result(extract_scraper_source(source, AGENDA_ADAPTER))
+    # Déduire le statut global des échecs et des événements obtenus
     failed = batch.statuses[EXTRACTOR_STATUS_FAILED]
     if failed:
         status = EXTRACTOR_STATUS_PARTIAL_SUCCESS if batch.articles else EXTRACTOR_STATUS_FAILED
     else:
         status = EXTRACTOR_STATUS_SUCCESS if batch.articles else EXTRACTOR_STATUS_EMPTY
+    # Assembler le résultat commun avec les compteurs cumulés
     return ExtractorResult(
         name=AGENDA_ADAPTER.default_name,
         source_type=SOURCE_TYPE_SCRAPER,
@@ -188,7 +293,13 @@ def extract_agenda_sources(sources: Sequence[Mapping[str, Any]]) -> ExtractorRes
 
 
 def extract_all_articles() -> ExtractorResult:
-    """Point d'entrée du registre : tous les sites autorisés."""
+    """Point d'entrée du registre : tous les sites autorisés.
+
+    Returns
+    -------
+    ExtractorResult
+        Le résultat de l'extraction de toutes les sources actives.
+    """
 
     return execute_configured_sources_extractor(
         extractor_name=AGENDA_ADAPTER.default_name,
@@ -203,7 +314,24 @@ def extract_all_articles() -> ExtractorResult:
 # ---------------------------------------------------------------------------
 
 def check_saved_page(path: Path, source: Mapping[str, Any]) -> str:
-    """Rapport sur une page enregistrée depuis le navigateur (aucune requête au site)."""
+    """Rapport sur une page enregistrée depuis le navigateur (aucune requête au site).
+
+    Sert à mettre au point les sélecteurs CSS d'une source avant d'avoir
+    l'accord de l'éditeur.
+
+    Parameters
+    ----------
+    path : Path
+        Fichier HTML enregistré.
+    source : Mapping[str, Any]
+        Configuration de la source dont on teste les sélecteurs.
+
+    Returns
+    -------
+    str
+        Le rapport : une ligne par fiche, « ok » avec les dates et le titre,
+        ou « -- » avec le motif du refus.
+    """
 
     cards = parse_agenda_page(path.read_text(encoding="utf-8", errors="replace"), source.get("selectors") or {},
                               str((source.get("start_urls") or [""])[0]))
@@ -218,10 +346,18 @@ def check_saved_page(path: Path, source: Mapping[str, Any]) -> str:
 
 
 def main() -> None:
+    """Lance l'essai sur une page enregistrée (`--fichier`) ou l'extraction complète.
+
+    Avec `--fichier`, aucune requête n'est envoyée au site : la page est lue
+    avec les sélecteurs de la source `--source` (par défaut
+    `frontignan_agenda`). Sans option, tous les sites autorisés sont lus.
+    """
+    # Lire les options de la ligne de commande
     parser = argparse.ArgumentParser(description="Agendas en ligne (scraper).")
     parser.add_argument("--fichier", type=Path, help="Page enregistrée à tester (aucune requête au site).")
     parser.add_argument("--source", default="frontignan_agenda", help="source_id dans scraper_sources.")
     args = parser.parse_args()
+    # Mode essai : page enregistrée, sans requête au site
     if args.fichier:
         registry = load_source_registry(SOURCES_FILE, require_secrets=False)
         source = next((s.to_dict() for s in registry.by_type(SOURCE_TYPE_SCRAPER) if s.source_id == args.source), None)
@@ -230,6 +366,7 @@ def main() -> None:
             return
         print(check_saved_page(args.fichier, source))
         return
+    # Mode normal : lire tous les sites autorisés
     result = extract_all_articles()
     print(f"{len(result.articles)} événement(s). Statut : {result.status}. Rejets : {result.rejection_reasons}")
 

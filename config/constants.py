@@ -2,6 +2,10 @@
 
 **Provenance** : repris de CheckIt.AI (projet 12, moteur de collecte), fichier `config/constants.py` (commit 93632c5).
 Modifié pour SortirIA : nom du logger renommé en « sortiria ».
+
+Regroupe les valeurs fixes utilisées par le moteur de collecte : types de sources,
+statuts des extracteurs, motifs d'erreur (RSS, robots.txt, API), paramètres de suivi
+retirés des URL, valeurs considérées comme absentes et format des journaux.
 """
 
 from __future__ import annotations

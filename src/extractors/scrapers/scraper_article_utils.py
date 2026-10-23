@@ -31,7 +31,22 @@ from src.utils.value_utils import normalize_value
 # Extraction des valeurs structurées
 
 def extract_person_name(value: Any) -> str:
-    """Extrait un ou plusieurs noms depuis une valeur auteur JSON-LD."""
+    """Extrait un ou plusieurs noms depuis une valeur auteur JSON-LD.
+
+    Accepte une chaîne, un objet (`name`, `legalName` ou `alternateName`) ou une
+    liste de ces valeurs ; dans ce dernier cas, les noms sont dédoublonnés en
+    gardant l'ordre et joints par des virgules.
+
+    Parameters
+    ----------
+    value : Any
+        Valeur du champ `author` (ou équivalent) lue dans le JSON-LD.
+
+    Returns
+    -------
+    str
+        Le ou les noms nettoyés, ou une chaîne vide si rien n'est exploitable.
+    """
 
     if isinstance(value, str):
         return clean_text(value)
@@ -58,7 +73,21 @@ def extract_person_name(value: Any) -> str:
 
 
 def extract_json_ld_image(value: Any) -> str:
-    """Extrait une URL d'image depuis une valeur JSON-LD."""
+    """Extrait une URL d'image depuis une valeur JSON-LD.
+
+    Accepte une chaîne, un objet `ImageObject` (`url`, `contentUrl` ou `@id`)
+    ou une liste ; pour une liste, la première URL trouvée est retenue.
+
+    Parameters
+    ----------
+    value : Any
+        Valeur du champ `image` lue dans le JSON-LD.
+
+    Returns
+    -------
+    str
+        L'URL de l'image telle que déclarée, ou une chaîne vide.
+    """
 
     if isinstance(value, str):
         return normalize_value(value)
@@ -84,7 +113,22 @@ def extract_json_ld_image(value: Any) -> str:
 
 
 def extract_srcset_url(value: Any) -> str:
-    """Sélectionne la plus grande URL déclarée dans un attribut srcset."""
+    """Sélectionne la plus grande URL déclarée dans un attribut srcset.
+
+    Les descripteurs de largeur (`800w`) sont pris tels quels, les densités
+    (`2x`) sont multipliées par 1000 pour passer devant ; une entrée sans
+    descripteur, ou illisible, compte pour 1.
+
+    Parameters
+    ----------
+    value : Any
+        Contenu brut de l'attribut `srcset` (ou `data-srcset`).
+
+    Returns
+    -------
+    str
+        L'URL de plus grand poids, ou une chaîne vide si l'attribut est vide.
+    """
 
     srcset = normalize_value(value)
 
@@ -93,6 +137,7 @@ def extract_srcset_url(value: Any) -> str:
 
     candidates: list[tuple[float, str]] = []
 
+    # Lire chaque candidat « url descripteur » et lui donner un poids
     for item in srcset.split(","):
         parts = item.strip().split()
 
@@ -119,11 +164,29 @@ def extract_srcset_url(value: Any) -> str:
 
         candidates.append((weight, url))
 
+    # Garder le candidat le plus lourd
     return max(candidates, default=(0.0, ""))[1]
 
 
 def get_image_url_from_tag(element: Tag | None, page_url: str) -> str:
-    """Extrait et normalise l'URL d'une balise image."""
+    """Extrait et normalise l'URL d'une balise image.
+
+    Essaie dans l'ordre `src`, les attributs de chargement différé
+    (`data-src`, `data-original`, `data-lazy-src`) puis `srcset` et
+    `data-srcset`.
+
+    Parameters
+    ----------
+    element : Tag | None
+        Balise image trouvée dans la page, ou `None`.
+    page_url : str
+        URL de la page, pour rendre absolue une URL relative.
+
+    Returns
+    -------
+    str
+        L'URL absolue de l'image, ou une chaîne vide.
+    """
 
     if element is None:
         return ""
@@ -148,8 +211,29 @@ def extract_canonical_url(
     open_graph: Mapping[str, Any],
     page_url: str
 ) -> str:
-    """Extrait l'URL canonique de l'article."""
+    """Extrait l'URL canonique de l'article.
 
+    Ordre de priorité : `<link rel="canonical">`, `og:url`, l'URL du JSON-LD
+    (`url` ou `mainEntityOfPage`), puis l'URL de la page elle-même.
+
+    Parameters
+    ----------
+    soup : BeautifulSoup
+        Page HTML analysée.
+    article_json_ld : Mapping[str, Any]
+        Objet JSON-LD de l'article (peut être vide).
+    open_graph : Mapping[str, Any]
+        Métadonnées Open Graph de la page (peut être vide).
+    page_url : str
+        URL à laquelle la page a été téléchargée.
+
+    Returns
+    -------
+    str
+        L'URL canonique, absolue et canonisée.
+    """
+
+    # Lire les trois sources possibles : balise link, JSON-LD, Open Graph
     configured_url = select_attribute(
         soup,
         "link[rel='canonical']",
@@ -167,6 +251,7 @@ def extract_canonical_url(
             or main_entity.get("url")
         )
 
+    # Retenir la première trouvée et la rendre absolue
     raw_url = (
         configured_url
         or normalize_value(open_graph.get("url"))
@@ -187,7 +272,27 @@ def extract_title(
     article_json_ld: Mapping[str, Any],
     open_graph: Mapping[str, Any]
 ) -> str:
-    """Extrait le titre de l'article."""
+    """Extrait le titre de l'article.
+
+    Ordre de priorité : sélecteur de la source, `headline` puis `name` du
+    JSON-LD, `og:title`, premier `<h1>`, puis `<title>`.
+
+    Parameters
+    ----------
+    soup : BeautifulSoup
+        Page HTML analysée.
+    source : Mapping[str, Any]
+        Configuration de la source (sélecteurs CSS).
+    article_json_ld : Mapping[str, Any]
+        Objet JSON-LD de l'article.
+    open_graph : Mapping[str, Any]
+        Métadonnées Open Graph.
+
+    Returns
+    -------
+    str
+        Le titre nettoyé, ou une chaîne vide.
+    """
 
     selector = get_source_selector(source, "title")
 
@@ -206,11 +311,32 @@ def extract_text(
     source: Mapping[str, Any],
     article_json_ld: Mapping[str, Any]
 ) -> str:
-    """Extrait le contenu principal de l'article."""
+    """Extrait le contenu principal de l'article.
+
+    Essaie d'abord le bloc désigné par le sélecteur `content` de la source
+    (paragraphes, sinon tout le texte), puis `articleBody` du JSON-LD, puis les
+    paragraphes de la balise `<article>`.
+
+    Parameters
+    ----------
+    soup : BeautifulSoup
+        Page HTML analysée ; les éléments parasites du bloc retenu en sont
+        retirés (`decompose`).
+    source : Mapping[str, Any]
+        Configuration de la source (sélecteurs CSS).
+    article_json_ld : Mapping[str, Any]
+        Objet JSON-LD de l'article.
+
+    Returns
+    -------
+    str
+        Le texte, paragraphes séparés par une ligne vide, ou une chaîne vide.
+    """
 
     selector = get_source_selector(source, "content")
     element = select_element(soup, selector)
 
+    # Bloc configuré : retirer scripts et navigation, puis garder les paragraphes
     if element is not None:
         for unwanted in element.select(
             "script,style,noscript,iframe,form,nav,aside,footer,button,svg"
@@ -237,6 +363,7 @@ def extract_text(
         if text:
             return text
 
+    # Sinon, le corps déclaré dans le JSON-LD
     article_body = clean_text(
         article_json_ld.get("articleBody")
     )
@@ -244,6 +371,7 @@ def extract_text(
     if article_body:
         return article_body
 
+    # En dernier recours, les paragraphes de la balise <article>
     article_element = select_element(soup, "article")
 
     if article_element is not None:
@@ -276,6 +404,21 @@ def extract_label(
 
     Modifié pour SortirIA : CheckIt.AI extrayait ici un verdict de
     fact-checking (vrai / faux) ; cette logique a été retirée.
+
+    Parameters
+    ----------
+    soup : BeautifulSoup
+        Page HTML analysée.
+    source : Mapping[str, Any]
+        Configuration de la source (sélecteurs `label` ou `category`).
+    article_json_ld : Mapping[str, Any]
+        Objet JSON-LD de l'article ; gardé pour la signature commune, il
+        n'est plus lu depuis le retrait de la logique de verdict.
+
+    Returns
+    -------
+    str
+        Le texte trouvé, ou une chaîne vide si aucun sélecteur n'est configuré.
     """
 
     selector = (
@@ -296,8 +439,31 @@ def extract_image_url(
     open_graph: Mapping[str, Any],
     page_url: str
 ) -> str:
-    """Extrait l'URL principale de l'image."""
+    """Extrait l'URL principale de l'image.
 
+    Ordre de priorité : sélecteur `image` de la source, `og:image`, `image` du
+    JSON-LD, puis la première image de `<article>` ou `<main>`.
+
+    Parameters
+    ----------
+    soup : BeautifulSoup
+        Page HTML analysée.
+    source : Mapping[str, Any]
+        Configuration de la source (sélecteurs CSS).
+    article_json_ld : Mapping[str, Any]
+        Objet JSON-LD de l'article.
+    open_graph : Mapping[str, Any]
+        Métadonnées Open Graph.
+    page_url : str
+        URL de référence pour rendre les liens absolus.
+
+    Returns
+    -------
+    str
+        L'URL absolue de l'image, ou une chaîne vide.
+    """
+
+    # Rassembler les candidats : sélecteur configuré, Open Graph, JSON-LD, repli
     selector = get_source_selector(source, "image")
     configured_element = select_element(soup, selector)
     configured_url = get_image_url_from_tag(
@@ -318,6 +484,7 @@ def extract_image_url(
         "article img, main img"
     )
 
+    # Retenir le premier candidat non vide
     raw_url = (
         configured_url
         or open_graph_image
@@ -337,7 +504,27 @@ def extract_author(
     article_json_ld: Mapping[str, Any],
     open_graph: Mapping[str, Any]
 ) -> str:
-    """Extrait l'auteur de l'article."""
+    """Extrait l'auteur de l'article.
+
+    Ordre de priorité : sélecteur `author` de la source, `author` du JSON-LD,
+    `article:author` d'Open Graph, puis `<meta name="author">`.
+
+    Parameters
+    ----------
+    soup : BeautifulSoup
+        Page HTML analysée.
+    source : Mapping[str, Any]
+        Configuration de la source (sélecteurs CSS).
+    article_json_ld : Mapping[str, Any]
+        Objet JSON-LD de l'article.
+    open_graph : Mapping[str, Any]
+        Métadonnées Open Graph.
+
+    Returns
+    -------
+    str
+        Le ou les auteurs, ou une chaîne vide.
+    """
 
     selector = get_source_selector(source, "author")
 
@@ -359,7 +546,29 @@ def extract_published_at(
     article_json_ld: Mapping[str, Any],
     open_graph: Mapping[str, Any]
 ) -> str:
-    """Extrait et normalise la date de publication."""
+    """Extrait et normalise la date de publication.
+
+    Ordre de priorité : attribut `datetime`/`content` puis texte du sélecteur
+    `published_at`, `datePublished` du JSON-LD, `article:published_time`
+    d'Open Graph, puis les balises meta et `<time>` usuelles.
+
+    Parameters
+    ----------
+    soup : BeautifulSoup
+        Page HTML analysée.
+    source : Mapping[str, Any]
+        Configuration de la source (sélecteurs CSS).
+    article_json_ld : Mapping[str, Any]
+        Objet JSON-LD de l'article.
+    open_graph : Mapping[str, Any]
+        Métadonnées Open Graph.
+
+    Returns
+    -------
+    str
+        La date au format ISO, ou ce que renvoie `convert_date_to_iso` pour une
+        valeur vide ou illisible.
+    """
 
     selector = get_source_selector(source, "published_at")
 
@@ -393,7 +602,28 @@ def extract_language(
     article_json_ld: Mapping[str, Any],
     open_graph: Mapping[str, Any]
 ) -> str:
-    """Extrait la langue de l'article."""
+    """Extrait la langue de l'article.
+
+    Ordre de priorité : `inLanguage` du JSON-LD, `og:locale`, attribut `lang`
+    de `<html>`, puis la langue déclarée pour la source.
+
+    Parameters
+    ----------
+    soup : BeautifulSoup
+        Page HTML analysée.
+    source : Mapping[str, Any]
+        Configuration de la source (clé `language`).
+    article_json_ld : Mapping[str, Any]
+        Objet JSON-LD de l'article.
+    open_graph : Mapping[str, Any]
+        Métadonnées Open Graph.
+
+    Returns
+    -------
+    str
+        Le code de langue court en minuscules (`fr` pour `fr_FR`), ou une
+        chaîne vide.
+    """
 
     html_tag = soup.find("html")
     html_language = (
@@ -422,7 +652,22 @@ def extract_language(
 
 
 def normalize_category_value(value: Any) -> str:
-    """Normalise une catégorie issue du HTML ou du JSON-LD."""
+    """Normalise une catégorie issue du HTML ou du JSON-LD.
+
+    Accepte une chaîne, un objet (`name`, `headline` ou `@id`) ou une liste ;
+    pour une liste, les catégories sont dédoublonnées et jointes par des
+    virgules.
+
+    Parameters
+    ----------
+    value : Any
+        Valeur brute de la catégorie.
+
+    Returns
+    -------
+    str
+        La catégorie nettoyée, ou une chaîne vide.
+    """
 
     if isinstance(value, str):
         return clean_text(value)
@@ -454,7 +699,28 @@ def extract_category(
     article_json_ld: Mapping[str, Any],
     open_graph: Mapping[str, Any]
 ) -> str:
-    """Extrait la catégorie principale."""
+    """Extrait la catégorie principale.
+
+    Ordre de priorité : sélecteur `category` de la source, `articleSection` du
+    JSON-LD, `article:section` d'Open Graph, puis la catégorie déclarée pour la
+    source.
+
+    Parameters
+    ----------
+    soup : BeautifulSoup
+        Page HTML analysée.
+    source : Mapping[str, Any]
+        Configuration de la source.
+    article_json_ld : Mapping[str, Any]
+        Objet JSON-LD de l'article.
+    open_graph : Mapping[str, Any]
+        Métadonnées Open Graph.
+
+    Returns
+    -------
+    str
+        La catégorie, ou une chaîne vide.
+    """
 
     selector = get_source_selector(source, "category")
 
@@ -476,8 +742,29 @@ def build_scraped_article(
     metadata: Mapping[str, Any],
     page_url: str
 ) -> dict[str, Any]:
-    """Construit un article standard depuis une page HTML."""
+    """Construit un article standard depuis une page HTML.
 
+    Chaque champ est extrait par la fonction dédiée de ce module, puis le tout
+    est assemblé par `build_standard_article`.
+
+    Parameters
+    ----------
+    soup : BeautifulSoup
+        Page HTML analysée.
+    source : Mapping[str, Any]
+        Configuration de la source (nom, sélecteurs, rôle, pays...).
+    metadata : Mapping[str, Any]
+        Métadonnées structurées de la page (JSON-LD, Open Graph...).
+    page_url : str
+        URL à laquelle la page a été téléchargée.
+
+    Returns
+    -------
+    dict[str, Any]
+        L'article au format standard du projet.
+    """
+
+    # Isoler le JSON-LD de l'article et l'Open Graph, puis fixer l'URL canonique
     article_json_ld = get_article_json_ld(metadata)
     open_graph = get_open_graph(metadata)
     canonical_url = extract_canonical_url(
@@ -487,6 +774,7 @@ def build_scraped_article(
         page_url
     )
 
+    # Extraire chaque champ et assembler l'article standard
     return build_standard_article(
         identifier=canonical_url or page_url,
         source=normalize_value(

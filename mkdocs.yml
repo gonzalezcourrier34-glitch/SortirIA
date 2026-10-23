@@ -3,8 +3,9 @@
 # Aperçu local :   uv run mkdocs serve
 # Construction :   uv run mkdocs build --strict
 #
-# Les pages « Référence du code » sont générées à partir des docstrings :
-# chaque module indique d'où vient son code (section « Provenance »).
+# Les pages « Référence du code » (une par fichier Python, docs/reference/) sont
+# générées à partir des docstrings numpy : chaque module indique d'où vient son
+# code (section « Provenance »).
 
 site_name: SortirIA
 site_description: Assistant IA de recommandation de sorties à Montpellier
@@ -59,7 +60,7 @@ plugins:
             docstring_style: numpy
             show_source: false
             show_root_heading: true
-            show_submodules: true
+            show_submodules: false
             members_order: source
             heading_level: 2
             filters: ["!^_"]
@@ -86,10 +87,150 @@ nav:
   - Évolutions possibles: evolutions.md
   - Référence du code:
       - Vue d'ensemble: reference/index.md
-      - Recherche et API: reference/rag.md
-      - Configuration: reference/config.md
-      - Collecte - extracteurs: reference/extracteurs.md
-      - Collecte - traitement: reference/traitement.md
-      - Collecte - utilitaires: reference/stockage.md
-      - Agent de collecte: reference/agent.md
-      - Orchestration Airflow: reference/dags.md
+      - API et recherche:
+          - app: reference/app/__init__.md
+          - app.config: reference/app/config.md
+          - app.interface_api: reference/app/interface_api.md
+          - app.main: reference/app/main.md
+          - app.query_understanding: reference/app/query_understanding.md
+          - app.rate_limit: reference/app/rate_limit.md
+          - app.ratings_api: reference/app/ratings_api.md
+          - app.search_service: reference/app/search_service.md
+          - app.security: reference/app/security.md
+      - Agent de collecte:
+          - agent: reference/agent/__init__.md
+          - agent.__main__: reference/agent/__main__.md
+          - agent.commentaires: reference/agent/commentaires.md
+          - agent.diagnosis: reference/agent/diagnosis.md
+          - agent.drift: reference/agent/drift.md
+          - agent.feedback_learning: reference/agent/feedback_learning.md
+          - agent.graph: reference/agent/graph.md
+          - agent.nodes: reference/agent/nodes.md
+          - agent.proposals: reference/agent/proposals.md
+          - agent.pull_requests: reference/agent/pull_requests.md
+          - agent.report: reference/agent/report.md
+          - agent.routing: reference/agent/routing.md
+          - agent.search_learning: reference/agent/search_learning.md
+          - agent.services: reference/agent/services.md
+          - agent.state: reference/agent/state.md
+          - agent.tracking: reference/agent/tracking.md
+          - agent.watch: reference/agent/watch.md
+      - "Collecte : événements":
+          - src.event: reference/src/event/__init__.md
+          - event.datatourisme_mapper: reference/src/event/datatourisme_mapper.md
+          - event.document_mapper: reference/src/event/document_mapper.md
+          - event.event_deduplicator: reference/src/event/event_deduplicator.md
+          - event.event_embedding: reference/src/event/event_embedding.md
+          - event.event_enrichment: reference/src/event/event_enrichment.md
+          - event.event_normalizer: reference/src/event/event_normalizer.md
+          - event.event_pipeline: reference/src/event/event_pipeline.md
+          - event.event_ratings: reference/src/event/event_ratings.md
+          - event.event_repository: reference/src/event/event_repository.md
+          - event.event_schema: reference/src/event/event_schema.md
+          - event.event_validator: reference/src/event/event_validator.md
+          - event.html_agenda_mapper: reference/src/event/html_agenda_mapper.md
+          - event.ical_mapper: reference/src/event/ical_mapper.md
+          - event.openagenda_mapper: reference/src/event/openagenda_mapper.md
+          - event.partner_mapper: reference/src/event/partner_mapper.md
+          - event.quality_judge: reference/src/event/quality_judge.md
+          - event.rss_event_mapper: reference/src/event/rss_event_mapper.md
+      - "Collecte : extracteurs":
+          - src.extractor_execution_service: reference/src/extractor_execution_service.md
+          - src.extractors: reference/src/extractors/__init__.md
+          - extractors.apis: reference/src/extractors/apis/__init__.md
+          - extractors.apis.api_adapter: reference/src/extractors/apis/api_adapter.md
+          - extractors.apis.api_extractor: reference/src/extractors/apis/api_extractor.md
+          - extractors.apis.source: reference/src/extractors/apis/source/__init__.md
+          - extractors.apis.source.datatourisme_extractor: reference/src/extractors/apis/source/datatourisme_extractor.md
+          - extractors.apis.source.openagenda_extractor: reference/src/extractors/apis/source/openagenda_extractor.md
+          - extractors.core: reference/src/extractors/core/__init__.md
+          - extractors.core.extractor_configuration: reference/src/extractors/core/extractor_configuration.md
+          - extractors.core.extractor_executor: reference/src/extractors/core/extractor_executor.md
+          - extractors.core.extractor_models: reference/src/extractors/core/extractor_models.md
+          - extractors.core.extractor_results: reference/src/extractors/core/extractor_results.md
+          - extractors.core.extractor_runner: reference/src/extractors/core/extractor_runner.md
+          - extractors.core.extractor_service: reference/src/extractors/core/extractor_service.md
+          - extractors.datasets: reference/src/extractors/datasets/__init__.md
+          - extractors.datasets.dataset_adapter: reference/src/extractors/datasets/dataset_adapter.md
+          - extractors.datasets.dataset_engine: reference/src/extractors/datasets/dataset_engine.md
+          - extractors.datasets.dataset_file_utils: reference/src/extractors/datasets/dataset_file_utils.md
+          - extractors.datasets.source: reference/src/extractors/datasets/source/__init__.md
+          - extractors.datasets.source.partner_documents: reference/src/extractors/datasets/source/partner_documents.md
+          - extractors.datasets.source.partner_extractor: reference/src/extractors/datasets/source/partner_extractor.md
+          - extractors.documents: reference/src/extractors/documents/__init__.md
+          - extractors.documents.document_extractor: reference/src/extractors/documents/document_extractor.md
+          - extractors.files: reference/src/extractors/files/__init__.md
+          - extractors.files.file_adapter: reference/src/extractors/files/file_adapter.md
+          - extractors.files.file_engine: reference/src/extractors/files/file_engine.md
+          - extractors.ical: reference/src/extractors/ical/__init__.md
+          - extractors.ical.ical_extractor: reference/src/extractors/ical/ical_extractor.md
+          - extractors.rss: reference/src/extractors/rss/__init__.md
+          - extractors.rss.rss_adapter: reference/src/extractors/rss/rss_adapter.md
+          - extractors.rss.rss_engine: reference/src/extractors/rss/rss_engine.md
+          - extractors.rss.rss_extractor: reference/src/extractors/rss/rss_extractor.md
+          - extractors.rss.source: reference/src/extractors/rss/source/__init__.md
+          - extractors.rss.source.event_rss_extractor: reference/src/extractors/rss/source/event_rss_extractor.md
+          - extractors.scrapers: reference/src/extractors/scrapers/__init__.md
+          - extractors.scrapers.scraper_adapter: reference/src/extractors/scrapers/scraper_adapter.md
+          - extractors.scrapers.scraper_article_utils: reference/src/extractors/scrapers/scraper_article_utils.md
+          - extractors.scrapers.scraper_engine: reference/src/extractors/scrapers/scraper_engine.md
+          - extractors.scrapers.scraper_extractor: reference/src/extractors/scrapers/scraper_extractor.md
+          - extractors.scrapers.scraper_http_utils: reference/src/extractors/scrapers/scraper_http_utils.md
+          - extractors.scrapers.scraper_metadata_utils: reference/src/extractors/scrapers/scraper_metadata_utils.md
+          - extractors.scrapers.scraper_selector_utils: reference/src/extractors/scrapers/scraper_selector_utils.md
+          - extractors.scrapers.scraper_url_utils: reference/src/extractors/scrapers/scraper_url_utils.md
+          - extractors.scrapers.source: reference/src/extractors/scrapers/source/__init__.md
+          - extractors.scrapers.source.agenda_scraper: reference/src/extractors/scrapers/source/agenda_scraper.md
+      - "Collecte : articles, nettoyage, robots":
+          - src: reference/src/__init__.md
+          - src.article: reference/src/article/__init__.md
+          - article.article_utils: reference/src/article/article_utils.md
+          - article.processing: reference/src/article/processing/__init__.md
+          - article.processing.article_cleaner: reference/src/article/processing/article_cleaner.md
+          - article.processing.article_deduplicator: reference/src/article/processing/article_deduplicator.md
+          - article.processing.article_transformer: reference/src/article/processing/article_transformer.md
+          - article.schema: reference/src/article/schema/__init__.md
+          - article.schema.article_schema: reference/src/article/schema/article_schema.md
+          - article.schema.article_schema_normalizer: reference/src/article/schema/article_schema_normalizer.md
+          - article.validation: reference/src/article/validation/__init__.md
+          - article.validation.article_validation_policy: reference/src/article/validation/article_validation_policy.md
+          - article.validation.article_validator: reference/src/article/validation/article_validator.md
+          - src.cleaner: reference/src/cleaner/__init__.md
+          - cleaner.html_cleaner: reference/src/cleaner/html_cleaner.md
+          - src.robot: reference/src/robot/__init__.md
+          - robot.robots_utils: reference/src/robot/robots_utils.md
+      - Utilitaires:
+          - src.logger: reference/src/logger.md
+          - src.utils: reference/src/utils/__init__.md
+          - utils.date_utils: reference/src/utils/date_utils.md
+          - utils.extractor_utils: reference/src/utils/extractor_utils.md
+          - utils.filter_utils: reference/src/utils/filter_utils.md
+          - utils.geo_utils: reference/src/utils/geo_utils.md
+          - utils.mail_utils: reference/src/utils/mail_utils.md
+          - utils.parsing_utils: reference/src/utils/parsing_utils.md
+          - utils.path_utils: reference/src/utils/path_utils.md
+          - utils.url_utils: reference/src/utils/url_utils.md
+          - utils.value_utils: reference/src/utils/value_utils.md
+          - utils.yaml_utils: reference/src/utils/yaml_utils.md
+      - Configuration:
+          - config: reference/config/__init__.md
+          - config.constants: reference/config/constants.md
+          - config.environment: reference/config/environment.md
+          - config.paths: reference/config/paths.md
+          - config.settings: reference/config/settings.md
+          - config.source_config: reference/config/source_config.md
+      - Scripts:
+          - scripts: reference/scripts/__init__.md
+          - scripts.audit_openagenda: reference/scripts/audit_openagenda.md
+          - scripts.check_mistral: reference/scripts/check_mistral.md
+          - scripts.creer_lecteur_grafana: reference/scripts/creer_lecteur_grafana.md
+          - scripts.creer_modele_partenaire: reference/scripts/creer_modele_partenaire.md
+          - scripts.eval_pertinence: reference/scripts/eval_pertinence.md
+          - scripts.eval_recherche: reference/scripts/eval_recherche.md
+          - scripts.explore_datatourisme: reference/scripts/explore_datatourisme.md
+          - scripts.init_db: reference/scripts/init_db.md
+          - scripts.jeu_test_recherche: reference/scripts/jeu_test_recherche.md
+          - scripts.mesure_cout_latence: reference/scripts/mesure_cout_latence.md
+          - scripts.suivi_mlflow: reference/scripts/suivi_mlflow.md
+      - Orchestration Airflow:
+          - sortiria_nightly_dag: reference/dags/sortiria_nightly_dag.md

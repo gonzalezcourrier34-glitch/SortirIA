@@ -23,6 +23,13 @@ from config.environment import load_environment
 
 
 def main() -> None:
+    """Lire les options de la ligne de commande et lancer la collecte ou le bilan.
+
+    Avec `--bilan-recherche`, n'affiche que le bilan de la recherche (voir
+    `print_search_report`) ; sinon lance la collecte nocturne complète et
+    affiche son résumé en JSON.
+    """
+    # Déclarer les options de la ligne de commande
     parser = argparse.ArgumentParser(description="Collecte nocturne SortirIA.")
     parser.add_argument("--essai", action="store_true", help="N'écrit rien en base.")
     parser.add_argument("--source", action="append", help="Source à collecter (répétable).")
@@ -36,10 +43,12 @@ def main() -> None:
 
     load_environment()
 
+    # Mode bilan seul : pas de collecte
     if args.bilan_recherche:
         print_search_report(learn=args.apprendre)
         return
 
+    # Lancer la collecte, puis n'afficher que les clés utiles de l'état final
     state = run_nightly_collection(sources=args.source, dry_run=args.essai,
                                    discover_agendas=args.decouverte)
     summary = {
@@ -52,11 +61,21 @@ def main() -> None:
 
 
 def print_search_report(days: int = 7, learn: bool = False) -> None:
-    """Bilan de la recherche à la demande : vocabulaire recalculé, puis ce que
+    """Afficher le bilan de la recherche à la demande.
+
+    Bilan de la recherche à la demande : vocabulaire recalculé, puis ce que
     les utilisateurs ont cherché sans trouver ces `days` derniers jours.
 
     `learn` : l'agent en tire aussi ses propositions (synonymes, agendas à
     lire), enregistrées en attente de validation comme celles de la nuit.
+
+    Parameters
+    ----------
+    days : int
+        Période examinée, en jours. Par défaut 7 jours.
+    learn : bool
+        Si vrai, l'agent tire de ce bilan des propositions et les enregistre en
+        attente de validation. Par défaut faux.
     """
 
     from datetime import datetime
@@ -66,6 +85,7 @@ def print_search_report(days: int = 7, learn: bool = False) -> None:
     from src.event import event_repository as repository
     from src.event.event_normalizer import PARIS
 
+    # Recalculer le vocabulaire et lire les recherches sans réponse et les pouces bas
     with connect_postgres() as connection:
         size = repository.refresh_title_vocabulary(connection)
         gaps = repository.fetch_search_gaps(connection, days)
@@ -74,9 +94,11 @@ def print_search_report(days: int = 7, learn: bool = False) -> None:
     print("\n".join(search_report_lines(gaps)).strip() or f"Aucune question ces {days} derniers jours.")
     if not learn:
         return
+    # Tirer les propositions de la semaine et les enregistrer en attente de validation
     learning = learn_from_week(gaps, datetime.now(PARIS).date())
     with connect_postgres() as connection:
         repository.record_proposals(connection, None, learning.proposals)
+    # Afficher propositions et remarques
     print("\nCe que l'agent en tire")
     for proposal in learning.proposals:
         print(f"- proposition : {describe_action(proposal)}")

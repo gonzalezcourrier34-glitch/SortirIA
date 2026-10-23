@@ -70,7 +70,18 @@ DEFAULT_DAYS_FORWARD = 30
 # ---------------------------------------------------------------------------
 
 def get_api_key() -> str:
-    """Retourne la clé OpenAgenda, ou lève une erreur claire si elle manque."""
+    """Retourne la clé OpenAgenda, ou lève une erreur claire si elle manque.
+
+    Returns
+    -------
+    str
+        La clé lue par `OPENAGENDA_EXTRACTOR.api_key`.
+
+    Raises
+    ------
+    ApiAuthenticationError
+        Si la clé est absente.
+    """
 
     api_key = OPENAGENDA_EXTRACTOR.api_key
     if not api_key:
@@ -85,7 +96,20 @@ def get_api_key() -> str:
 
 
 def get_date_window(source: Mapping[str, Any], today: date | None = None) -> tuple[str, str]:
-    """Fenêtre de dates interrogée : d'aujourd'hui à `days_forward` jours."""
+    """Fenêtre de dates interrogée : d'aujourd'hui à `days_forward` jours.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        La configuration de la source (clé `days_forward`, 30 jours par défaut).
+    today : date | None
+        Jour de référence. Par défaut `None` : aujourd'hui à Paris.
+
+    Returns
+    -------
+    tuple[str, str]
+        Dates de début et de fin au format ISO (`AAAA-MM-JJ`).
+    """
 
     today = today or datetime.now(PARIS).date()
     days_forward = parse_non_negative_integer(source.get("days_forward"), DEFAULT_DAYS_FORWARD)
@@ -112,6 +136,18 @@ def is_in_area(item: Mapping[str, Any], source: Mapping[str, Any]) -> bool:
       moins une zone <= son rayon.
     - Sinon : le nom de la ville doit être dans `cities` (ou être la `zone`).
     - Sans zone configurée du tout, tout est gardé.
+
+    Parameters
+    ----------
+    item : Mapping[str, Any]
+        L'événement brut OpenAgenda.
+    source : Mapping[str, Any]
+        La configuration de la source (zones GPS, `cities`, `zone`).
+
+    Returns
+    -------
+    bool
+        Vrai si l'événement est dans la zone, ou si aucune zone n'est configurée.
     """
 
     areas = get_areas(source)
@@ -132,7 +168,24 @@ def is_in_area(item: Mapping[str, Any], source: Mapping[str, Any]) -> bool:
 # ---------------------------------------------------------------------------
 
 def search_agenda_uids(source: Mapping[str, Any], api_key: str) -> list[str]:
-    """Liste les agendas à lire : configurés à la main, ou trouvés par recherche."""
+    """Liste les agendas à lire : configurés à la main, ou trouvés par recherche.
+
+    La recherche ne porte que sur les agendas officiels, une fois par terme de
+    `search_terms` (à défaut la `zone`, « Montpellier » si rien n'est configuré).
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        La configuration de la source (`agenda_uids`, `search_terms`, `zone`,
+        `max_agendas`, `agendas_search_url`).
+    api_key : str
+        La clé OpenAgenda.
+
+    Returns
+    -------
+    list[str]
+        Les identifiants d'agendas, sans doublon.
+    """
 
     configured = source.get("agenda_uids") or []
     if configured:
@@ -167,7 +220,26 @@ def fetch_agenda_page(
     offset: int,
     page_size: int,
 ) -> list[dict[str, Any]]:
-    """Lit une page d'événements d'un agenda."""
+    """Lit une page d'événements d'un agenda.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        La configuration de la source (`endpoint`, `days_forward`, `search_text`).
+    agenda_uid : str
+        Identifiant de l'agenda.
+    api_key : str
+        La clé OpenAgenda.
+    offset : int
+        Rang du premier événement de la page.
+    page_size : int
+        Nombre d'événements par page.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Les événements bruts de la page, dans la fenêtre de dates.
+    """
 
     date_from, date_to = get_date_window(source)
     params: dict[str, Any] = {
@@ -194,12 +266,35 @@ def iter_openagenda_items(
     source: Mapping[str, Any],
     maximum_articles: int,
 ) -> Iterator[tuple[str, int, Mapping[str, Any]]]:
-    """Parcourt tous les événements des agendas, sans dépasser `maximum_articles`."""
+    """Parcourt tous les événements des agendas, sans dépasser `maximum_articles`.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        La configuration de la source (agendas, zones, pagination, fenêtre de dates).
+    maximum_articles : int
+        Nombre maximal d'événements à donner ; 0 ou moins : aucun.
+
+    Yields
+    ------
+    tuple[str, int, Mapping[str, Any]]
+        Identifiant (`agenda=...|page=...`), rang dans la page, et l'événement
+        brut complété de son agenda sous la clé `_agenda_uid`.
+
+    Raises
+    ------
+    ApiAuthenticationError
+        Si la clé OpenAgenda manque (voir `get_api_key`).
+    ApiExtractionStoppedError
+        La première erreur d'agenda rencontrée, relevée une fois tous les
+        agendas lus (le moteur en fait une réussite partielle).
+    """
 
     maximum = parse_non_negative_integer(maximum_articles, 0)
     if maximum <= 0:
         return
 
+    # Lire la clé et les réglages de pagination
     api_key = get_api_key()
     page_size = max(parse_non_negative_integer(source.get("page_size"), DEFAULT_PAGE_SIZE), 1)
     max_pages = max(parse_non_negative_integer(source.get("max_pages"), DEFAULT_MAX_PAGES), 1)
@@ -213,6 +308,7 @@ def iter_openagenda_items(
     # la fin, pour que l'extracteur soit noté « réussite partielle » et que
     # l'agent garde les événements non relus.
     agenda_errors: list[Exception] = []
+    # Parcourir agenda par agenda, page par page, en filtrant par zone
     try:
         for agenda_uid in search_agenda_uids(source, api_key):
             read_before, kept_before = len(seen_uids), kept_by_agenda[agenda_uid]
@@ -246,9 +342,11 @@ def iter_openagenda_items(
                 "Agenda %s : %s événement(s) lu(s), %s dans la zone.",
                 agenda_uid, len(seen_uids) - read_before, kept_by_agenda[agenda_uid] - kept_before,
             )
+        # Relever la première erreur d'agenda pour signaler la réussite partielle
         if agenda_errors:
             raise agenda_errors[0]
     finally:
+        # Journaliser le bilan même si l'itération est interrompue
         logger.info(
             "OpenAgenda : %s événement(s) dans la zone, %s hors zone écarté(s). "
             "Agendas utiles : %s.",
@@ -262,7 +360,26 @@ def build_openagenda_article(
     item_identifier: str,
     source: Mapping[str, Any],
 ) -> dict[str, Any]:
-    """Transforme un événement OpenAgenda en « article » du moteur, événement inclus."""
+    """Transforme un événement OpenAgenda en « article » du moteur, événement inclus.
+
+    L'`Event` complet est rangé dans `metadata["event"]`, avec l'agenda d'origine.
+
+    Parameters
+    ----------
+    item : Any
+        L'événement brut, avec son agenda sous la clé `_agenda_uid`.
+    item_index : int
+        Rang de l'événement (non utilisé).
+    item_identifier : str
+        Identifiant de repli si l'événement n'a ni identifiant ni URL.
+    source : Mapping[str, Any]
+        La configuration de la source (`source_id`, `name`, `language`, `role`).
+
+    Returns
+    -------
+    dict[str, Any]
+        L'article standard, ou un dictionnaire vide si l'événement est inexploitable.
+    """
 
     del item_index
     if not isinstance(item, Mapping):
@@ -297,7 +414,25 @@ def validate_openagenda_item(
     filters: Mapping[str, Any],
     source: Mapping[str, Any],
 ) -> tuple[bool, str]:
-    """Contrôle minimal avant conversion : un titre et un identifiant."""
+    """Contrôle minimal avant conversion : un titre et un identifiant.
+
+    Dans le moteur API, ce contrôle est appelé après la construction de
+    l'article et la validation commune (voir `extract_api_from_source`).
+
+    Parameters
+    ----------
+    item : Any
+        L'événement brut OpenAgenda.
+    filters : Mapping[str, Any]
+        Les filtres de la source (non utilisés).
+    source : Mapping[str, Any]
+        La configuration de la source (non utilisée).
+
+    Returns
+    -------
+    tuple[bool, str]
+        Vrai et une chaîne vide si l'événement est complet, sinon faux et le motif.
+    """
 
     del filters, source
     if not isinstance(item, Mapping):
@@ -331,13 +466,30 @@ OPENAGENDA_EXTRACTOR = ApiExtractor(
 # ---------------------------------------------------------------------------
 
 def extract_articles_from_source(source: Mapping[str, Any]) -> ExtractorResult:
-    """Lance l'extraction depuis une configuration déjà chargée."""
+    """Lance l'extraction depuis une configuration déjà chargée.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        La configuration de la source OpenAgenda.
+
+    Returns
+    -------
+    ExtractorResult
+        Le bilan de l'extraction avec les articles retenus.
+    """
 
     return extract_api_from_source(source=source, adapter=OPENAGENDA_ADAPTER)
 
 
 def extract_all_articles() -> ExtractorResult:
-    """Charge `config/sources.yaml` puis lance l'extraction OpenAgenda."""
+    """Charge `config/sources.yaml` puis lance l'extraction OpenAgenda.
+
+    Returns
+    -------
+    ExtractorResult
+        Le bilan de l'extraction, via l'exécuteur générique.
+    """
 
     return OPENAGENDA_EXTRACTOR.run()
 

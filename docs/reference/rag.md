@@ -1,3 +1,0 @@
-# Recherche et API
-
-::: app

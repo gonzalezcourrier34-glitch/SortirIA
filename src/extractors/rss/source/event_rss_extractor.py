@@ -45,6 +45,16 @@ def iter_event_entries(source: Mapping[str, Any]) -> Sequence[Mapping[str, Any]]
 
     Import différé : `rss_extractor` charge feedparser, inutile tant qu'aucun
     flux n'est configuré (et remplaçable dans les tests).
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Entrée de `rss_sources` (nom, url...).
+
+    Returns
+    -------
+    Sequence[Mapping[str, Any]]
+        Entrées du flux analysées par Feedparser.
     """
 
     from src.extractors.rss.rss_extractor import iter_rss_items
@@ -53,7 +63,22 @@ def iter_event_entries(source: Mapping[str, Any]) -> Sequence[Mapping[str, Any]]
 
 
 def map_entry(entry: Mapping[str, Any], source: Mapping[str, Any]):
-    """Entrée -> (Event | None, motif), dans la fenêtre de collecte de la source."""
+    """Entrée -> (Event | None, motif), dans la fenêtre de collecte de la source.
+
+    Parameters
+    ----------
+    entry : Mapping[str, Any]
+        Entrée du flux.
+    source : Mapping[str, Any]
+        Entrée de `rss_sources` ; `days_forward` fixe la fenêtre (60 jours par
+        défaut).
+
+    Returns
+    -------
+    tuple[Event | None, str]
+        L'événement et un motif vide, ou None et le motif du rejet (voir
+        `map_rss_event`).
+    """
 
     now = datetime.now(PARIS)
     horizon = now.date() + timedelta(days=parse_non_negative_integer(source.get("days_forward"), DEFAULT_DAYS_FORWARD))
@@ -65,6 +90,18 @@ def validate_event_entry(entry: Any, source: Mapping[str, Any]) -> tuple[bool, s
 
     Une entrée hors fenêtre (passée, trop lointaine) est écartée sous le motif
     « hors_fenetre » : ce n'est pas une erreur du flux.
+
+    Parameters
+    ----------
+    entry : Any
+        Entrée du flux.
+    source : Mapping[str, Any]
+        Entrée de `rss_sources`.
+
+    Returns
+    -------
+    tuple[bool, str]
+        Vrai et motif vide si l'entrée donne un événement, sinon faux et le motif.
     """
 
     if not isinstance(entry, Mapping):
@@ -76,7 +113,21 @@ def validate_event_entry(entry: Any, source: Mapping[str, Any]) -> tuple[bool, s
 
 
 def build_event_rss_article(entry: Mapping[str, Any], source: Mapping[str, Any]) -> dict[str, Any]:
-    """Transforme une entrée validée en « article » du moteur, événement inclus."""
+    """Transforme une entrée validée en « article » du moteur, événement inclus.
+
+    Parameters
+    ----------
+    entry : Mapping[str, Any]
+        Entrée du flux, déjà validée.
+    source : Mapping[str, Any]
+        Entrée de `rss_sources` (nom, identifiant, rôle...).
+
+    Returns
+    -------
+    dict[str, Any]
+        Article standard, l'événement dans `metadata["event"]` ; dictionnaire
+        vide si l'entrée ne donne plus d'événement.
+    """
 
     event, _ = map_entry(entry, source)
     if event is None:
@@ -107,7 +158,13 @@ EVENT_RSS_EXTRACTOR = RssExtractor(adapter=EVENT_RSS_ADAPTER, sources_file=SOURC
 
 
 def extract_all_articles() -> ExtractorResult:
-    """Lit tous les flux de `rss_sources` (point d'entrée du registre)."""
+    """Lit tous les flux de `rss_sources` (point d'entrée du registre).
+
+    Returns
+    -------
+    ExtractorResult
+        Événements extraits, statut et bilan des rejets.
+    """
 
     return EVENT_RSS_EXTRACTOR.run()
 

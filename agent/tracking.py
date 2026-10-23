@@ -47,7 +47,20 @@ LLM_REJECTION_REASONS = ("titre_absent_du_texte", "champs_llm_invalides", "hors_
 
 
 def metric_key(*parts: Any) -> str:
-    """Nom de métrique accepté par MLflow : « events_kept/OpenAgenda - Montpellier »."""
+    """Nom de métrique accepté par MLflow : « events_kept/OpenAgenda - Montpellier ».
+
+    Les caractères refusés par MLflow deviennent `_` ; les parties vides sont omises.
+
+    Parameters
+    ----------
+    *parts : Any
+        Morceaux du nom, joints par `/`.
+
+    Returns
+    -------
+    str
+        Le nom de métrique.
+    """
 
     return "/".join(METRIC_KEY_PATTERN.sub("_", str(part)) for part in parts if str(part))
 
@@ -57,8 +70,22 @@ def metric_key(*parts: Any) -> str:
 # ---------------------------------------------------------------------------
 
 def run_metrics(state: Mapping[str, Any]) -> dict[str, float]:
-    """Toutes les métriques d'une nuit, à partir de l'état final de l'agent."""
+    """Toutes les métriques d'une nuit, à partir de l'état final de l'agent.
 
+    Fonction pure, testée sans MLflow.
+
+    Parameters
+    ----------
+    state : Mapping[str, Any]
+        L'état final de l'agent (`CollectionState`).
+
+    Returns
+    -------
+    dict[str, float]
+        `{nom de métrique: valeur}`, prêt pour `mlflow.log_metrics`.
+    """
+
+    # Totaux de la nuit : extraction, chargement, notes, enrichissement, coût
     metrics: dict[str, float] = {}
     preparation = state.get("preparation") or {}
     extracted = float(preparation.get("events_extracted", 0))
@@ -109,6 +136,7 @@ def run_metrics(state: Mapping[str, Any]) -> dict[str, float]:
             metrics["pdf/inventions_rattrapees"] = float(reasons.get("titre_absent_du_texte", 0))
             metrics["pdf/taux_rejet_llm"] = llm_rejections / analyzed
 
+    # Qualité (juge), tokens, couverture et durées des nœuds
     quality = state.get("quality") or {}
     if quality.get("score") is not None:
         metrics["qualite/score"] = float(quality["score"])
@@ -134,7 +162,22 @@ def run_metrics(state: Mapping[str, Any]) -> dict[str, float]:
 
 
 def run_params(services: Any, *, dry_run: bool, max_attempts: int) -> dict[str, str]:
-    """Paramètres d'une nuit : modèles, seuils, version de consigne, mode."""
+    """Paramètres d'une nuit : modèles, seuils, version de consigne, mode.
+
+    Parameters
+    ----------
+    services : Any
+        Les services de l'agent (`CollectionServices`), pour les sources et le modèle.
+    dry_run : bool
+        Mode essai (aucune écriture en base).
+    max_attempts : int
+        Nombre maximal d'essais d'extraction.
+
+    Returns
+    -------
+    dict[str, str]
+        Les paramètres, en texte, prêts pour `mlflow.log_params`.
+    """
 
     from agent import nodes, watch
     from src.event.document_mapper import PROMPT_VERSION
@@ -159,14 +202,31 @@ def run_params(services: Any, *, dry_run: bool, max_attempts: int) -> dict[str, 
 # ---------------------------------------------------------------------------
 
 class NullTracker:
-    """Aucun suivi (tests, ou MLflow désactivé)."""
+    """Aucun suivi (tests, ou MLflow désactivé).
+
+    Même interface que `MlflowTracker`, sans effet.
+    """
 
     run_id = ""
 
     def start(self, params: Mapping[str, str]) -> None:
+        """Ne fait rien.
+
+        Parameters
+        ----------
+        params : Mapping[str, str]
+            Paramètres de la nuit (ignorés).
+        """
         del params
 
     def finish(self, state: Mapping[str, Any]) -> None:
+        """Ne fait rien.
+
+        Parameters
+        ----------
+        state : Mapping[str, Any]
+            État final de l'agent (ignoré).
+        """
         del state
 
 
@@ -174,13 +234,30 @@ class MlflowTracker:
     """Une nuit = une exécution MLflow ; aucune erreur de suivi ne remonte."""
 
     def __init__(self, tracking_uri: str, experiment: str = DEFAULT_EXPERIMENT, artifact_location: str = "") -> None:
+        """Prépare le traceur, sans encore contacter MLflow.
+
+        Parameters
+        ----------
+        tracking_uri : str
+            Adresse du serveur MLflow (`http://...`) ou base locale (`sqlite:///...`).
+        experiment : str
+            Nom de l'expérience. Par défaut `sortiria-collecte`.
+        artifact_location : str
+            Dossier des artefacts à la création de l'expérience ; vide : choix de MLflow.
+        """
         self.tracking_uri = tracking_uri
         self.experiment = experiment
         self.artifact_location = artifact_location
         self.run_id = ""
 
     def server_is_up(self) -> bool:
-        """Serveur HTTP joignable en 3 s ? (sinon, le client MLflow réessaie plusieurs minutes)."""
+        """Serveur HTTP joignable en 3 s ? (sinon, le client MLflow réessaie plusieurs minutes).
+
+        Returns
+        -------
+        bool
+            True si `/health` répond 200, ou si le suivi est local (pas HTTP).
+        """
 
         if not self.tracking_uri.startswith("http"):
             return True
@@ -192,6 +269,17 @@ class MlflowTracker:
             return False
 
     def start(self, params: Mapping[str, str]) -> None:
+        """Ouvre l'exécution MLflow de la nuit et enregistre ses paramètres.
+
+        Serveur injoignable ou erreur : la collecte continue sans suivi
+        (`run_id` reste vide).
+
+        Parameters
+        ----------
+        params : Mapping[str, str]
+            Paramètres de la nuit (voir `run_params`) ; `started_at` sert au nom.
+        """
+        # Serveur absent : ne pas bloquer la nuit
         if not self.server_is_up():
             logger.warning("Serveur MLflow injoignable (%s) : collecte sans suivi cette nuit.", self.tracking_uri)
             self.run_id = ""
@@ -199,6 +287,7 @@ class MlflowTracker:
         try:
             import mlflow
 
+            # Créer ou choisir l'expérience
             mlflow.set_tracking_uri(self.tracking_uri)
             if mlflow.get_experiment_by_name(self.experiment) is None:
                 mlflow.create_experiment(self.experiment, artifact_location=self.artifact_location or None)
@@ -208,6 +297,7 @@ class MlflowTracker:
                 mlflow.langchain.autolog()
             except Exception as error:  # noqa: BLE001 (la trace est un plus, pas une obligation)
                 logger.warning("Trace LangChain indisponible : %s", error)
+            # Ouvrir l'exécution et enregistrer les paramètres
             run = mlflow.start_run(run_name=f"collecte {params.get('started_at', '')}".strip())
             self.run_id = run.info.run_id
             mlflow.log_params(dict(params))
@@ -216,6 +306,15 @@ class MlflowTracker:
             self.run_id = ""
 
     def finish(self, state: Mapping[str, Any]) -> None:
+        """Enregistre métriques, étiquettes et bilan (`bilan.json`), puis ferme l'exécution.
+
+        Sans exécution ouverte, ne fait rien ; une erreur est seulement journalisée.
+
+        Parameters
+        ----------
+        state : Mapping[str, Any]
+            L'état final de l'agent.
+        """
         if not self.run_id:
             return
         try:
@@ -238,8 +337,18 @@ class MlflowTracker:
 
 
 def build_tracker() -> NullTracker | MlflowTracker:
-    """Traceur de production : MLflow, sauf `MLFLOW_ACTIF=false` ou MLflow absent."""
+    """Traceur de production : MLflow, sauf `MLFLOW_ACTIF=false` ou MLflow absent.
 
+    Sans `MLFLOW_TRACKING_URI`, le suivi va dans une base SQLite locale
+    (`data/mlflow/mlflow.db`) et ses artefacts dans `data/mlflow/artifacts`.
+
+    Returns
+    -------
+    NullTracker | MlflowTracker
+        Le traceur à injecter dans les services.
+    """
+
+    # Suivi désactivé ou MLflow non installé : aucun suivi
     if os.getenv("MLFLOW_ACTIF", "true").strip().lower() in ("false", "0", "non", "no"):
         return NullTracker()
     try:
@@ -249,6 +358,7 @@ def build_tracker() -> NullTracker | MlflowTracker:
         return NullTracker()
     from config.paths import DATA_DIR
 
+    # Serveur indiqué dans `.env`, sinon base SQLite et artefacts locaux
     folder = DATA_DIR / "mlflow"
     folder.mkdir(parents=True, exist_ok=True)
     uri = os.getenv("MLFLOW_TRACKING_URI") or f"sqlite:///{(folder / 'mlflow.db').as_posix()}"

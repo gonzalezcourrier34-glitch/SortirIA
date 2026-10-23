@@ -47,8 +47,21 @@ EVENING_HOUR = 17          # « ce soir » : séances qui commencent à partir d
 
 
 def plain(value: str) -> str:
-    """Minuscules, sans accents, ponctuation remplacée par des espaces :
-    « Théâtre à Sète ? » -> « theatre a sete »."""
+    """Met un texte sous forme simple, pour comparer des mots sans se soucier de l'écriture.
+
+    Minuscules, sans accents, ponctuation remplacée par des espaces :
+    « Théâtre à Sète ? » -> « theatre a sete ».
+
+    Parameters
+    ----------
+    value : str
+        Le texte à simplifier (`None` ou vide donne une chaîne vide).
+
+    Returns
+    -------
+    str
+        Le texte simplifié, mots séparés par une seule espace.
+    """
 
     decomposed = unicodedata.normalize("NFKD", str(value or "").lower())
     text = "".join(char for char in decomposed if not unicodedata.combining(char))
@@ -121,7 +134,22 @@ WATCH_WORDS = ("spectacle", "spectacles", "voir", "regarder", "assister", "repre
 
 
 def find_practice(padded: str, categories: tuple[str, ...]) -> str | None:
-    """« je veux chanter » -> « chanter » ; rien si la question nomme un autre type."""
+    """« je veux chanter » -> « chanter » ; rien si la question nomme un autre type.
+
+    Les expressions (« jouer au théâtre ») sont cherchées avant les verbes seuls.
+
+    Parameters
+    ----------
+    padded : str
+        La question passée par `plain`, entourée d'une espace de chaque côté.
+    categories : tuple[str, ...]
+        Les types de sortie lus dans la question (`wanted_categories`).
+
+    Returns
+    -------
+    str | None
+        La pratique (clé de `PRACTICE_LABELS`), ou None.
+    """
 
     for phrase, practice in PRACTICE_PHRASES.items():
         if f" {phrase} " in padded:
@@ -138,8 +166,21 @@ SPECTACLE_YIELDS = True     # « spectacle » s'efface devant un type précis (d
 
 
 def wanted_categories(question: str) -> tuple[str, ...]:
-    """Catégories désignées par la question : « j'aimerais aller au théâtre »
-    -> ("theatre", "spectacle"). Vide si la question n'en nomme aucune."""
+    """Catégories désignées par la question.
+
+    « j'aimerais aller au théâtre » -> ("theatre", "spectacle"). Vide si la
+    question n'en nomme aucune.
+
+    Parameters
+    ----------
+    question : str
+        La question du visiteur (brute ou déjà simplifiée).
+
+    Returns
+    -------
+    tuple[str, ...]
+        Les catégories, dans l'ordre des mots, sans doublon.
+    """
 
     # Dans l'ordre des mots : le type nommé d'abord (« théâtre ou spectacle »).
     # « Spectacle » s'efface devant un autre mot de type (17/10/2026) : « un
@@ -167,6 +208,16 @@ def main_categories(question: str) -> tuple[str, ...]:
     Sert aux offres partenaires : un spectacle de marionnettes est rangé en
     « spectacle » et sortait en tête pour « j'aimerais aller au théâtre » et
     pour « un spectacle de danse » (grille de pertinence du 16/10/2026).
+
+    Parameters
+    ----------
+    question : str
+        La question du visiteur.
+
+    Returns
+    -------
+    tuple[str, ...]
+        Les types visés ; « spectacle » seulement si aucun type plus précis n'est nommé.
     """
 
     found: dict[str, None] = {}
@@ -180,7 +231,18 @@ def main_categories(question: str) -> tuple[str, ...]:
 
 
 def category_label(categories: Sequence[str]) -> str:
-    """« théâtre ou spectacle » pour l'affichage des étapes."""
+    """« théâtre ou spectacle » pour l'affichage des étapes.
+
+    Parameters
+    ----------
+    categories : Sequence[str]
+        Les catégories, sous leur forme sans accents.
+
+    Returns
+    -------
+    str
+        Les libellés accentués, joints par « ou ».
+    """
 
     return " ou ".join(CATEGORY_LABELS.get(c, c) for c in categories)
 
@@ -216,6 +278,18 @@ CITY_LABELS = {"sete": "Sète", "meze": "Mèze", "perols": "Pérols", "fabregues
 
 
 def city_label(city: str) -> str:
+    """Nom affichable d'une commune : « sete » -> « Sète », « le cres » -> « Le Crès ».
+
+    Parameters
+    ----------
+    city : str
+        La commune sous sa forme simplifiée.
+
+    Returns
+    -------
+    str
+        Le nom avec majuscules, accents connus et traits d'union.
+    """
     return CITY_LABELS.get(city, city.title().replace(" Le ", "-le-").replace(" Les ", "-les-"))
 
 
@@ -228,10 +302,25 @@ MONTPELLIER_ITSELF = (" a montpellier ", " dans montpellier ", " en ville a mont
 
 
 def find_places(text: str) -> tuple[tuple[str, ...], str | None]:
-    """Communes et zone nommées dans la question (texte déjà passé par `plain`)."""
+    """Communes et zone nommées dans la question (texte déjà passé par `plain`).
+
+    « à Montpellier » donne la commune Montpellier ; « Montpellier » seul donne
+    la zone (la métropole).
+
+    Parameters
+    ----------
+    text : str
+        La question passée par `plain`.
+
+    Returns
+    -------
+    tuple[tuple[str, ...], str | None]
+        Les communes trouvées (formes simplifiées), et la zone nommée ou None.
+    """
 
     padded = f" {text} "
     cities: list[str] = []
+    # Montpellier même (« à Montpellier »), puis les communes et leurs formes courtes
     if any(marker in padded for marker in MONTPELLIER_ITSELF):
         cities.append("montpellier")
     for city in (*MONTPELLIER_CITIES, *THAU_CITIES):
@@ -240,6 +329,7 @@ def find_places(text: str) -> tuple[tuple[str, ...], str | None]:
     for alias, targets in CITY_ALIASES.items():
         if f" {alias} " in padded:
             cities += [target for target in targets if target not in cities]
+    # La zone : le premier mot de zone rencontré
     zone = None
     for word, value in ZONE_WORDS.items():
         if f" {word} " in padded:
@@ -249,6 +339,18 @@ def find_places(text: str) -> tuple[tuple[str, ...], str | None]:
 
 
 def zone_of_city(city: str) -> str:
+    """Zone d'une commune : « thau » pour le bassin de Thau, sinon « montpellier ».
+
+    Parameters
+    ----------
+    city : str
+        La commune sous sa forme simplifiée.
+
+    Returns
+    -------
+    str
+        « thau » ou « montpellier ».
+    """
     return "thau" if city in THAU_CITIES else "montpellier"
 
 
@@ -257,15 +359,57 @@ def zone_of_city(city: str) -> str:
 # ----------------------------------------------------------------------------
 
 def day_bounds(day: date, now: datetime) -> tuple[datetime, datetime]:
+    """Bornes d'une journée à Paris, sans remonter avant maintenant.
+
+    Parameters
+    ----------
+    day : date
+        Le jour voulu.
+    now : datetime
+        L'heure actuelle : le début ne la précède jamais (aujourd'hui commence maintenant).
+
+    Returns
+    -------
+    tuple[datetime, datetime]
+        Le début (minuit ou maintenant) et la fin exclue (minuit le lendemain).
+    """
     start = datetime.combine(day, datetime.min.time(), tzinfo=PARIS)
     return max(start, now), start + timedelta(days=1)
 
 
 def day_label(day: date) -> str:
+    """Libellé court d'un jour : « sam. 18 oct. ».
+
+    Parameters
+    ----------
+    day : date
+        Le jour à afficher.
+
+    Returns
+    -------
+    str
+        Le jour de la semaine, le numéro et le mois abrégés.
+    """
     return f"{DAY_LABELS[day.weekday()]} {day.day} {MONTH_LABELS[day.month - 1]}"
 
 
 def next_weekday(today: date, weekday: int, *, strictly_after: bool = False) -> date:
+    """Prochain jour de la semaine voulu, à partir d'aujourd'hui.
+
+    Parameters
+    ----------
+    today : date
+        Le jour de départ.
+    weekday : int
+        Le jour cherché (0 pour lundi, 6 pour dimanche).
+    strictly_after : bool
+        Vrai pour exclure aujourd'hui (« samedi prochain » un samedi). Par défaut faux.
+
+    Returns
+    -------
+    date
+        Le jour trouvé, aujourd'hui compris sauf si `strictly_after`.
+    """
     delta = (weekday - today.weekday()) % 7
     if strictly_after and delta == 0:
         delta = 7
@@ -277,6 +421,18 @@ def find_period(text: str, now: datetime) -> tuple[datetime, datetime, str] | No
 
     `text` est déjà passé par `plain`. Les formes les plus précises sont
     cherchées d'abord (« demain soir » avant « demain »).
+
+    Parameters
+    ----------
+    text : str
+        La question passée par `plain`.
+    now : datetime
+        Heure de référence pour lire « demain », « ce week-end », « samedi ».
+
+    Returns
+    -------
+    tuple[datetime, datetime, str] | None
+        Le début, la fin exclue et le libellé affiché ; None si aucune date n'est nommée.
     """
 
     now = now.astimezone(PARIS)
@@ -284,8 +440,10 @@ def find_period(text: str, now: datetime) -> tuple[datetime, datetime, str] | No
     padded = f" {text} "
 
     def has(*words: str) -> bool:
+        """Vrai si l'un des mots (ou expressions) figure dans la question."""
         return any(f" {word} " in padded for word in words)
 
+    # Jours relatifs : après-demain, demain, aujourd'hui
     if has("apres demain"):
         day = today + timedelta(days=2)
         return (*day_bounds(day, now), day_label(day))
@@ -294,6 +452,7 @@ def find_period(text: str, now: datetime) -> tuple[datetime, datetime, str] | No
         return (*day_bounds(day, now), "demain")
     if has("aujourd hui", "ce jour", "ce soir", "cet apres midi", "tout de suite", "maintenant"):
         return (*day_bounds(today, now), "aujourd'hui")
+    # Week-ends et semaines
     if has("week end prochain", "weekend prochain"):
         saturday = next_weekday(today, 5, strictly_after=True)
         if today.weekday() == 6:
@@ -325,10 +484,12 @@ def find_period(text: str, now: datetime) -> tuple[datetime, datetime, str] | No
             day = None
         if day:
             return (*day_bounds(day, now), day_label(day))
+    # Un jour de la semaine nommé (« samedi », « samedi prochain »)
     for index, name in enumerate(WEEKDAYS):
         if has(name, name + "s"):
             day = next_weekday(today, index, strictly_after=has(f"{name} prochain"))
             return (*day_bounds(day, now), day_label(day))
+    # Un mois nommé (l'an prochain s'il est passé), puis « ce mois-ci »
     for index, name in enumerate(MONTH_NAMES):
         if has(f"en {name}", f"mois de {name}", f"debut {name}", f"fin {name}") or (
                 name not in ("mars", "mai") and has(name)):
@@ -376,7 +537,18 @@ MOMENT_LABELS = {"matin": "le matin", "apres-midi": "l'après-midi", "journee": 
 
 
 def find_moment(padded: str) -> str | None:
-    """« samedi matin » -> « matin », « en journée » -> « journee » (sans le soir)."""
+    """« samedi matin » -> « matin », « en journée » -> « journee » (sans le soir).
+
+    Parameters
+    ----------
+    padded : str
+        La question passée par `plain`, entourée d'une espace de chaque côté.
+
+    Returns
+    -------
+    str | None
+        Le moment (clé de `MOMENT_PHRASES`), ou None.
+    """
 
     for moment, phrases in MOMENT_PHRASES.items():
         if any(f" {phrase} " in padded for phrase in phrases):
@@ -437,7 +609,20 @@ RADIUS_PATTERN = re.compile(r"\b(?:a moins de|dans un rayon de|a)\s+(\d{1,2})\s*
 
 
 def find_budget(text: str) -> float | None:
-    """Prix maximum demandé (texte passé par `plain`), ou None."""
+    """Prix maximum demandé (texte passé par `plain`), ou None.
+
+    Un montant explicite (de 1 à 500 €) prime ; « pas cher » vaut `CHEAP_PRICE`.
+
+    Parameters
+    ----------
+    text : str
+        La question passée par `plain` (« € » déjà remplacé par « euros »).
+
+    Returns
+    -------
+    float | None
+        Le prix maximum en euros, ou None.
+    """
 
     for pattern in BUDGET_PATTERNS:
         match = pattern.search(text)
@@ -449,7 +634,18 @@ def find_budget(text: str) -> float | None:
 
 
 def find_setting(text: str) -> str | None:
-    """« interieur » (pluie, froid), « exterieur » (plein air), ou None."""
+    """« interieur » (pluie, froid), « exterieur » (plein air), ou None.
+
+    Parameters
+    ----------
+    text : str
+        La question passée par `plain`.
+
+    Returns
+    -------
+    str | None
+        « interieur », « exterieur » ou None ; l'intérieur l'emporte si les deux sont dits.
+    """
 
     padded = f" {text} "
     if any(f" {word} " in padded for word in INDOOR_WORDS):
@@ -460,7 +656,21 @@ def find_setting(text: str) -> str | None:
 
 
 def find_near(text: str, cities: Sequence[str]) -> tuple[str, float] | None:
-    """Commune citée comme point de repère (« près de Sète ») et rayon en km."""
+    """Commune citée comme point de repère (« près de Sète ») et rayon en km.
+
+    Parameters
+    ----------
+    text : str
+        La question passée par `plain`.
+    cities : Sequence[str]
+        Les communes trouvées dans la question (`find_places`).
+
+    Returns
+    -------
+    tuple[str, float] | None
+        La commune et le rayon (écrit, ou `NEAR_RADIUS_KM`), ou None si aucune
+        commune n'est précédée de « près de », « à 10 km de »…
+    """
 
     padded = f" {text} "
     for city in cities:
@@ -477,6 +687,18 @@ def find_near(text: str, cities: Sequence[str]) -> tuple[str, float] | None:
 
 
 def find_public(text: str) -> str | None:
+    """Public nommé sans ambiguïté dans la question (famille, ados, seniors, soirée).
+
+    Parameters
+    ----------
+    text : str
+        La question passée par `plain`.
+
+    Returns
+    -------
+    str | None
+        Le public (clé de `PUBLIC_WORDS`), ou None.
+    """
     padded = f" {text} "
     for public, words in PUBLIC_WORDS.items():
         if any(f" {word} " in padded for word in words):
@@ -485,7 +707,20 @@ def find_public(text: str) -> str | None:
 
 
 def keywords_of(text: str, consumed: set[str]) -> tuple[str, ...]:
-    """Mots porteurs de sens qui restent : pour la recherche plein texte."""
+    """Mots porteurs de sens qui restent : pour la recherche plein texte.
+
+    Parameters
+    ----------
+    text : str
+        La question passée par `plain`.
+    consumed : set[str]
+        Les mots déjà compris ailleurs (lieu, date, public…), à ne pas chercher.
+
+    Returns
+    -------
+    tuple[str, ...]
+        Au plus 8 mots, dans l'ordre de la question, sans doublon.
+    """
 
     words = []
     for word in text.split():
@@ -504,7 +739,48 @@ def keywords_of(text: str, consumed: set[str]) -> tuple[str, ...]:
 
 @dataclass(slots=True)
 class QueryPlan:
-    """Ce que la recherche doit respecter, et d'où vient chaque contrainte."""
+    """Ce que la recherche doit respecter, et d'où vient chaque contrainte.
+
+    Attributes
+    ----------
+    start : datetime
+        Début de la période cherchée.
+    end : datetime
+        Fin exclue de la période.
+    period_label : str
+        Libellé de la période (« ce week-end », « sam. 18 oct. »).
+    public : str | None
+        Public demandé (famille, ados, seniors, soirée), ou aucun.
+    zone : str | None
+        Zone demandée (« montpellier » ou « thau »), ou aucune.
+    cities : tuple[str, ...]
+        Communes demandées, formes simplifiées.
+    free_only : bool
+        Vrai pour ne garder que le gratuit.
+    evening : bool
+        Vrai pour les séances du soir (à partir de `EVENING_HOUR`).
+    moment : str | None
+        « matin », « apres-midi », « journee » (le soir : `evening`).
+    period_from_question : bool
+        Vrai si la date vient de la question (« samedi »).
+    categories : tuple[str, ...]
+        Types de sortie acceptés.
+    keywords : tuple[str, ...]
+        Mots pour la recherche plein texte.
+    practice : str | None
+        Pratique à faire soi-même (« chanter »), voir `PRACTICE_VERBS`.
+    watch : bool
+        Vrai pour regarder, pas pratiquer (« un spectacle de danse »).
+    max_price : float | None
+        Prix maximum en euros (« moins de 15 € »).
+    setting : str | None
+        « interieur » (s'il pleut) ou « exterieur » (plein air).
+    near : tuple[str, float] | None
+        Commune de repère et rayon en km (« près de Sète »).
+    from_question : set[str]
+        Contraintes lues dans la question (et non cochées), relâchables s'il n'y a
+        aucun résultat.
+    """
 
     start: datetime
     end: datetime
@@ -528,16 +804,25 @@ class QueryPlan:
     from_question: set[str] = field(default_factory=set)
 
     def describe(self) -> str:
-        """Résumé lisible : « sam. 18 oct. · Sète · famille · gratuit · théâtre ou spectacle »."""
+        """Résumé lisible : « sam. 18 oct. · Sète · famille · gratuit · théâtre ou spectacle ».
 
+        Returns
+        -------
+        str
+            Les contraintes du plan, séparées par « · ».
+        """
+
+        # Quand : la période et le moment de la journée
         moment = "soir" if self.evening else self.moment
         parts = [self.period_label + (f" ({MOMENT_LABELS[moment]})" if moment else "")]
+        # Où : rayon autour d'une commune, communes, ou zone
         if self.near:
             parts.append(f"à moins de {self.near[1]:g} km de {city_label(self.near[0])}")
         elif self.cities:
             parts.append(", ".join(city_label(city) for city in self.cities))
         elif self.zone:
             parts.append({"montpellier": "Montpellier et sa métropole", "thau": "bassin de Thau"}[self.zone])
+        # Pour qui, combien, cadre, puis quoi (pratique ou type de sortie)
         if self.public:
             parts.append({"soiree": "soirée"}.get(self.public, self.public))
         if self.free_only:
@@ -553,8 +838,17 @@ class QueryPlan:
         return " · ".join(parts)
 
     def relaxed(self) -> QueryPlan:
-        """Le même plan sans les contraintes lues dans la question (sauf la date) :
-        utilisé quand elles ne laissent aucun résultat."""
+        """Le même plan sans les contraintes lues dans la question (sauf la date).
+
+        Utilisé quand elles ne laissent aucun résultat. Le type de sortie, les
+        mots-clés et la pratique sont gardés ; le moment, les communes, le budget,
+        le cadre et le rayon sont retirés.
+
+        Returns
+        -------
+        QueryPlan
+            Un nouveau plan, sans contrainte marquée comme venant de la question.
+        """
 
         return QueryPlan(
             start=self.start, end=self.end, period_label=self.period_label,
@@ -568,7 +862,39 @@ class QueryPlan:
 
 @dataclass(slots=True)
 class Understanding:
-    """Ce que la question dit, indépendamment des filtres cochés."""
+    """Ce que la question dit, indépendamment des filtres cochés.
+
+    Attributes
+    ----------
+    period : tuple[datetime, datetime, str] | None
+        Période nommée : début, fin exclue, libellé ; ou None.
+    public : str | None
+        Public nommé, ou None.
+    zone : str | None
+        Zone nommée (« montpellier » ou « thau »), ou None.
+    cities : tuple[str, ...]
+        Communes nommées.
+    free_only : bool
+        Vrai si la question demande du gratuit.
+    evening : bool
+        Vrai si la question parle du soir.
+    moment : str | None
+        « matin », « apres-midi » ou « journee », ou None.
+    categories : tuple[str, ...]
+        Types de sortie nommés.
+    keywords : tuple[str, ...]
+        Mots restants, pour la recherche plein texte.
+    max_price : float | None
+        Prix maximum en euros, ou None.
+    setting : str | None
+        « interieur » ou « exterieur », ou None.
+    near : tuple[str, float] | None
+        Commune de repère et rayon en km, ou None.
+    practice : str | None
+        Pratique à faire soi-même (« chanter »), ou None.
+    watch : bool
+        Vrai si la question parle de regarder (« voir un spectacle »).
+    """
 
     period: tuple[datetime, datetime, str] | None = None
     public: str | None = None
@@ -586,6 +912,15 @@ class Understanding:
     watch: bool = False
 
     def is_empty(self) -> bool:
+        """Vrai si la question ne contient aucune contrainte utile.
+
+        Le soir, le moment, la pratique et `watch` ne sont pas pris en compte.
+
+        Returns
+        -------
+        bool
+            Vrai si rien de ce qui a été lu ne restreint la recherche.
+        """
         return not (self.period or self.public or self.zone or self.cities or self.free_only
                     or self.categories or self.keywords or self.max_price is not None or self.setting
                     or self.near)
@@ -604,12 +939,25 @@ def learned_synonyms(path: Path = SYNONYMS_FILE) -> dict[str, str]:
 
     Relu seulement quand le fichier change : une proposition acceptée sert
     dès la question suivante, sans redémarrer l'API.
+
+    Parameters
+    ----------
+    path : Path
+        Le fichier YAML (clé `synonymes`). Par défaut `config/synonymes.yaml`.
+
+    Returns
+    -------
+    dict[str, str]
+        Une copie des synonymes, mots et cibles passés par `plain` ; vide si le
+        fichier est absent ou illisible.
     """
 
+    # Fichier absent : aucun synonyme
     try:
         stat = path.stat()
     except OSError:
         return {}
+    # Relire le fichier seulement s'il a changé depuis la dernière lecture
     key = (str(path), stat.st_mtime_ns, stat.st_size)       # fichier, date et taille : relu s'il change
     if _synonyms_cache["key"] != key:
         import yaml
@@ -626,8 +974,22 @@ def learned_synonyms(path: Path = SYNONYMS_FILE) -> dict[str, str]:
 
 
 def with_synonyms(question: str, synonyms: dict[str, str] | None = None) -> str:
-    """Ajoute à la question les mots connus de ses synonymes appris :
-    « de la zumba » -> « de la zumba fitness ». Le mot tapé reste."""
+    """Ajoute à la question les mots connus de ses synonymes appris.
+
+    « de la zumba » -> « de la zumba fitness ». Le mot tapé reste.
+
+    Parameters
+    ----------
+    question : str
+        La question du visiteur.
+    synonyms : dict[str, str] | None
+        Les synonymes à appliquer ; par défaut ceux de `learned_synonyms`.
+
+    Returns
+    -------
+    str
+        La question, suivie des mots ajoutés s'il y en a.
+    """
 
     synonyms = learned_synonyms() if synonyms is None else synonyms
     padded = f" {plain(question)} "
@@ -636,16 +998,35 @@ def with_synonyms(question: str, synonyms: dict[str, str] | None = None) -> str:
 
 
 def understand(question: str, now: datetime) -> Understanding:
-    """Lit la question : quand, où, pour qui, combien, quoi, et les mots restants."""
+    """Lit la question : quand, où, pour qui, combien, quoi, et les mots restants.
 
+    Chaque mot compris (lieu, date, public, prix…) est retiré des mots-clés, qui
+    ne gardent que le sujet (« jazz », « échecs »).
+
+    Parameters
+    ----------
+    question : str
+        La question du visiteur, telle qu'il l'a écrite.
+    now : datetime
+        Heure de référence pour lire les dates (« ce soir », « samedi »).
+
+    Returns
+    -------
+    Understanding
+        Tout ce qui a été lu dans la question.
+    """
+
+    # Ajouter les synonymes appris, puis simplifier le texte
     question = with_synonyms(question)
 
     text = plain(question.replace("€", " euros "))      # le signe disparaîtrait avec la ponctuation
     padded = f" {text} "
+    # Où, et les mots de lieu et de date à ne pas chercher
     cities, zone = find_places(text)
     consumed = {word for city in cities for word in city.split()}
     consumed |= {word for word, _ in ZONE_WORDS.items() if f" {word} " in padded}
     consumed |= set(WEEKDAYS) | set(MONTH_NAMES) | {"soir", "week", "end", "weekend", "semaine", "mois", "jour"}
+    # Le moment de la journée, puis le public
     evening_phrase = any(f" {phrase} " in padded for phrase in EVENING_PHRASES)
     moment = None if evening_phrase else find_moment(padded)
     # « en soirée » est un moment, pas le public « Soirée » : retiré avant de chercher le public.
@@ -657,6 +1038,7 @@ def understand(question: str, now: datetime) -> Understanding:
         consumed |= {"debut", "fin", "soiree"}
     if public:
         consumed |= {word for phrase in PUBLIC_WORDS[public] for word in phrase.split()}
+    # Gratuit, type de sortie, pratique, budget, cadre et rayon
     free = any(f" {word} " in padded for word in FREE_WORDS)
     consumed |= {"gratuit", "gratuite", "gratuits", "gratuites", "gratos", "payer", "libre", "entree"}
     categories = wanted_categories(question)
@@ -671,6 +1053,7 @@ def understand(question: str, now: datetime) -> Understanding:
     near = find_near(text, cities)
     if near:
         consumed |= {"pres", "autour", "cote", "loin", "alentours", "proche", "rayon", "km", "kilometres"}
+    # Assembler la compréhension ; les mots-clés sont ce qui reste
     return Understanding(
         period=find_period(text, now),
         public=public,
@@ -699,8 +1082,23 @@ def understand(question: str, now: datetime) -> Understanding:
 
 
 def combine(previous: Understanding, current: Understanding) -> Understanding:
-    """Question de relance (« et pour les enfants ? ») : ce que la nouvelle
-    question précise remplace l'ancienne, le reste est gardé."""
+    """Combine une question de relance avec la demande précédente.
+
+    Question de relance (« et pour les enfants ? ») : ce que la nouvelle
+    question précise remplace l'ancienne, le reste est gardé.
+
+    Parameters
+    ----------
+    previous : Understanding
+        Ce qui avait été compris de la demande précédente.
+    current : Understanding
+        Ce qui est compris de la relance.
+
+    Returns
+    -------
+    Understanding
+        La demande complète, relance appliquée.
+    """
 
     return Understanding(
         period=current.period or previous.period,
@@ -725,8 +1123,21 @@ def combine(previous: Understanding, current: Understanding) -> Understanding:
 
 
 def is_follow_up(question: str) -> bool:
-    """Vrai pour une relance courte qui dépend de la question précédente :
-    « et pour les enfants ? », « plutôt samedi », « moins cher », « à Sète ? »."""
+    """Vrai pour une relance courte qui dépend de la question précédente.
+
+    « et pour les enfants ? », « plutôt samedi », « moins cher », « à Sète ? ».
+
+    Parameters
+    ----------
+    question : str
+        La nouvelle question du visiteur.
+
+    Returns
+    -------
+    bool
+        Vrai si elle commence par un mot de liaison (« et », « plutôt »…), ou si
+        elle est courte (4 mots au plus) et ne nomme aucun sujet.
+    """
 
     text = plain(question)
     words = text.split()
@@ -754,8 +1165,29 @@ def merge_with_filters(understanding: Understanding, *, public: str | None, zone
     - Lieu : une commune nommée l'emporte sur la zone cochée.
     - Public, gratuit : la case cochée d'abord, sinon la question.
     - Moment (le soir, le matin, l'après-midi, en journée) : seulement écrit.
+
+    Parameters
+    ----------
+    understanding : Understanding
+        Ce qui a été lu dans la question (`understand`, ou `combine` pour une relance).
+    public : str | None
+        Public coché, ou aucun.
+    zone : str | None
+        Zone cochée, ou aucune.
+    period_bounds : tuple[datetime, datetime]
+        Début et fin exclue de la période cochée.
+    period_label : str
+        Libellé de la période cochée.
+    free_only : bool
+        Vrai si « gratuit » est coché.
+
+    Returns
+    -------
+    QueryPlan
+        Le plan de recherche, avec la liste des contraintes venues de la question.
     """
 
+    # Date : la question précise la période cochée, ou la remplace
     start, end = period_bounds
     label = period_label
     from_question: set[str] = set()
@@ -766,6 +1198,7 @@ def merge_with_filters(understanding: Understanding, *, public: str | None, zone
         else:
             start, end = q_start, q_end
         label = q_label
+    # Lieu : rayon autour d'une commune, communes nommées, ou zone
     plan_zone, cities = zone, understanding.cities
     near = understanding.near
     if near:
@@ -781,6 +1214,7 @@ def merge_with_filters(understanding: Understanding, *, public: str | None, zone
     elif understanding.zone and not zone:
         plan_zone = understanding.zone
         from_question.add("zone")
+    # Public et gratuit : la case cochée d'abord, sinon la question
     plan_public = public
     if not public and understanding.public:
         plan_public = understanding.public
@@ -789,12 +1223,14 @@ def merge_with_filters(understanding: Understanding, *, public: str | None, zone
     if not free_only and understanding.free_only:
         plan_free = True
         from_question.add("free")
+    # Noter les autres contraintes écrites (relâchables)
     if understanding.max_price is not None and not plan_free:
         from_question.add("budget")
     if understanding.setting:
         from_question.add("setting")
     if understanding.evening or understanding.moment:
         from_question.add("moment")
+    # Assembler le plan
     return QueryPlan(
         start=start, end=end, period_label=label, public=plan_public, zone=plan_zone, cities=cities,
         free_only=plan_free, evening=understanding.evening, moment=understanding.moment,

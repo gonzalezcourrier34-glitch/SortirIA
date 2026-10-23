@@ -53,7 +53,18 @@ FORMAT_VERSION = 1
 
 
 def plain_value(value: Any) -> Any:
-    """Valeur JSON : dates en ISO, décimaux en flottants."""
+    """Valeur JSON : dates en ISO, décimaux en flottants.
+
+    Parameters
+    ----------
+    value : Any
+        Une valeur lue en base.
+
+    Returns
+    -------
+    Any
+        La même valeur, convertie si besoin pour être écrite en JSON.
+    """
 
     if isinstance(value, datetime | date):
         return value.isoformat()
@@ -63,6 +74,24 @@ def plain_value(value: Any) -> Any:
 
 
 def fetch_table(connection: Any, sql: str, params: Any = None) -> dict[str, Any]:
+    """Exécute une requête et renvoie ses colonnes et ses lignes, prêtes pour le JSON.
+
+    Les colonnes de SKIPPED_COLUMNS (embedding, run_id) sont retirées.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion psycopg2 ouverte.
+    sql : str
+        Requête SELECT à exécuter.
+    params : Any
+        Paramètres de la requête. Par défaut None.
+
+    Returns
+    -------
+    dict[str, Any]
+        Les noms de colonnes sous `colonnes` et les lignes converties sous `lignes`.
+    """
     with connection.cursor() as cursor:
         cursor.execute(sql, params)
         columns = [column[0] for column in cursor.description]
@@ -73,11 +102,31 @@ def fetch_table(connection: Any, sql: str, params: Any = None) -> dict[str, Any]
 
 def export_dataset(connection: Any, path: Path = DATASET,
                    excluded: Sequence[str] = EXCLUDED_SOURCES) -> dict[str, int]:
-    """Écrit les sorties à venir, leurs sources et les partenaires."""
+    """Écrit les sorties à venir, leurs sources et les partenaires.
 
+    Seuls les événements marqués comme sorties et pas encore terminés sont gardés,
+    hors sources exclues ; on n'exporte que les sources réellement utilisées.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion psycopg2 à la base à exporter.
+    path : Path
+        Fichier `.json.gz` à écrire. Par défaut `tests/data/jeu_recherche.json.gz`.
+    excluded : Sequence[str]
+        Sources à ne pas exporter. Par défaut la source `document`.
+
+    Returns
+    -------
+    dict[str, int]
+        Le nombre de lignes exportées par table.
+    """
+
+    # Noter l'instant de l'export : l'évaluation se placera à ce moment-là
     with connection.cursor() as cursor:
         cursor.execute("SELECT now()")
         now = cursor.fetchone()[0]
+    # Lire les sorties à venir, puis leurs sources et les partenaires
     events = fetch_table(connection, """
         SELECT * FROM sortiria.events
         WHERE is_outing AND COALESCE(end_at, start_at) >= now() AND source <> ALL (%(excluded)s)
@@ -87,6 +136,7 @@ def export_dataset(connection: Any, path: Path = DATASET,
     sources = fetch_table(connection, "SELECT * FROM sortiria.sources WHERE source_id = ANY (%(used)s) "
                                       "ORDER BY source_id", {"used": used})
     partners = fetch_table(connection, "SELECT * FROM sortiria.partners ORDER BY partner_id")
+    # Écrire le tout dans un JSON compressé
     dataset = {"version": FORMAT_VERSION, "maintenant": plain_value(now),
                "tables": {"sources": sources, "partners": partners, "events": events}}
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -96,18 +146,52 @@ def export_dataset(connection: Any, path: Path = DATASET,
 
 
 def read_dataset(path: Path = DATASET) -> dict[str, Any]:
+    """Lit le jeu de test compressé.
+
+    Parameters
+    ----------
+    path : Path
+        Fichier `.json.gz`. Par défaut `tests/data/jeu_recherche.json.gz`.
+
+    Returns
+    -------
+    dict[str, Any]
+        Le contenu : `version`, `maintenant` et `tables`.
+    """
     with gzip.open(path, "rt", encoding="utf-8") as handle:
         return json.load(handle)
 
 
 def snapshot_time(path: Path = DATASET) -> datetime:
-    """Instant de l'export : l'évaluation se place à ce moment-là."""
+    """Instant de l'export : l'évaluation se place à ce moment-là.
+
+    Parameters
+    ----------
+    path : Path
+        Fichier du jeu de test. Par défaut `tests/data/jeu_recherche.json.gz`.
+
+    Returns
+    -------
+    datetime
+        L'instant `maintenant` enregistré lors de l'export.
+    """
 
     return datetime.fromisoformat(read_dataset(path)["maintenant"])
 
 
 def is_test_database(url: str) -> bool:
-    """Garde-fou : le chargement efface le schéma ; seulement une base « test »."""
+    """Garde-fou : le chargement efface le schéma ; seulement une base « test ».
+
+    Parameters
+    ----------
+    url : str
+        Adresse de connexion PostgreSQL.
+
+    Returns
+    -------
+    bool
+        True si le nom de la base (dernier segment du chemin) contient « test ».
+    """
 
     from urllib.parse import urlsplit
 
@@ -115,17 +199,36 @@ def is_test_database(url: str) -> bool:
 
 
 def load_dataset(connection: Any, path: Path = DATASET) -> dict[str, int]:
-    """Recrée le schéma et charge l'export (base de test vide)."""
+    """Recrée le schéma et charge l'export (base de test vide).
+
+    Le schéma `sortiria` est supprimé puis recréé : à n'appeler que sur une base
+    de test (voir `is_test_database`). Les colonnes `jsonb` sont enveloppées pour
+    psycopg2, et le vocabulaire des titres est recalculé à la fin.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion psycopg2 à la base de test ; passée en autocommit.
+    path : Path
+        Fichier du jeu de test. Par défaut `tests/data/jeu_recherche.json.gz`.
+
+    Returns
+    -------
+    dict[str, int]
+        Le nombre de lignes lues dans l'export, par table.
+    """
 
     from psycopg2.extras import Json
 
     from scripts.init_db import apply_schema
 
+    # Repartir d'un schéma neuf
     dataset = read_dataset(path)
     connection.autocommit = True
     with connection.cursor() as cursor:
         cursor.execute("DROP SCHEMA IF EXISTS sortiria CASCADE")
     apply_schema(connection)
+    # Insérer les lignes table par table, dans l'ordre des clés étrangères
     counts = {}
     with connection.cursor() as cursor:
         for name in ("sources", "partners", "events"):
@@ -142,11 +245,20 @@ def load_dataset(connection: Any, path: Path = DATASET) -> dict[str, int]:
                 cursor.execute(sql, [Json(value) if column in json_columns and value is not None else value
                                      for column, value in zip(columns, row, strict=True)])
             counts[name] = len(table["lignes"])
+        # Recalculer le vocabulaire des titres à partir des événements chargés
         cursor.execute("SELECT sortiria.refresh_title_vocabulary()")
     return counts
 
 
 def main() -> None:
+    """Exporte la base vers le jeu de test, ou charge le jeu de test dans une base « test ».
+
+    Raises
+    ------
+    SystemExit
+        Si `--charger` est demandé alors que DATABASE_URL ne vise pas une base « test ».
+    """
+    # Lire les arguments : exporter ou charger
     parser = argparse.ArgumentParser(description="Base de test de la recherche (export, chargement en CI).")
     action = parser.add_mutually_exclusive_group(required=True)
     action.add_argument("--exporter", action="store_true", help="Exporte la base (DATABASE_URL) vers le jeu de test.")
@@ -154,6 +266,7 @@ def main() -> None:
     parser.add_argument("--fichier", type=Path, default=DATASET, help="Fichier du jeu de test.")
     args = parser.parse_args()
 
+    # Charger l'environnement et vérifier le garde-fou avant de se connecter
     from config.environment import load_environment
 
     load_environment()
@@ -162,6 +275,7 @@ def main() -> None:
     url = os.environ["DATABASE_URL"]
     if args.charger and not is_test_database(url):
         raise SystemExit("Refusé : le chargement efface le schéma ; DATABASE_URL doit viser une base « test ».")
+    # Exécuter l'action demandée, puis fermer la connexion dans tous les cas
     connection = psycopg2.connect(url)
     try:
         if args.exporter:

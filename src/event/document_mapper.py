@@ -102,7 +102,49 @@ TITLE_MATCH_RATIO = 0.6
 
 
 class DocumentEvent(BaseModel):
-    """Un événement tel que Mistral doit le rendre (validé par Pydantic)."""
+    """Un événement tel que Mistral doit le rendre (validé par Pydantic).
+
+    Les noms des champs sont ceux de la consigne (`EXTRACTION_PROMPT`), en français.
+
+    Attributes
+    ----------
+    titre : str
+        Titre de l'événement (au moins 3 caractères, espaces retirés).
+    date_debut : date
+        Date de début (ou de la séance).
+    date_fin : date | None
+        Date de fin d'un événement qui dure (exposition).
+    heure_debut : time | None
+        Heure de début.
+    heure_fin : time | None
+        Heure de fin.
+    lieu : str | None
+        Lieu tel qu'écrit dans le programme.
+    commune : str | None
+        Commune, si elle est écrite.
+    prix : str | None
+        Prix tel qu'écrit.
+    gratuit : bool | None
+        Gratuité annoncée.
+    public : str | None
+        Public visé (« Tout public », « À partir de 6 ans »...).
+    age_min : int | None
+        Âge minimal (entre 0 et 120, sinon ignoré).
+    age_max : int | None
+        Âge maximal (entre 0 et 120, sinon ignoré).
+    categorie : str | None
+        Catégorie (« Concert », « Exposition »...).
+    description : str | None
+        Une ou deux phrases tirées du texte.
+    lien_reservation : str | None
+        Lien de réservation.
+    sur_inscription : bool | None
+        True si l'inscription est demandée.
+    jours_semaine : list[str] | None
+        Jours d'une activité hebdomadaire (« mercredi »), déroulés par `expand_dates`.
+    hors_vacances_scolaires : bool | None
+        True si l'activité s'arrête pendant les vacances scolaires.
+    """
 
     titre: str
     date_debut: date
@@ -126,6 +168,23 @@ class DocumentEvent(BaseModel):
     @field_validator("titre")
     @classmethod
     def title_not_empty(cls, value: str) -> str:
+        """Refuse un titre de moins de 3 caractères et retire ses espaces.
+
+        Parameters
+        ----------
+        value : str
+            Le titre rendu par Mistral.
+
+        Returns
+        -------
+        str
+            Le titre sans espaces autour.
+
+        Raises
+        ------
+        ValueError
+            Si le titre fait moins de 3 caractères.
+        """
         if len(value.strip()) < 3:
             raise ValueError("titre vide")
         return value.strip()
@@ -133,11 +192,41 @@ class DocumentEvent(BaseModel):
     @field_validator("age_min", "age_max")
     @classmethod
     def plausible_age(cls, value: int | None) -> int | None:
+        """Ignore un âge hors de 0 à 120 ans (sans rejeter l'événement).
+
+        Parameters
+        ----------
+        value : int | None
+            L'âge rendu par Mistral.
+
+        Returns
+        -------
+        int | None
+            L'âge s'il est plausible, sinon None.
+        """
         return value if value is None or 0 <= value <= 120 else None
 
 
 def parse_llm_response(text: str) -> list[dict[str, Any]]:
-    """Liste brute des événements d'une réponse Mistral (JSON, éventuellement entouré de ```)."""
+    """Liste brute des événements d'une réponse Mistral (JSON, éventuellement entouré de ```).
+
+    Parameters
+    ----------
+    text : str
+        La réponse de Mistral.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Les entrées de la clé `evenements` qui sont des objets.
+
+    Raises
+    ------
+    ValueError
+        Motif `reponse_llm_illisible` si la réponse ne contient pas d'objet JSON
+        ou pas de liste `evenements` ; `json.JSONDecodeError` (sous-classe de
+        ValueError) si le JSON est mal formé.
+    """
 
     match = re.search(r"\{.*\}", text or "", re.DOTALL)
     if not match:
@@ -150,7 +239,18 @@ def parse_llm_response(text: str) -> list[dict[str, Any]]:
 
 
 def validate_llm_event(raw: Mapping[str, Any]) -> tuple[DocumentEvent | None, str]:
-    """Valide un événement rendu par Mistral. Renvoie (événement, "") ou (None, motif)."""
+    """Valide un événement rendu par Mistral. Renvoie (événement, "") ou (None, motif).
+
+    Parameters
+    ----------
+    raw : Mapping[str, Any]
+        Une entrée brute de la réponse.
+
+    Returns
+    -------
+    tuple[DocumentEvent | None, str]
+        L'événement validé et "", ou None et le motif `champs_llm_invalides`.
+    """
 
     try:
         return DocumentEvent.model_validate(dict(raw)), ""
@@ -163,6 +263,19 @@ def title_found_in_text(title: str, text: str) -> bool:
 
     Le texte d'un PDF est souvent espacé (« O n les appelait ») ou coupé en fin
     de ligne : on compare aussi le texte sans espaces.
+
+    Parameters
+    ----------
+    title : str
+        Le titre rendu par Mistral.
+    text : str
+        Le texte de la page lue.
+
+    Returns
+    -------
+    bool
+        True si assez de mots de plus de deux lettres sont retrouvés ; False
+        pour un titre sans mot significatif.
     """
 
     words = [word for word in normalize_for_comparison(title).split() if len(word) > 2]
@@ -175,7 +288,20 @@ def title_found_in_text(title: str, text: str) -> bool:
 
 
 def in_period(event: DocumentEvent, period: tuple[date, date] | None) -> bool:
-    """Vrai si l'événement chevauche la période du document (ou s'il n'y en a pas)."""
+    """Vrai si l'événement chevauche la période du document (ou s'il n'y en a pas).
+
+    Parameters
+    ----------
+    event : DocumentEvent
+        L'événement validé.
+    period : tuple[date, date] | None
+        Début et fin de la période du document ; None si inconnue.
+
+    Returns
+    -------
+    bool
+        True si l'événement chevauche la période, ou sans période.
+    """
 
     if period is None:
         return True
@@ -191,6 +317,16 @@ def parse_holidays(source: Mapping[str, Any]) -> list[tuple[date, date]]:
 
     Provisoire : remplacé par le jeu de données « calendrier scolaire » de
     l'Éducation nationale (prochaine méthode de collecte prévue).
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Configuration de la source document.
+
+    Returns
+    -------
+    list[tuple[date, date]]
+        Début et fin de chaque période de vacances lisible.
     """
 
     holidays = []
@@ -213,11 +349,30 @@ def expand_dates(
     Seulement entre `first_day` et `last_day` (la fenêtre de collecte), et hors
     vacances scolaires si le programme le précise. Un événement sans
     `jours_semaine` est renvoyé tel quel.
+
+    Parameters
+    ----------
+    event : DocumentEvent
+        L'activité, avec `jours_semaine`.
+    first_day : date
+        Premier jour de la fenêtre de collecte.
+    last_day : date
+        Dernier jour de la fenêtre de collecte.
+    holidays : list[tuple[date, date]] | None
+        Périodes de vacances scolaires ; None : aucune.
+
+    Returns
+    -------
+    list[DocumentEvent]
+        Une séance d'un jour par date retenue (sans `jours_semaine`), ou
+        `[event]` si aucun jour n'est reconnu.
     """
 
+    # Jours de la semaine reconnus (0 = lundi)
     days = {WEEKDAYS.index(day) for day in (normalize_for_comparison(d) for d in event.jours_semaine or []) if day in WEEKDAYS}
     if not days:
         return [event]
+    # Parcourir les jours communs à l'activité et à la fenêtre, hors vacances si demandé
     start = max(event.date_debut, first_day)
     end = min(event.date_fin or last_day, last_day)
     sessions = []
@@ -244,13 +399,26 @@ def fix_listed_sessions(events: list[DocumentEvent]) -> list[DocumentEvent]:
     séance dure le jour indiqué). La dernière séance perd aussi cette fin si
     elle est la même que celle retirée aux autres. Une exposition seule (une
     seule entrée, « du 1er au 31 décembre ») n'est pas touchée.
+
+    Parameters
+    ----------
+    events : list[DocumentEvent]
+        Les événements validés d'un document.
+
+    Returns
+    -------
+    list[DocumentEvent]
+        Les mêmes événements, dans le même ordre, dates de fin abusives retirées.
     """
 
+    # Regrouper les séances d'une même activité (titre, lieu), hors hebdomadaires
     groups: dict[tuple[str, str], list[int]] = {}
     for index, event in enumerate(events):
         if not event.jours_semaine:
             key = (normalize_for_comparison(event.titre), normalize_for_comparison(event.lieu or ""))
             groups.setdefault(key, []).append(index)
+    # Dans chaque groupe d'au moins deux dates, retirer les fins qui débordent
+    # sur la séance suivante, puis la même fin partout ailleurs
     fixed = list(events)
     for indexes in groups.values():
         ordered = sorted(indexes, key=lambda i: events[i].date_debut)
@@ -274,6 +442,19 @@ def find_city(venue: str, venues: Mapping[str, str] | None) -> str:
 
     Le programme écrit souvent « MÉDIATHÈQUE MONTAIGNE » sans la commune ; les
     pages pratiques du document donnent l'adresse de chaque lieu.
+
+    Parameters
+    ----------
+    venue : str
+        Le lieu tel qu'écrit dans le programme.
+    venues : Mapping[str, str] | None
+        `{nom du lieu: commune}` ; un lieu correspond si tous les mots de son
+        nom sont dans `venue`.
+
+    Returns
+    -------
+    str
+        La commune du premier lieu correspondant, ou "".
     """
 
     normalized = f" {normalize_for_comparison(venue)} "
@@ -291,8 +472,30 @@ def map_document_event(
     document_url: str,
     extracted_at: str = "",
 ) -> Event:
-    """Transforme un événement validé en `Event` SortirIA."""
+    """Transforme un événement validé en `Event` SortirIA.
 
+    Parameters
+    ----------
+    event : DocumentEvent
+        L'événement validé.
+    source : Mapping[str, Any]
+        Configuration de la source document (`source_id`, `venues`, `city`,
+        `credit` ou `name`, `published_on`).
+    page : int
+        Numéro de la page du PDF où l'événement a été lu.
+    document_url : str
+        Adresse du PDF ; le lien renvoie à la page (`#page=N`) faute de lien
+        de réservation.
+    extracted_at : str
+        Date de l'extraction (ISO 8601).
+
+    Returns
+    -------
+    Event
+        L'événement SortirIA.
+    """
+
+    # Début et fin (fin de journée si plusieurs jours sans heure de fin)
     start_time = event.heure_debut
     start = datetime.combine(event.date_debut, start_time or time.min, tzinfo=PARIS)
     end = None
@@ -301,6 +504,7 @@ def map_document_event(
     elif event.heure_fin and start_time and event.heure_fin > start_time:
         end = datetime.combine(event.date_debut, event.heure_fin, tzinfo=PARIS)
 
+    # Prix : texte lu, complété par la gratuité annoncée
     price_text = clean_text(event.prix)
     price_min, price_max, is_free = parse_price(price_text)
     if event.gratuit is not None and is_free is None:
@@ -308,6 +512,8 @@ def map_document_event(
         if is_free:
             price_min = price_max = 0.0
 
+    # Lieu et commune (écrite, sinon celle du lieu connu, sinon celle de la source),
+    # description, mots-clés et lien
     start_at = to_iso(start)
     venue = clean_text(event.lieu)
     city = (
@@ -360,7 +566,18 @@ def map_document_event(
 
 
 def parse_period(source: Mapping[str, Any]) -> tuple[date, date] | None:
-    """Période du document depuis la configuration (`period: {debut, fin}`)."""
+    """Période du document depuis la configuration (`period: {debut, fin}`).
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Configuration de la source document.
+
+    Returns
+    -------
+    tuple[date, date] | None
+        Début et fin, ou None si la période est absente ou illisible.
+    """
 
     period = source.get("period")
     if not isinstance(period, Mapping):
@@ -372,7 +589,18 @@ def parse_period(source: Mapping[str, Any]) -> tuple[date, date] | None:
 
 
 def describe_period(period: tuple[date, date] | None) -> str:
-    """Période en clair pour la consigne (« du 2026-09-01 au 2026-12-31 »)."""
+    """Période en clair pour la consigne (« du 2026-09-01 au 2026-12-31 »).
+
+    Parameters
+    ----------
+    period : tuple[date, date] | None
+        Début et fin de la période ; None si inconnue.
+
+    Returns
+    -------
+    str
+        La période en texte, ou « non précisée ».
+    """
 
     if period is None:
         return "non précisée"

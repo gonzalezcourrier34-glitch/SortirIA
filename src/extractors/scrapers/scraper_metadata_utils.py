@@ -29,14 +29,37 @@ ARTICLE_TYPES: frozenset[str] = frozenset({
 
 
 def empty_metadata() -> dict[str, list[Any]]:
-    """Retourne une structure de métadonnées vide."""
+    """Retourne une structure de métadonnées vide.
+
+    Returns
+    -------
+    dict[str, list[Any]]
+        Les clés `json-ld` et `opengraph`, chacune avec une liste vide.
+    """
 
     return {"json-ld": [], "opengraph": []}
 
 
 def extract_metadata(raw_html: str, page_url: str) -> dict[str, list[Any]]:
-    """Extrait les métadonnées JSON-LD et Open Graph."""
+    """Extrait les métadonnées JSON-LD et Open Graph.
 
+    Utilise `extruct` en mode uniforme ; une page illisible donne une
+    structure vide au lieu d'une erreur.
+
+    Parameters
+    ----------
+    raw_html : str
+        HTML brut de la page.
+    page_url : str
+        URL de la page, pour résoudre l'URL de base et les liens relatifs.
+
+    Returns
+    -------
+    dict[str, list[Any]]
+        Les listes d'objets `json-ld` et `opengraph` (éventuellement vides).
+    """
+
+    # Lancer extruct, en tolérant le HTML mal formé
     try:
         metadata = extruct.extract(
             raw_html,
@@ -48,6 +71,7 @@ def extract_metadata(raw_html: str, page_url: str) -> dict[str, list[Any]]:
         logger.debug("Métadonnées HTML non exploitables pour %s : %s", page_url, error)
         return empty_metadata()
 
+    # Ne garder que des listes pour les deux syntaxes attendues
     if not isinstance(metadata, dict):
         return empty_metadata()
 
@@ -61,7 +85,21 @@ def extract_metadata(raw_html: str, page_url: str) -> dict[str, list[Any]]:
 
 
 def flatten_json_ld(value: Any) -> list[dict[str, Any]]:
-    """Aplatit récursivement une structure JSON-LD."""
+    """Aplatit récursivement une structure JSON-LD.
+
+    Chaque objet est gardé tel quel, et les objets de son `@graph` sont
+    ajoutés à la suite ; les listes sont parcourues élément par élément.
+
+    Parameters
+    ----------
+    value : Any
+        Objet, liste ou valeur JSON-LD.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Tous les objets trouvés, dans l'ordre de parcours.
+    """
 
     objects: list[dict[str, Any]] = []
 
@@ -80,7 +118,18 @@ def flatten_json_ld(value: Any) -> list[dict[str, Any]]:
 
 
 def get_json_ld_objects(metadata: Mapping[str, Any]) -> list[dict[str, Any]]:
-    """Retourne tous les objets JSON-LD."""
+    """Retourne tous les objets JSON-LD.
+
+    Parameters
+    ----------
+    metadata : Mapping[str, Any]
+        Métadonnées produites par `extract_metadata`.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Les objets JSON-LD aplatis, `@graph` compris.
+    """
 
     items = metadata.get("json-ld", [])
     if not isinstance(items, list):
@@ -95,7 +144,18 @@ def get_json_ld_objects(metadata: Mapping[str, Any]) -> list[dict[str, Any]]:
 
 
 def normalize_json_ld_types(value: Any) -> set[str]:
-    """Normalise la valeur @type."""
+    """Normalise la valeur @type.
+
+    Parameters
+    ----------
+    value : Any
+        Valeur `@type` : une chaîne ou une liste de chaînes.
+
+    Returns
+    -------
+    set[str]
+        Les types nettoyés en minuscules ; vide si la valeur est inattendue.
+    """
 
     values = [value] if isinstance(value, str) else value
 
@@ -106,7 +166,21 @@ def normalize_json_ld_types(value: Any) -> set[str]:
 
 
 def get_article_json_ld(metadata: Mapping[str, Any]) -> dict[str, Any]:
-    """Retourne le meilleur objet JSON-LD d'article."""
+    """Retourne le meilleur objet JSON-LD d'article.
+
+    Parmi les objets dont le type figure dans `ARTICLE_TYPES`, retient celui
+    qui a, par ordre d'importance, un corps, un titre, une date et une image.
+
+    Parameters
+    ----------
+    metadata : Mapping[str, Any]
+        Métadonnées produites par `extract_metadata`.
+
+    Returns
+    -------
+    dict[str, Any]
+        L'objet retenu, ou un dictionnaire vide s'il n'y a aucun article.
+    """
 
     candidates = [
         item
@@ -129,7 +203,18 @@ def get_article_json_ld(metadata: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def get_open_graph(metadata: Mapping[str, Any]) -> dict[str, Any]:
-    """Retourne le premier objet Open Graph exploitable."""
+    """Retourne le premier objet Open Graph exploitable.
+
+    Parameters
+    ----------
+    metadata : Mapping[str, Any]
+        Métadonnées produites par `extract_metadata`.
+
+    Returns
+    -------
+    dict[str, Any]
+        Une copie du premier objet Open Graph, ou un dictionnaire vide.
+    """
 
     items = metadata.get("opengraph", [])
 

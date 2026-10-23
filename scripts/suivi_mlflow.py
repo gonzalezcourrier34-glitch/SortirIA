@@ -31,9 +31,29 @@ def log_run(experiment: str, run_name: str, params: Mapping[str, Any], metrics: 
     """Un lancement = une exécution MLflow. Renvoie un message à afficher.
 
     Les métriques vides (None, "") sont laissées de côté ; les paramètres sont
-    coupés à 250 caractères (limite de MLflow).
+    coupés à 250 caractères (limite de MLflow). Aucune erreur ne remonte : si
+    MLflow est absent ou injoignable, on renvoie simplement un message.
+
+    Parameters
+    ----------
+    experiment : str
+        Nom de l'expérience MLflow (par exemple `sortiria-evaluation-recherche`).
+    run_name : str
+        Nom de l'exécution.
+    params : Mapping[str, Any]
+        Paramètres du lancement (modèle, version de consigne...).
+    metrics : Mapping[str, Any]
+        Métriques numériques ; les valeurs None ou "" sont ignorées.
+    artifacts : Iterable[Path]
+        Fichiers à joindre, s'ils existent. Par défaut aucun.
+
+    Returns
+    -------
+    str
+        Un message qui dit si le lancement a été enregistré, ou pourquoi non.
     """
 
+    # Respecter l'interrupteur MLFLOW_ACTIF
     if os.getenv("MLFLOW_ACTIF", "true").strip().lower() in OFF_VALUES:
         return "MLflow désactivé (MLFLOW_ACTIF)."
     uri = os.getenv("MLFLOW_TRACKING_URI", "")
@@ -48,6 +68,7 @@ def log_run(experiment: str, run_name: str, params: Mapping[str, Any], metrics: 
             with urlopen(f"{uri.rstrip('/')}/health", timeout=3):
                 pass
             mlflow.set_tracking_uri(uri)
+        # Enregistrer paramètres, métriques et fichiers dans une exécution
         mlflow.set_experiment(experiment)
         with mlflow.start_run(run_name=run_name):
             mlflow.log_params({key: str(value)[:250] for key, value in params.items()})

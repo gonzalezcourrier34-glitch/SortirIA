@@ -23,7 +23,24 @@ from pendulum import datetime as pendulum_datetime
 
 
 def run_collection(**_: Any) -> dict[str, Any]:
-    """Lance l'agent et renvoie son bilan (visible dans XCom)."""
+    """Lance l'agent et renvoie son bilan (visible dans XCom).
+
+    Parameters
+    ----------
+    **_ : Any
+        Contexte passé par Airflow (date logique, tâche...), ignoré.
+
+    Returns
+    -------
+    dict[str, Any]
+        Le bilan de la nuit : statut, sources, événements ajoutés, retirés,
+        expirés et vectorisés, couverture, coût, alertes et identifiant de collecte.
+
+    Raises
+    ------
+    RuntimeError
+        Si l'agent rend le statut `failed`, pour que la tâche échoue dans Airflow.
+    """
 
     from agent.graph import run_nightly_collection
 

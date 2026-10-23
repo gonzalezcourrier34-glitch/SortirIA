@@ -294,7 +294,18 @@ ON CONFLICT (partner_id, file_sha256) DO UPDATE SET
 
 
 def event_to_row(event: Event) -> dict[str, Any]:
-    """Prépare les paramètres SQL d'un événement (les dates vides deviennent NULL)."""
+    """Prépare les paramètres SQL d'un événement (les dates vides deviennent NULL).
+
+    Parameters
+    ----------
+    event : Event
+        L'événement à enregistrer.
+
+    Returns
+    -------
+    dict[str, Any]
+        Une valeur par colonne de `EVENT_COLUMNS`.
+    """
 
     row = {column: getattr(event, column) for column in EVENT_COLUMNS}
     for column in ("end_at", "extracted_at", "source_updated_at"):
@@ -303,7 +314,21 @@ def event_to_row(event: Event) -> dict[str, Any]:
 
 
 def import_status(rows_loaded: int, rows_rejected: int) -> str:
-    """Statut d'un fichier partenaire : importé, partiel ou refusé."""
+    """Statut d'un fichier partenaire : importé, partiel ou refusé.
+
+    Parameters
+    ----------
+    rows_loaded : int
+        Nombre de lignes chargées.
+    rows_rejected : int
+        Nombre de lignes refusées.
+
+    Returns
+    -------
+    str
+        « importe » si tout est chargé, « partiel » s'il y a des refus,
+        « refuse » si rien n'est chargé.
+    """
 
     if rows_loaded and not rows_rejected:
         return "importe"
@@ -319,6 +344,18 @@ def attach_partners(connection: Any, events: Sequence[Event]) -> int:
     À appeler avant `upsert_events`, dans la même transaction (un événement
     « mis en avant » doit avoir un partenaire : contrainte de la table).
     Renvoie le nombre d'événements reliés.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte ; la transaction reste à l'appelant.
+    events : Sequence[Event]
+        Les événements de la nuit ; leur `partner_id` est rempli sur place.
+
+    Returns
+    -------
+    int
+        Nombre d'événements reliés à un partenaire.
     """
 
     partner_events = [event for event in events if event.partner_info.get("name")]
@@ -330,6 +367,7 @@ def attach_partners(connection: Any, events: Sequence[Event]) -> int:
         for event in partner_events:
             info = event.partner_info
             name = str(info["name"])
+            # Créer ou mettre à jour le partenaire, une fois par nom
             if name not in partner_ids:
                 cursor.execute(UPSERT_PARTNER_SQL, {
                     "name": name,
@@ -340,6 +378,7 @@ def attach_partners(connection: Any, events: Sequence[Event]) -> int:
                 })
                 partner_ids[name] = int(cursor.fetchone()[0])
             event.partner_id = partner_ids[name]
+            # Bilan du fichier, un par (partenaire, empreinte)
             if info.get("file_sha256"):
                 loaded, rejected = int(info.get("rows_loaded", 0)), int(info.get("rows_rejected", 0))
                 imports[(event.partner_id, str(info["file_sha256"]))] = {
@@ -352,13 +391,30 @@ def attach_partners(connection: Any, events: Sequence[Event]) -> int:
                     "rows_rejected": rejected,
                     "rejection_reasons": json.dumps(dict(info.get("rejection_reasons", {})), ensure_ascii=False),
                 }
+        # Enregistrer les bilans des fichiers
         if imports:
             cursor.executemany(UPSERT_PARTNER_IMPORT_SQL, list(imports.values()))
     return len(partner_events)
 
 
 def upsert_events(connection: Any, events: Iterable[Event]) -> int:
-    """Insère ou met à jour des événements. Renvoie le nombre de lignes envoyées."""
+    """Insère ou met à jour des événements. Renvoie le nombre de lignes envoyées.
+
+    Un événement déjà connu voit ses champs remplacés, `last_seen_at` remis à
+    maintenant, et son enrichissement et son embedding effacés si son texte a changé.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+    events : Iterable[Event]
+        Les événements à enregistrer.
+
+    Returns
+    -------
+    int
+        Nombre de lignes envoyées.
+    """
 
     rows = [event_to_row(event) for event in events]
     if not rows:
@@ -373,6 +429,20 @@ def delete_unseen_events(connection: Any, sources: Sequence[str]) -> int:
 
     À appeler dans la même transaction que `upsert_events`, et seulement pour
     les sources lues sans échec (voir `sources_safe_to_sweep` dans l'agent).
+    Seuls les événements à venir sont concernés ; les suppressions sont
+    comptées sous le motif « disparu ».
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+    sources : Sequence[str]
+        Sources lues sans échec cette nuit.
+
+    Returns
+    -------
+    int
+        Nombre d'événements supprimés.
     """
 
     if not sources:
@@ -383,7 +453,20 @@ def delete_unseen_events(connection: Any, sources: Sequence[str]) -> int:
 
 
 def _deleted_count(cursor: Any) -> int:
-    """Nombre de lignes supprimées, rendu par la requête DELETE_WITH_STATS_SQL."""
+    """Nombre de lignes supprimées, rendu par la requête DELETE_WITH_STATS_SQL.
+
+    Sans résultat lisible (fausse connexion des tests), `rowcount` sert de repli.
+
+    Parameters
+    ----------
+    cursor : Any
+        Curseur qui vient d'exécuter la suppression.
+
+    Returns
+    -------
+    int
+        Nombre de lignes supprimées (0 au moins).
+    """
 
     row = cursor.fetchone() if getattr(cursor, "description", None) else None
     return int(row[0]) if row else max(cursor.rowcount or 0, 0)
@@ -394,6 +477,18 @@ def enforce_event_cap(connection: Any, maximum: int = DEFAULT_MAX_EVENTS) -> int
 
     Les plus proches sont ceux que le RAG propose (3 mois au plus) : ce sont
     les derniers à partir. Renvoie le nombre d'événements supprimés.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+    maximum : int
+        Nombre d'événements à ne pas dépasser. Par défaut `DEFAULT_MAX_EVENTS` (10 000).
+
+    Returns
+    -------
+    int
+        Nombre d'événements supprimés (motif « plafond »).
     """
 
     with connection.cursor() as cursor:
@@ -402,7 +497,18 @@ def enforce_event_cap(connection: Any, maximum: int = DEFAULT_MAX_EVENTS) -> int
 
 
 def count_events(connection: Any) -> int:
-    """Nombre d'événements en base."""
+    """Nombre d'événements en base.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+
+    Returns
+    -------
+    int
+        Nombre de lignes de `sortiria.events`.
+    """
 
     with connection.cursor() as cursor:
         cursor.execute("SELECT count(*) FROM sortiria.events")
@@ -414,6 +520,18 @@ def delete_past_events(connection: Any, now: datetime | None = None) -> int:
     """Supprime les événements terminés depuis plus de 7 jours (délai de notation).
 
     Renvoie le nombre de lignes supprimées.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+    now : datetime or None
+        Heure de référence. Par défaut, l'heure courante à Paris.
+
+    Returns
+    -------
+    int
+        Nombre d'événements supprimés (motif « passe »).
     """
 
     now = (now or datetime.now(PARIS)).astimezone(PARIS) - timedelta(days=RATING_WINDOW_DAYS)
@@ -424,7 +542,22 @@ def delete_past_events(connection: Any, now: datetime | None = None) -> int:
 
 
 def fetch_events_missing_embedding(connection: Any, limit: int = 500) -> list[dict[str, Any]]:
-    """Liste les événements dont l'embedding reste à calculer."""
+    """Liste les événements dont l'embedding reste à calculer.
+
+    Seuls les événements pas encore terminés sont pris, les plus proches d'abord.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+    limit : int
+        Nombre maximal d'événements. Par défaut 500.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Une ligne par événement (identifiant, textes, lieu, catégorie, résumé).
+    """
 
     with connection.cursor() as cursor:
         cursor.execute(SELECT_MISSING_EMBEDDINGS_SQL, {"limit": limit})
@@ -433,7 +566,22 @@ def fetch_events_missing_embedding(connection: Any, limit: int = 500) -> list[di
 
 
 def fetch_events_to_enrich(connection: Any, version: str, limit: int = 1500) -> list[dict[str, Any]]:
-    """Événements à enrichir par Mistral (nouveaux, modifiés, ou d'une ancienne consigne)."""
+    """Événements à enrichir par Mistral (nouveaux, modifiés, ou d'une ancienne consigne).
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+    version : str
+        Version actuelle de la consigne (`ENRICHMENT_VERSION`).
+    limit : int
+        Nombre maximal d'événements. Par défaut 1500.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Une ligne par événement à venir, les plus proches d'abord.
+    """
 
     with connection.cursor() as cursor:
         cursor.execute(SELECT_TO_ENRICH_SQL, {"version": version, "limit": limit})
@@ -443,7 +591,25 @@ def fetch_events_to_enrich(connection: Any, version: str, limit: int = 1500) -> 
 
 def update_enrichments(connection: Any, rows: Iterable[Mapping[str, Any]], version: str) -> int:
     """Enregistre les enrichissements. Chaque ligne : event_id, category_norm, summary,
-    price_band, audiences_llm, is_outing. Renvoie le nombre de lignes."""
+    price_band, audiences_llm, is_outing. Renvoie le nombre de lignes.
+
+    Les publics de Mistral s'ajoutent à ceux de la source ; l'embedding est
+    effacé pour être recalculé avec la catégorie et le résumé.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+    rows : Iterable[Mapping[str, Any]]
+        Les enrichissements, un par événement.
+    version : str
+        Version de la consigne qui les a produits.
+
+    Returns
+    -------
+    int
+        Nombre de lignes envoyées.
+    """
 
     params = [{**dict(row), "version": version} for row in rows]
     if not params:
@@ -454,7 +620,20 @@ def update_enrichments(connection: Any, rows: Iterable[Mapping[str, Any]], versi
 
 
 def fetch_quality_sample(connection: Any, limit: int = 20) -> list[dict[str, Any]]:
-    """Événements proposables tirés au hasard, pour le juge de qualité."""
+    """Événements proposables tirés au hasard, pour le juge de qualité.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+    limit : int
+        Taille de l'échantillon. Par défaut 20.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Une ligne par événement tiré dans `v_upcoming_events`.
+    """
 
     with connection.cursor() as cursor:
         cursor.execute(SELECT_QUALITY_SAMPLE_SQL, {"limit": limit})
@@ -476,7 +655,24 @@ ON CONFLICT (source_id, (action ->> 'new')) WHERE status = 'en_attente' DO NOTHI
 
 
 def record_proposals(connection: Any, run_id: int | None, proposals: Iterable[Mapping[str, Any]]) -> int:
-    """Enregistre les réparations proposées par l'agent (une seule fois chacune)."""
+    """Enregistre les réparations proposées par l'agent (une seule fois chacune).
+
+    Une proposition déjà en attente, ou déjà refusée pour la même valeur, est ignorée.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+    run_id : int or None
+        Collecte qui a produit les propositions.
+    proposals : Iterable[Mapping[str, Any]]
+        Propositions : `source_id`, `kind`, `diagnosis` et `action` (dictionnaire).
+
+    Returns
+    -------
+    int
+        Nombre de propositions envoyées (les doublons ignorés compris).
+    """
 
     params = [
         {"run_id": run_id, "source_id": str(item.get("source_id", "")), "kind": str(item["kind"]),
@@ -491,7 +687,20 @@ def record_proposals(connection: Any, run_id: int | None, proposals: Iterable[Ma
 
 
 def fetch_proposals(connection: Any, status: str = "en_attente") -> list[dict[str, Any]]:
-    """Propositions de l'agent dans un état donné (les plus anciennes d'abord)."""
+    """Propositions de l'agent dans un état donné (les plus anciennes d'abord).
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+    status : str
+        État cherché. Par défaut « en_attente ».
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Une ligne par proposition, avec la pull request éventuelle.
+    """
 
     with connection.cursor() as cursor:
         cursor.execute(
@@ -511,6 +720,24 @@ def set_proposal_status(connection: Any, proposal_id: int, status: str, *,
     `decided_by` : « ligne de commande » (agent.proposals) ou « github » (merge
     ou fermeture de la pull request, agent/pull_requests.py) ; `decided_at` :
     l'heure de la décision (par défaut, maintenant).
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+    proposal_id : int
+        Identifiant de la proposition.
+    status : str
+        Nouvel état (« acceptee », « refusee », « appliquee »).
+    decided_by : str
+        Origine de la décision. Par défaut « ligne de commande ».
+    decided_at : Any
+        Heure de la décision. Par défaut None : maintenant.
+
+    Returns
+    -------
+    int
+        1 si la proposition a été trouvée, 0 sinon.
     """
 
     with connection.cursor() as cursor:
@@ -524,7 +751,24 @@ def set_proposal_status(connection: Any, proposal_id: int, status: str, *,
 
 
 def set_proposal_pull_request(connection: Any, proposal_id: int, number: int, url: str) -> int:
-    """Note la pull request ouverte pour une proposition (agent/pull_requests.py)."""
+    """Note la pull request ouverte pour une proposition (agent/pull_requests.py).
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+    proposal_id : int
+        Identifiant de la proposition.
+    number : int
+        Numéro de la pull request.
+    url : str
+        Adresse de la pull request.
+
+    Returns
+    -------
+    int
+        1 si la proposition a été trouvée, 0 sinon.
+    """
 
     with connection.cursor() as cursor:
         cursor.execute(
@@ -561,7 +805,24 @@ RETURNING rating_id
 
 
 def upsert_rating(connection: Any, rating: Mapping[str, Any]) -> int | None:
-    """Enregistre la note d'un client ; None si l'événement n'est pas notable."""
+    """Enregistre la note d'un client ; None si l'événement n'est pas notable.
+
+    La requête vérifie elle-même le délai : événement commencé, et fini depuis
+    7 jours au plus.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+    rating : Mapping[str, Any]
+        `event_id`, `user_key`, `stars`, `comment`, `comment_status` et
+        `moderation` (JSON).
+
+    Returns
+    -------
+    int or None
+        L'identifiant de la note, ou None si l'événement n'existe pas ou n'est pas notable.
+    """
 
     with connection.cursor() as cursor:
         cursor.execute(UPSERT_RATING_SQL, dict(rating))
@@ -570,7 +831,20 @@ def upsert_rating(connection: Any, rating: Mapping[str, Any]) -> int | None:
 
 
 def fetch_event_ratings(connection: Any, event_id: str) -> list[dict[str, Any]]:
-    """Notes d'un événement (étoiles, commentaire et son statut, date)."""
+    """Notes d'un événement (étoiles, commentaire et son statut, date).
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+    event_id : str
+        Identifiant de l'événement.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Les notes, les plus récentes d'abord.
+    """
 
     with connection.cursor() as cursor:
         cursor.execute(
@@ -583,7 +857,20 @@ def fetch_event_ratings(connection: Any, event_id: str) -> list[dict[str, Any]]:
 
 
 def fetch_pending_comments(connection: Any, limit: int = 200) -> list[dict[str, Any]]:
-    """Commentaires en attente de modération (service indisponible au moment de la note)."""
+    """Commentaires en attente de modération (service indisponible au moment de la note).
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+    limit : int
+        Nombre maximal de commentaires. Par défaut 200.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        `rating_id` et `comment` de chaque commentaire, les plus anciens d'abord.
+    """
 
     with connection.cursor() as cursor:
         cursor.execute(
@@ -595,7 +882,19 @@ def fetch_pending_comments(connection: Any, limit: int = 200) -> list[dict[str, 
 
 
 def update_comment_status(connection: Any, rating_id: int, status: str, details: Mapping[str, Any]) -> None:
-    """Résultat de la modération d'un commentaire."""
+    """Résultat de la modération d'un commentaire.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+    rating_id : int
+        Identifiant de la note.
+    status : str
+        Nouveau statut du commentaire (« publie », « refuse », « en_attente »).
+    details : Mapping[str, Any]
+        Détail de la modération, enregistré en JSON.
+    """
 
     with connection.cursor() as cursor:
         cursor.execute(
@@ -639,13 +938,29 @@ SELECT
 
 
 def ratings_summary(connection: Any) -> dict[str, Any]:
-    """Notes des dernières 24 h, total, partenaires mal notés."""
+    """Notes des dernières 24 h, total, partenaires mal notés.
+
+    Ajoute aussi les sorties mal notées et les commentaires refusés des
+    7 derniers jours (16/10/2026).
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+
+    Returns
+    -------
+    dict[str, Any]
+        `new_24h`, `average_24h` (None sans note), `total`,
+        `low_rated_partners`, `low_rated_events` et `refused_comments`.
+    """
 
     with connection.cursor() as cursor:
         cursor.execute(RATINGS_SUMMARY_SQL)
         row = cursor.fetchone() or (0, None, 0, [], [], [])
 
     def as_list(value: Any) -> list[Any]:
+        """Lire une liste JSON, déjà décodée par le pilote ou encore en texte."""
         return value if isinstance(value, list) else json.loads(value or "[]")
 
     return {"new_24h": int(row[0] or 0), "average_24h": float(row[1]) if row[1] is not None else None,
@@ -666,7 +981,30 @@ WHERE rating_id = %(rating_id)s AND comment <> ''
 
 
 def review_comment(connection: Any, rating_id: int, status: str) -> int:
-    """Décision humaine sur un commentaire : « publie » ou « refuse ». Renvoie 1 si trouvé."""
+    """Décision humaine sur un commentaire : « publie » ou « refuse ». Renvoie 1 si trouvé.
+
+    La décision et le statut précédent sont gardés dans `moderation`
+    (clé « revue_humaine »).
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+    rating_id : int
+        Identifiant de la note.
+    status : str
+        Décision : « publie » ou « refuse ».
+
+    Returns
+    -------
+    int
+        1 si une note avec commentaire a été trouvée, 0 sinon.
+
+    Raises
+    ------
+    ValueError
+        Si la décision n'est ni « publie » ni « refuse ».
+    """
 
     if status not in ("publie", "refuse"):
         raise ValueError(f"décision inconnue : {status}")
@@ -676,7 +1014,24 @@ def review_comment(connection: Any, rating_id: int, status: str) -> int:
 
 
 def fetch_comments(connection: Any, status: str, days: int = 30, limit: int = 50) -> list[dict[str, Any]]:
-    """Commentaires d'un statut (« refuse », « publie ») des `days` derniers jours."""
+    """Commentaires d'un statut (« refuse », « publie ») des `days` derniers jours.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+    status : str
+        Statut cherché.
+    days : int
+        Profondeur en jours. Par défaut 30.
+    limit : int
+        Nombre maximal de commentaires. Par défaut 50.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Les commentaires, les plus récents d'abord.
+    """
 
     with connection.cursor() as cursor:
         cursor.execute(
@@ -694,7 +1049,22 @@ def update_embeddings(
     embeddings: Iterable[tuple[str, Sequence[float]]],
     model: str,
 ) -> int:
-    """Enregistre les embeddings calculés. Renvoie le nombre d'événements mis à jour."""
+    """Enregistre les embeddings calculés. Renvoie le nombre d'événements mis à jour.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+    embeddings : Iterable[tuple[str, Sequence[float]]]
+        Couples (identifiant de l'événement, vecteur).
+    model : str
+        Nom du modèle d'embedding, enregistré avec le vecteur.
+
+    Returns
+    -------
+    int
+        Nombre de lignes envoyées.
+    """
 
     rows = [
         {"event_id": event_id, "embedding": to_pgvector(vector), "model": model}
@@ -708,8 +1078,26 @@ def update_embeddings(
 
 
 def record_collect_run(connection: Any, report: Mapping[str, Any]) -> int:
-    """Enregistre le bilan d'une collecte nocturne. Renvoie l'identifiant créé."""
+    """Enregistre le bilan d'une collecte nocturne. Renvoie l'identifiant créé.
 
+    Les champs absents du bilan prennent une valeur neutre (0, vide) ; les
+    dictionnaires sont enregistrés en JSON.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+    report : Mapping[str, Any]
+        Bilan de la nuit (compteurs, motifs de rejet, coûts, couverture,
+        alertes, qualité, dérive...).
+
+    Returns
+    -------
+    int
+        L'identifiant `run_id` de la collecte.
+    """
+
+    # Ramener chaque champ du bilan au type de sa colonne
     params = {
         "status": report.get("status", "success"),
         "events_extracted": int(report.get("events_extracted", 0)),
@@ -748,6 +1136,20 @@ def record_run_sources(connection: Any, run_id: int, rows: Iterable[Mapping[str,
 
     Chaque ligne : `source_id`, `status` (« ok », « partiel » ou « echec »), `attempts`,
     `events_kept` et `error` (facultatif).
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+    run_id : int
+        Identifiant de la collecte.
+    rows : Iterable[Mapping[str, Any]]
+        Le bilan de chaque source.
+
+    Returns
+    -------
+    int
+        Nombre de lignes envoyées.
     """
 
     params = [
@@ -773,6 +1175,18 @@ def fetch_weekly_coverage(connection: Any, days: int = 7) -> dict[str, dict[str,
 
     Les zones et publics absents sont à 0, pour que la surveillance voie les
     cases vides.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+    days : int
+        Nombre de jours à venir couverts. Par défaut 7.
+
+    Returns
+    -------
+    dict[str, dict[str, int]]
+        Nombre de sorties par zone (« montpellier », « bassin_de_thau ») et par public.
     """
 
     counts = {zone: {audience: 0 for audience in ("famille", "soiree", "ados", "seniors")}
@@ -786,7 +1200,20 @@ def fetch_weekly_coverage(connection: Any, days: int = 7) -> dict[str, dict[str,
 
 
 def fetch_previous_source_counts(connection: Any) -> dict[str, int]:
-    """Événements retenus par source : le meilleur de ses 7 dernières collectes réussies."""
+    """Événements retenus par source : le meilleur de ses 7 dernières collectes réussies.
+
+    Sert de référence pour repérer une baisse anormale d'une source.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+
+    Returns
+    -------
+    dict[str, int]
+        Nombre d'événements de référence par source.
+    """
 
     with connection.cursor() as cursor:
         cursor.execute(SELECT_PREVIOUS_SOURCE_COUNTS_SQL)
@@ -798,6 +1225,16 @@ def purge_old_data(connection: Any) -> dict[str, int]:
 
     Questions de plus de 90 jours (et leurs avis), cache expiré, collectes de
     plus d'un an. Renvoie le nombre de lignes supprimées par catégorie.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+
+    Returns
+    -------
+    dict[str, int]
+        Lignes supprimées : `requests`, `cache` et `runs`.
     """
 
     with connection.cursor() as cursor:
@@ -808,7 +1245,18 @@ def purge_old_data(connection: Any) -> dict[str, int]:
 
 def refresh_title_vocabulary(connection: Any) -> int:
     """Recalcule le vocabulaire des titres (sujets reconnus par la recherche).
-    Renvoie le nombre de racines de mots connues."""
+    Renvoie le nombre de racines de mots connues.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+
+    Returns
+    -------
+    int
+        Nombre de racines de mots connues (0 si la fonction SQL ne rend rien).
+    """
 
     with connection.cursor() as cursor:
         cursor.execute(REFRESH_TITLE_VOCABULARY_SQL)
@@ -833,7 +1281,23 @@ LIMIT %(limit)s
 
 
 def fetch_thumbs_down(connection: Any, days: int = 7, limit: int = 20) -> list[dict[str, Any]]:
-    """Pouces bas des `days` derniers jours, avec ce qu'il faut pour en trouver la cause."""
+    """Pouces bas des `days` derniers jours, avec ce qu'il faut pour en trouver la cause.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+    days : int
+        Profondeur en jours. Par défaut 7.
+    limit : int
+        Nombre maximal d'avis. Par défaut 20.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Un avis par ligne : commentaire, question, début de réponse, titres
+        des trois premières cartes (`titles`, toujours une liste) et carte visée.
+    """
 
     with connection.cursor() as cursor:
         cursor.execute(THUMBS_DOWN_SQL, {"days": int(days), "limit": int(limit)})
@@ -850,14 +1314,32 @@ def fetch_search_gaps(connection: Any, days: int = 7, limit: int = 10) -> dict[s
       partenaire ou un synonyme à envisager ;
     - questions sans réponse exacte les plus fréquentes.
     L'agent le met dans son bilan du lundi ; il ne change rien lui-même.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion DB-API ouverte.
+    days : int
+        Profondeur en jours. Par défaut 7.
+    limit : int
+        Nombre maximal de mots et de questions listés. Par défaut 10.
+
+    Returns
+    -------
+    dict[str, Any]
+        `days`, `questions`, `not_exact`, `no_answer`, `unknown_words` et
+        `unanswered` (listes de couples (texte, nombre de fois)).
     """
 
     params = {"days": int(days), "limit": int(limit)}
     with connection.cursor() as cursor:
+        # Totaux : questions posées, sans réponse exacte, sans réponse du tout
         cursor.execute(SEARCH_GAPS_TOTALS_SQL, params)
         questions, not_exact, no_answer = cursor.fetchone() or (0, 0, 0)
+        # Mots inconnus de la base, les plus fréquents
         cursor.execute(SEARCH_GAPS_WORDS_SQL, params)
         words = [(str(word), int(times)) for word, times in cursor.fetchall()]
+        # Questions sans réponse exacte, les plus fréquentes
         cursor.execute(SEARCH_GAPS_QUESTIONS_SQL, params)
         unanswered = [(str(question), int(times)) for question, times in cursor.fetchall()]
     return {"days": int(days), "questions": int(questions or 0), "not_exact": int(not_exact or 0),

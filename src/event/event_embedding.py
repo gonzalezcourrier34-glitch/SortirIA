@@ -19,6 +19,19 @@ def build_embedding_text(event: Mapping[str, Any]) -> str:
 
     Exemple : « Concert Jazz au Jam. Catégorie : concert. Lieu : Le Jam,
     Montpellier. Soirée jazz avec le Blue Mood Quartet. »
+
+    La description est coupée à `MAX_DESCRIPTION_CHARS` caractères.
+
+    Parameters
+    ----------
+    event : Mapping[str, Any]
+        L'événement (`title`, `category_norm` ou `category`, `summary`,
+        `venue_name`, `city`, `description`).
+
+    Returns
+    -------
+    str
+        Les morceaux renseignés, joints par « . » et terminés par un point.
     """
 
     parts = [str(event.get("title") or "").strip()]
@@ -38,6 +51,17 @@ def build_embedding_text(event: Mapping[str, Any]) -> str:
 
 
 def to_pgvector(vector: Sequence[float]) -> str:
-    """Format texte accepté par pgvector : « [0.1,0.2,...] » (casté en vector en SQL)."""
+    """Format texte accepté par pgvector : « [0.1,0.2,...] » (casté en vector en SQL).
+
+    Parameters
+    ----------
+    vector : Sequence[float]
+        Le vecteur d'embedding.
+
+    Returns
+    -------
+    str
+        Le vecteur en texte, sept chiffres significatifs par valeur.
+    """
 
     return "[" + ",".join(f"{float(value):.7g}" for value in vector) + "]"

@@ -44,17 +44,42 @@ TAG_PATTERN = re.compile(r"<[^>]+>")
 
 
 def strip_html(value: Any) -> str:
-    """Texte brut d'un champ HTML de flux (description, résumé)."""
+    """Texte brut d'un champ HTML de flux (description, résumé).
+
+    Parameters
+    ----------
+    value : Any
+        Contenu du champ, HTML ou texte ; `None` donne une chaîne vide.
+
+    Returns
+    -------
+    str
+        Le texte sans balises, espaces normalisés.
+    """
 
     return clean_text(TAG_PATTERN.sub(" ", str(value or "")))
 
 
 def parse_feed_datetime(value: Any) -> datetime | None:
-    """Date d'un flux : ISO 8601 (`ev:startdate`) ou RFC 822 (`pubDate`)."""
+    """Date d'un flux : ISO 8601 (`ev:startdate`) ou RFC 822 (`pubDate`).
+
+    Une date sans fuseau est lue à l'heure de Paris.
+
+    Parameters
+    ----------
+    value : Any
+        La date telle que le flux la donne.
+
+    Returns
+    -------
+    datetime | None
+        La date ramenée au fuseau de Paris, ou `None` si elle est vide ou illisible.
+    """
 
     text = clean_text(value)
     if not text:
         return None
+    # Essayer d'abord l'ISO 8601, puis le format RFC 822 des `pubDate`
     parsed = parse_event_datetime(text)
     if parsed is None:
         try:
@@ -67,7 +92,24 @@ def parse_feed_datetime(value: Any) -> datetime | None:
 
 
 def get_event_dates(entry: Mapping[str, Any], source: Mapping[str, Any]) -> tuple[datetime | None, datetime | None, bool]:
-    """(début, fin, heure connue) d'une entrée, selon la règle de la source."""
+    """(début, fin, heure connue) d'une entrée, selon la règle de la source.
+
+    Les champs `ev_startdate`/`ev_enddate` priment ; sinon la date de publication
+    sert de date d'événement seulement si la source le déclare (`event_date: "published"`).
+
+    Parameters
+    ----------
+    entry : Mapping[str, Any]
+        L'entrée du flux telle que feedparser la rend.
+    source : Mapping[str, Any]
+        La configuration de la source (clé `event_date` notamment).
+
+    Returns
+    -------
+    tuple[datetime | None, datetime | None, bool]
+        Début, fin (ou `None`) et un booléen vrai si l'heure de début est connue ;
+        `(None, None, False)` si l'entrée ne porte aucune date d'événement.
+    """
 
     if entry.get("ev_startdate"):
         start = parse_feed_datetime(entry.get("ev_startdate"))
@@ -92,8 +134,30 @@ def map_rss_event(
 
     Une entrée hors de la fenêtre (passée, ou trop lointaine) renvoie
     (None, "") : elle est ignorée sans être comptée comme une erreur.
+
+    Parameters
+    ----------
+    entry : Mapping[str, Any]
+        L'entrée du flux telle que feedparser la rend.
+    source : Mapping[str, Any]
+        La configuration de la source : lieu, commune, coordonnées, catégorie,
+        crédit et règle de date par défaut.
+    today : date
+        Premier jour de la fenêtre : les événements finis avant sont ignorés.
+    horizon : date
+        Dernier jour de la fenêtre : les événements qui commencent après sont ignorés.
+    extracted_at : str
+        Horodatage de l'extraction, recopié dans l'événement. Par défaut vide.
+
+    Returns
+    -------
+    tuple[Event | None, str]
+        L'événement et une chaîne vide, ou `None` et le motif de rejet
+        (`titre_absent`, `date_evenement_absente`, `commune_absente`, ou vide
+        si l'entrée est hors fenêtre).
     """
 
+    # Vérifier le titre et la date, puis la fenêtre de dates
     title = strip_html(entry.get("title"))
     if not title:
         return None, REASON_NO_TITLE
@@ -102,18 +166,22 @@ def map_rss_event(
         return None, REASON_NO_EVENT_DATE
     if (end or start).date() < today or start.date() > horizon:
         return None, ""
+    # Lieu et commune : l'entrée d'abord, la configuration de la source sinon
     venue = strip_html(entry.get("ev_location")) or clean_text(source.get("venue_name"))
     city = normalize_city(source.get("city"))
     if not city:
         return None, REASON_NO_CITY
+    # Heure inconnue : ramener le début à minuit pour ne pas afficher une heure inventée
     if not time_known:
         start = datetime.combine(start.date(), time.min, tzinfo=PARIS)
 
+    # Description, mots-clés et catégorie (première étiquette, sinon celle de la source)
     description = strip_html(entry.get("summary") or entry.get("description"))[:1000]
     tags = [clean_text(tag.get("term")) for tag in entry.get("tags") or [] if isinstance(tag, Mapping)]
     category = next((tag for tag in tags if tag), clean_text(source.get("category")))
     start_at = to_iso(start)
     link = clean_text(entry.get("link")) or clean_text(source.get("website"))
+    # Construire l'événement, identifié par sa clé de dédoublonnage
     return Event(
         event_id=build_event_id(build_dedup_key(title, start_at, venue or city)),
         source="rss",

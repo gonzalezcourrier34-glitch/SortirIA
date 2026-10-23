@@ -24,7 +24,21 @@ from src.event.event_validator import conform_to_schema, validate_event
 
 @dataclass(slots=True)
 class PreparationReport:
-    """Bilan de la préparation, enregistré dans `sortiria.collect_runs`."""
+    """Bilan de la préparation, enregistré dans `sortiria.collect_runs`.
+
+    Attributes
+    ----------
+    events_extracted : int
+        Nombre d'articles reçus des extracteurs.
+    events_rejected : int
+        Nombre d'événements écartés (format inconnu ou validation refusée).
+    duplicates_merged : int
+        Nombre total de doublons fusionnés (même source et entre sources).
+    cross_source_merged : int
+        Dont : même événement venu de deux sources.
+    rejection_reasons : dict[str, int]
+        Nombre de rejets par motif.
+    """
 
     events_extracted: int = 0
     events_rejected: int = 0
@@ -33,6 +47,13 @@ class PreparationReport:
     rejection_reasons: dict[str, int] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        """Convertir le bilan en dictionnaire prêt à enregistrer.
+
+        Returns
+        -------
+        dict[str, Any]
+            Les compteurs et une copie des motifs de rejet.
+        """
         return {
             "events_extracted": self.events_extracted,
             "events_rejected": self.events_rejected,
@@ -52,6 +73,17 @@ def occurrence_article_url(event: Event) -> str:
     moteur suit alors la même règle que celui des événements. Le lien montré à
     l'utilisateur reste `event.url`. (Bug trouvé le 14/10/2026 en testant le
     moteur iCal.)
+
+    Parameters
+    ----------
+    event : Event
+        L'événement dont on construit l'URL technique.
+
+    Returns
+    -------
+    str
+        `event.url` avec le paramètre `occurrence=<event_id>`, placé avant
+        un éventuel fragment.
     """
 
     # Le paramètre doit passer AVANT un éventuel fragment (`#page=3` des PDF) :
@@ -63,7 +95,18 @@ def occurrence_article_url(event: Event) -> str:
 
 
 def event_from_article(article: Mapping[str, Any]) -> Event | None:
-    """Récupère l'`Event` rangé par un extracteur dans `article["metadata"]["event"]`."""
+    """Récupère l'`Event` rangé par un extracteur dans `article["metadata"]["event"]`.
+
+    Parameters
+    ----------
+    article : Mapping[str, Any]
+        Article produit par le moteur d'extraction.
+
+    Returns
+    -------
+    Event or None
+        L'événement reconstruit, ou None si l'article n'en contient pas.
+    """
 
     metadata = article.get("metadata")
     data = metadata.get("event") if isinstance(metadata, Mapping) else None
@@ -76,12 +119,27 @@ def prepare_events(
     articles: Iterable[Mapping[str, Any]],
     now: datetime | None = None,
 ) -> tuple[list[Event], PreparationReport]:
-    """Convertit, valide et déduplique les événements d'une collecte."""
+    """Convertit, valide et déduplique les événements d'une collecte.
+
+    Parameters
+    ----------
+    articles : Iterable[Mapping[str, Any]]
+        Articles produits par les extracteurs, chacun portant un événement.
+    now : datetime or None
+        Heure de référence pour écarter les événements passés. Par défaut
+        None (l'heure courante, voir `validate_event`).
+
+    Returns
+    -------
+    tuple[list[Event], PreparationReport]
+        Les événements valides et uniques, et le bilan chiffré de la préparation.
+    """
 
     report = PreparationReport()
     reasons: Counter[str] = Counter()
     valid: list[Event] = []
 
+    # Convertir chaque article en événement, le mettre au schéma et le valider
     for article in articles:
         report.events_extracted += 1
         event = event_from_article(article)
@@ -95,9 +153,11 @@ def prepare_events(
             continue
         valid.append(event)
 
+    # Fusionner les doublons d'une même source (même clé)
     unique, duplicates = deduplicate_events(valid)
     # Puis le même événement venu de deux sources, titres écrits autrement.
     unique, cross_source = merge_cross_source(unique)
+    # Remplir le bilan de la nuit
     report.events_rejected = sum(reasons.values())
     report.duplicates_merged = duplicates + cross_source
     report.cross_source_merged = cross_source

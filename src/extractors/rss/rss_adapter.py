@@ -29,7 +29,15 @@ RssArticleValidator = Callable[
 # Contexte attendu
 
 class RssValidationContext(Protocol):
-    """Décrit les données nécessaires aux validations RSS."""
+    """Décrit les données nécessaires aux validations RSS.
+
+    Attributes
+    ----------
+    source : Mapping[str, Any]
+        Configuration de la source en cours de lecture.
+    filters : Mapping[str, Any]
+        Filtres appliqués aux articles de cette source.
+    """
 
     source: Mapping[str, Any]
     filters: Mapping[str, Any]
@@ -39,7 +47,25 @@ class RssValidationContext(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class RssAdapter:
-    """Décrit le comportement propre au lecteur RSS ou Atom."""
+    """Décrit le comportement propre au lecteur RSS ou Atom.
+
+    Le moteur RSS orchestre la lecture ; l'adaptateur fournit les fonctions
+    propres à un flux ou à une famille de flux.
+
+    Attributes
+    ----------
+    iter_items : RssIterator
+        Renvoie les entrées brutes d'une source.
+    build_article : RssArticleBuilder
+        Transforme une entrée en article standard.
+    validate_item : RssItemValidator | None
+        Validation d'une entrée avant construction. Par défaut aucune.
+    validate_article : RssArticleValidator | None
+        Validation propre de l'article construit, avant la validation commune.
+        Par défaut aucune.
+    default_name : str
+        Nom du lecteur dans les journaux et le bilan. Par défaut « RSS ».
+    """
 
     iter_items: RssIterator
     build_article: RssArticleBuilder
@@ -48,7 +74,14 @@ class RssAdapter:
     default_name: str = "RSS"
 
     def __post_init__(self) -> None:
-        """Normalise et valide le contrat de l'adaptateur."""
+        """Normalise et valide le contrat de l'adaptateur.
+
+        Raises
+        ------
+        TypeError
+            Si une fonction obligatoire n'est pas appelable, ou si une fonction
+            facultative n'est ni appelable ni `None`.
+        """
 
         # Validation des callbacks obligatoires
         if not callable(self.iter_items):
@@ -86,7 +119,22 @@ def normalize_validation_result(
     invalid_reason: str,
     rejected_reason: str
 ) -> tuple[bool, str]:
-    """Normalise le résultat retourné par un callback de validation."""
+    """Normalise le résultat retourné par un callback de validation.
+
+    Parameters
+    ----------
+    result : Any
+        Valeur renvoyée par le callback, attendue sous la forme (bool, str).
+    invalid_reason : str
+        Motif utilisé si le résultat n'a pas la forme attendue.
+    rejected_reason : str
+        Motif utilisé si le callback rejette sans donner de motif.
+
+    Returns
+    -------
+    tuple[bool, str]
+        (True, "") si accepté, sinon (False, motif normalisé).
+    """
 
     # Un callback doit toujours retourner exactement (bool, str).
     if not isinstance(result, tuple) or len(result) != 2:
@@ -113,7 +161,27 @@ def validate_rss_item(
     context: RssValidationContext,
     adapter: RssAdapter
 ) -> tuple[bool, str]:
-    """Applique la validation spécifique d'une entrée RSS."""
+    """Applique la validation spécifique d'une entrée RSS.
+
+    Parameters
+    ----------
+    item : RssItem
+        Entrée brute du flux.
+    context : RssValidationContext
+        Contexte de la source (configuration et filtres).
+    adapter : RssAdapter
+        Adaptateur du flux ; sans `validate_item`, toute entrée est acceptée.
+
+    Returns
+    -------
+    tuple[bool, str]
+        Vrai et motif vide si l'entrée est acceptée, sinon faux et le motif.
+
+    Raises
+    ------
+    TypeError
+        Si `adapter` n'est pas un `RssAdapter`.
+    """
 
     if not isinstance(adapter, RssAdapter):
         raise TypeError("adapter doit être une instance de RssAdapter.")
@@ -139,7 +207,27 @@ def validate_rss_article(
     context: RssValidationContext,
     adapter: RssAdapter
 ) -> tuple[bool, str]:
-    """Applique les validations spécifique puis commune."""
+    """Applique les validations spécifique puis commune.
+
+    Parameters
+    ----------
+    article : Mapping[str, Any]
+        Article construit par l'adaptateur.
+    context : RssValidationContext
+        Contexte de la source (configuration et filtres).
+    adapter : RssAdapter
+        Adaptateur du flux.
+
+    Returns
+    -------
+    tuple[bool, str]
+        Vrai et motif vide si l'article est accepté, sinon faux et le motif.
+
+    Raises
+    ------
+    TypeError
+        Si `adapter` n'est pas un `RssAdapter`.
+    """
 
     if not isinstance(adapter, RssAdapter):
         raise TypeError("adapter doit être une instance de RssAdapter.")

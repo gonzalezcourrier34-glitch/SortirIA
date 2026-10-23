@@ -27,7 +27,24 @@ FileItemValidator = Callable[[FileItem, FileSource], tuple[bool, str]]
 
 @dataclass(frozen=True, slots=True)
 class FileSourceAdapter:
-    """Décrit comment lire un format : ses éléments, et comment en faire un article."""
+    """Décrit comment lire un format : ses éléments, et comment en faire un article.
+
+    Le moteur commun (`file_engine`) orchestre ; l'adaptateur ne fournit que les
+    trois fonctions propres au format.
+
+    Attributes
+    ----------
+    iter_items : FileIterator
+        Télécharge la source et renvoie ses éléments bruts (événements iCal,
+        événements lus dans un PDF...).
+    build_article : FileArticleBuilder
+        Transforme un élément validé en article standard du moteur.
+    validate_item : FileItemValidator | None
+        Validation propre au format, avant la construction de l'article.
+        Par défaut aucune.
+    default_name : str
+        Nom du lecteur dans les journaux et le bilan. Par défaut « Fichiers ».
+    """
 
     iter_items: FileIterator
     build_article: FileArticleBuilder
@@ -35,6 +52,14 @@ class FileSourceAdapter:
     default_name: str = "Fichiers"
 
     def __post_init__(self) -> None:
+        """Vérifie que les fonctions fournies sont appelables et normalise le nom.
+
+        Raises
+        ------
+        TypeError
+            Si `iter_items` ou `build_article` n'est pas appelable, ou si
+            `validate_item` n'est ni appelable ni `None`.
+        """
         if not callable(self.iter_items):
             raise TypeError("iter_items doit être une fonction appelable.")
         if not callable(self.build_article):
@@ -45,7 +70,22 @@ class FileSourceAdapter:
 
 
 def validate_file_item(item: FileItem, source: FileSource, adapter: FileSourceAdapter) -> tuple[bool, str]:
-    """Validation propre à l'adaptateur (avant la construction de l'article)."""
+    """Validation propre à l'adaptateur (avant la construction de l'article).
+
+    Parameters
+    ----------
+    item : FileItem
+        Élément brut renvoyé par `adapter.iter_items`.
+    source : FileSource
+        Configuration de la source.
+    adapter : FileSourceAdapter
+        Adaptateur du format ; sans `validate_item`, tout élément est accepté.
+
+    Returns
+    -------
+    tuple[bool, str]
+        Vrai et motif vide si l'élément est accepté, sinon faux et le motif du rejet.
+    """
 
     if adapter.validate_item is None:
         return True, ""
@@ -57,7 +97,20 @@ def validate_file_item(item: FileItem, source: FileSource, adapter: FileSourceAd
 
 
 def validate_file_article(article: Mapping[str, Any], filters: Mapping[str, Any]) -> tuple[bool, str]:
-    """Validation commune à tous les articles du moteur CheckIt.AI."""
+    """Validation commune à tous les articles du moteur CheckIt.AI.
+
+    Parameters
+    ----------
+    article : Mapping[str, Any]
+        Article construit par l'adaptateur.
+    filters : Mapping[str, Any]
+        Filtres de la source (mots-clés, longueurs minimales...).
+
+    Returns
+    -------
+    tuple[bool, str]
+        Vrai et motif vide si l'article est accepté, sinon faux et le motif du rejet.
+    """
 
     if not isinstance(article, Mapping):
         return False, "article_invalide"

@@ -66,7 +66,19 @@ Réponds uniquement en JSON :
 
 
 class FeedbackReading(BaseModel):
-    """Ce que Mistral dit d'un pouce bas."""
+    """Ce que Mistral dit d'un pouce bas.
+
+    Attributes
+    ----------
+    id : int
+        Numéro de l'avis dans la liste envoyée à Mistral.
+    cause : str
+        Cause retenue (une des `CAUSES`).
+    mot : str
+        Mot cherché, pour `sujet_absent` et `mal_compris` ; vide sinon.
+    explication : str
+        Explication de quelques mots donnée par Mistral.
+    """
 
     id: int
     cause: str
@@ -76,7 +88,19 @@ class FeedbackReading(BaseModel):
 
 @dataclass
 class FeedbackLearning:
-    """Mots à apprendre (ajoutés aux recherches ratées) et lignes pour le mail."""
+    """Mots à apprendre (ajoutés aux recherches ratées) et lignes pour le mail.
+
+    Attributes
+    ----------
+    words : dict[str, int]
+        Mots à apprendre, avec leur poids (chaque pouce bas compte `MIN_TIMES` fois).
+    causes : dict[str, int]
+        Nombre de pouces bas par cause.
+    notes : list[str]
+        Lignes destinées au mail du lundi.
+    usage : dict[str, dict[str, int]]
+        Jetons consommés, par modèle Mistral.
+    """
 
     words: dict[str, int] = field(default_factory=dict)
     causes: dict[str, int] = field(default_factory=dict)
@@ -85,6 +109,20 @@ class FeedbackLearning:
 
 
 def describe_review(index: int, review: Mapping[str, Any]) -> str:
+    """Rédiger un pouce bas en quelques lignes, pour le message envoyé à Mistral.
+
+    Parameters
+    ----------
+    index : int
+        Numéro de l'avis, que Mistral renvoie dans son champ `id`.
+    review : Mapping[str, Any]
+        Le pouce bas (`question`, `comment`, `titles`, `card_title`, `answer`).
+
+    Returns
+    -------
+    str
+        Le texte de l'avis : question, commentaire, sorties proposées, début de la réponse.
+    """
     titles = [str(title) for title in review.get("titles") or [] if title]
     card = review.get("card_title")
     lines = [f"Avis {index}",
@@ -99,7 +137,29 @@ def describe_review(index: int, review: Mapping[str, Any]) -> str:
 
 
 def parse_feedback(answer: str, count: int) -> dict[int, FeedbackReading]:
-    """Réponse de Mistral contrôlée : avis demandés, cause connue, mot d'un seul tenant."""
+    """Réponse de Mistral contrôlée : avis demandés, cause connue, mot d'un seul tenant.
+
+    Les avis mal formés, hors liste ou de cause inconnue sont ignorés ; le mot
+    est vidé s'il ne concerne pas `sujet_absent` / `mal_compris` ou n'est pas
+    un seul mot de 3 à 30 caractères.
+
+    Parameters
+    ----------
+    answer : str
+        Réponse JSON brute de Mistral.
+    count : int
+        Nombre d'avis envoyés (les `id` valides vont de 0 à `count - 1`).
+
+    Returns
+    -------
+    dict[int, FeedbackReading]
+        Les lectures retenues, indexées par numéro d'avis.
+
+    Raises
+    ------
+    json.JSONDecodeError
+        Si la réponse n'est pas du JSON (laissée remonter jusqu'à l'appelant).
+    """
 
     data = json.loads(answer)
     readings: dict[int, FeedbackReading] = {}
@@ -119,7 +179,18 @@ def parse_feedback(answer: str, count: int) -> dict[int, FeedbackReading]:
 
 def read_feedback_with_mistral(reviews: Sequence[Mapping[str, Any]]) -> tuple[dict[int, FeedbackReading],
                                                                                 dict[str, dict[str, int]]]:
-    """Lecture réelle par Mistral (`LEARNING_MODEL`, mistral-small-latest par défaut)."""
+    """Lecture réelle par Mistral (`LEARNING_MODEL`, mistral-small-latest par défaut).
+
+    Parameters
+    ----------
+    reviews : Sequence[Mapping[str, Any]]
+        Les pouces bas à classer.
+
+    Returns
+    -------
+    tuple[dict[int, FeedbackReading], dict[str, dict[str, int]]]
+        Les lectures contrôlées par `parse_feedback`, et les jetons consommés par modèle.
+    """
 
     import os
 
@@ -135,12 +206,30 @@ def learn_from_thumbs_down(
     reviews: Sequence[Mapping[str, Any]],
     read: Callable[[Sequence[Mapping[str, Any]]], tuple[Mapping[int, FeedbackReading], Mapping[str, Mapping[str, int]]]],
 ) -> FeedbackLearning:
-    """Range les pouces bas de la semaine par cause ; les mots à apprendre en sortent."""
+    """Range les pouces bas de la semaine par cause ; les mots à apprendre en sortent.
+
+    Au plus `MAX_REVIEWS` avis sont lus. Si la lecture échoue, le bilan part
+    quand même, avec une simple ligne qui le signale.
+
+    Parameters
+    ----------
+    reviews : Sequence[Mapping[str, Any]]
+        Les pouces bas de la semaine.
+    read : Callable
+        Classe les avis et renvoie (lectures par numéro, jetons par modèle) ;
+        en production `read_feedback_with_mistral`.
+
+    Returns
+    -------
+    FeedbackLearning
+        Les mots à apprendre, le compte par cause, les lignes du mail et les jetons.
+    """
 
     result = FeedbackLearning()
     reviews = list(reviews)[:MAX_REVIEWS]
     if not reviews:
         return result
+    # Faire classer les avis par Mistral ; en cas d'échec, une ligne dans le mail suffit
     try:
         readings, usage = read(reviews)
     except Exception as error:  # le bilan part quand même, sans le classement
@@ -148,6 +237,7 @@ def learn_from_thumbs_down(
         result.notes.append(f"{len(reviews)} pouce(s) bas cette semaine ; lecture par Mistral impossible : {error}")
         return result
     result.usage = {model: dict(tokens) for model, tokens in usage.items()}
+    # Compter les causes, garder les mots à apprendre, détailler chaque avis
     details: list[str] = []
     for index, review in enumerate(reviews):
         reading = readings.get(index)
@@ -158,6 +248,7 @@ def learn_from_thumbs_down(
         why = f" : {reading.explication}" if reading and reading.explication else ""
         comment = f" (« {review['comment']} »)" if review.get("comment") else ""
         details.append(f"« {review.get('question', '')} »{comment} → {CAUSE_LABELS[cause]}{why}")
+    # Rédiger le résumé par cause, puis le détail et les mots retenus
     summary = ", ".join(f"{count} {CAUSE_LABELS[cause]}" for cause, count in
                         sorted(result.causes.items(), key=lambda item: -item[1]))
     result.notes = [f"{len(reviews)} pouce(s) bas cette semaine : {summary}.", *details]
@@ -168,7 +259,21 @@ def learn_from_thumbs_down(
 
 
 def merge_words(gaps: Mapping[str, Any], words: Mapping[str, int]) -> dict[str, Any]:
-    """Les mots des pouces bas rejoignent les mots inconnus de la semaine."""
+    """Les mots des pouces bas rejoignent les mots inconnus de la semaine.
+
+    Parameters
+    ----------
+    gaps : Mapping[str, Any]
+        Bilan de la recherche, dont `unknown_words` : liste de (mot, nombre de fois).
+    words : Mapping[str, int]
+        Mots tirés des pouces bas, avec leur poids.
+
+    Returns
+    -------
+    dict[str, Any]
+        Une copie du bilan où `unknown_words` cumule les deux, du plus cherché
+        au moins cherché (puis par ordre alphabétique).
+    """
 
     merged: dict[str, int] = {str(word): int(times) for word, times in gaps.get("unknown_words") or []}
     for word, times in words.items():
@@ -179,9 +284,29 @@ def merge_words(gaps: Mapping[str, Any], words: Mapping[str, int]) -> dict[str, 
 
 def learn_with_feedback(gaps: Mapping[str, Any], today: Any, *, learn: Callable[[Mapping[str, Any], Any], Any],
                         read_feedback: Callable[..., Any]) -> Any:
-    """Le lundi : pouces bas d'abord (leurs mots rejoignent les recherches
+    """Apprendre des pouces bas puis des recherches ratées de la semaine.
+
+    Le lundi : pouces bas d'abord (leurs mots rejoignent les recherches
     ratées), puis l'apprentissage habituel (`learn`, qui renvoie un
-    `LearningResult`) ; le classement des pouces bas va dans le mail."""
+    `LearningResult`) ; le classement des pouces bas va dans le mail.
+
+    Parameters
+    ----------
+    gaps : Mapping[str, Any]
+        Bilan de la recherche de la semaine, avec les pouces bas sous `thumbs_down`.
+    today : Any
+        Date du jour, transmise à `learn`.
+    learn : Callable[[Mapping[str, Any], Any], Any]
+        Apprentissage habituel des recherches ratées (renvoie un `LearningResult`).
+    read_feedback : Callable[..., Any]
+        Classe les pouces bas (voir `learn_from_thumbs_down`).
+
+    Returns
+    -------
+    Any
+        Le `LearningResult` de `learn`, complété de `feedback_notes` et des
+        jetons des deux lectures.
+    """
 
     from agent.watch import merge_usage
 

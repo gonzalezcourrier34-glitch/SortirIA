@@ -59,7 +59,23 @@ Réponds uniquement avec un objet JSON :
 
 
 class Verdict(BaseModel):
-    """Réponse du juge pour une fiche."""
+    """Réponse du juge pour une fiche.
+
+    Attributes
+    ----------
+    id : str
+        Identifiant de l'événement jugé (`event_id`).
+    coherent : bool
+        Le titre, la catégorie et le résumé décrivent fidèlement le texte.
+    est_une_sortie : bool
+        C'est une sortie de loisir proposable.
+    publics_corrects : bool
+        Les publics indiqués sont justes.
+    categorie_correcte : bool
+        La catégorie est la plus juste de la liste fermée.
+    probleme : str
+        Courte explication quand une réponse est fausse ; vide par défaut.
+    """
 
     id: str
     coherent: bool
@@ -70,11 +86,31 @@ class Verdict(BaseModel):
 
     @property
     def score(self) -> float:
+        """Part des quatre questions de la grille auxquelles la fiche satisfait.
+
+        Returns
+        -------
+        float
+            Score entre 0 et 1 (0,25 par question réussie).
+        """
         return sum(bool(getattr(self, check)) for check in CHECKS) / len(CHECKS)
 
 
 def build_judge_text(rows: Sequence[Mapping[str, Any]]) -> str:
-    """Fiches envoyées au juge : ce que l'utilisateur verrait, plus le texte d'origine."""
+    """Fiches envoyées au juge : ce que l'utilisateur verrait, plus le texte d'origine.
+
+    Parameters
+    ----------
+    rows : Sequence[Mapping[str, Any]]
+        Événements de l'échantillon (identifiant, titre, catégorie, publics,
+        résumé, lieu, description).
+
+    Returns
+    -------
+    str
+        Un bloc de texte par fiche, séparés par une ligne vide ; le texte
+        d'origine est coupé à 600 caractères.
+    """
 
     blocks = []
     for row in rows:
@@ -90,8 +126,24 @@ def build_judge_text(rows: Sequence[Mapping[str, Any]]) -> str:
 
 
 def parse_verdicts(answer: str, expected_ids: Sequence[str]) -> dict[str, Verdict]:
-    """Verdicts valides d'une réponse, par identifiant."""
+    """Verdicts valides d'une réponse, par identifiant.
 
+    Un verdict mal formé ou d'identifiant inattendu est ignoré sans bruit.
+
+    Parameters
+    ----------
+    answer : str
+        Réponse brute du juge.
+    expected_ids : Sequence[str]
+        Identifiants des événements envoyés.
+
+    Returns
+    -------
+    dict[str, Verdict]
+        Les verdicts valides par `event_id` ; vide si la réponse est illisible.
+    """
+
+    # Extraire l'objet JSON de la réponse
     match = re.search(r"\{.*\}", answer or "", re.DOTALL)
     if not match:
         return {}
@@ -99,6 +151,7 @@ def parse_verdicts(answer: str, expected_ids: Sequence[str]) -> dict[str, Verdic
         items = json.loads(match.group(0)).get("verdicts", [])
     except (json.JSONDecodeError, AttributeError):
         return {}
+    # Valider chaque verdict et ne garder que les identifiants attendus
     verdicts = {}
     for item in items if isinstance(items, list) else []:
         try:
@@ -111,10 +164,26 @@ def parse_verdicts(answer: str, expected_ids: Sequence[str]) -> dict[str, Verdic
 
 
 def summarize(verdicts: Mapping[str, Verdict], rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
-    """Bilan d'une nuit : score global, taux par question, exemples de problèmes."""
+    """Bilan d'une nuit : score global, taux par question, exemples de problèmes.
+
+    Parameters
+    ----------
+    verdicts : Mapping[str, Verdict]
+        Verdicts du juge par `event_id`.
+    rows : Sequence[Mapping[str, Any]]
+        Événements de l'échantillon, pour citer leurs titres.
+
+    Returns
+    -------
+    dict[str, Any]
+        `checked`, `score` (moyenne arrondie au millième, None sans verdict),
+        le taux de réussite de chaque question de `CHECKS`, et au plus cinq
+        problèmes « titre : explication ».
+    """
 
     if not verdicts:
         return {"checked": 0, "score": None}
+    # Score global puis taux de réussite par question
     titles = {str(row["event_id"]): row.get("title", "") for row in rows}
     values = list(verdicts.values())
     result: dict[str, Any] = {
@@ -123,6 +192,7 @@ def summarize(verdicts: Mapping[str, Verdict], rows: Sequence[Mapping[str, Any]]
     }
     for check in CHECKS:
         result[check] = round(sum(bool(getattr(verdict, check)) for verdict in values) / len(values), 3)
+    # Quelques exemples de problèmes, pour le journal et le tableau de bord
     result["problems"] = [
         f"{titles.get(verdict.id, verdict.id)} : {verdict.probleme}"
         for verdict in values if verdict.score < 1 and verdict.probleme
@@ -131,13 +201,30 @@ def summarize(verdicts: Mapping[str, Verdict], rows: Sequence[Mapping[str, Any]]
 
 
 def judge_model() -> str:
-    """Modèle du juge (`JUDGE_MODEL` dans .env)."""
+    """Modèle du juge (`JUDGE_MODEL` dans .env).
+
+    Returns
+    -------
+    str
+        Le nom du modèle ; `DEFAULT_JUDGE_MODEL` si la variable n'est pas définie.
+    """
 
     return os.getenv("JUDGE_MODEL", DEFAULT_JUDGE_MODEL)
 
 
 def judge_with_mistral(rows: Sequence[Mapping[str, Any]]) -> tuple[dict[str, Verdict], dict[str, dict[str, int]]]:
-    """Fait juger un échantillon. Renvoie ({event_id: Verdict}, consommation {modèle: tokens})."""
+    """Fait juger un échantillon. Renvoie ({event_id: Verdict}, consommation {modèle: tokens}).
+
+    Parameters
+    ----------
+    rows : Sequence[Mapping[str, Any]]
+        Événements de l'échantillon ; chacun doit avoir un `event_id`.
+
+    Returns
+    -------
+    tuple[dict[str, Verdict], dict[str, dict[str, int]]]
+        Les verdicts valides par `event_id`, et les tokens consommés par modèle.
+    """
 
     from src.event.event_enrichment import call_mistral_json
 

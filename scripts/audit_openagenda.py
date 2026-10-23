@@ -39,12 +39,42 @@ from src.extractors.apis.source.openagenda_extractor import (
 
 
 def percent(part: int, total: int) -> str:
+    """Formate une part en pourcentage à une décimale.
+
+    Parameters
+    ----------
+    part : int
+        Le nombre d'éléments concernés.
+    total : int
+        Le nombre total d'éléments.
+
+    Returns
+    -------
+    str
+        Par exemple « 42.5 % », ou « n/a » si le total est nul.
+    """
     return f"{100 * part / total:.1f} %" if total else "n/a"
 
 
 def compute_indicators(events: list[Event], target_city: str) -> dict[str, Any]:
-    """Calcule les indicateurs de qualité sur les événements retenus."""
+    """Calcule les indicateurs de qualité sur les événements retenus.
 
+    Parameters
+    ----------
+    events : list[Event]
+        Les événements après validation et déduplication.
+    target_city : str
+        La ville visée, comparée sans tenir compte de la casse.
+
+    Returns
+    -------
+    dict[str, Any]
+        Les compteurs et pourcentages (ville cible, heure, prix, gratuité, GPS,
+        image, description), l'horizon des dates et les dix villes et
+        catégories les plus fréquentes.
+    """
+
+    # Compter villes, catégories et horizon des dates de début
     total = len(events)
     cities = Counter(event.city or "(sans ville)" for event in events)
     categories = Counter(event.category or "(sans catégorie)" for event in events)
@@ -53,6 +83,7 @@ def compute_indicators(events: list[Event], target_city: str) -> dict[str, Any]:
         "aujourd'hui-7 j" if (d - datetime.now(PARIS)).days < 7 else "8-30 j" if (d - datetime.now(PARIS)).days <= 30 else "> 30 j"
         for d in starts if d
     )
+    # Mesurer la part des événements dans la ville cible et le remplissage des champs
     in_target = sum(1 for event in events if event.city.lower() == target_city.lower())
     return {
         "evenements_retenus": total,
@@ -71,7 +102,24 @@ def compute_indicators(events: list[Event], target_city: str) -> dict[str, Any]:
 
 
 def field_paths(value: Any, prefix: str = "") -> list[str]:
-    """Liste les chemins des champs d'un objet JSON (« location.city »...)."""
+    """Liste les chemins des champs d'un objet JSON (« location.city »...).
+
+    Les dictionnaires de traductions (clés « fr », « en »...) ne sont pas
+    détaillés ; pour une liste de dictionnaires, seul le premier élément est
+    parcouru (suffixe « [] »).
+
+    Parameters
+    ----------
+    value : Any
+        L'objet JSON à parcourir.
+    prefix : str
+        Le chemin déjà parcouru. Par défaut vide (racine).
+
+    Returns
+    -------
+    list[str]
+        Les chemins de tous les champs rencontrés.
+    """
 
     if isinstance(value, dict):
         paths: list[str] = []
@@ -87,7 +135,20 @@ def field_paths(value: Any, prefix: str = "") -> list[str]:
 
 
 def dump_raw_structure(source: dict[str, Any], agenda_uids: list[str], path: Path) -> None:
-    """Enregistre la fréquence des champs et un exemple brut d'événement local."""
+    """Enregistre la fréquence des champs et un exemple brut d'événement local.
+
+    Lit une page de 50 événements dans au plus trois agendas, garde ceux de la
+    zone, puis écrit un JSON avec la fréquence de chaque champ et un exemple.
+
+    Parameters
+    ----------
+    source : dict[str, Any]
+        La configuration de la source OpenAgenda (zones, paramètres d'appel).
+    agenda_uids : list[str]
+        Les agendas à interroger ; seuls les trois premiers sont lus.
+    path : Path
+        Le fichier JSON à écrire.
+    """
 
     api_key = get_api_key()
     items: list[dict[str, Any]] = []
@@ -104,6 +165,13 @@ def dump_raw_structure(source: dict[str, Any], agenda_uids: list[str], path: Pat
 
 
 def main() -> None:
+    """Lance la collecte, prépare les événements et affiche le bilan d'audit.
+
+    Options : `--json` pour enregistrer le bilan, `--brut` pour la structure
+    brute de quelques événements, `--decouverte` pour chercher les agendas par
+    termes au lieu de la liste `agenda_uids`.
+    """
+    # Lire les options de la ligne de commande
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--json", type=Path, help="Enregistre aussi le résultat dans ce fichier JSON.")
     parser.add_argument("--brut", type=Path, help="Enregistre la structure brute de quelques événements.")
@@ -114,6 +182,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    # Collecter (agendas configurés ou découverte), puis préparer comme la nuit
     source = OPENAGENDA_EXTRACTOR.source
     configured = {str(uid) for uid in source.get("agenda_uids") or []}
     if args.decouverte:
@@ -127,6 +196,7 @@ def main() -> None:
         str((article.get("metadata") or {}).get("agenda_uid", "")) for article in result.articles
     )
 
+    # Assembler le bilan, sans la description de l'exemple (trop longue)
     summary = {
         "date": datetime.now(PARIS).isoformat(timespec="seconds"),
         "statut_extraction": result.status,
@@ -145,6 +215,7 @@ def main() -> None:
     if summary["exemple"]:
         summary["exemple"].pop("description", None)
 
+    # Afficher, puis enregistrer ce qui a été demandé
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     if args.brut:
         dump_raw_structure(dict(source), [uid for uid, _ in agendas.most_common(3) if uid], args.brut)

@@ -52,8 +52,19 @@ RULES = [
 
 
 def write_excel(path: Path) -> None:
-    """Classeur Excel mis en forme, avec listes déroulantes."""
+    """Classeur Excel mis en forme, avec listes déroulantes.
 
+    Trois onglets : « Programme » à remplir (en-têtes colorés selon que la
+    colonne est obligatoire, listes déroulantes pour `gratuit`, `statut` et
+    `public`), « Exemple » et « Aide ».
+
+    Parameters
+    ----------
+    path : Path
+        Le fichier .xlsx à écrire.
+    """
+
+    # Préparer les en-têtes et leurs couleurs (orange : obligatoire)
     from openpyxl import Workbook
     from openpyxl.styles import Alignment, Font, PatternFill
     from openpyxl.worksheet.datavalidation import DataValidation
@@ -64,6 +75,7 @@ def write_excel(path: Path) -> None:
     workbook = Workbook()
 
     def header_sheet(sheet) -> None:
+        """Écrit la ligne d'en-têtes colorée et la fige en haut de l'onglet."""
         sheet.append(headers)
         for cell, (_, required, _) in zip(sheet[1], TEMPLATE_COLUMNS, strict=True):
             cell.font = Font(bold=True)
@@ -71,6 +83,7 @@ def write_excel(path: Path) -> None:
             sheet.column_dimensions[cell.column_letter].width = 32 if cell.value == "description" else 16
         sheet.freeze_panes = "A2"
 
+    # Onglet « Programme » : en-têtes et listes déroulantes
     programme = workbook.active
     programme.title = "Programme"
     header_sheet(programme)
@@ -81,11 +94,13 @@ def write_excel(path: Path) -> None:
         validation.add(f"{letter}2:{letter}1000")
         programme.add_data_validation(validation)
 
+    # Onglet « Exemple » : les lignes fictives
     example = workbook.create_sheet("Exemple")
     header_sheet(example)
     for row in EXAMPLE_ROWS:
         example.append([row.get(name, "") for name in headers])
 
+    # Onglet « Aide » : le sens de chaque colonne, puis les règles de remplissage
     help_sheet = workbook.create_sheet("Aide")
     help_sheet.append(["Colonne", "Obligatoire", "À quoi elle sert"])
     for cell in help_sheet[1]:
@@ -108,13 +123,25 @@ def write_excel(path: Path) -> None:
 
 
 def write_csv(path: Path) -> None:
-    """Version CSV (séparateur « ; » et BOM : s'ouvre proprement dans Excel)."""
+    """Version CSV (séparateur « ; » et BOM : s'ouvre proprement dans Excel).
+
+    Le fichier ne contient que la ligne d'en-têtes.
+
+    Parameters
+    ----------
+    path : Path
+        Le fichier .csv à écrire.
+    """
 
     with path.open("w", encoding="utf-8-sig", newline="") as handle:
         csv.writer(handle, delimiter=";").writerow([name for name, _, _ in TEMPLATE_COLUMNS])
 
 
 def main() -> None:
+    """Écrit les modèles Excel et CSV dans le dossier choisi.
+
+    L'option `--dossier` change le dossier de sortie (par défaut `docs/modeles`).
+    """
     parser = argparse.ArgumentParser(description="Crée le modèle de fichier partenaire.")
     parser.add_argument("--dossier", type=Path, default=OUTPUT_DIR)
     args = parser.parse_args()

@@ -31,7 +31,11 @@ PLACEHOLDER_VALUES: frozenset[str] = frozenset({
 
 # Exceptions
 class SecretError(RuntimeError):
-    """Erreur générique liée à la résolution d'un secret."""
+    """Erreur générique liée à la résolution d'un secret.
+
+    Classe mère des erreurs de secrets : l'attraper suffit pour couvrir un secret
+    absent comme un nom invalide.
+    """
 
 
 class SecretNotFoundError(SecretError):
@@ -54,13 +58,41 @@ load_environment()
 
 # Validation commune
 def is_valid_secret(value: str | None) -> bool:
-    """Vérifie qu'une valeur sensible est présente et non factice."""
+    """Vérifie qu'une valeur sensible est présente et non factice.
+
+    Parameters
+    ----------
+    value : str | None
+        La valeur lue (secret, variable d'environnement ou défaut).
+
+    Returns
+    -------
+    bool
+        False si la valeur est vide ou fait partie de PLACEHOLDER_VALUES
+        (`change_me`, `xxx`...), True sinon.
+    """
 
     return bool(value and value.strip().lower() not in PLACEHOLDER_VALUES)
 
 
 def validate_secret_name(secret_name: str) -> str:
-    """Valide et retourne un nom de Docker Secret normalisé."""
+    """Valide et retourne un nom de Docker Secret normalisé.
+
+    Parameters
+    ----------
+    secret_name : str
+        Le nom demandé ; les espaces autour sont retirés.
+
+    Returns
+    -------
+    str
+        Le nom nettoyé, en snake_case minuscule.
+
+    Raises
+    ------
+    SecretNameError
+        Si le nom n'est pas en snake_case minuscule (ce qui écarte aussi `..` et `/`).
+    """
 
     normalized_name = str(secret_name or "").strip()
     if not SECRET_NAME_PATTERN.fullmatch(normalized_name):
@@ -73,13 +105,44 @@ def validate_secret_name(secret_name: str) -> str:
 
 # Variables d'environnement
 def get_environment_variable(name: str, default: str | None = None) -> str | None:
-    """Retourne une variable d'environnement ou sa valeur par défaut."""
+    """Retourne une variable d'environnement ou sa valeur par défaut.
+
+    Parameters
+    ----------
+    name : str
+        Nom de la variable.
+    default : str | None
+        Valeur rendue si la variable n'existe pas. Par défaut None.
+
+    Returns
+    -------
+    str | None
+        La valeur de la variable, ou `default`.
+    """
 
     return os.getenv(name, default)
 
 
 def get_integer_environment_variable(name: str, default: int) -> int:
-    """Retourne une variable d'environnement convertie en entier."""
+    """Retourne une variable d'environnement convertie en entier.
+
+    Parameters
+    ----------
+    name : str
+        Nom de la variable.
+    default : int
+        Valeur rendue si la variable n'existe pas.
+
+    Returns
+    -------
+    int
+        La valeur convertie en entier.
+
+    Raises
+    ------
+    ValueError
+        Si la valeur ne peut pas être lue comme un entier.
+    """
 
     value = get_environment_variable(name, str(default))
     try:
@@ -89,7 +152,25 @@ def get_integer_environment_variable(name: str, default: int) -> int:
 
 
 def get_float_environment_variable(name: str, default: float) -> float:
-    """Retourne une variable d'environnement convertie en nombre."""
+    """Retourne une variable d'environnement convertie en nombre.
+
+    Parameters
+    ----------
+    name : str
+        Nom de la variable.
+    default : float
+        Valeur rendue si la variable n'existe pas.
+
+    Returns
+    -------
+    float
+        La valeur convertie en flottant.
+
+    Raises
+    ------
+    ValueError
+        Si la valeur ne peut pas être lue comme un nombre.
+    """
 
     value = get_environment_variable(name, str(default))
     try:
@@ -99,7 +180,28 @@ def get_float_environment_variable(name: str, default: float) -> float:
 
 
 def get_boolean_environment_variable(name: str, default: bool) -> bool:
-    """Retourne une variable d'environnement convertie en booléen."""
+    """Retourne une variable d'environnement convertie en booléen.
+
+    Valeurs acceptées, sans tenir compte de la casse : 1, true, yes, on pour vrai ;
+    0, false, no, off pour faux.
+
+    Parameters
+    ----------
+    name : str
+        Nom de la variable.
+    default : bool
+        Valeur rendue si la variable n'existe pas.
+
+    Returns
+    -------
+    bool
+        La valeur convertie en booléen.
+
+    Raises
+    ------
+    ValueError
+        Si la valeur n'est pas l'une des formes acceptées.
+    """
 
     value = (get_environment_variable(name, str(default)) or "").strip().lower()
     if value in {"1", "true", "yes", "on"}:
@@ -113,7 +215,19 @@ def get_boolean_environment_variable(name: str, default: bool) -> bool:
 def get_secret_directories(
     secrets_directory: str | Path | None = None
 ) -> tuple[Path, ...]:
-    """Retourne les répertoires de secrets dans leur ordre de priorité."""
+    """Retourne les répertoires de secrets dans leur ordre de priorité.
+
+    Parameters
+    ----------
+    secrets_directory : str | Path | None
+        Répertoire imposé. Par défaut None : Docker Secrets (/run/secrets) puis
+        le dossier local, sans doublon.
+
+    Returns
+    -------
+    tuple[Path, ...]
+        Les répertoires à parcourir, du plus prioritaire au moins prioritaire.
+    """
 
     if secrets_directory is not None:
         return (Path(secrets_directory),)
@@ -130,7 +244,27 @@ def get_secret_path(
     *,
     secrets_directory: str | Path
 ) -> Path:
-    """Construit le chemin sécurisé d'un secret."""
+    """Construit le chemin sécurisé d'un secret.
+
+    Vérifie que le chemin obtenu reste bien dans le répertoire des secrets.
+
+    Parameters
+    ----------
+    secret_name : str
+        Nom du secret, validé par `validate_secret_name`.
+    secrets_directory : str | Path
+        Répertoire où chercher le secret.
+
+    Returns
+    -------
+    Path
+        Le chemin du fichier secret (qui peut ne pas exister).
+
+    Raises
+    ------
+    SecretNameError
+        Si le nom est invalide ou si le chemin sort du répertoire des secrets.
+    """
 
     normalized_name = validate_secret_name(secret_name)
     directory = Path(secrets_directory)
@@ -149,7 +283,19 @@ def get_secret_path(
 
 
 def read_secret_file(secret_path: Path) -> str | None:
-    """Lit et valide un fichier secret."""
+    """Lit et valide un fichier secret.
+
+    Parameters
+    ----------
+    secret_path : Path
+        Chemin du fichier secret.
+
+    Returns
+    -------
+    str | None
+        Le contenu sans espaces autour, ou None si le fichier est absent,
+        illisible ou contient une valeur factice.
+    """
 
     if not secret_path.is_file():
         return None
@@ -169,8 +315,33 @@ def get_secret(
     required: bool = False,
     secrets_directory: str | Path | None = None
 ) -> str | None:
-    """Résout un secret depuis Docker Secrets puis le dossier local."""
+    """Résout un secret depuis Docker Secrets puis le dossier local.
 
+    Parameters
+    ----------
+    secret_name : str | None
+        Nom du secret ; vide ou None renvoie `default` (ou lève si `required`).
+    default : str | None
+        Valeur rendue si le secret est introuvable. Par défaut None.
+    required : bool
+        Lève une erreur au lieu de rendre `default`. Par défaut False.
+    secrets_directory : str | Path | None
+        Répertoire imposé. Par défaut None : Docker Secrets puis dossier local.
+
+    Returns
+    -------
+    str | None
+        La valeur du premier fichier secret valide trouvé, sinon `default`.
+
+    Raises
+    ------
+    SecretNotFoundError
+        Si `required` est vrai et que le nom manque ou que le secret est introuvable.
+    SecretNameError
+        Si le nom du secret est invalide.
+    """
+
+    # Sans nom, rien à chercher
     if not secret_name:
         if required:
             raise SecretNotFoundError(
@@ -178,6 +349,7 @@ def get_secret(
             )
         return default
 
+    # Parcourir les répertoires par priorité et rendre le premier secret valide
     normalized_name = validate_secret_name(secret_name)
     searched_paths: list[Path] = []
 
@@ -191,6 +363,7 @@ def get_secret(
         if value := read_secret_file(secret_path):
             return value
 
+    # Introuvable : erreur détaillée si requis, sinon valeur par défaut
     if required:
         searched_locations = ", ".join(
             str(path) for path in searched_paths
@@ -208,7 +381,22 @@ def require_secrets(
     *,
     secrets_directory: str | Path | None = None
 ) -> None:
-    """Vérifie que tous les secrets demandés sont disponibles."""
+    """Vérifie que tous les secrets demandés sont disponibles.
+
+    Tous les secrets sont testés avant de lever l'erreur, qui les liste ensemble.
+
+    Parameters
+    ----------
+    secret_names : Iterable[str]
+        Noms des secrets requis.
+    secrets_directory : str | Path | None
+        Répertoire imposé. Par défaut None : Docker Secrets puis dossier local.
+
+    Raises
+    ------
+    SecretNotFoundError
+        S'il manque au moins un secret (ou si un nom est invalide).
+    """
 
     missing: list[str] = []
 
@@ -243,8 +431,34 @@ def get_secret_or_environment(
 
     Priorité : Docker Secret, secret local, variable d'environnement,
     valeur par défaut.
+
+    Parameters
+    ----------
+    secret_name : str | None
+        Nom du Docker Secret. Par défaut None (pas de secret à chercher).
+    environment_variable : str | None
+        Nom de la variable d'environnement de repli. Par défaut None.
+    default : str | None
+        Valeur de repli finale. Par défaut None.
+    required : bool
+        Lève une erreur si aucune valeur valide n'est trouvée. Par défaut False.
+    secrets_directory : str | Path | None
+        Répertoire de secrets imposé. Par défaut None.
+
+    Returns
+    -------
+    str | None
+        La première valeur valide trouvée, sinon `default`.
+
+    Raises
+    ------
+    SecretNotFoundError
+        Si `required` est vrai et qu'aucune source ne donne de valeur valide.
+    SecretNameError
+        Si `secret_name` est un nom invalide.
     """
 
+    # Essayer d'abord les secrets (Docker puis local)
     value = get_secret(
         secret_name,
         required=False,
@@ -253,6 +467,7 @@ def get_secret_or_environment(
     if is_valid_secret(value):
         return value
 
+    # Puis la variable d'environnement, puis la valeur par défaut
     value = (
         get_environment_variable(environment_variable)
         if environment_variable else None
@@ -263,6 +478,7 @@ def get_secret_or_environment(
     if is_valid_secret(default):
         return default
 
+    # Rien de valide : erreur qui cite les sources consultées si requis
     if required:
         references = [
             reference

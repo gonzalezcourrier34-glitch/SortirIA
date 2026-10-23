@@ -61,7 +61,11 @@ RssExtractionResult = list[dict[str, Any]] | ExtractorResult
 # Exceptions RSS
 
 class RssExtractionStoppedError(RuntimeError):
-    """Demande l'arrêt immédiat de l'extraction RSS courante."""
+    """Demande l'arrêt immédiat de l'extraction RSS courante.
+
+    Les sous-classes ne changent que `error_code`, le motif machine reporté
+    dans le bilan de la source.
+    """
 
     error_code = RSS_ERROR_EXTRACTION_STOPPED
 
@@ -71,6 +75,17 @@ class RssExtractionStoppedError(RuntimeError):
         reason: str,
         status_code: int | None = None
     ) -> None:
+        """Enregistre la source, le motif et le code HTTP de l'arrêt.
+
+        Parameters
+        ----------
+        source_name : str
+            Nom de la source ; vide, il devient « source RSS ».
+        reason : str
+            Motif lisible de l'arrêt ; vide, un motif générique est utilisé.
+        status_code : int | None
+            Code HTTP à l'origine de l'arrêt, s'il y en a un. Par défaut None.
+        """
         self.source_name = normalize_value(source_name) or "source RSS"
         self.reason = normalize_value(reason) or "Erreur RSS non communiquée"
         self.status_code = status_code
@@ -139,6 +154,17 @@ class RssRequestError(RuntimeError):
         reason: str,
         status_code: int | None = None
     ) -> None:
+        """Enregistre la source, le motif et le code HTTP de l'échec.
+
+        Parameters
+        ----------
+        source_name : str
+            Nom de la source ; vide, il devient « source RSS ».
+        reason : str
+            Motif lisible de l'échec ; vide, un motif générique est utilisé.
+        status_code : int | None
+            Code HTTP de la réponse, s'il y en a un. Par défaut None.
+        """
         self.source_name = normalize_value(source_name) or "source RSS"
         self.reason = normalize_value(reason) or "Erreur RSS non communiquée"
         self.status_code = status_code
@@ -155,7 +181,13 @@ _RSS_REQUEST_ERRORS: ContextVar[tuple[str, ...]] = ContextVar(
 
 
 def reset_rss_request_count() -> object:
-    """Réinitialise le compteur HTTP RSS courant."""
+    """Réinitialise le compteur HTTP RSS courant.
+
+    Returns
+    -------
+    object
+        Jeton de la variable de contexte, pour restaurer l'ancienne valeur.
+    """
 
     return _RSS_REQUEST_COUNT.set(0)
 
@@ -167,25 +199,55 @@ def increment_rss_request_count() -> None:
 
 
 def get_rss_request_count() -> int:
-    """Retourne le nombre de requêtes RSS effectuées."""
+    """Retourne le nombre de requêtes RSS effectuées.
+
+    Returns
+    -------
+    int
+        Nombre de requêtes comptées depuis la dernière réinitialisation.
+    """
 
     return _RSS_REQUEST_COUNT.get()
 
 
 def reset_rss_request_errors() -> object:
-    """Réinitialise les erreurs RSS courantes."""
+    """Réinitialise les erreurs RSS courantes.
+
+    Returns
+    -------
+    object
+        Jeton de la variable de contexte, pour restaurer l'ancienne valeur.
+    """
 
     return _RSS_REQUEST_ERRORS.set(())
 
 
 def get_rss_request_errors() -> list[str]:
-    """Retourne les erreurs RSS enregistrées."""
+    """Retourne les erreurs RSS enregistrées.
+
+    Returns
+    -------
+    list[str]
+        Messages d'erreur enregistrés depuis la dernière réinitialisation.
+    """
 
     return list(_RSS_REQUEST_ERRORS.get())
 
 
 def get_http_error_message(error: httpx.HTTPStatusError) -> str:
-    """Extrait un message HTTP exploitable sans exposer l'URL complète."""
+    """Extrait un message HTTP exploitable sans exposer l'URL complète.
+
+    Parameters
+    ----------
+    error : httpx.HTTPStatusError
+        Erreur HTTP reçue.
+
+    Returns
+    -------
+    str
+        Début du corps de la réponse (1000 caractères), sinon la raison HTTP,
+        sinon « Erreur HTTP <code> », adresses masquées.
+    """
 
     response_text = normalize_value(error.response.text[:1000])
     reason_phrase = normalize_value(error.response.reason_phrase)
@@ -195,7 +257,18 @@ def get_http_error_message(error: httpx.HTTPStatusError) -> str:
 
 
 def record_rss_request_error(error: Any) -> str:
-    """Enregistre une erreur RSS normalisée et sûre pour les logs."""
+    """Enregistre une erreur RSS normalisée et sûre pour les logs.
+
+    Parameters
+    ----------
+    error : Any
+        Erreur RSS, erreur httpx ou toute autre valeur.
+
+    Returns
+    -------
+    str
+        Message enregistré dans la liste des erreurs courantes.
+    """
 
     if isinstance(error, (RssExtractionStoppedError, RssRequestError)):
         message = error.reason
@@ -216,7 +289,34 @@ def raise_if_fatal_rss_error(
     source_name: str,
     status_code: int | None = None
 ) -> str:
-    """Qualifie une erreur RSS et lève une exception spécialisée si nécessaire."""
+    """Qualifie une erreur RSS et lève une exception spécialisée si nécessaire.
+
+    Parameters
+    ----------
+    error : Any
+        Erreur rencontrée ; pour une `httpx.HTTPStatusError`, le code HTTP est
+        lu dans la réponse.
+    source_name : str
+        Nom de la source.
+    status_code : int | None
+        Code HTTP connu par ailleurs. Par défaut None.
+
+    Returns
+    -------
+    str
+        Le motif de l'erreur, si elle n'est pas fatale.
+
+    Raises
+    ------
+    RssAccessDeniedError
+        Si le code HTTP signale un accès refusé.
+    RssRateLimitError
+        Si le code HTTP signale une limitation de débit.
+    RssMaintenanceError
+        Si le code HTTP signale une maintenance.
+    RssServerError
+        Si le code HTTP signale une erreur interne du serveur.
+    """
 
     if isinstance(error, httpx.HTTPStatusError):
         status_code = error.response.status_code
@@ -240,7 +340,18 @@ def raise_if_fatal_rss_error(
 
 
 def get_rss_failure_reason(error: RssExtractionStoppedError) -> str:
-    """Retourne le motif machine d'un arrêt RSS spécialisé."""
+    """Retourne le motif machine d'un arrêt RSS spécialisé.
+
+    Parameters
+    ----------
+    error : RssExtractionStoppedError
+        Arrêt RSS.
+
+    Returns
+    -------
+    str
+        Son `error_code`, ou le motif générique d'arrêt.
+    """
 
     return normalize_value(getattr(error, "error_code", "")) or RSS_ERROR_EXTRACTION_STOPPED
 
@@ -249,7 +360,29 @@ def get_rss_failure_reason(error: RssExtractionStoppedError) -> str:
 
 @dataclass(slots=True)
 class RssExtractionContext:
-    """Porte l'état d'orchestration d'une source RSS."""
+    """Porte l'état d'orchestration d'une source RSS.
+
+    Attributes
+    ----------
+    source : dict[str, Any]
+        Configuration de la source.
+    filters : dict[str, Any]
+        Filtres appliqués aux articles de la source.
+    maximum_articles : int
+        Nombre d'articles au-delà duquel la lecture s'arrête.
+    remove_duplicates : bool
+        Vrai pour écarter les doublons dans la source.
+    articles : list[dict[str, Any]]
+        Articles retenus.
+    seen_keys : set[str]
+        Clés de doublon déjà vues.
+    rejection_stats : Counter[str]
+        Nombre de rejets par motif.
+    processed_count : int
+        Nombre d'entrées examinées.
+    converted_count : int
+        Nombre d'entrées transformées en article (avant validation).
+    """
 
     source: dict[str, Any]
     filters: dict[str, Any]
@@ -263,20 +396,55 @@ class RssExtractionContext:
 
     @property
     def source_name(self) -> str:
+        """Nom lisible de la source.
+
+        Returns
+        -------
+        str
+            Le champ `name`, ou « source RSS » s'il est vide.
+        """
         return normalize_value(self.source.get("name")) or "source RSS"
 
     @property
     def source_id(self) -> str:
+        """Identifiant stable de la source.
+
+        Returns
+        -------
+        str
+            Le champ `source_id`, ou à défaut le nom de la source.
+        """
         return normalize_value(self.source.get("source_id")) or self.source_name
 
     @property
     def completed(self) -> bool:
+        """Vrai si le nombre maximal d'articles est atteint.
+
+        Returns
+        -------
+        bool
+            Vrai quand il n'y a plus d'article à lire pour cette source.
+        """
         return len(self.articles) >= self.maximum_articles
 
     def reject(self, reason: Any) -> None:
+        """Compte un rejet sous son motif.
+
+        Parameters
+        ----------
+        reason : Any
+            Motif du rejet ; vide, il est compté comme « article_invalide ».
+        """
         self.rejection_stats[normalize_value(reason) or "article_invalide"] += 1
 
     def add_article(self, article: dict[str, Any]) -> None:
+        """Retient un article et, si demandé, enregistre ses clés de doublon.
+
+        Parameters
+        ----------
+        article : dict[str, Any]
+            Article validé.
+        """
         if self.remove_duplicates:
             register_article(article, self.seen_keys)
         self.articles.append(article)
@@ -284,7 +452,35 @@ class RssExtractionContext:
 
 @dataclass(slots=True)
 class RssBatchContext:
-    """Porte les résultats agrégés de plusieurs sources RSS."""
+    """Porte les résultats agrégés de plusieurs sources RSS.
+
+    Attributes
+    ----------
+    articles : list[dict[str, Any]]
+        Articles retenus sur le lot, sans doublon entre sources.
+    errors : list[str]
+        Messages d'erreur des sources.
+    seen_keys : set[str]
+        Clés de doublon déjà vues sur le lot.
+    rejection_stats : Counter[str]
+        Nombre de rejets par motif, toutes sources confondues.
+    successful_sources : int
+        Nombre de sources réussies.
+    partial_sources : int
+        Nombre de sources partiellement réussies.
+    failed_sources : int
+        Nombre de sources en échec.
+    empty_sources : int
+        Nombre de sources sans article.
+    duplicate_count : int
+        Nombre d'articles écartés comme doublons entre sources.
+    analyzed_count : int
+        Nombre total d'entrées examinées.
+    rejected_count : int
+        Nombre total d'entrées rejetées.
+    requests_count : int
+        Nombre total de requêtes HTTP.
+    """
 
     articles: list[dict[str, Any]] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
@@ -300,12 +496,24 @@ class RssBatchContext:
     requests_count: int = 0
 
     def add_result(self, result: ExtractorResult) -> None:
+        """Ajoute le résultat d'une source au lot.
+
+        Additionne les compteurs, compte la source sous son statut et écarte
+        les articles déjà vus dans une autre source.
+
+        Parameters
+        ----------
+        result : ExtractorResult
+            Résultat d'une source.
+        """
+        # Additionner les compteurs et les erreurs
         self.analyzed_count += result.analyzed_count
         self.rejected_count += result.rejected_count
         self.requests_count += result.requests_count
         self.errors.extend(result.errors)
         self.rejection_stats.update(result.rejection_reasons)
 
+        # Compter la source sous son statut
         if result.status == EXTRACTOR_STATUS_SUCCESS:
             self.successful_sources += 1
         elif result.status == EXTRACTOR_STATUS_PARTIAL_SUCCESS:
@@ -315,6 +523,7 @@ class RssBatchContext:
         else:
             self.failed_sources += 1
 
+        # Retenir les articles, sauf les doublons d'une autre source
         for article in result.articles:
             if is_duplicate_article(article, self.seen_keys):
                 self.duplicate_count += 1
@@ -329,41 +538,134 @@ class RssBatchContext:
 
 @dataclass(slots=True)
 class RssExtractor:
-    """Charge les sources et délègue leur traitement à un adaptateur RSS."""
+    """Charge les sources et délègue leur traitement à un adaptateur RSS.
+
+    Attributes
+    ----------
+    adapter : RssAdapter
+        Adaptateur qui sait lire les flux concernés.
+    sources_file : Path
+        Fichier de configuration des sources. Par défaut `SOURCES_FILE`.
+    _registry : SourceRegistry | None
+        Registre des sources, chargé à la première demande.
+    """
 
     adapter: RssAdapter
     sources_file: Path = SOURCES_FILE
     _registry: SourceRegistry | None = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
+        """Vérifie les types de l'adaptateur et du fichier de sources.
+
+        Raises
+        ------
+        TypeError
+            Si `adapter` n'est pas un `RssAdapter` ou `sources_file` pas un `Path`.
+        """
         if not isinstance(self.adapter, RssAdapter):
             raise TypeError("adapter doit être une instance de RssAdapter.")
         if not isinstance(self.sources_file, Path):
             raise TypeError("sources_file doit être une instance de Path.")
 
     def reload_sources(self) -> SourceRegistry:
+        """Recharge le registre depuis le fichier de configuration.
+
+        Returns
+        -------
+        SourceRegistry
+            Registre rechargé (sans exiger les secrets).
+        """
         self._registry = load_source_registry(self.sources_file, require_secrets=False)
         return self._registry
 
     def get_registry(self) -> SourceRegistry:
+        """Renvoie le registre, chargé au premier appel.
+
+        Returns
+        -------
+        SourceRegistry
+            Registre des sources.
+        """
         return self._registry or self.reload_sources()
 
     def get_sources(self) -> list[dict[str, Any]]:
+        """Renvoie les sources RSS configurées.
+
+        Returns
+        -------
+        list[dict[str, Any]]
+            Configuration de chaque source de type RSS.
+        """
         return [source.to_dict() for source in self.get_registry().by_type(SOURCE_TYPE_RSS)]
 
     def extract_source_result(self, source: RssSource) -> ExtractorResult:
+        """Extrait une source et renvoie son résultat détaillé.
+
+        Parameters
+        ----------
+        source : RssSource
+            Configuration de la source.
+
+        Returns
+        -------
+        ExtractorResult
+            Résultat qualifié de la source.
+        """
         return extract_rss_source(source, self.adapter)
 
     def extract_source(self, source: RssSource) -> list[dict[str, Any]]:
+        """Extrait une source et ne renvoie que ses articles.
+
+        Parameters
+        ----------
+        source : RssSource
+            Configuration de la source.
+
+        Returns
+        -------
+        list[dict[str, Any]]
+            Articles retenus.
+        """
         return self.extract_source_result(source).articles
 
     def extract_sources_result(self, sources: Sequence[RssSource]) -> ExtractorResult:
+        """Extrait plusieurs sources et renvoie le résultat agrégé.
+
+        Parameters
+        ----------
+        sources : Sequence[RssSource]
+            Configurations des sources.
+
+        Returns
+        -------
+        ExtractorResult
+            Résultat agrégé du lot.
+        """
         return extract_rss_sources(sources, self.adapter)
 
     def extract_sources(self, sources: Sequence[RssSource]) -> list[dict[str, Any]]:
+        """Extrait plusieurs sources et ne renvoie que leurs articles.
+
+        Parameters
+        ----------
+        sources : Sequence[RssSource]
+            Configurations des sources.
+
+        Returns
+        -------
+        list[dict[str, Any]]
+            Articles retenus, sans doublon entre sources.
+        """
         return self.extract_sources_result(sources).articles
 
     def run(self) -> ExtractorResult:
+        """Lance toutes les sources RSS configurées, par le service d'extraction commun.
+
+        Returns
+        -------
+        ExtractorResult
+            Résultat agrégé de toutes les sources RSS.
+        """
         return execute_configured_sources_extractor(
             extractor_name=self.adapter.default_name,
             source_type=SOURCE_TYPE_RSS,
@@ -375,7 +677,23 @@ class RssExtractor:
 # Préparation et traitement des items
 
 def create_context(source: Mapping[str, Any]) -> RssExtractionContext:
-    """Construit l'état d'orchestration depuis la configuration."""
+    """Construit l'état d'orchestration depuis la configuration.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Configuration de la source (`max_articles`, filtres...).
+
+    Returns
+    -------
+    RssExtractionContext
+        État initial ; le dédoublonnage est actif par défaut.
+
+    Raises
+    ------
+    ValueError
+        Si la configuration des filtres n'est pas un dictionnaire.
+    """
 
     normalized_source = dict(source)
     filters = get_filter_configuration(normalized_source)
@@ -402,8 +720,22 @@ def process_rss_item(
     context: RssExtractionContext,
     adapter: RssAdapter
 ) -> None:
-    """Valide, transforme puis déduplique une entrée RSS."""
+    """Valide, transforme puis déduplique une entrée RSS.
 
+    L'article retenu est ajouté au contexte ; un rejet est compté sous son
+    motif. Les erreurs de construction deviennent des rejets.
+
+    Parameters
+    ----------
+    item : RssItem
+        Entrée brute du flux.
+    context : RssExtractionContext
+        État de la source, mis à jour sur place.
+    adapter : RssAdapter
+        Adaptateur du flux.
+    """
+
+    # Valider l'entrée selon les règles de l'adaptateur
     context.processed_count += 1
 
     valid, reason = validate_rss_item(item, context, adapter)
@@ -462,6 +794,7 @@ def process_rss_item(
 
     context.converted_count += 1
 
+    # Valider l'article (règles propres puis communes), puis écarter les doublons
     valid, reason = validate_rss_article(
         article,
         context,
@@ -487,13 +820,41 @@ def extract_rss_source(
     source: Mapping[str, Any],
     adapter: RssAdapter
 ) -> ExtractorResult:
-    """Extrait une source RSS avec la même qualification que le moteur API."""
+    """Extrait une source RSS avec la même qualification que le moteur API.
+
+    Un arrêt fatal (accès refusé, quota, délai...) après quelques articles
+    donne un succès partiel ; sans aucun article, l'arrêt remonte à l'appelant.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Configuration de la source.
+    adapter : RssAdapter
+        Adaptateur du flux.
+
+    Returns
+    -------
+    ExtractorResult
+        Résultat qualifié (succès, partiel, vide ou échec), articles, erreurs
+        de requêtes et compteurs.
+
+    Raises
+    ------
+    TypeError
+        Si `adapter` n'est pas un `RssAdapter` ou `source` pas un dictionnaire.
+    RssExtractionStoppedError
+        Si l'extraction est arrêtée avant d'avoir retenu un article.
+    RuntimeError
+        Pour une autre erreur HTTP ou une erreur de lecture du flux (message
+        sans adresse complète).
+    """
 
     if not isinstance(adapter, RssAdapter):
         raise TypeError("adapter doit être une instance de RssAdapter.")
     if not isinstance(source, Mapping):
         raise TypeError(f"Configuration RSS invalide : {type(source).__name__}.")
 
+    # Préparer l'état ; source désactivée ou sans quota : résultat vide
     context = create_context(source)
     base_metadata = {
         "source_id": context.source_id,
@@ -518,6 +879,8 @@ def extract_rss_source(
             metadata=base_metadata
         )
 
+    # Lire les entrées avec des compteurs de requêtes propres à cette source ;
+    # les erreurs HTTP fatales sont gardées pour qualifier le résultat
     logger.info("Début de l'extraction RSS : %s.", context.source_name)
     request_count_token = reset_rss_request_count()
     request_errors_token = reset_rss_request_errors()
@@ -593,9 +956,11 @@ def extract_rss_source(
         _RSS_REQUEST_COUNT.reset(request_count_token)
         _RSS_REQUEST_ERRORS.reset(request_errors_token)
 
+    # Arrêt sans aucun article : la source est en échec
     if fatal_error is not None and not context.articles:
         raise fatal_error
 
+    # Assembler les compteurs et les métadonnées
     fatal_message = ""
     fatal_reason = ""
 
@@ -630,6 +995,7 @@ def extract_rss_source(
         rejection_stats=context.rejection_stats
     )
 
+    # Qualifier la source : arrêt, requêtes en erreur, ou lecture complète
     if fatal_error is not None:
         status = EXTRACTOR_STATUS_PARTIAL_SUCCESS
         message = (
@@ -670,7 +1036,25 @@ def build_failed_source_result(
     error: Any,
     source_id: str = ""
 ) -> ExtractorResult:
-    """Construit un résultat d'échec homogène pour une source RSS."""
+    """Construit un résultat d'échec homogène pour une source RSS.
+
+    Le message est aussi ajouté aux erreurs RSS courantes.
+
+    Parameters
+    ----------
+    source_name : str
+        Nom de la source.
+    error : Any
+        Erreur rencontrée ; pour un arrêt RSS, son motif et son code HTTP vont
+        dans les métadonnées.
+    source_id : str
+        Identifiant de la source. Par défaut vide.
+
+    Returns
+    -------
+    ExtractorResult
+        Résultat au statut échec.
+    """
 
     if isinstance(error, RssExtractionStoppedError):
         message = record_rss_request_error(error)
@@ -702,13 +1086,37 @@ def extract_rss_sources(
     sources: Sequence[RssSource],
     adapter: RssAdapter
 ) -> ExtractorResult:
-    """Extrait plusieurs sources et agrège leurs résultats détaillés."""
+    """Extrait plusieurs sources et agrège leurs résultats détaillés.
+
+    Une source en échec (configuration invalide, arrêt, erreur inattendue)
+    n'arrête pas les autres.
+
+    Parameters
+    ----------
+    sources : Sequence[RssSource]
+        Configurations des sources.
+    adapter : RssAdapter
+        Adaptateur des flux.
+
+    Returns
+    -------
+    ExtractorResult
+        Résultat agrégé : articles sans doublon entre sources, statut du lot
+        et compteurs par statut de source.
+
+    Raises
+    ------
+    TypeError
+        Si `adapter` n'est pas un `RssAdapter` ou si `sources` n'est pas une
+        séquence (ou est une chaîne).
+    """
 
     if not isinstance(adapter, RssAdapter):
         raise TypeError("adapter doit être une instance de RssAdapter.")
     if isinstance(sources, (str, bytes)) or not isinstance(sources, Sequence):
         raise TypeError("sources doit être une séquence de configurations RSS.")
 
+    # Extraire chaque source ; toute erreur devient un résultat d'échec
     context = RssBatchContext()
 
     for source_index, source in enumerate(sources, start=1):
@@ -756,6 +1164,7 @@ def extract_rss_sources(
         elif result.status == EXTRACTOR_STATUS_EMPTY:
             logger.warning("Source RSS terminée sans article exploitable : %s.", source_name)
 
+    # Qualifier le lot et rédiger son message
     total_sources = len(sources)
     metadata = {
         "configured_sources": total_sources,
@@ -783,6 +1192,7 @@ def extract_rss_sources(
     else:
         message = ""
 
+    # Journaliser le bilan et assembler le résultat
     logger.info(
         "%s article(s) RSS unique(s), %s réussite(s), %s partielle(s), "
         "%s vide(s), %s échec(s), %s doublon(s).",
@@ -815,7 +1225,25 @@ def extract_articles_from_sources(
     sources: Sequence[RssSource],
     extractor: RssExtractor
 ) -> list[dict[str, Any]]:
-    """Exécute un lot déjà chargé et retourne uniquement ses articles."""
+    """Exécute un lot déjà chargé et retourne uniquement ses articles.
+
+    Parameters
+    ----------
+    sources : Sequence[RssSource]
+        Configurations des sources.
+    extractor : RssExtractor
+        Extracteur à utiliser.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Articles retenus.
+
+    Raises
+    ------
+    TypeError
+        Si `extractor` n'est pas un `RssExtractor`.
+    """
 
     if not isinstance(extractor, RssExtractor):
         raise TypeError("extractor doit être une instance de RssExtractor.")
@@ -823,7 +1251,23 @@ def extract_articles_from_sources(
 
 
 def load_rss_sources(extractor: RssExtractor) -> list[dict[str, Any]]:
-    """Recharge puis retourne les sources RSS."""
+    """Recharge puis retourne les sources RSS.
+
+    Parameters
+    ----------
+    extractor : RssExtractor
+        Extracteur dont le registre est rechargé.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Configuration de chaque source RSS.
+
+    Raises
+    ------
+    TypeError
+        Si `extractor` n'est pas un `RssExtractor`.
+    """
 
     if not isinstance(extractor, RssExtractor):
         raise TypeError("extractor doit être une instance de RssExtractor.")
@@ -832,7 +1276,23 @@ def load_rss_sources(extractor: RssExtractor) -> list[dict[str, Any]]:
 
 
 def extract_all_articles(extractor: RssExtractor) -> ExtractorResult:
-    """Lance toutes les sources RSS actives."""
+    """Lance toutes les sources RSS actives.
+
+    Parameters
+    ----------
+    extractor : RssExtractor
+        Extracteur à exécuter.
+
+    Returns
+    -------
+    ExtractorResult
+        Résultat agrégé de toutes les sources RSS.
+
+    Raises
+    ------
+    TypeError
+        Si `extractor` n'est pas un `RssExtractor`.
+    """
 
     if not isinstance(extractor, RssExtractor):
         raise TypeError("extractor doit être une instance de RssExtractor.")

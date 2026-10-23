@@ -119,7 +119,19 @@ Réponds uniquement en JSON : {"reponse": "...", "suggestions": ["...", "...", "
 
 @dataclass(slots=True)
 class SearchFilters:
-    """Contraintes choisies dans l'interface (toutes facultatives)."""
+    """Contraintes choisies dans l'interface (toutes facultatives).
+
+    Attributes
+    ----------
+    public : str | None
+        Public coché (une valeur de `PUBLICS`), ou aucun.
+    zone : str | None
+        Zone cochée (une clé de `ZONES`), ou aucune.
+    period : str
+        Période cochée (une valeur de `PERIODS`) ; par défaut les 3 prochains mois.
+    free_only : bool
+        Vrai pour ne garder que le gratuit.
+    """
 
     public: str | None = None
     zone: str | None = None
@@ -127,6 +139,13 @@ class SearchFilters:
     free_only: bool = False
 
     def __post_init__(self) -> None:
+        """Vérifie que les valeurs cochées sont connues.
+
+        Raises
+        ------
+        ValueError
+            Si le public, la zone ou la période n'est pas une valeur prévue.
+        """
         if self.public not in (None, *PUBLICS):
             raise ValueError(f"public inconnu : {self.public}")
         if self.zone not in (None, *ZONES):
@@ -135,7 +154,14 @@ class SearchFilters:
             raise ValueError(f"période inconnue : {self.period}")
 
     def describe(self) -> str:
-        """Résumé lisible, affiché à l'étape « comprendre »."""
+        """Résumé lisible, affiché à l'étape « comprendre ».
+
+        Returns
+        -------
+        str
+            La période, puis le public, la zone et « gratuit » s'ils sont cochés,
+            séparés par « · ».
+        """
 
         parts = [PERIOD_LABELS[self.period]]
         if self.public:
@@ -152,6 +178,19 @@ def period_bounds(period: str, now: datetime) -> tuple[datetime, datetime]:
 
     « weekend » : du samedi 0 h au lundi 0 h ; le samedi ou le dimanche, ce
     week-end-ci (à partir de maintenant).
+
+    Parameters
+    ----------
+    period : str
+        Période cochée : « aujourdhui », « weekend », « 7jours » ou « 3mois »
+        (toute autre valeur vaut 90 jours).
+    now : datetime
+        Heure de référence : le début n'est jamais avant elle.
+
+    Returns
+    -------
+    tuple[datetime, datetime]
+        Le début et la fin exclue de la période.
     """
 
     now = now.astimezone(PARIS)
@@ -281,8 +320,21 @@ PRACTISED = f"{PARTICIPATION} | ((soiree | repas | the) & dansant) | baleti:* | 
 
 
 def lexical_query(keywords: Sequence[str]) -> str:
-    """Mots-clés au format to_tsquery : « jazz | echecs » (n'importe lequel suffit,
-    plus il y en a, mieux l'événement est classé)."""
+    """Met les mots-clés au format to_tsquery : « jazz | echecs ».
+
+    N'importe lequel suffit, plus il y en a, mieux l'événement est classé.
+
+    Parameters
+    ----------
+    keywords : Sequence[str]
+        Les mots-clés de la question.
+
+    Returns
+    -------
+    str
+        Les mots simplifiés joints par « | », complétés par « :* » à partir de
+        4 lettres ; chaîne vide s'il n'en reste aucun.
+    """
 
     words = [word for word in (plain(keyword) for keyword in keywords) if re.fullmatch(r"[a-z0-9]+", word)]
     # Préfixe (15/10/2026) : « photo » trouve aussi « photographies », « ciné »
@@ -291,21 +343,56 @@ def lexical_query(keywords: Sequence[str]) -> str:
 
 
 def type_query(words: Sequence[str]) -> str:
-    """Types de sortie au format to_tsquery, racines exactes : « jeux | concert »."""
+    """Types de sortie au format to_tsquery, racines exactes : « jeux | concert ».
+
+    Parameters
+    ----------
+    words : Sequence[str]
+        Les mots de type (catégories et mots de la question).
+
+    Returns
+    -------
+    str
+        Les mots simplifiés (lettres seules) joints par « | », sans préfixe.
+    """
 
     kept = [word for word in (plain(word) for word in words) if re.fullmatch(r"[a-z]+", word)]
     return " | ".join(dict.fromkeys(kept))
 
 
 def type_keywords(keywords: Sequence[str]) -> list[str]:
-    """Mots de la question qui désignent un type de sortie (« jeux », « concert »)."""
+    """Mots de la question qui désignent un type de sortie (« jeux », « concert »).
+
+    Parameters
+    ----------
+    keywords : Sequence[str]
+        Les mots-clés de la question.
+
+    Returns
+    -------
+    list[str]
+        Ceux qui figurent dans `QUESTION_CATEGORIES` (au pluriel ou non).
+    """
 
     return [word for word in keywords if word in QUESTION_CATEGORIES or word.rstrip("sx") in QUESTION_CATEGORIES]
 
 
 def distinctive_keywords(keywords: Sequence[str]) -> list[str]:
-    """Mots précis de la question (« échecs », « Fabre », « Halloween ») : ni un
-    type de sortie (« concert », « expo »), déjà traité par la catégorie."""
+    """Mots précis de la question (« échecs », « Fabre », « Halloween »).
+
+    Ni un type de sortie (« concert », « expo »), déjà traité par la catégorie ;
+    les genres de `PRECISE_SUBJECTS` (« cirque », « jazz ») restent des mots précis.
+
+    Parameters
+    ----------
+    keywords : Sequence[str]
+        Les mots-clés de la question.
+
+    Returns
+    -------
+    list[str]
+        Les mots précis, dans l'ordre.
+    """
 
     return [word for word in keywords
             if word in PRECISE_SUBJECTS or word.rstrip("sx") in PRECISE_SUBJECTS
@@ -321,12 +408,25 @@ def keep_exact_matches(rows: list[dict[str, Any]]) -> tuple[list[dict[str, Any]]
        seulement eux.
     Sinon, rien n'est retiré : ce sont des idées voisines, et Mistral le dira.
     Renvoie (lignes, mots trouvés ?, type trouvé ?).
+
+    Parameters
+    ----------
+    rows : list[dict[str, Any]]
+        Les séances candidates, avec `keyword_match`, `keyword_hits`,
+        `visible_hits` et `category_match` (`build_search_query`).
+
+    Returns
+    -------
+    tuple[list[dict[str, Any]], bool, bool]
+        Les lignes gardées, vrai si des mots précis ont été trouvés, vrai si le
+        type demandé a été trouvé.
     """
 
     # Plusieurs mots précis : seulement ceux qui en ont le plus (« blind test » :
     # les deux mots, pas une dictée qui propose de « tester » son orthographe).
     # Parmi eux, d'abord ceux où le visiteur voit les mots (titre, résumé, lieu).
     def counts(row: Mapping[str, Any]) -> tuple[int, int]:
+        """Couple (mots visibles, mots trouvés) d'une ligne."""
         hits = int(row.get("keyword_hits") or (1 if row.get("keyword_match") else 0))
         return int(row.get("visible_hits") or 0), hits
 
@@ -351,6 +451,21 @@ def fetch_candidates(connection: Any, plan: QueryPlan, vector: str | None) -> tu
     karaoké partenaire dans 15 jours tombait au-delà des 80 premières séances
     et n'était jamais examiné. Les séances partenaires sont ajoutées à la fin ;
     `partners_first` décide ensuite si elles répondent (et les met en tête).
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion PostgreSQL.
+    plan : QueryPlan
+        Le plan de recherche (contraintes, types, mots-clés).
+    vector : str | None
+        Vecteur de la question au format pgvector, ou None (classement par date et mots).
+
+    Returns
+    -------
+    tuple[list[dict[str, Any]], dict[str, Any]]
+        Les séances candidates, et les paramètres de la requête principale
+        (`lexical` y dit si les mots-clés ont servi).
     """
 
     sql, params = build_search_query(plan, vector)
@@ -387,6 +502,18 @@ def known_subjects(connection: Any, words: Sequence[str]) -> set[str]:
     Aucune liste à tenir à la main : le vocabulaire suit la base. Une base
     sans la table (schéma pas encore mis à jour) : aucun mot reconnu, la
     recherche fonctionne comme avant.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion PostgreSQL (annulée si la requête échoue).
+    words : Sequence[str]
+        Les mots précis de la question.
+
+    Returns
+    -------
+    set[str]
+        Les mots trouvés dans au moins un titre ; vide en cas d'erreur.
     """
 
     if not words:
@@ -399,8 +526,23 @@ def known_subjects(connection: Any, words: Sequence[str]) -> set[str]:
 
 
 def on_subject(rows: Sequence[Mapping[str, Any]], plan: QueryPlan) -> list[Mapping[str, Any]]:
-    """Lignes qui parlent du sujet de la question : les mots précis (« photo »,
-    « cirque ») s'il y en a, sinon le type demandé (« concert »)."""
+    """Lignes qui parlent du sujet de la question.
+
+    Les mots précis (« photo », « cirque ») s'il y en a, sinon le type demandé
+    (« concert »).
+
+    Parameters
+    ----------
+    rows : Sequence[Mapping[str, Any]]
+        Les séances candidates.
+    plan : QueryPlan
+        Le plan de recherche (mots-clés).
+
+    Returns
+    -------
+    list[Mapping[str, Any]]
+        Les lignes avec `keyword_match` (mots précis) ou `category_match` (type).
+    """
 
     if distinctive_keywords(plan.keywords):
         return [row for row in rows if row.get("keyword_match")]
@@ -408,13 +550,35 @@ def on_subject(rows: Sequence[Mapping[str, Any]], plan: QueryPlan) -> list[Mappi
 
 
 def lexical_words(words: Sequence[str]) -> set[str]:
-    """Mots distincts de la recherche par mots (sans les synonymes ajoutés)."""
+    """Mots distincts de la recherche par mots (sans les synonymes ajoutés).
+
+    Parameters
+    ----------
+    words : Sequence[str]
+        Les mots de la question.
+
+    Returns
+    -------
+    set[str]
+        Les termes de `lexical_query`, un par mot distinct.
+    """
 
     return {word for word in lexical_query(words).split(" | ") if word}
 
 
 def core_words(words: Sequence[str]) -> list[str]:
-    """Mots de la question, sans les synonymes appris (une alternative, pas un mot de plus)."""
+    """Mots de la question, sans les synonymes appris (une alternative, pas un mot de plus).
+
+    Parameters
+    ----------
+    words : Sequence[str]
+        Les mots de la question.
+
+    Returns
+    -------
+    list[str]
+        Les mots qui ne sont ni un synonyme appris ni sa cible.
+    """
 
     from app.query_understanding import learned_synonyms
 
@@ -423,14 +587,37 @@ def core_words(words: Sequence[str]) -> list[str]:
 
 
 def best_match(rows: Sequence[Mapping[str, Any]]) -> tuple[int, int]:
-    """Meilleur couple (mots visibles, mots trouvés) parmi les lignes sur le sujet."""
+    """Meilleur couple (mots visibles, mots trouvés) parmi les lignes sur le sujet.
+
+    Parameters
+    ----------
+    rows : Sequence[Mapping[str, Any]]
+        Les séances candidates.
+
+    Returns
+    -------
+    tuple[int, int]
+        Le plus grand couple (`visible_hits`, `keyword_hits`), ou (0, 0).
+    """
 
     return max(((int(row.get("visible_hits") or 0), int(row.get("keyword_hits") or 0))
                 for row in rows if row.get("keyword_match")), default=(0, 0))
 
 
 def plan_can_widen(plan: QueryPlan) -> bool:
-    """Le plan a des contraintes que `widen_for_subject` peut relâcher."""
+    """Le plan a des contraintes que `widen_for_subject` peut relâcher.
+
+    Parameters
+    ----------
+    plan : QueryPlan
+        Le plan de recherche.
+
+    Returns
+    -------
+    bool
+        Vrai s'il y a un public, un prix, un moment, un cadre, un lieu, ou une
+        période plus courte que `WIDER_PERIOD`.
+    """
 
     return bool(plan.public or plan.free_only or plan.max_price is not None or plan.evening or plan.moment or plan.setting
                 or plan.zone or plan.cities or plan.near or plan.end < plan.start + WIDER_PERIOD)
@@ -449,8 +636,25 @@ def widen_for_subject(connection: Any, plan: QueryPlan, vector: str | None,
     Renvoie (lignes sur le sujet, plan élargi, contraintes relâchées) ; aucune
     ligne si le sujet n'existe nulle part : mieux vaut le dire que proposer
     n'importe quoi.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion PostgreSQL.
+    plan : QueryPlan
+        Le plan de recherche dont le sujet est absent.
+    vector : str | None
+        Vecteur de la question au format pgvector, ou None.
+
+    Returns
+    -------
+    tuple[list[dict[str, Any]], QueryPlan, list[str]]
+        Les lignes sur le sujet, le plan élargi qui les a trouvées, et les
+        contraintes relâchées (libellés pour la réponse) ; ([], plan, []) si
+        rien n'est trouvé.
     """
 
+    # Libellés des contraintes relâchées à la première étape
     dropped: list[str] = []
     if plan.public:
         dropped.append(f"pour le public « {PUBLIC_LABELS.get(plan.public, plan.public)} »")
@@ -460,6 +664,7 @@ def widen_for_subject(connection: Any, plan: QueryPlan, vector: str | None,
         dropped.append(MOMENT_LABELS["soir" if plan.evening else str(plan.moment)])
     if plan.setting:
         dropped.append({"interieur": "en intérieur", "exterieur": "en plein air"}[plan.setting])
+    # Construire les plans élargis, du plus proche au plus large
     steps: list[tuple[QueryPlan, list[str]]] = []
     if plan.cities and plan.zone and not plan.near:
         # « à Montpellier » : d'abord la métropole, avec toutes les autres
@@ -475,6 +680,7 @@ def widen_for_subject(connection: Any, plan: QueryPlan, vector: str | None,
         steps.append((replace(longer, cities=()), [*steps[-1][1], "dans la commune même"]))
     if plan.zone or plan.cities or plan.near:
         steps.append((replace(longer, zone=None, cities=(), near=None), [*steps[-1][1], "à cet endroit"]))
+    # Essayer chaque plan : le premier qui trouve le sujet l'emporte
     for wider, relaxed in steps:
         rows = on_subject(fetch_candidates(connection, wider, vector)[0], wider)
         if rows:
@@ -483,7 +689,22 @@ def widen_for_subject(connection: Any, plan: QueryPlan, vector: str | None,
 
 
 def plan_from_filters(filters: SearchFilters, now: datetime, categories: Sequence[str] = ()) -> QueryPlan:
-    """Plan de recherche fait des seuls filtres cochés (sans question)."""
+    """Plan de recherche fait des seuls filtres cochés (sans question).
+
+    Parameters
+    ----------
+    filters : SearchFilters
+        Les cases cochées.
+    now : datetime
+        Heure de référence pour la période.
+    categories : Sequence[str]
+        Types de sortie à préférer ; aucun par défaut.
+
+    Returns
+    -------
+    QueryPlan
+        Le plan correspondant.
+    """
 
     return merge_with_filters(Understanding(categories=tuple(categories)), public=filters.public,
                               zone=filters.zone, period_bounds=period_bounds(filters.period, now),
@@ -507,8 +728,30 @@ def build_search_query(plan: QueryPlan | SearchFilters, vector: str | None, now:
        sans les exclure.
 
     Sans vecteur ni mots-clés : les plus proches dans le temps d'abord.
+
+    Parameters
+    ----------
+    plan : QueryPlan | SearchFilters
+        Le plan de recherche ; de simples filtres sont d'abord changés en plan.
+    vector : str | None
+        Vecteur de la question au format pgvector, ou None.
+    now : datetime | None
+        Heure de référence, utilisée seulement si `plan` est un `SearchFilters`
+        (par défaut maintenant).
+    limit : int
+        Nombre maximum de séances. Par défaut `CANDIDATES` (80).
+    categories : Sequence[str]
+        Types de sortie, utilisés seulement si `plan` est un `SearchFilters`.
+    partners_only : bool
+        Vrai pour ne chercher que les séances des partenaires.
+
+    Returns
+    -------
+    tuple[str, dict[str, Any]]
+        La requête SQL et ses paramètres nommés.
     """
 
+    # Filtres stricts : période, public, lieu, prix, cadre, moment
     if isinstance(plan, SearchFilters):
         plan = plan_from_filters(plan, now or datetime.now(PARIS), categories)
     conditions = ["e.is_outing", "COALESCE(e.end_at, e.start_at) >= %(start)s", "e.start_at < %(end)s"]
@@ -550,6 +793,7 @@ def build_search_query(plan: QueryPlan | SearchFilters, vector: str | None, now:
         conditions.append("(NOT e.time_known OR EXTRACT(HOUR FROM e.start_at AT TIME ZONE 'Europe/Paris') "
                           f"BETWEEN {first} AND {last - 1})")
 
+    # Deux classements des séances filtrées : par le sens, par les mots
     practice = PRACTICES.get(plan.practice or "")
     lexical = practice[0] if practice else lexical_query(plan.keywords)
     ctes = [f"""base AS (
@@ -574,6 +818,7 @@ def build_search_query(plan: QueryPlan | SearchFilters, vector: str | None, now:
     ORDER BY ts_rank_cd(document, query) DESC LIMIT %(pool)s)""")
         joins.append("LEFT JOIN by_words ON by_words.event_id = b.event_id")
         score.append(f"COALESCE(1.0 / ({RRF_K} + by_words.rank), 0)")
+    # Fusion des rangs, puis l'expression « du type demandé »
     score_sql = " + ".join(score) or "0"
     category_sql = f"{EVENT_CATEGORY} = ANY (%(categories)s)"
     # Le type demandé écrit dans le TITRE ou la catégorie de la source compte
@@ -614,6 +859,7 @@ def build_search_query(plan: QueryPlan | SearchFilters, vector: str | None, now:
                 f"OR {title} @@ to_tsquery('french', %(participation)s))")
         hits = [f"(b.document @@ to_tsquery('french', %(practice)s) AND {kept})::int"]
         visible = [f"({visible_text} @@ to_tsquery('french', %(practice)s) AND {kept})::int"]
+    # Assembler la requête : mots visibles, mots trouvés, type, score, date
     hits_sql = " + ".join(hits) or "0"
     visible_sql = " + ".join(visible) or "0"
     sql = (
@@ -757,7 +1003,22 @@ RETURNING request_id"""
 
 
 def fetch_rows(connection: Any, sql: str, params: Mapping[str, Any]) -> list[dict[str, Any]]:
-    """Exécute une requête et renvoie des dictionnaires."""
+    """Exécute une requête et renvoie des dictionnaires.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion PostgreSQL (psycopg2).
+    sql : str
+        La requête, avec des paramètres nommés `%(nom)s`.
+    params : Mapping[str, Any]
+        Les valeurs des paramètres.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Une ligne par dictionnaire, clés = noms des colonnes.
+    """
 
     with connection.cursor() as cursor:
         cursor.execute(sql, dict(params))
@@ -770,7 +1031,20 @@ def fetch_rows(connection: Any, sql: str, params: Mapping[str, Any]) -> list[dic
 # ----------------------------------------------------------------------------
 
 def date_label(start: datetime, time_known: bool = True) -> str:
-    """« Sam. 17 oct. · 10:00 » (sans l'heure si elle est inconnue)."""
+    """« Sam. 17 oct. · 10:00 » (sans l'heure si elle est inconnue).
+
+    Parameters
+    ----------
+    start : datetime
+        Le début de la séance.
+    time_known : bool
+        Faux si l'heure n'est pas connue : elle n'est pas affichée. Par défaut vrai.
+
+    Returns
+    -------
+    str
+        La date à l'heure de Paris.
+    """
 
     local = start.astimezone(PARIS)
     label = f"{DAYS[local.weekday()]} {local.day} {MONTHS[local.month - 1]}"
@@ -778,9 +1052,24 @@ def date_label(start: datetime, time_known: bool = True) -> str:
 
 
 def event_date_label(row: Mapping[str, Any], now: datetime | None = None) -> str:
-    """Date de la carte. Un événement déjà commencé et pas terminé (exposition,
+    """Date affichée sur la carte d'un événement.
+
+    Un événement déjà commencé et pas terminé (exposition,
     programme sur plusieurs semaines) affiche « En cours · jusqu'au 19 déc. »
-    au lieu de sa date de début passée, qui laissait croire à une erreur."""
+    au lieu de sa date de début passée, qui laissait croire à une erreur.
+
+    Parameters
+    ----------
+    row : Mapping[str, Any]
+        La séance (`start_at`, `end_at`, `time_known`).
+    now : datetime | None
+        Heure de référence ; par défaut maintenant.
+
+    Returns
+    -------
+    str
+        « En cours · jusqu'au … », « Du … au … », ou la date de la séance.
+    """
 
     start, end = row["start_at"], row.get("end_at")
     now = now or datetime.now(PARIS)
@@ -803,15 +1092,39 @@ MONEY = re.compile(r"€|\beur(?:os?)?\b", re.IGNORECASE)
 
 
 def french_amount(value: float) -> str:
-    """12.5 -> « 12,50 » ; 12.0 -> « 12 » (16/10/2026 : « 25.5 € » s'affichait tel quel)."""
+    """12.5 -> « 12,50 » ; 12.0 -> « 12 » (16/10/2026 : « 25.5 € » s'affichait tel quel).
+
+    Parameters
+    ----------
+    value : float
+        Le montant.
+
+    Returns
+    -------
+    str
+        Le montant au format français, sans décimales s'il est rond.
+    """
 
     value = float(value)
     return str(int(value)) if value.is_integer() else f"{value:.2f}".replace(".", ",")
 
 
 def french_prices(text: str) -> str:
-    """Montants d'un texte de prix au format français : « De 5.5 à 8.5 € » ->
-    « De 5,50 à 8,50 € ». Seulement dans un texte qui parle d'euros."""
+    """Met les montants d'un texte de prix au format français.
+
+    « De 5.5 à 8.5 € » -> « De 5,50 à 8,50 € ». Seulement dans un texte qui
+    parle d'euros.
+
+    Parameters
+    ----------
+    text : str
+        Le texte de prix de la source.
+
+    Returns
+    -------
+    str
+        Le texte, montants décimaux réécrits avec une virgule.
+    """
 
     if not MONEY.search(text):
         return text
@@ -819,7 +1132,19 @@ def french_prices(text: str) -> str:
 
 
 def price_label(row: Mapping[str, Any]) -> str:
-    """Prix affiché sur la carte."""
+    """Prix affiché sur la carte.
+
+    Parameters
+    ----------
+    row : Mapping[str, Any]
+        La séance (`is_free`, `price_text`, `price_min`).
+
+    Returns
+    -------
+    str
+        « Gratuit », le texte de la source (40 caractères au plus), « dès … € »,
+        ou « Prix non communiqué ».
+    """
 
     if row.get("is_free"):
         return "Gratuit"
@@ -832,8 +1157,21 @@ def price_label(row: Mapping[str, Any]) -> str:
 
 
 def place_label(row: Mapping[str, Any]) -> str:
-    """Lieu affiché : « Salle · Ville », ou la ville seule quand le lieu porte
-    son nom (16/10/2026 : « Montpellier · Montpellier »)."""
+    """Lieu affiché : « Salle · Ville », ou la ville seule quand le lieu porte son nom.
+
+    La ville seule quand le lieu porte son nom (16/10/2026 : « Montpellier ·
+    Montpellier »).
+
+    Parameters
+    ----------
+    row : Mapping[str, Any]
+        La séance (`venue_name`, `city`).
+
+    Returns
+    -------
+    str
+        Le lieu et la ville, ou ce qui en est connu.
+    """
 
     venue = str(row.get("venue_name") or "").strip()
     city = str(row.get("city") or "").strip()
@@ -843,7 +1181,18 @@ def place_label(row: Mapping[str, Any]) -> str:
 
 
 def short_summary(row: Mapping[str, Any]) -> str:
-    """Le résumé d'enrichissement, sinon le début de la description."""
+    """Le résumé d'enrichissement, sinon le début de la description.
+
+    Parameters
+    ----------
+    row : Mapping[str, Any]
+        La séance (`summary`, `description`).
+
+    Returns
+    -------
+    str
+        Le texte, coupé à un mot entier avant `SUMMARY_CHARS` caractères.
+    """
 
     text = str(row.get("summary") or "").strip() or " ".join(str(row.get("description") or "").split())
     if len(text) <= SUMMARY_CHARS:
@@ -852,13 +1201,35 @@ def short_summary(row: Mapping[str, Any]) -> str:
 
 
 def squash(value: Any) -> str:
-    """Minuscules, espaces réduits (même règle que OTHER_DATES_SQL)."""
+    """Minuscules, espaces réduits (même règle que OTHER_DATES_SQL).
+
+    Parameters
+    ----------
+    value : Any
+        La valeur à normaliser (`None` donne une chaîne vide).
+
+    Returns
+    -------
+    str
+        Le texte normalisé.
+    """
 
     return " ".join(str(value or "").split()).lower()
 
 
 def occurrence_key(row: Mapping[str, Any]) -> tuple[str, str, str]:
-    """Un même événement à plusieurs dates : même titre, même lieu, même commune."""
+    """Un même événement à plusieurs dates : même titre, même lieu, même commune.
+
+    Parameters
+    ----------
+    row : Mapping[str, Any]
+        La séance.
+
+    Returns
+    -------
+    tuple[str, str, str]
+        Le titre, le lieu et la commune normalisés par `squash`.
+    """
 
     return squash(row.get("title")), squash(row.get("venue_name")), squash(row.get("city"))
 
@@ -886,6 +1257,20 @@ def partner_fits(row: Mapping[str, Any], plan: QueryPlan, main: Sequence[str]) -
     voisin accepté en plus (« spectacle » pour « théâtre »), sauf si le mot
     demandé est dans l'offre. Le public : le titre ne doit pas en nommer un
     autre. Sans ces deux conditions, l'offre reste à sa place parmi les autres.
+
+    Parameters
+    ----------
+    row : Mapping[str, Any]
+        La séance du partenaire.
+    plan : QueryPlan
+        Le plan de recherche (public demandé).
+    main : Sequence[str]
+        Les types que la question vise (`main_categories`).
+
+    Returns
+    -------
+    bool
+        Vrai si l'offre peut passer en tête.
     """
 
     title = f" {plain(str(row.get('title') or ''))} "
@@ -920,6 +1305,22 @@ def partners_first(rows: list[dict[str, Any]], plan: QueryPlan, exact: bool,
       public demandés (`partner_fits`). Les offres passées en tête sont
       marquées `partner_ahead` : l'ordre des cartes et la rédaction s'en
       servent ; une offre partenaire qui n'y est pas garde sa place.
+
+    Parameters
+    ----------
+    rows : list[dict[str, Any]]
+        Les séances retenues, dans l'ordre de pertinence.
+    plan : QueryPlan
+        Le plan de recherche.
+    exact : bool
+        Vrai si les séances répondent exactement (ou au sujet élargi).
+    question : str
+        La question, pour trouver le type visé ; vide pour des filtres seuls.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Les offres passées en tête, puis les autres séances.
     """
 
     main = main_categories(question) if question else ()
@@ -929,6 +1330,7 @@ def partners_first(rows: list[dict[str, Any]], plan: QueryPlan, exact: bool,
         on_topic = [{**row, "partner_ahead": True} for row in rows if row.get("partner_id") is not None
                     and (row.get("keyword_match") or row.get("category_match")) and partner_fits(row, plan, main)]
         return on_topic + [row for row in rows if row.get("partner_id") is None]
+    # Réponse exacte : une offre qui répond passe en tête
     precise = bool(plan.categories) or bool(distinctive_keywords(plan.keywords))
     ranked_by_meaning = any(row.get("score") for row in rows)
     ahead, rest = [], []
@@ -956,11 +1358,28 @@ def group_occurrences(rows: Sequence[Mapping[str, Any]], now: datetime,
     Diversité (15/10/2026) : pas plus de 2 propositions au même lieu tant
     qu'il y a d'autres lieux à proposer ; six ateliers de la même
     médiathèque laissaient peu de choix.
+
+    Parameters
+    ----------
+    rows : Sequence[Mapping[str, Any]]
+        Les séances, dans l'ordre de pertinence.
+    now : datetime
+        Heure de référence : une séance déjà commencée passe après les autres.
+    limit : int
+        Nombre maximum de propositions. Par défaut `MAX_PROPOSALS` (8).
+
+    Returns
+    -------
+    list[tuple[Mapping[str, Any], list[Mapping[str, Any]]]]
+        Pour chaque proposition : la séance montrée et ses autres séances
+        (`MAX_OTHER_DATES` au plus), triées par date.
     """
 
+    # Regrouper les séances par événement (titre, lieu, commune)
     groups: dict[tuple[str, str, str], list[Mapping[str, Any]]] = {}
     for row in rows:
         groups.setdefault(occurrence_key(row), []).append(row)
+    # Choisir les événements, pas plus de MAX_PER_VENUE au même lieu
     chosen: list[tuple[str, str, str]] = []
     waiting: list[tuple[str, str, str]] = []
     per_venue: dict[tuple[str, str], int] = {}
@@ -974,6 +1393,7 @@ def group_occurrences(rows: Sequence[Mapping[str, Any]], now: datetime,
         if len(chosen) == limit:
             break
     chosen += waiting[:limit - len(chosen)]            # pas assez d'autres lieux : on complète
+    # Dans chaque groupe : la prochaine séance montrée, les autres par date
     result = []
     for key in chosen:
         ordered = sorted(groups[key], key=lambda r: (r["start_at"] < now, r["start_at"]))
@@ -983,7 +1403,22 @@ def group_occurrences(rows: Sequence[Mapping[str, Any]], now: datetime,
 
 
 def sibling_rows(connection: Any, row: Mapping[str, Any], limit: int = 60) -> list[dict[str, Any]]:
-    """Toutes les autres séances à venir du même événement (même titre, lieu, commune)."""
+    """Toutes les autres séances à venir du même événement (même titre, lieu, commune).
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion PostgreSQL.
+    row : Mapping[str, Any]
+        La séance de référence (exclue du résultat).
+    limit : int
+        Nombre maximum de séances. Par défaut 60.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Les autres séances, triées par date.
+    """
 
     return fetch_rows(connection, OTHER_DATES_SQL, {
         "event_id": str(row["event_id"]), "title": squash(row.get("title")), "venue": squash(row.get("venue_name")),
@@ -1007,6 +1442,25 @@ def complete_occurrences(connection: Any, row: Mapping[str, Any], plan: QueryPla
     enrichissement : pour « Halloween », la carte montrait la séance du 24/10
     (sans Halloween) au lieu de celle du 31/10 ; pour « ados », une séance
     sans le public ados.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion PostgreSQL.
+    row : Mapping[str, Any]
+        La séance retenue pour la carte.
+    plan : QueryPlan
+        Le plan de recherche (période demandée).
+    now : datetime
+        Heure de référence : une séance déjà commencée passe après les autres.
+    found : Sequence[Mapping[str, Any]]
+        Les autres séances du même événement trouvées par la recherche.
+
+    Returns
+    -------
+    tuple[Mapping[str, Any], list[Mapping[str, Any]]]
+        La séance montrée, et toutes les autres séances à venir
+        (`MAX_OTHER_DATES` au plus), triées par date.
     """
 
     everyone = [row, *sibling_rows(connection, row)]
@@ -1018,13 +1472,35 @@ def complete_occurrences(connection: Any, row: Mapping[str, Any], plan: QueryPla
 
 
 def other_dates(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, str]]:
-    """Autres dates d'un événement, telles que l'interface les affiche."""
+    """Autres dates d'un événement, telles que l'interface les affiche.
+
+    Parameters
+    ----------
+    rows : Sequence[Mapping[str, Any]]
+        Les autres séances.
+
+    Returns
+    -------
+    list[dict[str, str]]
+        Pour chaque séance : `event_id` et la date affichée.
+    """
 
     return [{"event_id": str(row["event_id"]), "date": event_date_label(row)} for row in rows]
 
 
 def category_display(row: Mapping[str, Any]) -> str:
-    """Type de sortie tel qu'on l'écrit : « soirée », « théâtre », « marché »."""
+    """Type de sortie tel qu'on l'écrit : « soirée », « théâtre », « marché ».
+
+    Parameters
+    ----------
+    row : Mapping[str, Any]
+        La séance (`category_norm`, sinon `category`).
+
+    Returns
+    -------
+    str
+        Le libellé accentué, ou la catégorie telle quelle.
+    """
 
     category = str(row.get("category_norm") or row.get("category") or "").strip()
     return CATEGORY_LABELS.get(category.lower(), category)
@@ -1034,7 +1510,18 @@ DEMO_HOSTS = ("example.org", "example.com", "example.net")
 
 
 def is_demo_link(url: str) -> bool:
-    """Lien d'une offre de démonstration (partenaires fictifs : example.org)."""
+    """Lien d'une offre de démonstration (partenaires fictifs : example.org).
+
+    Parameters
+    ----------
+    url : str
+        Le lien de l'événement.
+
+    Returns
+    -------
+    bool
+        Vrai si l'hôte est l'un des `DEMO_HOSTS` ou l'un de leurs sous-domaines.
+    """
 
     from urllib.parse import urlparse
 
@@ -1043,7 +1530,21 @@ def is_demo_link(url: str) -> bool:
 
 
 def to_card(row: Mapping[str, Any], ref: int | None = None) -> dict[str, Any]:
-    """Un événement tel que l'interface l'affiche (carte et détail)."""
+    """Un événement tel que l'interface l'affiche (carte et détail).
+
+    Parameters
+    ----------
+    row : Mapping[str, Any]
+        La séance, avec les colonnes de `EVENT_COLUMNS`.
+    ref : int | None
+        Numéro de la carte, cité par la réponse ([1], [2]) ; None hors d'une réponse.
+
+    Returns
+    -------
+    dict[str, Any]
+        Les champs de la carte (titre, date, lieu, prix, source, partenaire…) ;
+        `other_dates` est vide, à remplir par l'appelant.
+    """
 
     place = place_label(row)
     rating = row.get("venue_rating")
@@ -1084,10 +1585,33 @@ def to_card(row: Mapping[str, Any], ref: int | None = None) -> dict[str, Any]:
 
 def event_detail(connection: Any, event_id: str, comments: int = 3,
                  visitor_key: str | None = None) -> dict[str, Any] | None:
-    """Détail d'un événement proposable, avec les derniers avis publiés sur son
-    lieu, leur nombre, et l'avis du visiteur (`visitor_key` : empreinte de son
-    navigateur) s'il en a donné un."""
+    """Détail d'un événement proposable, avec les avis sur son lieu et celui du visiteur.
 
+    Détail d'un événement proposable, avec les derniers avis publiés sur son
+    lieu, leur nombre, et l'avis du visiteur (`visitor_key` : empreinte de son
+    navigateur) s'il en a donné un. Un événement passé depuis moins de
+    `RATING_WINDOW_DAYS` jours est encore trouvé, pour pouvoir le noter.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion PostgreSQL.
+    event_id : str
+        Identifiant de l'événement.
+    comments : int
+        Nombre de commentaires publiés à joindre. Par défaut 3.
+    visitor_key : str | None
+        Empreinte du navigateur du visiteur, ou None.
+
+    Returns
+    -------
+    dict[str, Any] | None
+        La carte complétée (fenêtre de notation, autres dates, description,
+        commentaires, nombre d'avis, avis du visiteur), ou None si
+        l'événement est introuvable.
+    """
+
+    # L'événement : proposable, sinon passé récemment
     rows = fetch_rows(connection, DETAIL_SQL, {"event_id": event_id}) or \
         fetch_rows(connection, RECENT_DETAIL_SQL, {"event_id": event_id})
     if not rows:
@@ -1097,6 +1621,7 @@ def event_detail(connection: Any, event_id: str, comments: int = 3,
     card.update(rating_window(row))
     card["other_dates"] = other_dates(sibling_rows(connection, row, MAX_OTHER_DATES))
     card["description"] = " ".join(str(row.get("description") or "").split())[:1200]
+    # Les avis sur le lieu : derniers commentaires publiés, puis nombre de notes
     card["comments"] = [
         {"stars": int(item["stars"]), "text": str(item["comment"]),
          "date": item["updated_at"].astimezone(PARIS).strftime("%d/%m/%Y"),
@@ -1109,6 +1634,7 @@ def event_detail(connection: Any, event_id: str, comments: int = 3,
     venue = {"city": row.get("city") or "", "venue": row.get("venue_name") or ""}
     counted = fetch_rows(connection, VENUE_RATING_COUNT_SQL, venue)
     card["venue_ratings"] = int(counted[0]["ratings"]) if counted else 0
+    # L'avis du visiteur lui-même, s'il en a donné un
     card["my_rating"] = None
     if visitor_key:
         own = fetch_rows(connection, OWN_RATING_SQL, {"event_id": str(row["event_id"]), "user_key": visitor_key})
@@ -1124,6 +1650,19 @@ def rating_window(row: Mapping[str, Any], now: datetime | None = None) -> dict[s
 
     Même règle que la base (UPSERT_RATING_SQL) : du début de l'événement à
     7 jours après sa fin.
+
+    Parameters
+    ----------
+    row : Mapping[str, Any]
+        La séance (`start_at`, `end_at`).
+    now : datetime | None
+        Heure de référence ; par défaut maintenant.
+
+    Returns
+    -------
+    dict[str, Any]
+        `can_rate` (bool), et `rate_from` : la date d'ouverture si l'événement
+        n'a pas commencé, sinon une chaîne vide.
     """
 
     now = now or datetime.now(PARIS)
@@ -1135,7 +1674,26 @@ def rating_window(row: Mapping[str, Any], now: datetime | None = None) -> dict[s
 
 def events_to_rate(connection: Any, event_ids: Sequence[str], session_id: str,
                    limit: int = 10) -> list[dict[str, Any]]:
-    """Événements consultés par ce visiteur qu'il peut noter maintenant."""
+    """Événements consultés par ce visiteur qu'il peut noter maintenant.
+
+    Ceux qu'il a déjà notés sont écartés.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion PostgreSQL.
+    event_ids : Sequence[str]
+        Les événements consultés (50 premiers gardés).
+    session_id : str
+        Identifiant aléatoire du navigateur (changé en empreinte avant la requête).
+    limit : int
+        Nombre maximum d'événements. Par défaut 10.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Pour chaque événement : identifiant, titre, date et lieu affichés.
+    """
 
     from src.event.event_ratings import user_key
 
@@ -1159,8 +1717,27 @@ def build_partner_query(plan: QueryPlan, vector: str | None, exclude: Sequence[s
     Même période que la demande (et même lieu si `keep_place`), seulement les
     événements d'un partenaire ; classées par proximité de sens avec la
     question (mises en avant d'abord à égalité), sinon par date.
+
+    Parameters
+    ----------
+    plan : QueryPlan
+        Le plan de recherche (période, lieu).
+    vector : str | None
+        Vecteur de la question au format pgvector, ou None (tri par date).
+    exclude : Sequence[str]
+        Les événements déjà sur les cartes.
+    keep_place : bool
+        Vrai pour garder le lieu demandé. Par défaut vrai.
+    limit : int
+        Nombre maximum d'offres. Par défaut `MAX_PARTNER_OFFERS` (3).
+
+    Returns
+    -------
+    tuple[str, dict[str, Any]]
+        La requête SQL et ses paramètres nommés.
     """
 
+    # Filtres : période, partenaires seulement, et le lieu si demandé
     conditions = ["e.is_outing", "e.partner_id IS NOT NULL", "COALESCE(e.end_at, e.start_at) >= %(start)s",
                   "e.start_at < %(end)s", "NOT (e.event_id = ANY (%(exclude)s))"]
     params: dict[str, Any] = {"start": plan.start, "end": plan.end, "exclude": list(exclude), "limit": limit}
@@ -1173,6 +1750,7 @@ def build_partner_query(plan: QueryPlan, vector: str | None, exclude: Sequence[s
     elif keep_place and plan.zone:
         conditions.append("sortiria.event_zone(e.latitude, e.longitude, e.city) = %(zone)s")
         params["zone"] = ZONES[plan.zone]
+    # Ordre : par le sens si possible, sinon par formule puis par date
     order = "partner_rank DESC, e.start_at"
     if vector:
         params["vector"] = vector
@@ -1185,8 +1763,26 @@ def build_partner_query(plan: QueryPlan, vector: str | None, exclude: Sequence[s
 
 def partner_offers(connection: Any, plan: QueryPlan, vector: str | None,
                    exclude: Sequence[str]) -> list[dict[str, Any]]:
-    """Quand rien ne répond exactement : les offres partenaires les plus proches,
-    au même endroit d'abord, puis n'importe où dans la zone couverte."""
+    """Offres partenaires les plus proches, quand rien ne répond exactement.
+
+    Au même endroit d'abord, puis n'importe où dans la zone couverte.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion PostgreSQL.
+    plan : QueryPlan
+        Le plan de recherche.
+    vector : str | None
+        Vecteur de la question au format pgvector, ou None.
+    exclude : Sequence[str]
+        Les événements déjà sur les cartes.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Les cartes des offres, une par événement.
+    """
 
     rows = fetch_rows(connection, *build_partner_query(plan, vector, exclude))
     if not rows and (plan.cities or plan.zone or plan.near):
@@ -1206,6 +1802,18 @@ def partner_highlights(connection: Any, limit: int = 3) -> list[dict[str, Any]]:
     Mises en avant d'abord, puis les plus proches dans le temps ; une offre par
     partenaire tant qu'il y a d'autres partenaires (chacun a sa place), et une
     offre répétée sur plusieurs dates ne compte qu'une fois.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion PostgreSQL.
+    limit : int
+        Nombre d'offres. Par défaut 3.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Les cartes des offres.
     """
 
     rows = fetch_rows(connection, HIGHLIGHTS_SQL, {"pool": max(limit * 10, 30)})
@@ -1225,7 +1833,18 @@ def partner_highlights(connection: Any, limit: int = 3) -> list[dict[str, Any]]:
 
 
 def active_sources(connection: Any) -> list[dict[str, Any]]:
-    """Sources qui ont au moins un événement proposable (en-tête de l'interface)."""
+    """Sources qui ont au moins un événement proposable (en-tête de l'interface).
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion PostgreSQL.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Pour chaque source : `name` et le nombre d'`events`, les plus fournies d'abord.
+    """
 
     return [{"name": str(row["source_name"]), "events": int(row["events"])}
             for row in fetch_rows(connection, SOURCES_SQL, {})]
@@ -1243,7 +1862,19 @@ SELECT
 
 
 def collect_health(connection: Any) -> dict[str, Any]:
-    """Statut de la dernière collecte et heures depuis la dernière réussie."""
+    """Statut de la dernière collecte et heures depuis la dernière réussie.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion PostgreSQL.
+
+    Returns
+    -------
+    dict[str, Any]
+        `statut` de la dernière collecte, et `heures_depuis_reussite` (None si
+        aucune collecte n'a réussi).
+    """
 
     row = fetch_rows(connection, COLLECT_HEALTH_SQL, {})[0]
     hours = row["heures"]
@@ -1258,7 +1889,19 @@ CITATION = re.compile(r"\[(\d+)\]")
 
 
 def events_for_prompt(cards: Sequence[Mapping[str, Any]]) -> str:
-    """Liste numérotée donnée à Mistral (seules informations qu'il peut utiliser)."""
+    """Liste numérotée donnée à Mistral (seules informations qu'il peut utiliser).
+
+    Parameters
+    ----------
+    cards : Sequence[Mapping[str, Any]]
+        Les cartes retenues (`to_card`), numérotées par `ref`.
+
+    Returns
+    -------
+    str
+        Une entrée par carte : numéro, titre, date, lieu, type, prix, mention
+        partenaire, public, autres dates, puis le résumé.
+    """
 
     lines = []
     for card in cards:
@@ -1279,6 +1922,24 @@ def parse_answer(raw: str, count: int) -> tuple[str, list[str]]:
 
     Une citation qui ne renvoie à aucun événement fourni ([7] quand il y en a
     4) est retirée : on n'affiche jamais une source qui n'existe pas.
+
+    Parameters
+    ----------
+    raw : str
+        Le JSON renvoyé par Mistral (`reponse`, `suggestions`).
+    count : int
+        Nombre d'événements fournis : les citations au-delà sont retirées.
+
+    Returns
+    -------
+    tuple[str, list[str]]
+        La réponse nettoyée (espaces, typographie) et les relances gardées.
+
+    Raises
+    ------
+    ValueError
+        Si la réponse est vide, ou si le JSON est illisible
+        (`json.JSONDecodeError`, laissée remonter).
     """
 
     data = json.loads(raw)
@@ -1299,6 +1960,18 @@ HIGH_PUNCTUATION = re.compile(r"(?:(?<=[^\s\u00a0])| +)([:;!?])(?=\s|$|[»)\]])"
 
 
 def french_spacing(text: str) -> str:
+    """Met une espace insécable avant « : ; ! ? » (typographie française).
+
+    Parameters
+    ----------
+    text : str
+        Le texte à corriger.
+
+    Returns
+    -------
+    str
+        Le texte corrigé ; heures et liens (« 20:30 », « https:// ») inchangés.
+    """
     return HIGH_PUNCTUATION.sub(lambda m: "\u00a0" + m.group(1), text)
 
 
@@ -1315,6 +1988,17 @@ def clean_suggestions(items: Sequence[Any]) -> list[str]:
 
     17/10/2026 : une relance est un bouton, donc un seul choix. « En intérieur
     ou en extérieur ? » est séparée en « En intérieur ? » et « En extérieur ? ».
+
+    Parameters
+    ----------
+    items : Sequence[Any]
+        Les relances proposées par Mistral.
+
+    Returns
+    -------
+    list[str]
+        Au plus 3 relances, sans doublon ; vide s'il n'en reste aucune (les
+        relances par défaut sont ajoutées par l'appelant).
     """
 
     kept: list[str] = []
@@ -1336,6 +2020,16 @@ def single_choices(text: str) -> list[str]:
     Seule une relance faite de deux choix courts est séparée ; si un morceau
     est trop long pour être un choix, la relance est gardée telle quelle et
     `clean_suggestions` la jugera.
+
+    Parameters
+    ----------
+    text : str
+        Une relance proposée.
+
+    Returns
+    -------
+    list[str]
+        Les deux choix séparés, ou la relance seule (espaces réduits).
     """
 
     text = " ".join(text.split())
@@ -1354,21 +2048,39 @@ def single_choices(text: str) -> list[str]:
 
 
 def order_cards(cards: list[dict[str, Any]], answer: str) -> tuple[list[dict[str, Any]], str]:
-    """Ordre des cartes affichées (15/10/2026) : d'abord les offres partenaires,
+    """Range les cartes affichées et renumérote les citations de la réponse.
+
+    Ordre des cartes affichées (15/10/2026) : d'abord les offres partenaires,
     puis les événements que la réponse cite (dans l'ordre où elle les cite),
     puis les autres. Les numéros sont refaits de 1 à n, et les citations de
     la réponse ([5] → [2]) suivent, pour que [n] désigne toujours la n-ième carte.
+
+    Parameters
+    ----------
+    cards : list[dict[str, Any]]
+        Les cartes numérotées de 1 à n (`ref`).
+    answer : str
+        La réponse rédigée, avec ses citations [n].
+
+    Returns
+    -------
+    tuple[list[dict[str, Any]], str]
+        Les cartes dans le nouvel ordre (copies renumérotées), et la réponse aux
+        citations mises à jour.
     """
 
+    # Relever les cartes citées, dans l'ordre de la réponse
     cited: list[int] = []
     for match in CITATION.finditer(answer):
         ref = int(match.group(1))
         if 1 <= ref <= len(cards) and ref not in cited:
             cited.append(ref)
+    # Nouvel ordre : partenaires, puis cartes citées, puis les autres
     partners = [ref for ref in range(1, len(cards) + 1)
                 if cards[ref - 1].get("partner_ahead", cards[ref - 1].get("partner"))]
     order = partners + [ref for ref in cited if ref not in partners]
     order += [ref for ref in range(1, len(cards) + 1) if ref not in order]
+    # Renuméroter les cartes et les citations de la réponse
     new_ref = {old: new for new, old in enumerate(order, start=1)}
     ordered = []
     for old in order:
@@ -1380,7 +2092,20 @@ def order_cards(cards: list[dict[str, Any]], answer: str) -> tuple[list[dict[str
 
 
 def fallback_answer(cards: Sequence[Mapping[str, Any]], filters: QueryPlan | SearchFilters) -> tuple[str, list[str]]:
-    """Réponse sans Mistral (service indisponible) : simple et toujours exacte."""
+    """Réponse sans Mistral (service indisponible) : simple et toujours exacte.
+
+    Parameters
+    ----------
+    cards : Sequence[Mapping[str, Any]]
+        Les cartes retenues (les 3 premières sont citées).
+    filters : QueryPlan | SearchFilters
+        Les contraintes, résumées dans la phrase.
+
+    Returns
+    -------
+    tuple[str, list[str]]
+        La réponse et ses relances (vides quand des cartes sont trouvées).
+    """
 
     if not cards:
         message = ("Je n'ai trouvé aucun événement qui corresponde pour "
@@ -1391,7 +2116,18 @@ def fallback_answer(cards: Sequence[Mapping[str, Any]], filters: QueryPlan | Sea
 
 
 def default_suggestions(filters: QueryPlan | SearchFilters) -> list[str]:
-    """Relances proposées si Mistral n'en donne pas."""
+    """Relances proposées si Mistral n'en donne pas.
+
+    Parameters
+    ----------
+    filters : QueryPlan | SearchFilters
+        Les contraintes : le soir et le gratuit changent les relances proposées.
+
+    Returns
+    -------
+    list[str]
+        Trois relances.
+    """
 
     evening = isinstance(filters, QueryPlan) and filters.evening
     suggestions = ["Et s'il pleut ?", "Plutôt en journée ?" if evening else "Plutôt le soir ?"]
@@ -1401,7 +2137,24 @@ def default_suggestions(filters: QueryPlan | SearchFilters) -> list[str]:
 
 def write_with_mistral(question: str, filters: QueryPlan | SearchFilters,
                        cards: Sequence[Mapping[str, Any]]) -> tuple[str, dict[str, int], str]:
-    """Appel de rédaction. Renvoie (JSON brut, tokens, modèle)."""
+    """Appel de rédaction. Renvoie (JSON brut, tokens, modèle).
+
+    Le modèle est lu dans `SEARCH_MODEL` (par défaut `DEFAULT_SEARCH_MODEL`).
+
+    Parameters
+    ----------
+    question : str
+        La demande transmise, avec ses précisions (`writer_question`).
+    filters : QueryPlan | SearchFilters
+        Les contraintes comprises, résumées pour Mistral.
+    cards : Sequence[Mapping[str, Any]]
+        Les cartes retenues, seules informations données à Mistral.
+
+    Returns
+    -------
+    tuple[str, dict[str, int], str]
+        Le JSON brut de la réponse, les tokens consommés et le nom du modèle.
+    """
 
     from src.event.event_enrichment import call_mistral_json
 
@@ -1413,7 +2166,18 @@ def write_with_mistral(question: str, filters: QueryPlan | SearchFilters,
 
 
 def embed_question(question: str) -> str:
-    """Vecteur de la question au format pgvector."""
+    """Vecteur de la question au format pgvector.
+
+    Parameters
+    ----------
+    question : str
+        Le texte à vectoriser (mistral-embed).
+
+    Returns
+    -------
+    str
+        Le vecteur au format texte de pgvector.
+    """
 
     from agent.services import embed_with_mistral
     from src.event.event_embedding import to_pgvector
@@ -1427,7 +2191,21 @@ def embed_question(question: str) -> str:
 
 @dataclass(slots=True)
 class SearchServices:
-    """Ce dont la recherche a besoin (remplacé par des faux dans les tests)."""
+    """Ce dont la recherche a besoin (remplacé par des faux dans les tests).
+
+    Attributes
+    ----------
+    embed : Callable[[str], str] | None
+        Vectorise la question ; None pour chercher sans le sens.
+    write : Callable[..., tuple[str, dict[str, int], str]] | None
+        Rédige la réponse ; None pour la réponse simple sans Mistral.
+    now : Callable[[], datetime]
+        Donne l'heure actuelle (à Paris).
+    log : bool
+        Faux pour ne pas tracer les demandes dans `rag_requests` (évaluation).
+    cache : bool
+        Faux pour ne pas lire ni écrire le cache des réponses (évaluation).
+    """
 
     embed: Callable[[str], str] | None = embed_question
     write: Callable[..., tuple[str, dict[str, int], str]] | None = write_with_mistral
@@ -1441,7 +2219,35 @@ class SearchServices:
 
 @dataclass(slots=True)
 class SearchResult:
-    """Résultat final envoyé à l'interface."""
+    """Résultat final envoyé à l'interface.
+
+    Attributes
+    ----------
+    answer : str
+        La réponse rédigée, avec ses citations [n].
+    events : list[dict[str, Any]]
+        Les cartes, dans l'ordre d'affichage.
+    suggestions : list[str]
+        Les questions de relance.
+    filters : str
+        Résumé des contraintes appliquées (`QueryPlan.describe`).
+    degraded : bool
+        Vrai si Mistral n'a pas répondu (réponse simplifiée).
+    request_id : int | None
+        Numéro de la demande dans `rag_requests`, pour le pouce haut ou bas.
+    tokens : dict[str, int]
+        Tokens consommés par la rédaction.
+    context : str
+        Demande complète comprise, renvoyée par l'interface avec la question suivante.
+    exact : bool
+        Vrai si les propositions répondent exactement ; faux : idées voisines.
+    partner_offers : list[dict[str, Any]]
+        Offres partenaires proches, affichées à part quand rien n'est exact.
+    checked : dict[str, Any]
+        Cases que l'interface doit cocher d'après la question.
+    gaps : dict[str, Any]
+        Ce qui a manqué, gardé dans le journal pour le bilan hebdomadaire.
+    """
 
     answer: str
     events: list[dict[str, Any]]
@@ -1470,16 +2276,54 @@ class SearchResult:
 
 
 def progress(step: str, status: str, message: str = "") -> dict[str, Any]:
-    """Un événement de progression (« event: progress » du flux)."""
+    """Un événement de progression (« event: progress » du flux).
+
+    Parameters
+    ----------
+    step : str
+        L'étape (`STEP_UNDERSTAND`, `STEP_SEARCH`, `STEP_FILTER`, `STEP_WRITE`).
+    status : str
+        « running » ou « completed ».
+    message : str
+        Le détail affiché sous l'étape ; vide par défaut.
+
+    Returns
+    -------
+    dict[str, Any]
+        L'événement à diffuser.
+    """
 
     return {"event": "progress", "step": step, "status": status, "message": message}
 
 
 def cache_key(question: str, context: str, filters: SearchFilters, now: datetime, version: str,
               follow_up: bool = False) -> str:
-    """Empreinte de la demande : question et contexte normalisés, cases cochées,
+    """Calcule l'empreinte de la demande, clé du cache des réponses.
+
+    Empreinte de la demande : question et contexte normalisés, cases cochées,
     jour, version du prompt et de la base, synonymes appris (un synonyme
-    validé sert dès la question suivante, sans attendre la fin du cache)."""
+    validé sert dès la question suivante, sans attendre la fin du cache).
+
+    Parameters
+    ----------
+    question : str
+        La question du visiteur.
+    context : str
+        La demande précédente de la conversation.
+    filters : SearchFilters
+        Les cases cochées.
+    now : datetime
+        Heure de référence (seul le jour, à Paris, compte).
+    version : str
+        Numéro de la dernière collecte (`index_version`).
+    follow_up : bool
+        Vrai si la question est une relance cliquée. Par défaut faux.
+
+    Returns
+    -------
+    str
+        L'empreinte SHA-256 en hexadécimal.
+    """
 
     import hashlib
 
@@ -1493,7 +2337,18 @@ def cache_key(question: str, context: str, filters: SearchFilters, now: datetime
 
 
 def cache_expiry(now: datetime) -> datetime:
-    """Fin de validité : 6 h plus tard, et jamais après minuit (heure de Paris)."""
+    """Fin de validité : 6 h plus tard, et jamais après minuit (heure de Paris).
+
+    Parameters
+    ----------
+    now : datetime
+        L'heure d'écriture dans le cache.
+
+    Returns
+    -------
+    datetime
+        La plus proche de `now` + `CACHE_HOURS` et du minuit suivant.
+    """
 
     local = now.astimezone(PARIS)
     midnight = local.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
@@ -1501,14 +2356,32 @@ def cache_expiry(now: datetime) -> datetime:
 
 
 def read_cache(connection: Any, key: str) -> dict[str, Any] | None:
-    """Réponse gardée pour cette demande, ou None. Jamais bloquant."""
+    """Réponse gardée pour cette demande, ou None. Jamais bloquant.
 
+    Une lecture compte aussi un usage de l'entrée (`hits`).
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion PostgreSQL (validée après la lecture, annulée en cas d'erreur).
+    key : str
+        L'empreinte de la demande (`cache_key`).
+
+    Returns
+    -------
+    dict[str, Any] | None
+        Le résultat gardé (avec au moins `answer` et `events`), ou None s'il est
+        absent, expiré ou illisible.
+    """
+
+    # Lire l'entrée encore valide (une erreur de base vaut « pas de cache »)
     try:
         rows = fetch_rows(connection, CACHE_GET_SQL, {"key": key})
         connection.commit()
     except Exception:  # noqa: BLE001 (sans cache, la recherche se fait normalement)
         connection.rollback()
         return None
+    # Décoder la réponse gardée et vérifier qu'elle est complète
     response = rows[0].get("response") if rows else None
     if not response:
         return None
@@ -1521,7 +2394,25 @@ def read_cache(connection: Any, key: str) -> dict[str, Any] | None:
 
 def write_cache(connection: Any, key: str, question: str, plan: QueryPlan, result: SearchResult,
                 version: str, now: datetime) -> None:
-    """Garde une réponse complète et sourcée. Jamais bloquant."""
+    """Garde une réponse complète et sourcée. Jamais bloquant.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion PostgreSQL (validée après l'écriture, annulée en cas d'erreur).
+    key : str
+        L'empreinte de la demande (`cache_key`).
+    question : str
+        La question, gardée sous forme simplifiée.
+    plan : QueryPlan
+        Le plan appliqué, gardé en JSON (`plan_summary`).
+    result : SearchResult
+        Le résultat à garder.
+    version : str
+        Numéro de la dernière collecte.
+    now : datetime
+        Heure d'écriture, pour calculer l'expiration.
+    """
 
     try:
         fetch_rows(connection, CACHE_PUT_SQL + " RETURNING cache_key", {
@@ -1537,7 +2428,18 @@ def write_cache(connection: Any, key: str, question: str, plan: QueryPlan, resul
 
 
 def index_version(connection: Any) -> str:
-    """Numéro de la dernière collecte : change chaque nuit."""
+    """Numéro de la dernière collecte : change chaque nuit.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion PostgreSQL (annulée en cas d'erreur).
+
+    Returns
+    -------
+    str
+        Le numéro, ou une chaîne vide s'il n'est pas lisible.
+    """
 
     try:
         rows = fetch_rows(connection, INDEX_VERSION_SQL, {})
@@ -1548,7 +2450,19 @@ def index_version(connection: Any) -> str:
 
 
 def checked_by_question(plan: QueryPlan) -> dict[str, Any]:
-    """Cases que l'interface doit cocher pour refléter la question."""
+    """Cases que l'interface doit cocher pour refléter la question.
+
+    Parameters
+    ----------
+    plan : QueryPlan
+        Le plan de recherche, avec ce qui vient de la question.
+
+    Returns
+    -------
+    dict[str, Any]
+        Les cases fixées par la question : `public`, `date` (libellé) et `zone`,
+        seulement celles qui s'appliquent.
+    """
 
     checked: dict[str, Any] = {}
     # « soiree » n'a plus de bouton (18/10/2026) : compris, mais rien à cocher.
@@ -1584,18 +2498,39 @@ def plan_search(question: str, filters: SearchFilters, now: datetime,
     avec « Seniors » coché cherche pour les familles, et l'interface coche
     « Famille ») ; ce qui vient seulement de la question précédente cède à la
     case : cocher, c'est vouloir changer.
+
+    Parameters
+    ----------
+    question : str
+        La question du visiteur.
+    filters : SearchFilters
+        Les cases cochées.
+    now : datetime
+        Heure de référence pour lire les dates.
+    context : str
+        La demande précédente de la conversation ; vide par défaut.
+    follow_up : bool
+        Vrai si la question est une relance cliquée. Par défaut faux.
+
+    Returns
+    -------
+    tuple[QueryPlan, str]
+        Le plan de recherche, et le texte à vectoriser.
     """
 
+    # Lire la question : un public ou un lieu écrit l'emporte sur la case cochée
     current = understand(question, now)
     public, zone = filters.public, filters.zone
     if current.public:
         public = None
     if current.zone or current.cities or current.near:
         zone = None
+    # Relance : compléter la demande précédente
     embed_text = question
     if context and (follow_up or is_follow_up(question)):
         current = combine(understand(context, now), current)
         embed_text = f"{context} {question}"
+    # Fusionner avec les cases cochées
     plan = merge_with_filters(current, public=public, zone=zone,
                               period_bounds=period_bounds(filters.period, now),
                               period_label=PERIOD_LABELS[filters.period], free_only=filters.free_only)
@@ -1609,6 +2544,27 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
 
     Dernier élément : {"event": "completed", "result": {...}}. Une panne de
     la base lève l'exception (l'appelant envoie « event: error »).
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion PostgreSQL.
+    question : str
+        La question du visiteur (espaces réduits, 500 caractères gardés).
+    filters : SearchFilters
+        Les cases cochées.
+    services : SearchServices | None
+        Les services Mistral ; par défaut les vrais.
+    context : str
+        La demande précédente de la conversation ; vide par défaut.
+    follow_up : bool
+        Vrai si la question est une relance cliquée. Par défaut faux.
+
+    Yields
+    ------
+    dict[str, Any]
+        Les événements `progress` de chaque étape, puis l'événement `completed`
+        avec le résultat (`SearchResult` en dictionnaire).
     """
 
     services = services or SearchServices()
@@ -1618,6 +2574,7 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
     now = services.now()
     degraded = False
 
+    # Étape « comprendre » : la question et les cases deviennent un plan
     yield progress(STEP_UNDERSTAND, "running")
     plan, embed_text = plan_search(question, filters, now, context, follow_up)
     yield progress(STEP_UNDERSTAND, "completed", plan.describe())
@@ -1640,6 +2597,7 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
             yield {"event": "completed", "result": cached}
             return
 
+    # Étape « rechercher » : vecteur de la question, puis séances candidates
     yield progress(STEP_SEARCH, "running")
     vector = None
     if embed_text and services.embed is not None:
@@ -1663,6 +2621,7 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
         found += f", rien pour « {relaxed} » : recherche élargie"
     yield progress(STEP_SEARCH, "completed", found)
 
+    # Étape « filtrer » : garder ce qui répond, élargir si le sujet manque
     yield progress(STEP_FILTER, "running")
     # Seulement ce qui répond exactement (mots précis, type demandé), quand il y
     # en a : 2 concerts à Mèze valent mieux que 2 concerts et 4 autres choses.
@@ -1713,6 +2672,7 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
             plan, widened = wider_plan, dropped
             words_found = any(row.get("keyword_match") for row in candidates)
             type_found = any(row.get("category_match") for row in candidates)
+    # Décider si la réponse est exacte ou faite d'idées voisines
     missing_words = distinctive_keywords(plan.keywords) if not words_found else []
     # Exact seulement si la carte montre le sujet (15/10/2026, évaluation des
     # 100 recherches) : des mots trouvés dans la seule description (« bière »
@@ -1766,6 +2726,7 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
             kept += f" ; {len(offers)} offre(s) partenaire proche(s)"
     yield progress(STEP_FILTER, "completed", kept)
 
+    # Étape « rédiger » : Mistral, sinon une réponse simple
     yield progress(STEP_WRITE, "running")
     tokens: dict[str, int] = {}
     model = ""
@@ -1789,6 +2750,7 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
     cards, answer = order_cards(cards, answer)
     yield progress(STEP_WRITE, "completed", "réponse sourcée" if not degraded else "réponse simplifiée")
 
+    # Résultat : cache, journal, puis envoi
     result = SearchResult(answer=answer, events=cards, suggestions=suggestions, filters=plan.describe(),
                           degraded=degraded, tokens=tokens, context=embed_text[-1000:], exact=exact,
                           partner_offers=offers, checked=checked_by_question(plan),
@@ -1805,8 +2767,35 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
 def writer_question(question: str, categories: Sequence[str], matching: int, *,
                     relaxed: str = "", context: str = "", missing_words: Sequence[str] = (),
                     widened: Sequence[str] = (), asked: str = "") -> str:
-    """Demande transmise à Mistral, avec les précisions utiles : relance d'une
-    question précédente, type de sortie absent, contraintes relâchées."""
+    """Demande transmise à Mistral, avec les précisions utiles.
+
+    Relance d'une question précédente, type de sortie absent, mots absents,
+    contraintes relâchées : chaque précision est ajoutée entre parenthèses.
+
+    Parameters
+    ----------
+    question : str
+        La question du visiteur.
+    categories : Sequence[str]
+        Les types de sortie demandés.
+    matching : int
+        Nombre de cartes du type demandé.
+    relaxed : str
+        Résumé des contraintes relâchées faute de résultat ; vide sinon.
+    context : str
+        La demande complète (question précédente comprise) ; vide sinon.
+    missing_words : Sequence[str]
+        Mots précis qu'aucune carte ne mentionne.
+    widened : Sequence[str]
+        Contraintes relâchées pour trouver le sujet (`widen_for_subject`).
+    asked : str
+        Résumé des contraintes demandées au départ.
+
+    Returns
+    -------
+    str
+        La question suivie des précisions, une par ligne.
+    """
 
     notes = []
     if context and context != question:
@@ -1828,15 +2817,42 @@ def writer_question(question: str, categories: Sequence[str], matching: int, *,
 
 
 def request_cost(model: str, tokens: Mapping[str, int]) -> float:
-    """Coût d'une réponse en dollars (grille de agent/watch.py), gardé au millionième :
-    une seule réponse coûte de l'ordre de 0,00001 $, l'arrondi de la nuit (4 décimales) le perdrait."""
+    """Coût d'une réponse en dollars (grille de agent/watch.py), gardé au millionième.
+
+    Une seule réponse coûte de l'ordre de 0,00001 $, l'arrondi de la nuit
+    (4 décimales) le perdrait.
+
+    Parameters
+    ----------
+    model : str
+        Le modèle de rédaction (prix par défaut s'il n'est pas dans la grille).
+    tokens : Mapping[str, int]
+        Les tokens consommés (`input`, `output`).
+
+    Returns
+    -------
+    float
+        Le coût en dollars, arrondi à 6 décimales.
+    """
 
     price_in, price_out = PRICES_USD_PER_MILLION.get(model, DEFAULT_PRICE)
     return round(tokens.get("input", 0) * price_in / 1e6 + tokens.get("output", 0) * price_out / 1e6, 6)
 
 
 def plan_summary(plan: QueryPlan) -> dict[str, Any]:
-    """Le plan en JSON pour `rag_requests.constraints`."""
+    """Le plan en JSON pour `rag_requests.constraints`.
+
+    Parameters
+    ----------
+    plan : QueryPlan
+        Le plan de recherche.
+
+    Returns
+    -------
+    dict[str, Any]
+        Période, public, zone, communes, gratuit, soir, moment, types, mots-clés,
+        et la liste des contraintes lues dans la question.
+    """
 
     return {"periode": [plan.start.isoformat(), plan.end.isoformat()], "public": plan.public,
             "zone": plan.zone, "communes": list(plan.cities), "gratuit": plan.free_only, "soir": plan.evening, "moment": plan.moment,
@@ -1846,7 +2862,32 @@ def plan_summary(plan: QueryPlan) -> dict[str, Any]:
 
 def log_request(connection: Any, question: str, filters: SearchFilters, result: SearchResult,
                 model: str, latency_ms: int, plan: QueryPlan | None = None, from_cache: bool = False) -> int | None:
-    """Trace la demande dans `rag_requests` (suivi Grafana). Jamais bloquant."""
+    """Trace la demande dans `rag_requests` (suivi Grafana). Jamais bloquant.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion PostgreSQL (validée après l'écriture, annulée en cas d'erreur).
+    question : str
+        La question (« (filtres seuls) » si elle est vide).
+    filters : SearchFilters
+        Les cases cochées.
+    result : SearchResult
+        Le résultat envoyé.
+    model : str
+        Le modèle de rédaction, vide si Mistral n'a pas servi.
+    latency_ms : int
+        Durée de la recherche, en millisecondes.
+    plan : QueryPlan | None
+        Le plan appliqué, s'il est connu.
+    from_cache : bool
+        Vrai si la réponse vient du cache. Par défaut faux.
+
+    Returns
+    -------
+    int | None
+        Le numéro de la demande, ou None si la trace n'a pas pu être écrite.
+    """
 
     try:
         rows = fetch_rows(connection, LOG_SQL, {
@@ -1898,7 +2939,33 @@ RETURNING feedback_id"""
 def record_feedback(connection: Any, request_id: int, rating: int, comment: str = "",
                     now: datetime | None = None) -> bool:
     """Enregistre l'avis sur une réponse (1 : utile, -1 : pas utile).
-    Faux si la réponse n'existe pas ou date de plus d'un jour."""
+
+    Faux si la réponse n'existe pas ou date de plus d'un jour. Un second avis
+    remplace le premier.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion PostgreSQL (validée après l'écriture).
+    request_id : int
+        Numéro de la réponse dans `rag_requests`.
+    rating : int
+        1 (utile) ou -1 (pas utile).
+    comment : str
+        Mot facultatif (300 caractères gardés).
+    now : datetime | None
+        Heure de référence ; par défaut maintenant.
+
+    Returns
+    -------
+    bool
+        Vrai si l'avis est enregistré.
+
+    Raises
+    ------
+    ValueError
+        Si `rating` ne vaut ni 1 ni -1.
+    """
 
     if rating not in (-1, 1):
         raise ValueError("rating vaut 1 ou -1")
@@ -1910,7 +2977,18 @@ def record_feedback(connection: Any, request_id: int, rating: int, comment: str 
 
 
 def sse(event: Mapping[str, Any]) -> str:
-    """Un message Server-Sent Events (même format que Chess Agent)."""
+    """Un message Server-Sent Events (même format que Chess Agent).
+
+    Parameters
+    ----------
+    event : Mapping[str, Any]
+        L'événement ; sa clé `event` donne le nom du message (« progress » par défaut).
+
+    Returns
+    -------
+    str
+        Les lignes `event:` et `data:` (JSON), suivies d'une ligne vide.
+    """
 
     name = str(event.get("event", "progress"))
     return f"event: {name}\ndata: {json.dumps(event, ensure_ascii=False, default=str)}\n\n"

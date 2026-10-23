@@ -2,6 +2,10 @@
 
 **Provenance** : repris de CheckIt.AI (projet 12, moteur de collecte), fichier `src/extractors/datasets/dataset_engine.py` (commit 93632c5).
 Modifié pour SortirIA : la validation propre au dataset passe avant la construction de l'article (voir `process_dataset_item`).
+
+Le moteur charge la configuration d'un dataset, trouve ses fichiers via
+l'adaptateur, parcourt les éléments, construit et valide les articles (avec
+dédoublonnage) puis renvoie un `ExtractorResult` avec le bilan des rejets.
 """
 
 from __future__ import annotations
@@ -60,7 +64,24 @@ logger = get_logger(__name__)
 
 @dataclass(slots=True)
 class DatasetExtractor:
-    """Représente un extracteur de dataset configurable et exécutable."""
+    """Représente un extracteur de dataset configurable et exécutable.
+
+    Attributes
+    ----------
+    source_id : str
+        Identifiant de la source dans le fichier de configuration ; doit être
+        celui de l'adaptateur.
+    default_name : str
+        Nom lisible par défaut ; reprend `source_id` s'il est vide.
+    adapter : DatasetAdapter
+        Fonctions propres au dataset.
+    section_name : str
+        Section du fichier de sources. Par défaut « datasets ».
+    sources_file : Path
+        Fichier YAML des sources. Par défaut `SOURCES_FILE`.
+    _source : dict[str, Any]
+        Cache interne de la configuration chargée.
+    """
 
     source_id: str
     default_name: str
@@ -70,7 +91,16 @@ class DatasetExtractor:
     _source: dict[str, Any] = field(default_factory=dict, init=False, repr=False)
 
     def __post_init__(self) -> None:
-        """Normalise l'identité et contrôle la cohérence de l'adaptateur."""
+        """Normalise l'identité et contrôle la cohérence de l'adaptateur.
+
+        Raises
+        ------
+        ValueError
+            Si l'identifiant est vide, si le fichier de sources manque ou si
+            l'adaptateur porte un autre identifiant.
+        TypeError
+            Si `adapter` n'est pas un `DatasetAdapter`.
+        """
 
         self.source_id = normalize_value(self.source_id)
         self.default_name = normalize_value(self.default_name) or self.source_id
@@ -93,7 +123,19 @@ class DatasetExtractor:
     # Configuration
 
     def load_source(self, force_reload: bool = False) -> dict[str, Any]:
-        """Charge et met en cache la configuration validée du dataset."""
+        """Charge et met en cache la configuration validée du dataset.
+
+        Parameters
+        ----------
+        force_reload : bool
+            Relire le fichier même si une configuration est en cache. Par défaut
+            False.
+
+        Returns
+        -------
+        dict[str, Any]
+            Une copie de la configuration validée.
+        """
 
         if self._source and not force_reload:
             return dict(self._source)
@@ -106,25 +148,54 @@ class DatasetExtractor:
         return dict(self._source)
 
     def reload_source(self) -> dict[str, Any]:
-        """Recharge explicitement la configuration depuis le fichier YAML."""
+        """Recharge explicitement la configuration depuis le fichier YAML.
+
+        Returns
+        -------
+        dict[str, Any]
+            Une copie de la configuration fraîchement lue.
+        """
 
         return self.load_source(force_reload=True)
 
     def get_source(self) -> dict[str, Any]:
-        """Retourne la configuration actuellement disponible."""
+        """Retourne la configuration actuellement disponible.
+
+        Returns
+        -------
+        dict[str, Any]
+            Une copie de la configuration, chargée si besoin.
+        """
 
         return self.load_source()
 
     @property
     def source(self) -> Mapping[str, Any]:
-        """Retourne la configuration courante du dataset."""
+        """Retourne la configuration courante du dataset.
+
+        Returns
+        -------
+        Mapping[str, Any]
+            Une copie de la configuration, chargée si besoin.
+        """
 
         return self.load_source()
 
     # Exécution
 
     def extract(self, source: Mapping[str, Any]) -> ExtractorResult:
-        """Extrait les articles depuis une configuration déjà chargée."""
+        """Extrait les articles depuis une configuration déjà chargée.
+
+        Parameters
+        ----------
+        source : Mapping[str, Any]
+            Configuration normalisée de la source.
+
+        Returns
+        -------
+        ExtractorResult
+            Le résultat de `extract_dataset_from_source`.
+        """
 
         return extract_dataset_from_source(
             source=source,
@@ -132,7 +203,16 @@ class DatasetExtractor:
         )
 
     def run(self) -> ExtractorResult:
-        """Charge la configuration puis exécute le dataset."""
+        """Charge la configuration puis exécute le dataset.
+
+        La configuration est relue à chaque exécution ; une erreur isolée devient
+        un résultat en échec.
+
+        Returns
+        -------
+        ExtractorResult
+            Le résultat de l'extraction.
+        """
 
         return execute_configured_extractor(
             extractor_name=self.default_name,
@@ -146,7 +226,19 @@ class DatasetExtractor:
 
 @dataclass(slots=True)
 class DatasetExtractionContext:
-    """Conserve l'état partagé pendant l'extraction d'un dataset."""
+    """Conserve l'état partagé pendant l'extraction d'un dataset.
+
+    Attributes
+    ----------
+    articles : list[dict[str, Any]]
+        Articles retenus.
+    seen_keys : set[str]
+        Clés de dédoublonnage déjà rencontrées.
+    rejection_stats : Counter[str]
+        Compteur des motifs de rejet.
+    processed_count : int
+        Nombre d'éléments examinés.
+    """
 
     articles: list[dict[str, Any]] = field(default_factory=list)
     seen_keys: set[str] = field(default_factory=set)
@@ -154,7 +246,15 @@ class DatasetExtractionContext:
     processed_count: int = 0
 
     def reject(self, reason: str, default: str) -> None:
-        """Enregistre un rejet avec une raison toujours exploitable."""
+        """Enregistre un rejet avec une raison toujours exploitable.
+
+        Parameters
+        ----------
+        reason : str
+            Motif du rejet ; peut être vide.
+        default : str
+            Motif utilisé si `reason` est vide.
+        """
 
         self.rejection_stats[normalize_value(reason) or default] += 1
 
@@ -162,7 +262,18 @@ class DatasetExtractionContext:
 # Paramètres
 
 def get_dataset_max_articles(source: Mapping[str, Any]) -> int:
-    """Retourne le nombre maximal d'articles à extraire."""
+    """Retourne le nombre maximal d'articles à extraire.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Configuration de la source (clé `max_articles`).
+
+    Returns
+    -------
+    int
+        Le plafond, positif ou nul ; `MAX_ARTICLES_PER_SOURCE` par défaut.
+    """
 
     return parse_non_negative_integer(
         source.get("max_articles", MAX_ARTICLES_PER_SOURCE),
@@ -175,7 +286,22 @@ def get_dataset_chunk_size(
     default: int,
     source_name: str,
 ) -> int:
-    """Retourne une taille de bloc strictement positive."""
+    """Retourne une taille de bloc strictement positive.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Configuration de la source (clé `chunksize` ou `chunk_size`).
+    default : int
+        Taille utilisée si la configuration n'en donne pas.
+    source_name : str
+        Nom lisible de la source, pour l'avertissement.
+
+    Returns
+    -------
+    int
+        La taille configurée si elle est positive, sinon `default` (au moins 1).
+    """
 
     configured = source.get("chunksize", source.get("chunk_size", default))
     chunk_size = parse_non_negative_integer(configured, default=default)
@@ -193,7 +319,18 @@ def get_dataset_chunk_size(
 
 
 def get_dataset_filters(source: Mapping[str, Any]) -> dict[str, Any]:
-    """Applique les filtres correspondant au rôle dataset."""
+    """Applique les filtres correspondant au rôle dataset.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Configuration de la source.
+
+    Returns
+    -------
+    dict[str, Any]
+        Les filtres du rôle « dataset », ou un dictionnaire vide.
+    """
 
     filter_source = dict(source)
     filter_source["role"] = "dataset"
@@ -207,7 +344,31 @@ def get_dataset_files(
     source: Mapping[str, Any],
     source_name: str,
 ) -> list[Path]:
-    """Recherche puis valide les fichiers fournis par un adaptateur."""
+    """Recherche puis valide les fichiers fournis par un adaptateur.
+
+    Parameters
+    ----------
+    adapter : DatasetAdapter
+        L'adaptateur, qui fournit la recherche et les extensions acceptées.
+    dataset_directory : Path
+        Dossier du dataset.
+    source : Mapping[str, Any]
+        Configuration de la source.
+    source_name : str
+        Nom lisible de la source, pour les messages.
+
+    Returns
+    -------
+    list[Path]
+        Les fichiers exploitables.
+
+    Raises
+    ------
+    TypeError
+        Si la recherche ne renvoie pas une liste.
+    FileNotFoundError
+        Si aucun fichier exploitable n'est trouvé.
+    """
 
     discovered_files = adapter.find_files(dataset_directory, source)
 
@@ -243,8 +404,35 @@ def process_dataset_item(
     remove_duplicates: bool,
     context: DatasetExtractionContext
 ) -> None:
-    """Construit, normalise, valide et conserve un élément du dataset."""
+    """Construit, normalise, valide et conserve un élément du dataset.
 
+    Chaque refus est compté dans `context` avec son motif ; l'article retenu est
+    ajouté à `context.articles`.
+
+    Parameters
+    ----------
+    adapter : DatasetAdapter
+        L'adaptateur du dataset.
+    item : DatasetItem
+        L'élément brut lu dans le fichier.
+    item_index : int
+        Position de l'élément.
+    item_identifier : Any
+        Identifiant fourni par l'adaptateur ; à défaut `source_id:index`.
+    source : Mapping[str, Any]
+        Configuration de la source.
+    source_name : str
+        Nom transmis à la construction de l'article (l'appelant y passe
+        l'identifiant technique de la source).
+    filters : Mapping[str, Any]
+        Filtres du rôle dataset.
+    remove_duplicates : bool
+        Écarter les doublons déjà vus.
+    context : DatasetExtractionContext
+        État partagé de l'extraction, mis à jour sur place.
+    """
+
+    # Compter l'élément et lui donner un identifiant
     context.processed_count += 1
     identifier = (
         normalize_value(item_identifier)
@@ -266,6 +454,7 @@ def process_dataset_item(
         context.reject(reason, "rejected_item")
         return
 
+    # Construire l'article à partir de l'élément brut
     article = build_article_from_item(
         adapter,
         item,
@@ -300,12 +489,14 @@ def process_dataset_item(
     )
     article.setdefault("source_name", source_name)
 
+    # Valider l'article avec les règles communes et les filtres
     valid, reason = validate_article(article, filters)
 
     if not valid:
         context.reject(reason, "invalid_article")
         return
 
+    # Écarter les doublons, puis conserver l'article
     if (
         remove_duplicates
         and is_duplicate_article(article, context.seen_keys)
@@ -325,7 +516,19 @@ def log_dataset_summary(
     maximum_articles: int,
     context: DatasetExtractionContext,
 ) -> None:
-    """Journalise le bilan final d'une extraction de dataset."""
+    """Journalise le bilan final d'une extraction de dataset.
+
+    Un avertissement est ajouté si moins d'articles que demandé ont été trouvés.
+
+    Parameters
+    ----------
+    source_name : str
+        Nom lisible de la source.
+    maximum_articles : int
+        Nombre d'articles demandés.
+    context : DatasetExtractionContext
+        État final de l'extraction.
+    """
 
     log_extraction_summary(
         source_name=source_name,
@@ -349,7 +552,35 @@ def extract_dataset_from_source(
     source: Mapping[str, Any],
     adapter: DatasetAdapter
 ) -> ExtractorResult:
-    """Extrait un dataset en utilisant son adaptateur."""
+    """Extrait un dataset en utilisant son adaptateur.
+
+    Une erreur de lecture en cours de parcours n'interrompt pas tout : les
+    articles déjà retenus donnent un succès partiel.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Configuration de la source (activation, plafond, dossier, filtres...).
+        Une source sans `enabled` explicite est traitée comme désactivée.
+    adapter : DatasetAdapter
+        Fonctions propres au dataset.
+
+    Returns
+    -------
+    ExtractorResult
+        Un résultat désactivé, vide, réussi ou partiel, avec les métadonnées du
+        dataset (dossier, fichiers, plafond).
+
+    Raises
+    ------
+    TypeError
+        Si `adapter` n'est pas un `DatasetAdapter` ou si `source` n'est pas un
+        dictionnaire.
+    FileNotFoundError
+        Si aucun fichier exploitable n'est trouvé (via `get_dataset_files`).
+    RuntimeError
+        Si l'adaptateur ne renvoie aucun itérateur.
+    """
 
     # Vérifie les objets reçus avant de commencer l'extraction
     if not isinstance(adapter, DatasetAdapter):
@@ -392,6 +623,7 @@ def extract_dataset_from_source(
             metadata=metadata
         )
 
+    # Ne rien lire si aucun article n'est demandé
     maximum_articles = get_dataset_max_articles(source)
     metadata["max_articles"] = maximum_articles
 
@@ -422,6 +654,7 @@ def extract_dataset_from_source(
         "files_count": len(dataset_files)
     })
 
+    # Préparer filtres, dédoublonnage et contexte de parcours
     filters = get_dataset_filters(source)
     remove_duplicates = parse_boolean(
         filters.get("remove_duplicates", True),
@@ -444,6 +677,7 @@ def extract_dataset_from_source(
 
     errors: list[str] = []
 
+    # Parcourir les éléments jusqu'au plafond ; une erreur de lecture arrête la boucle
     try:
         for raw_item in items:
             if len(context.articles) >= maximum_articles:
@@ -495,6 +729,7 @@ def extract_dataset_from_source(
         logger.exception(error_message)
         errors.append(error_message)
 
+    # Journaliser le bilan et préparer les champs communs du résultat
     log_dataset_summary(
         source_name,
         maximum_articles,
@@ -527,6 +762,7 @@ def extract_dataset_from_source(
             )
         )
 
+    # Sinon succès s'il y a des articles, résultat vide dans le cas contraire
     if context.articles:
         return build_success_result(
             **result_kwargs,

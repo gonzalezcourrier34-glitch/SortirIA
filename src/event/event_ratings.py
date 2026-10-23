@@ -43,7 +43,15 @@ Moderation = tuple[str, dict[str, Any]]
 
 
 class RatingInput(BaseModel):
-    """Note envoyée par un client (validée avant tout accès à la base)."""
+    """Note envoyée par un client (validée avant tout accès à la base).
+
+    Attributes
+    ----------
+    stars : int
+        Nombre d'étoiles, de 1 à 5.
+    comment : str
+        Commentaire facultatif, espaces compactés, `MAX_COMMENT_CHARS` caractères au plus.
+    """
 
     stars: int = Field(ge=1, le=5)
     comment: str = ""
@@ -51,6 +59,23 @@ class RatingInput(BaseModel):
     @field_validator("comment")
     @classmethod
     def short_comment(cls, value: str) -> str:
+        """Compacter les espaces du commentaire et vérifier sa longueur.
+
+        Parameters
+        ----------
+        value : str
+            Commentaire saisi par le client.
+
+        Returns
+        -------
+        str
+            Le commentaire aux espaces compactés.
+
+        Raises
+        ------
+        ValueError
+            Si le commentaire dépasse `MAX_COMMENT_CHARS` caractères.
+        """
         value = " ".join(value.split())
         if len(value) > MAX_COMMENT_CHARS:
             raise ValueError(f"commentaire de {MAX_COMMENT_CHARS} caractères au plus")
@@ -62,6 +87,24 @@ def user_key(raw_identifier: str, salt: str | None = None) -> str:
 
     Le même client garde la même empreinte (une note par événement), mais on
     ne peut pas remonter à l'identifiant sans le sel, qui reste dans le .env.
+
+    Parameters
+    ----------
+    raw_identifier : str
+        Identifiant de session du client.
+    salt : str or None
+        Sel à utiliser. Par défaut None : `RATING_SALT` du .env (avertissement
+        une fois par processus s'il est absent).
+
+    Returns
+    -------
+    str
+        L'empreinte SHA-256 en hexadécimal.
+
+    Raises
+    ------
+    ValueError
+        Si l'identifiant est vide.
     """
 
     identifier = str(raw_identifier or "").strip()
@@ -79,6 +122,7 @@ _SALT_WARNED = False
 
 
 def _warn_missing_salt() -> None:
+    """Avertir dans le journal, une seule fois par processus, que `RATING_SALT` manque."""
     global _SALT_WARNED  # un seul avertissement par processus
     if not _SALT_WARNED:
         _SALT_WARNED = True
@@ -92,12 +136,24 @@ def moderate_with_mistral(text: str) -> Moderation:
 
     Publié si aucune catégorie n'est signalée, refusé sinon. Si le service ne
     répond pas : en attente (repris par l'agent la nuit suivante).
+
+    Parameters
+    ----------
+    text : str
+        Commentaire à modérer.
+
+    Returns
+    -------
+    Moderation
+        Le statut du commentaire (`STATUS_NONE` si vide, `STATUS_PUBLISHED`,
+        `STATUS_REFUSED` ou `STATUS_PENDING`) et le détail (`{"flagged": [...]}`).
     """
 
     if not text:
         return STATUS_NONE, {}
     import httpx
 
+    # Interroger le service ; toute erreur laisse le commentaire en attente
     try:
         response = httpx.post(
             MODERATION_URL,
@@ -109,6 +165,7 @@ def moderate_with_mistral(text: str) -> Moderation:
         categories = response.json()["results"][0]["categories"]
     except (KeyError, IndexError, ValueError, httpx.HTTPError):
         return STATUS_PENDING, {}
+    # Refuser dès qu'une catégorie est signalée
     flagged = sorted(name for name, value in categories.items() if value)
     return (STATUS_REFUSED if flagged else STATUS_PUBLISHED), {"flagged": flagged}
 
@@ -125,12 +182,42 @@ def submit_rating(
 
     `status` vaut « enregistree », ou « hors_delai » si l'événement n'existe
     pas ou n'est pas notable (pas commencé, ou fini depuis plus de 7 jours).
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion PostgreSQL ouverte.
+    event_id : str
+        Identifiant de l'événement noté.
+    raw_user : str
+        Identifiant de session du client (transformé en empreinte anonyme).
+    stars : int
+        Nombre d'étoiles, de 1 à 5.
+    comment : str
+        Commentaire facultatif. Par défaut vide.
+    moderate : Callable[[str], Moderation]
+        Fonction de modération du commentaire. Par défaut `moderate_with_mistral`.
+
+    Returns
+    -------
+    dict[str, Any]
+        `status` et `event_id`, plus `rating_id` et `comment_status` si la
+        note est enregistrée.
+
+    Raises
+    ------
+    pydantic.ValidationError
+        Si les étoiles ou le commentaire sont hors des règles (`RatingInput`).
+    ValueError
+        Si l'identifiant du client est vide (`user_key`).
     """
 
     from src.event import event_repository as repository
 
+    # Valider la note, puis modérer le commentaire s'il y en a un
     rating = RatingInput(stars=stars, comment=comment)
     comment_status, details = moderate(rating.comment) if rating.comment else (STATUS_NONE, {})
+    # Écrire en base ; la requête refuse elle-même une note hors délai
     rating_id = repository.upsert_rating(connection, {
         "event_id": event_id,
         "user_key": user_key(raw_user),
@@ -145,7 +232,19 @@ def submit_rating(
 
 
 def summarize_ratings(rows: list[Mapping[str, Any]]) -> dict[str, Any]:
-    """Moyenne et commentaires publiés d'un événement (pour l'API)."""
+    """Moyenne et commentaires publiés d'un événement (pour l'API).
+
+    Parameters
+    ----------
+    rows : list[Mapping[str, Any]]
+        Les notes de l'événement (`stars`, `comment`, `comment_status`, `updated_at`).
+
+    Returns
+    -------
+    dict[str, Any]
+        Nombre de notes, moyenne arrondie au dixième (None sans note) et
+        commentaires publiés avec leur date.
+    """
 
     if not rows:
         return {"ratings": 0, "average_stars": None, "comments": []}

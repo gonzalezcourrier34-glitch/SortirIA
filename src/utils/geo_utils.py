@@ -23,7 +23,18 @@ DEFAULT_RADIUS_KM = 20.0
 
 
 def to_float(value: Any) -> float | None:
-    """Convertit en nombre, ou renvoie None (valeur absente ou illisible)."""
+    """Convertit en nombre, ou renvoie None (valeur absente ou illisible).
+
+    Parameters
+    ----------
+    value : Any
+        La valeur à convertir ; None et la chaîne vide donnent None.
+
+    Returns
+    -------
+    float | None
+        Le nombre lu, ou None.
+    """
 
     try:
         return float(value) if value not in (None, "") else None
@@ -36,6 +47,22 @@ def distance_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 
     La même formule existe en SQL (`sortiria.distance_km`, fichier
     `sql/sortiria/00_extensions.sql`) pour filtrer directement en base.
+
+    Parameters
+    ----------
+    lat1 : float
+        Latitude du premier point, en degrés.
+    lon1 : float
+        Longitude du premier point, en degrés.
+    lat2 : float
+        Latitude du second point, en degrés.
+    lon2 : float
+        Longitude du second point, en degrés.
+
+    Returns
+    -------
+    float
+        La distance en kilomètres.
     """
 
     lat1, lon1, lat2, lon2 = map(radians, (lat1, lon1, lat2, lon2))
@@ -47,13 +74,28 @@ def get_areas(source: Mapping[str, Any]) -> list[dict[str, float]]:
     """Zones d'une source : liste `areas`, ou ancien format à une seule zone.
 
     Chaque zone a un centre (`latitude`, `longitude`) et un rayon `radius_km`.
+    L'ancien format (`center_latitude`, `center_longitude`, `radius_km`) n'est
+    lu que si la liste `areas` ne donne aucune zone valide. Un rayon absent
+    vaut `DEFAULT_RADIUS_KM` (20 km).
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        La configuration de la source, lue dans `config/sources.yaml`.
+
+    Returns
+    -------
+    list[dict[str, float]]
+        Les zones valides ; vide si aucune n'a de centre lisible.
     """
 
+    # Lire la liste `areas`, en ignorant les zones sans centre lisible
     areas: list[dict[str, float]] = []
     for area in source.get("areas") or []:
         lat, lon = to_float(area.get("latitude")), to_float(area.get("longitude"))
         if lat is not None and lon is not None:
             areas.append({"latitude": lat, "longitude": lon, "radius_km": to_float(area.get("radius_km")) or DEFAULT_RADIUS_KM})
+    # À défaut, se rabattre sur l'ancien format à une seule zone
     center_lat, center_lon = to_float(source.get("center_latitude")), to_float(source.get("center_longitude"))
     if not areas and center_lat is not None and center_lon is not None:
         areas.append({"latitude": center_lat, "longitude": center_lon,
@@ -62,7 +104,23 @@ def get_areas(source: Mapping[str, Any]) -> list[dict[str, float]]:
 
 
 def is_point_in_areas(latitude: float, longitude: float, areas: list[dict[str, float]]) -> bool:
-    """Vrai si le point est dans au moins une des zones."""
+    """Vrai si le point est dans au moins une des zones.
+
+    Parameters
+    ----------
+    latitude : float
+        Latitude du point, en degrés.
+    longitude : float
+        Longitude du point, en degrés.
+    areas : list[dict[str, float]]
+        Les zones, au format renvoyé par `get_areas`.
+
+    Returns
+    -------
+    bool
+        Vrai si le point est à moins de `radius_km` du centre d'une zone ;
+        faux si la liste est vide.
+    """
 
     return any(
         distance_km(area["latitude"], area["longitude"], latitude, longitude) <= area["radius_km"]

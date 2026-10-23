@@ -46,7 +46,18 @@ NON_TEXTUAL_HTML_ELEMENTS = (
 # Détection
 
 def contains_html(text: str) -> bool:
-    """Détecte prudemment la présence probable de balises HTML."""
+    """Détecte prudemment la présence probable de balises HTML.
+
+    Parameters
+    ----------
+    text : str
+        Le texte à examiner.
+
+    Returns
+    -------
+    bool
+        True si le texte contient une balise, un commentaire ou un DOCTYPE.
+    """
 
     return bool(text and HTML_TAG_PATTERN.search(text))
 
@@ -54,7 +65,18 @@ def contains_html(text: str) -> bool:
 # Parsing
 
 def create_html_soup(text: str) -> BeautifulSoup:
-    """Crée un parseur HTML avec repli sur le parseur natif."""
+    """Crée un parseur HTML avec repli sur le parseur natif.
+
+    Parameters
+    ----------
+    text : str
+        Le HTML à analyser.
+
+    Returns
+    -------
+    BeautifulSoup
+        Le document analysé par `lxml`, ou par `html.parser` si `lxml` manque.
+    """
 
     try:
         return BeautifulSoup(text, PREFERRED_HTML_PARSER)
@@ -65,11 +87,27 @@ def create_html_soup(text: str) -> BeautifulSoup:
 # Nettoyage
 
 def remove_html(text: str) -> str:
-    """Retire les balises et les éléments HTML non textuels."""
+    """Retire les balises et les éléments HTML non textuels.
+
+    Un texte sans HTML est rendu tel quel. Au-delà de `MAX_HTML_LENGTH`
+    caractères, le contenu est tronqué avant l'analyse.
+
+    Parameters
+    ----------
+    text : str
+        Le texte, éventuellement HTML.
+
+    Returns
+    -------
+    str
+        Le texte visible, ses morceaux séparés par des espaces ; en cas d'échec
+        de l'analyse, le contenu (tronqué) non nettoyé.
+    """
 
     if not text or not contains_html(text):
         return text
 
+    # Tronquer les contenus démesurés
     html_content = text[:MAX_HTML_LENGTH]
 
     if len(text) > MAX_HTML_LENGTH:
@@ -79,6 +117,7 @@ def remove_html(text: str) -> str:
             MAX_HTML_LENGTH
         )
 
+    # Analyser, retirer scripts, styles et médias, puis garder le texte visible
     try:
         soup = create_html_soup(html_content)
 

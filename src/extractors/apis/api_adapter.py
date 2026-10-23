@@ -48,7 +48,25 @@ ValidateApiItemCallable = Callable[
 
 @dataclass(frozen=True, slots=True)
 class ApiAdapter:
-    """Regroupe les fonctions propres au format d'une API."""
+    """Regroupe les fonctions propres au format d'une API.
+
+    Le moteur générique (`api_extractor`) s'occupe des appels HTTP, de la
+    pagination et des filtres ; l'adaptateur ne sait que parcourir une réponse
+    et en tirer des articles.
+
+    Attributes
+    ----------
+    source_id : str
+        Identifiant de la source (normalisé, non vide).
+    default_name : str
+        Nom affiché par défaut ; reprend `source_id` s'il est vide.
+    iter_items : IterApiItemsCallable
+        Parcourt une réponse d'API et donne (identifiant, rang, élément brut).
+    build_article : BuildApiArticleCallable
+        Transforme un élément brut en article standard.
+    validate_item : ValidateApiItemCallable | None
+        Validation propre à l'API, facultative. Par défaut `None`.
+    """
 
     source_id: str
     default_name: str
@@ -57,7 +75,18 @@ class ApiAdapter:
     validate_item: ValidateApiItemCallable | None = None
 
     def __post_init__(self) -> None:
-        """Normalise l'identité et valide les fonctions de l'adaptateur."""
+        """Normalise l'identité et valide les fonctions de l'adaptateur.
+
+        La classe étant figée, les valeurs normalisées sont réécrites avec
+        `object.__setattr__`.
+
+        Raises
+        ------
+        ValueError
+            Si l'identifiant de la source est vide.
+        TypeError
+            Si une des fonctions fournies n'est pas appelable.
+        """
 
         source_id = normalize_value(self.source_id)
         default_name = normalize_value(self.default_name) or source_id
@@ -90,7 +119,31 @@ def build_article_from_api_item(
     source: Mapping[str, Any],
     source_name: str
 ) -> dict[str, Any]:
-    """Transforme un élément brut d'API en article CheckIt.AI."""
+    """Transforme un élément brut d'API en article CheckIt.AI.
+
+    Une erreur de l'adaptateur est journalisée et donne un article vide,
+    pour ne pas interrompre l'extraction des autres éléments.
+
+    Parameters
+    ----------
+    adapter : ApiAdapter
+        L'adaptateur de l'API.
+    item : ApiItem
+        L'élément brut renvoyé par l'API.
+    item_index : int
+        Rang de l'élément dans la réponse.
+    item_identifier : str
+        Identifiant de l'élément, pour le journal.
+    source : Mapping[str, Any]
+        La configuration de la source.
+    source_name : str
+        Nom de la source, pour le journal.
+
+    Returns
+    -------
+    dict[str, Any]
+        L'article construit, ou un dictionnaire vide en cas d'erreur.
+    """
 
     try:
         article = adapter.build_article(
@@ -126,7 +179,26 @@ def validate_api_item(
     filters: Mapping[str, Any],
     source: Mapping[str, Any]
 ) -> tuple[bool, str]:
-    """Applique la validation spécifique définie par l'adaptateur."""
+    """Applique la validation spécifique définie par l'adaptateur.
+
+    Parameters
+    ----------
+    adapter : ApiAdapter
+        L'adaptateur de l'API ; sans `validate_item`, tout élément est accepté.
+    item : ApiItem
+        L'élément brut à valider.
+    filters : Mapping[str, Any]
+        Les filtres de la source.
+    source : Mapping[str, Any]
+        La configuration de la source.
+
+    Returns
+    -------
+    tuple[bool, str]
+        Vrai et une chaîne vide si l'élément est retenu, sinon faux et le motif
+        (`validation_specifique_invalide` ou `resultat_validation_invalide` en
+        cas d'erreur de l'adaptateur).
+    """
 
     if adapter.validate_item is None:
         return True, ""

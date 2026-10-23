@@ -84,7 +84,21 @@ DATASET_FILTER_ROLES: frozenset[str] = frozenset({
 def get_default_filter_section(
     source: Mapping[str, Any] | None
 ) -> str:
-    """Retourne la section de filtres adaptée à une source."""
+    """Retourne la section de filtres adaptée à une source.
+
+    Une source de type « dataset » ou de rôle « dataset » reçoit le profil
+    jeu de données ; toutes les autres, le profil d'acquisition.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any] | None
+        La configuration de la source (champs `type`, `role`, `dataset_role`).
+
+    Returns
+    -------
+    str
+        `"dataset_filters"` ou `"acquisition_filters"`.
+    """
 
     if not isinstance(source, Mapping):
         return ACQUISITION_FILTER_SECTION
@@ -104,7 +118,18 @@ def get_default_filter_section(
 def get_fallback_filters(
     source: Mapping[str, Any] | None
 ) -> dict[str, Any]:
-    """Retourne une copie du profil Python adapté à la source."""
+    """Retourne une copie du profil Python adapté à la source.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any] | None
+        La configuration de la source.
+
+    Returns
+    -------
+    dict[str, Any]
+        Une copie du profil de repli défini dans `FALLBACK_FILTERS`.
+    """
 
     return FALLBACK_FILTERS[get_default_filter_section(source)].copy()
 
@@ -115,8 +140,25 @@ def load_default_filters(
     source: Mapping[str, Any] | None,
     file_path: str | Path = SOURCES_FILE
 ) -> dict[str, Any]:
-    """Charge les filtres par défaut adaptés depuis sources.yaml."""
+    """Charge les filtres par défaut adaptés depuis sources.yaml.
 
+    Toute erreur de lecture ou de structure est journalisée et donne un
+    dictionnaire vide : le profil Python de repli prend alors le relais.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any] | None
+        La configuration de la source, qui choisit la section à lire.
+    file_path : str | Path
+        Le fichier YAML à lire. Par défaut `SOURCES_FILE`.
+
+    Returns
+    -------
+    dict[str, Any]
+        Les filtres de la section, ou {} si le fichier est illisible ou mal formé.
+    """
+
+    # Choisir la section puis lire le fichier YAML
     section = get_default_filter_section(source)
 
     try:
@@ -129,6 +171,7 @@ def load_default_filters(
         )
         return {}
 
+    # Vérifier que le fichier et la section sont bien des dictionnaires
     if not isinstance(configuration, Mapping):
         logger.error(
             "Le fichier %s doit contenir un dictionnaire YAML.",
@@ -155,10 +198,24 @@ def normalize_filter_configuration(
     filters: Mapping[str, Any],
     fallback_filters: Mapping[str, Any]
 ) -> dict[str, Any]:
-    """Normalise les valeurs d'une configuration de filtres."""
+    """Normalise les valeurs d'une configuration de filtres.
+
+    Parameters
+    ----------
+    filters : Mapping[str, Any]
+        Les filtres fusionnés, dont les valeurs peuvent être des chaînes.
+    fallback_filters : Mapping[str, Any]
+        Le profil de repli, qui fournit la valeur des booléens illisibles.
+
+    Returns
+    -------
+    dict[str, Any]
+        Une copie des filtres avec des booléens et des entiers positifs fiables.
+    """
 
     normalized_filters = dict(filters)
 
+    # Convertir les drapeaux en booléens, puis les longueurs en entiers positifs
     for field in BOOLEAN_FILTER_FIELDS:
         normalized_filters[field] = parse_boolean(
             normalized_filters.get(field),
@@ -181,8 +238,27 @@ def get_filter_configuration(
     default_filters: Mapping[str, Any] | None = None,
     defaults_file: str | Path = SOURCES_FILE
 ) -> dict[str, Any]:
-    """Fusionne et normalise les filtres applicables à une source."""
+    """Fusionne et normalise les filtres applicables à une source.
 
+    Ordre de priorité, du plus faible au plus fort : profil Python de repli,
+    sources.yaml, filtres transmis, puis filtres propres à la source.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any] | None
+        La configuration de la source ; invalide, elle est remplacée par {}.
+    default_filters : Mapping[str, Any] | None
+        Filtres transmis par l'appelant. Par défaut aucun.
+    defaults_file : str | Path
+        Le fichier YAML des filtres par défaut. Par défaut `SOURCES_FILE`.
+
+    Returns
+    -------
+    dict[str, Any]
+        Les filtres fusionnés et normalisés.
+    """
+
+    # Remplacer une configuration de source invalide par un dictionnaire vide
     if not isinstance(source, Mapping):
         if source is not None:
             logger.warning(
@@ -203,6 +279,7 @@ def get_filter_configuration(
             "Les filtres par défaut transmis doivent être un dictionnaire."
         )
 
+    # Appliquer en dernier les filtres propres à la source, puis normaliser
     source_filters = source.get("filters", {})
 
     if isinstance(source_filters, Mapping):

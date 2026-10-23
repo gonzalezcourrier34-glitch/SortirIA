@@ -36,7 +36,18 @@ TITLE_STOPWORDS = frozenset(TITLE_STOPWORD_TEXT.split())
 
 
 def completeness(event: Event) -> int:
-    """Nombre de champs renseignés : sert à choisir la meilleure version."""
+    """Nombre de champs renseignés : sert à choisir la meilleure version.
+
+    Parameters
+    ----------
+    event : Event
+        L'événement à mesurer.
+
+    Returns
+    -------
+    int
+        Nombre de champs ni None, ni vides.
+    """
 
     return sum(
         1
@@ -46,7 +57,20 @@ def completeness(event: Event) -> int:
 
 
 def merge_events(main: Event, other: Event) -> Event:
-    """Complète les champs vides de `main` avec ceux de `other`."""
+    """Complète les champs vides de `main` avec ceux de `other`.
+
+    Parameters
+    ----------
+    main : Event
+        La version gardée ; ses valeurs renseignées ne changent pas.
+    other : Event
+        L'autre version, qui comble les trous.
+
+    Returns
+    -------
+    Event
+        Un nouvel événement fusionné.
+    """
 
     merged = main.to_dict()
     for name, value in other.to_dict().items():
@@ -59,6 +83,18 @@ def deduplicate_events(events: Iterable[Event]) -> tuple[list[Event], int]:
     """Supprime les doublons. Renvoie (événements uniques, nombre de doublons fusionnés).
 
     L'ordre de première apparition est conservé, pour des résultats stables.
+    À `event_id` égal, la version la plus complète est gardée et complétée par
+    l'autre.
+
+    Parameters
+    ----------
+    events : Iterable[Event]
+        Les événements, toutes sources confondues.
+
+    Returns
+    -------
+    tuple[list[Event], int]
+        Les événements uniques, et le nombre de doublons fusionnés.
     """
 
     kept: dict[str, Event] = {}
@@ -75,7 +111,18 @@ def deduplicate_events(events: Iterable[Event]) -> tuple[list[Event], int]:
 
 
 def title_words(title: str) -> frozenset[str]:
-    """Mots porteurs d'un titre (sans accents, sans mots outils ni types de sortie)."""
+    """Mots porteurs d'un titre (sans accents, sans mots outils ni types de sortie).
+
+    Parameters
+    ----------
+    title : str
+        Le titre de l'événement.
+
+    Returns
+    -------
+    frozenset[str]
+        Les mots d'au moins trois caractères hors `TITLE_STOPWORDS`.
+    """
 
     words = re.findall(r"[a-z0-9]+", normalize_for_comparison(title))
     return frozenset(word for word in words if len(word) >= 3 and word not in TITLE_STOPWORDS)
@@ -87,8 +134,22 @@ def same_event(first: Event, second: Event) -> bool:
     Même jour et même commune (déjà vérifiés par l'appelant), heures compatibles,
     et titres presque identiques : au moins 75 % de mots communs, ou l'un
     contenu dans l'autre avec au moins deux mots.
+
+    Parameters
+    ----------
+    first : Event
+        La première fiche.
+    second : Event
+        La seconde fiche.
+
+    Returns
+    -------
+    bool
+        True si les deux fiches viennent de sources différentes et décrivent
+        la même sortie.
     """
 
+    # Même source, ou heures connues trop éloignées : deux sorties distinctes
     if first.source == second.source:
         return False
     start_a, start_b = parse_event_datetime(first.start_at), parse_event_datetime(second.start_at)
@@ -96,6 +157,7 @@ def same_event(first: Event, second: Event) -> bool:
     if (both_timed and isinstance(start_a, datetime) and isinstance(start_b, datetime)
             and abs((start_a - start_b).total_seconds()) > MAX_TIME_GAP_MINUTES * 60):
         return False
+    # Comparer les mots porteurs des titres
     words_a, words_b = title_words(first.title), title_words(second.title)
     if not words_a or not words_b:
         return False
@@ -112,14 +174,28 @@ def merge_cross_source(events: Iterable[Event]) -> tuple[list[Event], int]:
     (rapide, et sans risque de rapprocher deux villes). La fiche gardée est
     celle de la source prioritaire (identifiant stable d'une nuit à l'autre),
     complétée par l'autre.
+
+    Parameters
+    ----------
+    events : Iterable[Event]
+        Les événements, déjà dédoublonnés par `event_id`.
+
+    Returns
+    -------
+    tuple[list[Event], int]
+        Les événements après fusion (ordre d'origine conservé), et le nombre de
+        fiches absorbées.
     """
 
+    # Ranger les événements par jour et par commune
     events = list(events)
     buckets: dict[tuple[str, str], list[int]] = defaultdict(list)
     for index, event in enumerate(events):
         start = parse_event_datetime(event.start_at)
         if start is not None and event.city:
             buckets[(start.date().isoformat(), normalize_for_comparison(event.city))].append(index)
+    # Dans chaque case, comparer les fiches deux à deux ; la source prioritaire
+    # (puis la plus complète) absorbe l'autre
     absorbed: set[int] = set()
     replaced: dict[int, Event] = {}
     for indexes in buckets.values():
@@ -137,5 +213,6 @@ def merge_cross_source(events: Iterable[Event]) -> tuple[list[Event], int]:
                 best, other = (main_event, events[j]) if keep_first else (events[j], main_event)
                 replaced[i] = merge_events(best, other)
                 absorbed.add(j)
+    # Remettre les fiches fusionnées à leur place, sans les fiches absorbées
     merged = [replaced.get(index, event) for index, event in enumerate(events) if index not in absorbed]
     return merged, len(absorbed)

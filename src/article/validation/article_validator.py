@@ -27,7 +27,18 @@ logger = get_logger(__name__)
 # Validation des images
 
 def has_validated_local_image(article: Mapping[str, Any]) -> bool:
-    """Vérifie qu'une image locale a été validée par image_service."""
+    """Vérifie qu'une image locale a été validée par image_service.
+
+    Parameters
+    ----------
+    article : Mapping[str, Any]
+        L'article (`image_path`, `image_is_valid`).
+
+    Returns
+    -------
+    bool
+        True si un chemin d'image est renseigné et `image_is_valid` vaut True.
+    """
 
     if not isinstance(article, Mapping):
         return False
@@ -49,7 +60,28 @@ def validate_article_with_reason(
     *,
     policy_is_built: bool = False
 ) -> tuple[bool, str]:
-    """Valide un article et retourne un motif de rejet stable."""
+    """Valide un article et retourne un motif de rejet stable.
+
+    Les règles sont appliquées dans l'ordre et la première qui échoue donne le
+    motif : schéma, identifiant, source, contenu supprimé, titre, texte, URL,
+    image.
+
+    Parameters
+    ----------
+    article : Mapping[str, Any]
+        L'article normalisé à valider.
+    policy : Mapping[str, Any] | None
+        Politique de validation ; None : la politique par défaut.
+    policy_is_built : bool
+        True si `policy` sort déjà de `build_validation_policy` (évite de la
+        reconstruire pour chaque article). Par défaut False.
+
+    Returns
+    -------
+    tuple[bool, str]
+        `(True, "")` si l'article est valide, sinon `(False, motif)` (ex.
+        `titre_trop_court`, `url_invalide`).
+    """
 
     if not isinstance(article, Mapping):
         return False, "format_article_invalide"
@@ -60,6 +92,7 @@ def validate_article_with_reason(
         else build_validation_policy(policy)
     )
 
+    # Structure : schéma complet, identifiant et source présents
     if any(field not in article for field in STANDARD_ARTICLE_FIELDS):
         return False, "schema_incomplet"
 
@@ -69,6 +102,7 @@ def validate_article_with_reason(
     if is_empty_value(article.get("source")):
         return False, "source_absente"
 
+    # Contenu marqué comme supprimé (titre, texte, auteur)
     title = normalize_value(article.get("title"))
     article_text = normalize_value(get_article_text(article))
     author = normalize_value(article.get("author"))
@@ -84,6 +118,7 @@ def validate_article_with_reason(
             if value and is_deleted_value(value):
                 return False, reason
 
+    # Longueurs du titre et du texte
     if validation_policy["require_title"] and not title:
         return False, "titre_absent"
 
@@ -102,6 +137,7 @@ def validate_article_with_reason(
         if total_text_length < validation_policy["min_total_text_length"]:
             return False, "contenu_textuel_trop_court"
 
+    # Adresses de l'article et de l'image, puis image locale validée
     if validation_policy["validate_urls"]:
         article_url = article.get("url")
         image_url = article.get("image_url")
@@ -135,7 +171,29 @@ def validate_articles(
     *,
     require_image: bool | None = None
 ) -> list[dict[str, Any]]:
-    """Conserve uniquement les articles valides d'une collection."""
+    """Conserve uniquement les articles valides d'une collection.
+
+    Chaque rejet est journalisé avec son motif, puis un décompte des motifs.
+
+    Parameters
+    ----------
+    articles : list[Any]
+        Les articles à valider.
+    policy : Mapping[str, Any] | None
+        Politique de validation ; None : la politique par défaut.
+    require_image : bool | None
+        Force l'exigence d'image ; None : celle de la politique.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Copies des articles valides, dans l'ordre d'origine.
+
+    Raises
+    ------
+    TypeError
+        Si `articles` n'est pas une liste.
+    """
 
     if not isinstance(articles, list):
         raise TypeError("articles doit être une liste.")
@@ -144,11 +202,13 @@ def validate_articles(
         logger.info("Aucun article à valider.")
         return []
 
+    # Construire la politique une seule fois pour toute la collection
     validation_policy = build_validation_policy(policy)
 
     if require_image is not None:
         validation_policy["require_image"] = bool(require_image)
 
+    # Valider chaque article, en comptant les motifs de rejet
     valid_articles: list[dict[str, Any]] = []
     rejection_counts: Counter[str] = Counter()
 
@@ -172,6 +232,7 @@ def validate_articles(
             rejection_reason
         )
 
+    # Journaliser le bilan
     logger.info(
         "%s article(s) valide(s) sur %s.",
         len(valid_articles),

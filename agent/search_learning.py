@@ -60,7 +60,17 @@ Réponds uniquement en JSON :
 
 
 class WordReading(BaseModel):
-    """Ce que Mistral dit d'un mot cherché."""
+    """Ce que Mistral dit d'un mot cherché.
+
+    Attributes
+    ----------
+    mot : str
+        Le mot cherché.
+    nature : str
+        Sa nature (une des `NATURES` : faute, synonyme, sujet, ambiance).
+    equivalents : list[str]
+        Mots équivalents ou proches proposés par Mistral.
+    """
 
     mot: str
     nature: str
@@ -69,7 +79,19 @@ class WordReading(BaseModel):
 
 @dataclass
 class LearningResult:
-    """Propositions pour la table `agent_proposals` et lignes pour le mail."""
+    """Propositions pour la table `agent_proposals` et lignes pour le mail.
+
+    Attributes
+    ----------
+    proposals : list[dict[str, Any]]
+        Propositions (`ajouter_synonyme`, `ajouter_agenda`) en attente de validation.
+    notes : list[str]
+        Lignes destinées au mail du lundi.
+    usage : dict[str, dict[str, int]]
+        Jetons consommés, par modèle Mistral.
+    feedback_notes : list[str]
+        Lignes sur les pouces bas de la semaine rangés par cause.
+    """
 
     proposals: list[dict[str, Any]] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
@@ -79,9 +101,22 @@ class LearningResult:
 
 
 def subject_words(words: Iterable[tuple[str, int]]) -> list[tuple[str, int]]:
-    """Sans les mots de la phrase (« bonjour », « sont », « propositions ») :
+    """Retirer les mots vides de la liste des mots cherchés.
+
+    Sans les mots de la phrase (« bonjour », « sont », « propositions ») :
     les recherches d'avant le 19/10/2026 les gardaient comme sujets, et l'agent
-    proposait « bonjour » -> « salut » (bilan du 19/10)."""
+    proposait « bonjour » -> « salut » (bilan du 19/10).
+
+    Parameters
+    ----------
+    words : Iterable[tuple[str, int]]
+        Couples (mot, nombre de fois cherché).
+
+    Returns
+    -------
+    list[tuple[str, int]]
+        Les mêmes couples, sans les mots de `STOPWORDS`.
+    """
 
     from app.query_understanding import STOPWORDS
 
@@ -89,15 +124,52 @@ def subject_words(words: Iterable[tuple[str, int]]) -> list[tuple[str, int]]:
 
 
 def words_to_learn(gaps: Mapping[str, Any], minimum: int = MIN_TIMES, limit: int = MAX_WORDS) -> list[tuple[str, int]]:
-    """Mots inconnus de la base, cherchés au moins `minimum` fois (les plus cherchés d'abord)."""
+    """Mots inconnus de la base, cherchés au moins `minimum` fois (les plus cherchés d'abord).
+
+    L'ordre est celui de `unknown_words`, déjà trié du plus cherché au moins cherché.
+
+    Parameters
+    ----------
+    gaps : Mapping[str, Any]
+        Bilan de la recherche, dont `unknown_words` : liste de (mot, nombre de fois).
+    minimum : int
+        Nombre minimal de recherches. Par défaut `MIN_TIMES` (2).
+    limit : int
+        Nombre maximal de mots gardés. Par défaut `MAX_WORDS` (5).
+
+    Returns
+    -------
+    list[tuple[str, int]]
+        Les mots retenus, avec leur nombre de recherches.
+    """
 
     words = [(word, times) for word, times in subject_words(gaps.get("unknown_words") or []) if times >= minimum]
     return words[:limit]
 
 
 def parse_readings(answer: str, words: Sequence[str]) -> dict[str, WordReading]:
-    """Réponse de Mistral lue et contrôlée : seulement les mots demandés, une
-    nature connue, des équivalents d'un seul mot, différents du mot cherché."""
+    """Lire et contrôler la réponse de Mistral sur les mots cherchés.
+
+    Réponse de Mistral lue et contrôlée : seulement les mots demandés, une
+    nature connue, des équivalents d'un seul mot, différents du mot cherché.
+
+    Parameters
+    ----------
+    answer : str
+        Réponse JSON brute de Mistral.
+    words : Sequence[str]
+        Les mots demandés ; les autres sont ignorés.
+
+    Returns
+    -------
+    dict[str, WordReading]
+        Les lectures retenues, indexées par mot (au plus `MAX_CANDIDATES` équivalents).
+
+    Raises
+    ------
+    json.JSONDecodeError
+        Si la réponse n'est pas du JSON (laissée remonter jusqu'à l'appelant).
+    """
 
     data = json.loads(answer)
     asked = set(words)
@@ -121,7 +193,18 @@ def parse_readings(answer: str, words: Sequence[str]) -> dict[str, WordReading]:
 
 
 def read_words_with_mistral(words: Sequence[str]) -> tuple[dict[str, WordReading], dict[str, dict[str, int]]]:
-    """Lecture réelle par Mistral (`LEARNING_MODEL`, mistral-small-latest par défaut)."""
+    """Lecture réelle par Mistral (`LEARNING_MODEL`, mistral-small-latest par défaut).
+
+    Parameters
+    ----------
+    words : Sequence[str]
+        Les mots à classer.
+
+    Returns
+    -------
+    tuple[dict[str, WordReading], dict[str, dict[str, int]]]
+        Les lectures contrôlées par `parse_readings`, et les jetons consommés par modèle.
+    """
 
     import os
 
@@ -148,8 +231,29 @@ def learn_from_searches(
     - `find_agendas` : {mot: {agenda: {"events": n, "examples": [...]}}} pour
       les agendas OpenAgenda de la zone qu'on ne lit pas encore (None : pas de
       recherche, par exemple sans clé OpenAgenda).
+
+    Parameters
+    ----------
+    gaps : Mapping[str, Any]
+        Bilan de la recherche de la semaine (`unknown_words`).
+    today : date
+        Date du jour, notée dans chaque proposition (`found_on`).
+    read_words : Callable
+        Classe les mots et renvoie (lectures par mot, jetons par modèle) ;
+        en production `read_words_with_mistral`.
+    known_words : Callable[[Sequence[str]], Iterable[str]]
+        Renvoie, parmi les mots donnés, ceux présents dans les titres de la base.
+    find_agendas : Callable | None
+        Cherche les sujets dans les agendas OpenAgenda non lus ; `None` par
+        défaut (pas de recherche).
+
+    Returns
+    -------
+    LearningResult
+        Les propositions, les lignes du mail et les jetons consommés.
     """
 
+    # Choisir les mots à apprendre et les faire classer par Mistral
     result = LearningResult()
     words = words_to_learn(gaps)
     if not words:
@@ -163,6 +267,7 @@ def learn_from_searches(
         return result
     result.usage = {model: dict(tokens) for model, tokens in usage.items()}
 
+    # Faute ou synonyme d'un mot connu de la base : proposer un synonyme ; sujet : à chercher
     to_search: list[str] = []
     for word, count in words:
         reading = readings.get(word)
@@ -186,18 +291,21 @@ def learn_from_searches(
             continue
         to_search.append(word)
 
+    # Sujets absents : sans recherche OpenAgenda, une simple piste dans le mail
     if not to_search:
         return result
     if find_agendas is None:
         result.notes += [f"« {word} » ({times[word]}) : absent de la base ; piste à proposer aux partenaires."
                          for word in to_search]
         return result
+    # Chercher les sujets dans les agendas OpenAgenda non lus
     try:
         found = find_agendas(to_search)
     except Exception as error:
         logger.exception("Recherche des sujets dans OpenAgenda impossible.")
         result.notes.append(f"Recherche dans OpenAgenda impossible : {error}")
         return result
+    # Proposer chaque agenda trouvé (le plus fourni d'abord), sinon une piste partenaires
     for word in to_search:
         agendas = found.get(word) or {}
         if not agendas:

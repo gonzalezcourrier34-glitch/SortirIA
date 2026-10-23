@@ -61,20 +61,61 @@ def identity_keys(article: Mapping[str, Any]) -> set[str]:
     Marseillan le même samedi, « Visite guidée » dans deux musées (15/10/2026).
     Le dédoublonnage par titre + jour + LIEU est fait ensuite par la chaîne
     d'événements (event_pipeline).
+
+    Parameters
+    ----------
+    article : Mapping[str, Any]
+        Article standard du moteur.
+
+    Returns
+    -------
+    set[str]
+        Clés de doublon de l'article, sans celles fondées sur le titre.
     """
 
     return {key for key in get_article_duplicate_keys(article) if ":title:" not in key and not key.startswith("title:")}
 
 
 def is_same_event(article: Mapping[str, Any], seen_keys: set[str]) -> bool:
-    """Vrai si l'article a déjà été vu (même identifiant ou même adresse)."""
+    """Vrai si l'article a déjà été vu (même identifiant ou même adresse).
+
+    Parameters
+    ----------
+    article : Mapping[str, Any]
+        Article à tester.
+    seen_keys : set[str]
+        Clés d'identité des articles déjà retenus.
+
+    Returns
+    -------
+    bool
+        Vrai si au moins une clé d'identité est déjà connue.
+    """
 
     return bool(identity_keys(article) & seen_keys)
 
 
 @dataclass(slots=True)
 class FileExtractionContext:
-    """État de l'extraction d'une source."""
+    """État de l'extraction d'une source.
+
+    Attributes
+    ----------
+    source : dict[str, Any]
+        Configuration de la source.
+    filters : dict[str, Any]
+        Filtres appliqués aux articles de cette source.
+    maximum_articles : int
+        Nombre d'articles au-delà duquel la lecture s'arrête.
+    articles : list[dict[str, Any]]
+        Articles retenus.
+    seen_keys : set[str]
+        Clés d'identité déjà vues, pour le dédoublonnage dans la source.
+    rejection_stats : Counter[str]
+        Nombre de rejets par motif.
+    processed_count : int
+        Nombre d'éléments examinés.
+    """
 
     source: dict[str, Any]
     filters: dict[str, Any]
@@ -86,23 +127,71 @@ class FileExtractionContext:
 
     @property
     def source_name(self) -> str:
+        """Nom lisible de la source.
+
+        Returns
+        -------
+        str
+            Le champ `name`, ou « source » s'il est vide.
+        """
         return normalize_value(self.source.get("name")) or "source"
 
     @property
     def source_id(self) -> str:
+        """Identifiant stable de la source.
+
+        Returns
+        -------
+        str
+            Le champ `source_id`, ou à défaut le nom de la source.
+        """
         return normalize_value(self.source.get("source_id")) or self.source_name
 
     @property
     def completed(self) -> bool:
+        """Vrai si le nombre maximal d'articles est atteint.
+
+        Returns
+        -------
+        bool
+            Vrai quand il n'y a plus d'article à lire pour cette source.
+        """
         return len(self.articles) >= self.maximum_articles
 
     def reject(self, reason: Any) -> None:
+        """Compte un rejet sous son motif.
+
+        Parameters
+        ----------
+        reason : Any
+            Motif du rejet ; vide, il est compté comme « article_invalide ».
+        """
         self.rejection_stats[normalize_value(reason) or "article_invalide"] += 1
 
 
 @dataclass(slots=True)
 class FileBatchContext:
-    """Résultats agrégés de plusieurs sources."""
+    """Résultats agrégés de plusieurs sources.
+
+    Attributes
+    ----------
+    articles : list[dict[str, Any]]
+        Articles retenus sur l'ensemble du lot, sans doublon entre sources.
+    errors : list[str]
+        Messages d'erreur des sources.
+    seen_keys : set[str]
+        Clés d'identité déjà vues sur le lot.
+    rejection_stats : Counter[str]
+        Nombre de rejets par motif, toutes sources confondues.
+    statuses : Counter[str]
+        Nombre de sources par statut (succès, vide, échec...).
+    analyzed_count : int
+        Nombre total d'éléments examinés.
+    rejected_count : int
+        Nombre total d'éléments rejetés.
+    requests_count : int
+        Nombre total de requêtes (téléchargements).
+    """
 
     articles: list[dict[str, Any]] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
@@ -114,6 +203,13 @@ class FileBatchContext:
     requests_count: int = 0
 
     def add_result(self, result: ExtractorResult) -> None:
+        """Ajoute le résultat d'une source au lot, en écartant les doublons entre sources.
+
+        Parameters
+        ----------
+        result : ExtractorResult
+            Résultat d'une source (compteurs, erreurs, articles).
+        """
         self.analyzed_count += result.analyzed_count
         self.rejected_count += result.rejected_count
         self.requests_count += result.requests_count
@@ -136,7 +232,19 @@ class FileBatchContext:
 
 @dataclass(slots=True)
 class FileSourceExtractor:
-    """Charge les sources d'un type (« ical », « document ») et les fait lire par l'adaptateur."""
+    """Charge les sources d'un type (« ical », « document ») et les fait lire par l'adaptateur.
+
+    Attributes
+    ----------
+    adapter : FileSourceAdapter
+        Lecteur du format.
+    source_type : str
+        Type de source dans `config/sources.yaml` (« ical », « document »).
+    sources_file : Path
+        Fichier de configuration des sources. Par défaut `SOURCES_FILE`.
+    _registry : SourceRegistry | None
+        Registre des sources, chargé à la première demande.
+    """
 
     adapter: FileSourceAdapter
     source_type: str
@@ -144,18 +252,51 @@ class FileSourceExtractor:
     _registry: SourceRegistry | None = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
+        """Vérifie le type de l'adaptateur.
+
+        Raises
+        ------
+        TypeError
+            Si `adapter` n'est pas un `FileSourceAdapter`.
+        """
         if not isinstance(self.adapter, FileSourceAdapter):
             raise TypeError("adapter doit être une instance de FileSourceAdapter.")
 
     def get_sources(self) -> list[dict[str, Any]]:
+        """Renvoie les sources configurées pour ce type (registre chargé une seule fois).
+
+        Returns
+        -------
+        list[dict[str, Any]]
+            Configuration de chaque source du type, sans exiger les secrets.
+        """
         if self._registry is None:
             self._registry = load_source_registry(self.sources_file, require_secrets=False)
         return [source.to_dict() for source in self._registry.by_type(self.source_type)]
 
     def extract_sources_result(self, sources: Sequence[FileSource]) -> ExtractorResult:
+        """Lit une liste de sources avec l'adaptateur de ce lecteur.
+
+        Parameters
+        ----------
+        sources : Sequence[FileSource]
+            Configurations des sources à lire.
+
+        Returns
+        -------
+        ExtractorResult
+            Résultat agrégé du lot.
+        """
         return extract_file_sources(sources, self.adapter, self.source_type)
 
     def run(self) -> ExtractorResult:
+        """Lit toutes les sources configurées, par le service d'extraction commun.
+
+        Returns
+        -------
+        ExtractorResult
+            Résultat agrégé de toutes les sources du type.
+        """
         return execute_configured_sources_extractor(
             extractor_name=self.adapter.default_name,
             source_type=self.source_type,
@@ -169,13 +310,30 @@ class FileSourceExtractor:
 # ---------------------------------------------------------------------------
 
 def process_file_item(item: Any, context: FileExtractionContext, adapter: FileSourceAdapter, source_type: str) -> None:
-    """Valide, transforme puis déduplique un élément de la source."""
+    """Valide, transforme puis déduplique un élément de la source.
 
+    L'article retenu est ajouté à `context.articles` ; un rejet est compté
+    sous son motif dans `context.rejection_stats`.
+
+    Parameters
+    ----------
+    item : Any
+        Élément brut renvoyé par l'adaptateur.
+    context : FileExtractionContext
+        État de l'extraction de la source, mis à jour sur place.
+    adapter : FileSourceAdapter
+        Lecteur du format.
+    source_type : str
+        Type de source, recopié dans l'article.
+    """
+
+    # Valider l'élément selon les règles du format
     context.processed_count += 1
     valid, reason = validate_file_item(item, context.source, adapter)
     if not valid:
         context.reject(reason)
         return
+    # Construire l'article et y inscrire sa source
     try:
         article = adapter.build_article(item, context.source)
     except (ValueError, TypeError, KeyError) as error:
@@ -189,6 +347,7 @@ def process_file_item(item: Any, context: FileExtractionContext, adapter: FileSo
     article["source_type"] = source_type
     article.setdefault("source_name", context.source_name)
 
+    # Appliquer la validation commune, puis écarter les doublons de la source
     valid, reason = validate_file_article(article, context.filters)
     if not valid:
         context.reject(reason)
@@ -201,8 +360,25 @@ def process_file_item(item: Any, context: FileExtractionContext, adapter: FileSo
 
 
 def extract_file_source(source: Mapping[str, Any], adapter: FileSourceAdapter, source_type: str) -> ExtractorResult:
-    """Lit une source et renvoie un résultat qualifié."""
+    """Lit une source et renvoie un résultat qualifié.
 
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Configuration de la source (nom, url, `max_articles`, `enabled`, filtres...).
+    adapter : FileSourceAdapter
+        Lecteur du format.
+    source_type : str
+        Type de source (« ical », « document »).
+
+    Returns
+    -------
+    ExtractorResult
+        Statut succès ou vide, articles retenus et motifs de rejet. Les erreurs
+        de lecture remontent à l'appelant (`extract_file_sources`).
+    """
+
+    # Préparer l'état de la source : filtres et nombre maximal d'articles
     filters = get_filter_configuration(dict(source))
     context = FileExtractionContext(
         source=dict(source),
@@ -211,6 +387,7 @@ def extract_file_source(source: Mapping[str, Any], adapter: FileSourceAdapter, s
     )
     metadata = {"source_id": context.source_id, "maximum_articles": context.maximum_articles}
 
+    # Source désactivée ou sans quota : résultat vide sans téléchargement
     if not parse_boolean(context.source.get("enabled"), default=True):
         return ExtractorResult(name=context.source_name, source_type=source_type,
                                status=EXTRACTOR_STATUS_EMPTY, message="Source désactivée.", metadata=metadata)
@@ -218,12 +395,14 @@ def extract_file_source(source: Mapping[str, Any], adapter: FileSourceAdapter, s
         return ExtractorResult(name=context.source_name, source_type=source_type,
                                status=EXTRACTOR_STATUS_EMPTY, message="Aucun article demandé.", metadata=metadata)
 
+    # Lire les éléments jusqu'au nombre maximal d'articles
     logger.info("Début de la lecture : %s.", context.source_name)
     for item in adapter.iter_items(context.source):
         if context.completed:
             break
         process_file_item(item, context, adapter, source_type)
 
+    # Journaliser le bilan et qualifier le résultat
     rejected = sum(context.rejection_stats.values())
     log_extraction_summary(
         source_name=context.source_name,
@@ -249,7 +428,25 @@ def extract_file_source(source: Mapping[str, Any], adapter: FileSourceAdapter, s
 def build_failed_source_result(
     source_name: str, error: BaseException, source_type: str, source_id: str = ""
 ) -> ExtractorResult:
-    """Résultat d'échec homogène pour une source illisible ou injoignable."""
+    """Résultat d'échec homogène pour une source illisible ou injoignable.
+
+    Parameters
+    ----------
+    source_name : str
+        Nom de la source.
+    error : BaseException
+        Erreur rencontrée ; les erreurs HTTP, de délai et de réseau ont un
+        message dédié, les autres gardent leur message (adresses masquées).
+    source_type : str
+        Type de source.
+    source_id : str
+        Identifiant de la source. Par défaut vide.
+
+    Returns
+    -------
+    ExtractorResult
+        Résultat au statut échec, avec le message et le type d'erreur.
+    """
 
     if isinstance(error, httpx.HTTPStatusError):
         message = f"Fichier inaccessible (HTTP {error.response.status_code})."
@@ -275,11 +472,33 @@ def build_failed_source_result(
 # ---------------------------------------------------------------------------
 
 def extract_file_sources(sources: Sequence[FileSource], adapter: FileSourceAdapter, source_type: str) -> ExtractorResult:
-    """Lit toutes les sources ; une source en échec n'arrête pas les autres."""
+    """Lit toutes les sources ; une source en échec n'arrête pas les autres.
+
+    Parameters
+    ----------
+    sources : Sequence[FileSource]
+        Configurations des sources à lire.
+    adapter : FileSourceAdapter
+        Lecteur du format.
+    source_type : str
+        Type de source (« ical », « document »).
+
+    Returns
+    -------
+    ExtractorResult
+        Résultat agrégé : articles sans doublon entre sources, statut du lot
+        (succès, partiel, vide, échec) et compteurs.
+
+    Raises
+    ------
+    TypeError
+        Si `sources` n'est pas une séquence (ou est une chaîne).
+    """
 
     if isinstance(sources, (str, bytes)) or not isinstance(sources, Sequence):
         raise TypeError("sources doit être une séquence de configurations.")
 
+    # Lire chaque source ; une erreur devient un résultat d'échec
     batch = FileBatchContext()
     for source in sources:
         name = normalize_value(source.get("name")) if isinstance(source, Mapping) else ""
@@ -293,6 +512,7 @@ def extract_file_sources(sources: Sequence[FileSource], adapter: FileSourceAdapt
             logger.error("Échec de la source %s : %s", name or "?", result.message)
         batch.add_result(result)
 
+    # Qualifier le lot selon les échecs et les articles obtenus
     failed = batch.statuses[EXTRACTOR_STATUS_FAILED]
     if failed:
         status = EXTRACTOR_STATUS_PARTIAL_SUCCESS if batch.articles else EXTRACTOR_STATUS_FAILED
@@ -303,6 +523,7 @@ def extract_file_sources(sources: Sequence[FileSource], adapter: FileSourceAdapt
         EXTRACTOR_STATUS_PARTIAL_SUCCESS: f"{len(batch.articles)} événement(s), {failed} source(s) en échec.",
         EXTRACTOR_STATUS_EMPTY: "Aucune source n'a produit d'événement exploitable.",
     }.get(status, "")
+    # Journaliser et assembler le résultat du lot
     logger.info(
         "%s : %s événement(s) unique(s) depuis %s source(s), %s échec(s).",
         adapter.default_name, len(batch.articles), len(sources), failed,

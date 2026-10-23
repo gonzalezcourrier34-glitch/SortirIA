@@ -23,7 +23,21 @@ logger = get_logger(__name__)
 # Normalisation des champs métier
 
 def normalize_language(value: Any) -> str:
-    """Normalise une langue vers un code pris en charge."""
+    """Normalise une langue vers un code pris en charge.
+
+    La table `LANGUAGE_MAPPING` est consultée d'abord ; sinon on garde la
+    partie avant le tiret (« fr-FR » donne « fr »).
+
+    Parameters
+    ----------
+    value : Any
+        La langue brute.
+
+    Returns
+    -------
+    str
+        Le code de langue s'il fait partie de `SUPPORTED_LANGUAGES`, sinon "".
+    """
 
     language = normalize_value(value).lower()
 
@@ -43,7 +57,19 @@ def normalize_language(value: Any) -> str:
 
 
 def normalize_category(value: Any) -> str:
-    """Normalise et déduplique une ou plusieurs catégories."""
+    """Normalise et déduplique une ou plusieurs catégories.
+
+    Parameters
+    ----------
+    value : Any
+        Une catégorie ou plusieurs séparées par des virgules.
+
+    Returns
+    -------
+    str
+        Les catégories en minuscules, sans doublons ni valeurs vides
+        (`EMPTY_CATEGORY_VALUES`), jointes par « , ».
+    """
 
     raw_category = normalize_value(value)
 
@@ -62,7 +88,18 @@ def normalize_category(value: Any) -> str:
 
 
 def normalize_dataset_role(value: Any) -> str:
-    """Normalise le rôle métier porté par l'article."""
+    """Normalise le rôle métier porté par l'article.
+
+    Parameters
+    ----------
+    value : Any
+        Le rôle brut.
+
+    Returns
+    -------
+    str
+        Le rôle s'il fait partie de `DATASET_ROLES`, sinon `DEFAULT_DATASET_ROLE`.
+    """
 
     role = normalize_value(value).lower()
     return role if role in DATASET_ROLES else DEFAULT_DATASET_ROLE
@@ -71,7 +108,26 @@ def normalize_dataset_role(value: Any) -> str:
 # Transformation des articles
 
 def transform_article(article: Mapping[str, Any]) -> dict[str, Any]:
-    """Applique les transformations métier à une copie d'article."""
+    """Applique les transformations métier à une copie d'article.
+
+    Langue, catégorie et rôle sont normalisés ; `dataset_role` est fondu dans
+    `role` puis retiré.
+
+    Parameters
+    ----------
+    article : Mapping[str, Any]
+        L'article à transformer.
+
+    Returns
+    -------
+    dict[str, Any]
+        Une copie transformée de l'article.
+
+    Raises
+    ------
+    TypeError
+        Si `article` n'est pas un Mapping.
+    """
 
     if not isinstance(article, Mapping):
         raise TypeError("article doit être une structure de type Mapping.")
@@ -97,8 +153,26 @@ def transform_article(article: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def transform_articles(articles: list[Any]) -> list[dict[str, Any]]:
-    """Transforme une collection sans supprimer d'article normalisé."""
+    """Transforme une collection sans supprimer d'article normalisé.
 
+    Parameters
+    ----------
+    articles : list[Any]
+        Les articles, qui doivent tous être des Mapping.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Les articles transformés, dans le même ordre.
+
+    Raises
+    ------
+    TypeError
+        Si `articles` n'est pas une liste ou contient un élément qui n'est pas
+        un Mapping.
+    """
+
+    # Vérifier l'entrée : une liste d'articles tous normalisés
     if not isinstance(articles, list):
         raise TypeError("articles doit être une liste.")
 
@@ -118,6 +192,7 @@ def transform_articles(articles: list[Any]) -> list[dict[str, Any]]:
             f"{invalid_indexes[:10]}."
         )
 
+    # Transformer chaque article et journaliser le bilan
     transformed_articles = [
         transform_article(article)
         for article in articles

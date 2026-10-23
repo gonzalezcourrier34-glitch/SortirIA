@@ -50,7 +50,18 @@ MAX_EMBEDDING_FAILURES = 3      # lots d'embeddings en échec avant d'abandonner
 
 
 def get_services(config: RunnableConfig) -> CollectionServices:
-    """Récupère les services injectés dans la configuration du graphe."""
+    """Récupère les services injectés dans la configuration du graphe.
+
+    Parameters
+    ----------
+    config : RunnableConfig
+        Configuration LangGraph, avec les services sous `configurable.services`.
+
+    Returns
+    -------
+    CollectionServices
+        Les services de la nuit.
+    """
 
     return config["configurable"]["services"]
 
@@ -68,13 +79,36 @@ def disabled_sources() -> list[str]:
     (sinon elle remonterait comme une panne chaque nuit) et lue depuis le PC
     (`python -m agent --source document`). Ses événements ne sont pas balayés :
     seule une source lancée et lue sans échec peut l'être.
+
+    Returns
+    -------
+    list[str]
+        Identifiants des sources coupées (vide si la variable n'est pas réglée).
     """
 
     return [name.strip() for name in os.getenv("SOURCES_DESACTIVEES", "").split(",") if name.strip()]
 
 
 def plan_sources(state: CollectionState, config: RunnableConfig) -> dict[str, Any]:
-    """Choisit les sources de la nuit (celles demandées, sinon celles par défaut)."""
+    """Choisit les sources de la nuit (celles demandées, sinon celles par défaut).
+
+    Parmi les sources par défaut, celles sans configuration active ne sont pas
+    lancées, ni celles coupées sur ce serveur (`SOURCES_DESACTIVEES`). Une
+    configuration illisible mène au bilan, sans source, plutôt qu'au plantage.
+
+    Parameters
+    ----------
+    state : CollectionState
+        État initial (`sources` si demandées explicitement).
+    config : RunnableConfig
+        Configuration LangGraph portant les services.
+
+    Returns
+    -------
+    dict[str, Any]
+        `sources`, `skipped_sources`, `disabled_sources`, `started_at`, et les
+        compteurs remis à zéro (`attempts`, `errors`, `alerts`).
+    """
 
     services = get_services(config)
     skipped: list[str] = []
@@ -121,8 +155,22 @@ def extract_sources(state: CollectionState, config: RunnableConfig) -> dict[str,
     **seulement les sources en échec** : leurs événements s'ajoutent à ceux
     des sources qui ont réussi (décision ajoutée le 14/10/2026). Si rien
     n'avait été extrait du tout, tout est relancé.
+
+    Parameters
+    ----------
+    state : CollectionState
+        État de la collecte (`sources`, `attempts`, `articles`, bilans précédents).
+    config : RunnableConfig
+        Configuration LangGraph portant les services.
+
+    Returns
+    -------
+    dict[str, Any]
+        `attempts`, `articles` cumulés, `failed_sources`, `source_attempts`,
+        et, si l'extraction a abouti, `llm_usage` et `extractor_stats`.
     """
 
+    # Choisir les sources de cet essai : toutes, ou seulement celles en échec
     services = get_services(config)
     attempt = state.get("attempts", 0) + 1
     previous_articles = list(state.get("articles", []))
@@ -132,9 +180,11 @@ def extract_sources(state: CollectionState, config: RunnableConfig) -> dict[str,
         logger.info("Nouvel essai (essai %s) pour les sources en échec : %s.", attempt, retry)
     elif attempt > 1:
         previous_articles = []   # rien n'avait été extrait : tout est relancé
+    # Compter les essais par source
     source_attempts = dict(state.get("source_attempts", {}))
     for name in to_run:
         source_attempts[name] = source_attempts.get(name, 0) + 1
+    # Lancer les extracteurs ; une exception est notée, la nuit continue
     try:
         output = services.extract(to_run)
     except Exception as error:  # l'agent doit toujours arriver au bilan
@@ -146,6 +196,7 @@ def extract_sources(state: CollectionState, config: RunnableConfig) -> dict[str,
             "source_attempts": source_attempts,
             "errors": [*state.get("errors", []), f"extraction (essai {attempt}) : {error}"],
         }
+    # Ajouter les nouveaux éléments à ceux des sources déjà réussies
     logger.info("Extraction (essai %s) : %s élément(s).", attempt, len(output.articles))
     return {
         "attempts": attempt,
@@ -167,7 +218,20 @@ def extract_sources(state: CollectionState, config: RunnableConfig) -> dict[str,
 # ---------------------------------------------------------------------------
 
 def prepare(state: CollectionState, config: RunnableConfig) -> dict[str, Any]:
-    """Convertit, valide et dédoublonne les événements."""
+    """Convertit, valide et dédoublonne les événements.
+
+    Parameters
+    ----------
+    state : CollectionState
+        État de la collecte (`articles` extraits).
+    config : RunnableConfig
+        Configuration LangGraph portant les services.
+
+    Returns
+    -------
+    dict[str, Any]
+        `events` (dictionnaires) et `preparation` (bilan : extraits, rejetés, motifs).
+    """
 
     services = get_services(config)
     events, report = prepare_events(state.get("articles", []), now=services.now())
@@ -186,6 +250,19 @@ def load_events(state: CollectionState, config: RunnableConfig) -> dict[str, Any
     reste dans l'état de la veille. 17/10/2026 : l'erreur ne remonte plus hors
     du graphe (une contrainte violée par une fiche DATAtourisme avait arrêté la
     nuit sans bilan ni mail) ; la nuit continue jusqu'au bilan, en échec.
+
+    Parameters
+    ----------
+    state : CollectionState
+        État de la collecte (`events` préparés).
+    config : RunnableConfig
+        Configuration LangGraph portant les services.
+
+    Returns
+    -------
+    dict[str, Any]
+        Les chiffres de `write_events`, ou des compteurs à zéro et `load_error`
+        si l'écriture a échoué.
     """
 
     try:
@@ -198,7 +275,24 @@ def load_events(state: CollectionState, config: RunnableConfig) -> dict[str, Any
 
 
 def write_events(state: CollectionState, config: RunnableConfig) -> dict[str, Any]:
-    """Le travail de `load_events`, dans une transaction (lève en cas d'erreur)."""
+    """Le travail de `load_events`, dans une transaction (lève en cas d'erreur).
+
+    En mode essai (`dry_run`), rien n'est écrit et les compteurs sont à zéro.
+
+    Parameters
+    ----------
+    state : CollectionState
+        État de la collecte (`events`, `sources`, bilans d'extraction).
+    config : RunnableConfig
+        Configuration LangGraph portant les services.
+
+    Returns
+    -------
+    dict[str, Any]
+        Chiffres de la base (enregistrés, disparus, expirés, plafonnés, total),
+        enrichissement, embeddings, notes, purge, couverture, vocabulaire,
+        recherches ratées, dérive et consommation Mistral cumulée.
+    """
 
     if state.get("dry_run"):
         logger.info("Mode essai : aucune écriture en base.")
@@ -208,6 +302,7 @@ def write_events(state: CollectionState, config: RunnableConfig) -> dict[str, An
     services = get_services(config)
     events = [Event.from_dict(data) for data in state.get("events", [])]
     with services.connect() as connection:
+        # Repérer les sources en forte baisse et celles qu'on peut balayer sans risque
         previous = repository.fetch_previous_source_counts(connection)
         drops = detect_source_drops(state, previous)
         # Une source en forte baisse garde ses événements de la veille.
@@ -215,6 +310,7 @@ def write_events(state: CollectionState, config: RunnableConfig) -> dict[str, An
         # Fichiers des partenaires : partenaire créé ou mis à jour, partner_id
         # attribué, bilan du fichier enregistré (avant l'écriture des événements).
         repository.attach_partners(connection, events)
+        # Écrire les événements, puis retirer les disparus et les passés
         upserted = repository.upsert_events(connection, events)
         removed = repository.delete_unseen_events(connection, sweepable)
         expired = repository.delete_past_events(connection, services.now())
@@ -230,8 +326,10 @@ def write_events(state: CollectionState, config: RunnableConfig) -> dict[str, An
         ratings = review_ratings(connection, services) if services.ratings_enabled else {}
         purged = repository.purge_old_data(connection)
         coverage_db = repository.fetch_weekly_coverage(connection, watch.COVERAGE_DAYS)
+    # Hors transaction : vocabulaire de la recherche et dérive (lectures seules)
     vocabulary_size, search_gaps = refresh_search_vocabulary(services)
     drift = measure_drift(services)
+    # Journaliser et renvoyer les chiffres de la nuit
     logger.info(
         "Base : %s enregistré(s), %s disparu(s) de leur source, %s expiré(s), %s enrichi(s) "
         "(%s réponse(s) refusée(s), %s lot(s) en échec), %s embedding(s), %s retiré(s) par le plafond, "
@@ -263,7 +361,20 @@ def write_events(state: CollectionState, config: RunnableConfig) -> dict[str, An
 
 
 def review_ratings(connection: Any, services: CollectionServices) -> dict[str, Any]:
-    """Modère les commentaires restés en attente, puis fait le bilan des notes clients."""
+    """Modère les commentaires restés en attente, puis fait le bilan des notes clients.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion PostgreSQL (transaction de la nuit).
+    services : CollectionServices
+        Services de la nuit (`moderate` peut être `None` : pas de modération).
+
+    Returns
+    -------
+    dict[str, Any]
+        Le bilan des notes (`ratings_summary`) et le nombre de commentaires modérés.
+    """
 
     moderated = 0
     if services.moderate is not None:
@@ -281,15 +392,29 @@ def enrich_missing(connection: Any, services: CollectionServices) -> dict[str, A
     Un lot en échec (réponse illisible, quota) est ignoré : ses événements
     seront repris la nuit suivante. Renvoie le bilan : enrichis, refusés par
     la validation, signalés « pas une sortie », lots en échec, consommation.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion PostgreSQL (transaction de la nuit).
+    services : CollectionServices
+        Services de la nuit (`enrich` peut être `None` : pas d'enrichissement).
+
+    Returns
+    -------
+    dict[str, Any]
+        `enriched`, `invalid`, `not_outing`, `failed_batches` et `usage`.
     """
 
     from src.event.event_enrichment import ENRICHMENT_VERSION, price_band
 
+    # Lire les événements à enrichir (au plus MAX_ENRICHMENTS_PER_RUN)
     summary: dict[str, Any] = {"enriched": 0, "invalid": 0, "not_outing": 0, "failed_batches": 0, "usage": {}}
     if services.enrich is None:
         return summary
     rows = repository.fetch_events_to_enrich(connection, ENRICHMENT_VERSION, limit=MAX_ENRICHMENTS_PER_RUN)
     for start in range(0, len(rows), ENRICHMENT_BATCH_SIZE):
+        # Faire enrichir le lot par Mistral ; un lot en échec est repris la nuit suivante
         batch = rows[start:start + ENRICHMENT_BATCH_SIZE]
         try:
             results, usage = services.enrich(batch)
@@ -298,6 +423,7 @@ def enrich_missing(connection: Any, services: CollectionServices) -> dict[str, A
             summary["failed_batches"] += 1
             continue
         summary["usage"] = watch.merge_usage(summary["usage"], usage)
+        # Garder les réponses validées et les écrire en base
         updates = []
         for row in batch:
             result = results.get(str(row["event_id"]))
@@ -329,6 +455,18 @@ def detect_source_drops(state: CollectionState, previous: dict[str, int]) -> dic
     Une décision de l'agent : une API qui répond mais renvoie soudain beaucoup
     moins (filtre cassé, agenda vidé, pagination perdue comme le 14/10/2026)
     ne doit ni vider la base ni passer inaperçue.
+
+    Parameters
+    ----------
+    state : CollectionState
+        État de la collecte (`events` préparés, `sources`).
+    previous : dict[str, int]
+        Nombre d'événements de chaque source lors de la dernière collecte.
+
+    Returns
+    -------
+    dict[str, tuple[int, int]]
+        Pour chaque source en forte baisse : (nombre d'avant, nombre de cette nuit).
     """
 
     current: dict[str, int] = {}
@@ -349,6 +487,16 @@ def sources_safe_to_sweep(state: CollectionState) -> list[str]:
     sans échec ni échec partiel, ET qui a fourni au moins un événement. Si une source tombe en
     panne ou renvoie une liste vide (API en maintenance), on garde ses
     événements de la veille plutôt que de vider la base.
+
+    Parameters
+    ----------
+    state : CollectionState
+        État de la collecte (`sources`, `events`, bilans d'extraction).
+
+    Returns
+    -------
+    list[str]
+        Identifiants des sources au statut « ok » ayant fourni au moins un événement.
     """
 
     # « partiel » compte comme non sûr : si un des deux PDF est en 404, ses
@@ -369,11 +517,27 @@ def embed_missing(connection: Any, services: CollectionServices) -> tuple[int, i
     Un lot en échec (clé absente, 429, 503) est journalisé et passé : avant le
     15/10/2026, l'exception remontait, annulait toute la transaction de la nuit
     (événements, enrichissements payés) et l'agent s'arrêtait sans bilan.
+
+    Après `MAX_EMBEDDING_FAILURES` lots en échec (au total sur la nuit), on
+    arrête pour cette nuit.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion PostgreSQL (transaction de la nuit).
+    services : CollectionServices
+        Services de la nuit (`embed`, `embedding_model`).
+
+    Returns
+    -------
+    tuple[int, int]
+        Nombre d'embeddings enregistrés, et nombre de tokens estimé.
     """
 
     rows = repository.fetch_events_missing_embedding(connection, limit=MAX_EMBEDDINGS_PER_RUN)
     total, tokens, failed = 0, 0, 0
     for start in range(0, len(rows), EMBEDDING_BATCH_SIZE):
+        # Calculer les vecteurs du lot ; abandonner après trop d'échecs
         batch = rows[start:start + EMBEDDING_BATCH_SIZE]
         texts = [build_embedding_text(row) for row in batch]
         try:
@@ -386,6 +550,7 @@ def embed_missing(connection: Any, services: CollectionServices) -> tuple[int, i
                 logger.error("Embeddings : %s lots en échec de suite, on arrête pour cette nuit.", failed)
                 break
             continue
+        # Compter les tokens et enregistrer les vecteurs
         tokens += watch.estimate_tokens(texts)
         total += repository.update_embeddings(
             connection,
@@ -405,6 +570,19 @@ def judge_quality(state: CollectionState, config: RunnableConfig) -> dict[str, A
     Échantillon tiré dans la base (événements proposables, enrichis) ; en
     mode essai, parmi les événements de la nuit. Une panne du juge ne fait
     jamais échouer la collecte : le score est simplement absent.
+
+    Parameters
+    ----------
+    state : CollectionState
+        État de la collecte (`dry_run`, `events`).
+    config : RunnableConfig
+        Configuration LangGraph portant les services.
+
+    Returns
+    -------
+    dict[str, Any]
+        `quality` (score et problèmes, vide sans juge, ou `error`), et
+        `llm_usage` cumulé si le juge a répondu.
     """
 
     from src.event.quality_judge import SAMPLE_SIZE, summarize
@@ -412,6 +590,7 @@ def judge_quality(state: CollectionState, config: RunnableConfig) -> dict[str, A
     services = get_services(config)
     if services.judge is None:
         return {"quality": {}}
+    # Tirer l'échantillon (base, ou événements de la nuit en mode essai) et le faire juger
     try:
         if state.get("dry_run"):
             import random
@@ -426,6 +605,7 @@ def judge_quality(state: CollectionState, config: RunnableConfig) -> dict[str, A
     except Exception as error:  # noqa: BLE001 (le juge est un contrôle, pas une étape indispensable)
         logger.warning("Juge de qualité indisponible : %s", error)
         return {"quality": {"error": str(error)}}
+    # Résumer les verdicts en score et liste de problèmes
     quality = summarize(verdicts, rows)
     logger.info("Qualité : %s.", quality)
     return {"quality": quality, "llm_usage": watch.merge_usage(state.get("llm_usage", {}), usage)}
@@ -442,6 +622,16 @@ def measure_drift(services: CollectionServices) -> dict[str, Any]:
     envoyée et transformée en alertes le lundi seulement (`watch_collection`).
     Transaction à part, jamais bloquante : une erreur ici ne coûte que le
     rapport de dérive de la nuit.
+
+    Parameters
+    ----------
+    services : CollectionServices
+        Services de la nuit (pour la connexion à la base).
+
+    Returns
+    -------
+    dict[str, Any]
+        Le rapport de dérive (voir `agent.drift.build_report`), vide en cas d'erreur.
     """
 
     from agent.drift import fetch_drift
@@ -458,14 +648,28 @@ def measure_drift(services: CollectionServices) -> dict[str, Any]:
 
 
 def refresh_search_vocabulary(services: CollectionServices) -> tuple[int, dict[str, Any]]:
-    """Après l'écriture : vocabulaire des titres recalculé (sujets reconnus par
+    """Recalculer le vocabulaire des titres et lire les recherches ratées de la semaine.
+
+    Après l'écriture : vocabulaire des titres recalculé (sujets reconnus par
     la recherche) et recherches de la semaine restées sans réponse exacte.
 
     Transaction à part : une base dont le schéma n'a pas encore la table
     `title_vocabulary` ne fait pas échouer la collecte (la recherche lit
     alors les titres directement).
+
+    Parameters
+    ----------
+    services : CollectionServices
+        Services de la nuit (pour la connexion à la base).
+
+    Returns
+    -------
+    tuple[int, dict[str, Any]]
+        Taille du vocabulaire, et bilan de la recherche (avec `thumbs_down`
+        si lisibles) ; (0, {}) en cas d'erreur.
     """
 
+    # Vocabulaire et recherches ratées, dans leur propre transaction
     try:
         with services.connect() as connection:
             size = repository.refresh_title_vocabulary(connection)
@@ -492,8 +696,26 @@ def watch_collection(state: CollectionState, config: RunnableConfig) -> dict[str
     Fonctionne aussi en mode essai : tout est calculé à partir de l'état et de
     la configuration (la couverture lue en base par `load_events` est utilisée
     quand elle existe).
+
+    Le lundi s'y ajoutent le bilan de la recherche, l'apprentissage (pouces
+    bas, recherches ratées), les commentaires refusés et la dérive.
+
+    Parameters
+    ----------
+    state : CollectionState
+        État de la collecte après chargement (ou après l'échec de l'extraction).
+    config : RunnableConfig
+        Configuration LangGraph portant les services.
+
+    Returns
+    -------
+    dict[str, Any]
+        `coverage`, `cost_usd`, `watch_alerts`, `proposals`, `search_report`,
+        `search_learning`, `llm_usage`, `feedback_learning`, `refused_comments`
+        et `drift_report`.
     """
 
+    # Lire la configuration à surveiller (documents, partenaires, jour de découverte)
     services = get_services(config)
     today = services.now().date()
     try:
@@ -510,6 +732,7 @@ def watch_collection(state: CollectionState, config: RunnableConfig) -> dict[str
     # Les partenaires ne sont contrôlés que si leurs fichiers ont bien été lus
     # cette nuit : sinon chacun recevrait « plus aucune séance » à tort.
     partner_files = inputs.get("partner_files", []) if source_statuses(state).get("partenaire") == STATUS_OK else []
+    # Contrôles de surveillance : chacun renvoie ses alertes
     alerts = [
         *watch.check_documents(inputs.get("documents", []), today),
         *watch.check_partners(partner_files, events, today),
@@ -529,6 +752,7 @@ def watch_collection(state: CollectionState, config: RunnableConfig) -> dict[str
         {"source_id": d.proposal.get("source_id", ""), "kind": d.kind, "diagnosis": d.as_alert(), "action": d.proposal}
         for d in diagnoses if d.proposal
     ]
+    # Découverte des agendas OpenAgenda (hebdomadaire ou forcée)
     agendas, discovery_alerts = discover_new_agendas(state, services, inputs, today)
     alerts += discovery_alerts
     proposals += agenda_proposals(agendas, today)
@@ -550,6 +774,7 @@ def watch_collection(state: CollectionState, config: RunnableConfig) -> dict[str
         from agent.drift import drift_alerts
 
         alerts += drift_alerts(drift_report)
+    # Le lundi, hors mode essai : l'agent tire ses propositions de la semaine
     usage = state.get("llm_usage", {})
     if search_report and services.learn_searches is not None and not state.get("dry_run"):
         try:
@@ -573,7 +798,9 @@ def watch_collection(state: CollectionState, config: RunnableConfig) -> dict[str
 
 def discover_new_agendas(state: CollectionState, services: CollectionServices, inputs: Mapping[str, Any],
                          today: date) -> tuple[dict[str, int], list[str]]:
-    """Découverte hebdomadaire des agendas OpenAgenda (`discovery_weekday`,
+    """Chercher les nouveaux agendas OpenAgenda de la zone, une fois par semaine.
+
+    Découverte hebdomadaire des agendas OpenAgenda (`discovery_weekday`,
     dimanche par défaut), ou forcée (`uv run python -m agent --decouverte`).
 
     La nuit ne lit que les agendas de `agenda_uids` (rapide) ; une fois par
@@ -581,6 +808,23 @@ def discover_new_agendas(state: CollectionState, services: CollectionServices, i
     agenda apparu dans la zone. Il ne touche pas à la configuration : chaque
     agenda trouvé devient une proposition, à valider par un humain.
     Renvoie ({uid: événements dans la zone}, alertes).
+
+    Parameters
+    ----------
+    state : CollectionState
+        État de la collecte (`discover_agendas` si la découverte est forcée).
+    services : CollectionServices
+        Services de la nuit (`discover_agendas` peut être `None`).
+    inputs : Mapping[str, Any]
+        Configuration surveillée (`discovery_weekday` : jour de la semaine, 0 = lundi).
+    today : date
+        Date du jour.
+
+    Returns
+    -------
+    tuple[dict[str, int], list[str]]
+        Les agendas trouvés avec leur nombre d'événements dans la zone, et les
+        alertes (une en cas d'erreur).
     """
 
     weekday = inputs.get("discovery_weekday")
@@ -597,7 +841,20 @@ def discover_new_agendas(state: CollectionState, services: CollectionServices, i
 
 
 def agenda_proposals(agendas: Mapping[str, int], today: date) -> list[dict[str, Any]]:
-    """Une proposition « ajouter_agenda » par agenda trouvé (les plus riches d'abord)."""
+    """Une proposition « ajouter_agenda » par agenda trouvé (les plus riches d'abord).
+
+    Parameters
+    ----------
+    agendas : Mapping[str, int]
+        Agendas trouvés, avec leur nombre d'événements dans la zone.
+    today : date
+        Date de la découverte (`found_on`).
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Les propositions, prêtes pour `agent_proposals`.
+    """
 
     return [
         {"source_id": "openagenda", "kind": "nouvel_agenda",
@@ -615,6 +872,19 @@ def partner_document_proposals(documents: Sequence[Mapping[str, Any]], today: da
     Rien n'est publié avant l'accord : la proposition donne le nombre de
     séances lues et un aperçu, pour juger sans ouvrir le fichier. Un document
     modifié (autre empreinte) est une nouvelle proposition.
+
+    Parameters
+    ----------
+    documents : Sequence[Mapping[str, Any]]
+        Documents lus par Mistral (`name`, `file_name`, `sha256`, `events`,
+        `rejected`, `preview`) ; ceux sans séance sont ignorés.
+    today : date
+        Date de la lecture (`found_on`).
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Les propositions, prêtes pour `agent_proposals`.
     """
 
     return [
@@ -634,14 +904,31 @@ def partner_document_proposals(documents: Sequence[Mapping[str, Any]], today: da
 # ---------------------------------------------------------------------------
 
 def decide_status(state: CollectionState) -> tuple[str, list[str]]:
-    """Statut de la nuit et alertes à remonter."""
+    """Statut de la nuit et alertes à remonter.
 
+    Échec si l'écriture en base a échoué ou si aucun événement n'est retenu ;
+    partiel s'il y a des sources en échec, des erreurs ou une forte baisse ;
+    succès sinon. Les alertes de la surveillance ne changent pas le statut.
+
+    Parameters
+    ----------
+    state : CollectionState
+        État de la collecte à la fin de la nuit.
+
+    Returns
+    -------
+    tuple[str, list[str]]
+        Le statut (`STATUS_SUCCESS`, `STATUS_PARTIAL` ou `STATUS_FAILED`) et les alertes.
+    """
+
+    # Chiffres de la préparation
     alerts: list[str] = []
     preparation = state.get("preparation") or {}
     extracted = preparation.get("events_extracted", 0)
     rejected = preparation.get("events_rejected", 0)
     kept = len(state.get("events", []))
 
+    # Alertes sur la collecte : rien collecté, sources en échec, baisses, rejets
     if extracted == 0:
         alerts.append("Aucun événement collecté cette nuit.")
     if state.get("failed_sources"):
@@ -657,6 +944,7 @@ def decide_status(state: CollectionState) -> tuple[str, list[str]]:
     # relancer, couverture, coût) : signalés, sans changer le statut.
     alerts.extend(state.get("watch_alerts", []))
 
+    # Statut de la nuit
     if state.get("load_error"):
         alerts.append(f"Écriture en base impossible, la base reste celle de la veille : {state['load_error']}")
         return STATUS_FAILED, alerts
@@ -671,6 +959,16 @@ def build_source_rows(state: CollectionState) -> list[dict[str, Any]]:
     """Détail par source pour `sortiria.collect_run_sources`.
 
     Le statut vient de `routing.source_statuses` (bilan des extracteurs).
+
+    Parameters
+    ----------
+    state : CollectionState
+        État de la collecte (`sources`, `events`, `source_attempts`).
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Une ligne par source prévue : `source_id`, `status`, `attempts`, `events_kept`.
     """
 
     statuses = source_statuses(state)
@@ -689,12 +987,31 @@ def build_source_rows(state: CollectionState) -> list[dict[str, Any]]:
 
 
 def write_report(state: CollectionState, config: RunnableConfig) -> dict[str, Any]:
-    """Écrit le bilan dans `sortiria.collect_runs`, journalise les alertes et l'envoie par mail."""
+    """Écrit le bilan dans `sortiria.collect_runs`, journalise les alertes et l'envoie par mail.
 
+    En mode essai, rien n'est écrit et aucun mail ne part. Chaque étape
+    (bilan en base, pull requests, mail) a sa propre protection : aucune ne
+    fait échouer la nuit.
+
+    Parameters
+    ----------
+    state : CollectionState
+        État de la collecte à la fin de la nuit.
+    config : RunnableConfig
+        Configuration LangGraph portant les services.
+
+    Returns
+    -------
+    dict[str, Any]
+        `status`, `alerts` et `run_id` (`None` si le bilan n'a pas été enregistré).
+    """
+
+    # Décider du statut et journaliser les alertes
     status, alerts = decide_status(state)
     for alert in alerts:
         logger.warning("ALERTE collecte : %s", alert)
 
+    # Assembler la ligne de bilan pour `collect_runs`
     services = get_services(config)
     source_rows = build_source_rows(state)
     report = {
@@ -723,6 +1040,7 @@ def write_report(state: CollectionState, config: RunnableConfig) -> dict[str, An
     run_id = None
     pull_requests: dict[str, Any] = {}
     if not state.get("dry_run"):
+        # Enregistrer le bilan, le détail par source et les propositions
         try:
             with services.connect() as connection:
                 run_id = repository.record_collect_run(connection, report)

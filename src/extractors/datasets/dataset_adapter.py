@@ -1,5 +1,9 @@
 """Contrat commun des adaptateurs de datasets CheckIt.AI.
 
+Un `DatasetAdapter` regroupe les fonctions propres à un dataset (trouver les
+fichiers, parcourir les éléments, construire et valider un article) ; les
+fonctions du module les appellent sans qu'une erreur isolée bloque l'extraction.
+
 **Provenance** : repris de CheckIt.AI (projet 12, moteur de collecte), fichier `src/extractors/datasets/dataset_adapter.py` (commit 93632c5).
 """
 
@@ -42,7 +46,25 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True, slots=True)
 class DatasetAdapter:
-    """Regroupe les fonctions propres à un dataset."""
+    """Regroupe les fonctions propres à un dataset.
+
+    Attributes
+    ----------
+    source_id : str
+        Identifiant de la source ; obligatoire.
+    default_name : str
+        Nom lisible par défaut ; reprend `source_id` s'il est vide.
+    supported_extensions : frozenset[str]
+        Extensions de fichiers acceptées, normalisées en minuscules avec un point.
+    find_files : FindFilesCallable
+        Trouve les fichiers à lire dans un dossier selon la configuration.
+    iter_items : IterItemsCallable
+        Parcourt les fichiers et produit `(identifiant, index, élément)`.
+    build_article : BuildArticleCallable
+        Transforme un élément brut en article.
+    validate_item : ValidateItemCallable | None
+        Validation propre au dataset, renvoyant `(valide, raison)` ; facultative.
+    """
 
     source_id: str
     default_name: str
@@ -53,8 +75,17 @@ class DatasetAdapter:
     validate_item: ValidateItemCallable | None = None
 
     def __post_init__(self) -> None:
-        """Normalise et valide l'adaptateur."""
+        """Normalise et valide l'adaptateur.
 
+        Raises
+        ------
+        ValueError
+            Si l'identifiant est vide ou si aucune extension n'est valide.
+        TypeError
+            Si une des fonctions de l'adaptateur n'est pas appelable.
+        """
+
+        # Normaliser l'identifiant, le nom et les extensions (« csv » -> « .csv »)
         source_id = normalize_value(self.source_id)
         default_name = normalize_value(self.default_name) or source_id
         extensions = frozenset(
@@ -63,6 +94,7 @@ class DatasetAdapter:
             if (extension := normalize_value(value).lower())
         )
 
+        # Valider les champs et les fonctions fournies
         if not source_id:
             raise ValueError(
                 "L'identifiant d'un DatasetAdapter ne peut pas être vide."
@@ -82,6 +114,7 @@ class DatasetAdapter:
                 "validate_item doit être une fonction appelable ou None."
             )
 
+        # Réécrire les valeurs normalisées sur l'objet figé
         object.__setattr__(self, "source_id", source_id)
         object.__setattr__(self, "default_name", default_name)
         object.__setattr__(
@@ -100,7 +133,29 @@ def build_article_from_item(
     source: Mapping[str, Any],
     source_name: str
 ) -> dict[str, Any]:
-    """Construit un article sans bloquer toute l'extraction."""
+    """Construit un article sans bloquer toute l'extraction.
+
+    Parameters
+    ----------
+    adapter : DatasetAdapter
+        L'adaptateur du dataset.
+    item : DatasetItem
+        L'élément brut lu dans le fichier.
+    item_index : int
+        Position de l'élément dans le fichier.
+    item_identifier : str
+        Identifiant du fichier ou de la portion d'où vient l'élément.
+    source : Mapping[str, Any]
+        Configuration de la source.
+    source_name : str
+        Nom lisible de la source, pour les journaux.
+
+    Returns
+    -------
+    dict[str, Any]
+        L'article construit, ou un dictionnaire vide si la construction échoue
+        ou ne renvoie pas un dictionnaire.
+    """
 
     try:
         article = adapter.build_article(
@@ -135,7 +190,26 @@ def validate_adapter_item(
     filters: Mapping[str, Any],
     source: Mapping[str, Any]
 ) -> tuple[bool, str]:
-    """Lance la validation propre au dataset si elle existe."""
+    """Lance la validation propre au dataset si elle existe.
+
+    Parameters
+    ----------
+    adapter : DatasetAdapter
+        L'adaptateur du dataset.
+    item : DatasetItem
+        L'élément brut à valider.
+    filters : Mapping[str, Any]
+        Filtres de la source.
+    source : Mapping[str, Any]
+        Configuration de la source.
+
+    Returns
+    -------
+    tuple[bool, str]
+        `(True, "")` sans validateur ; sinon `(valide, raison)`, ou
+        `(False, "invalid_specific_validation")` si le validateur échoue ou
+        renvoie un format inattendu.
+    """
 
     if adapter.validate_item is None:
         return True, ""

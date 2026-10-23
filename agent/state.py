@@ -21,7 +21,106 @@ STATUS_FAILED = "failed"
 
 
 class CollectionState(TypedDict, total=False):
-    """Ce que l'agent sait au fil de la collecte."""
+    """Ce que l'agent sait au fil de la collecte.
+
+    Tous les champs sont facultatifs (`total=False`) : chaque nœud ne remplit
+    que les siens.
+
+    Attributes
+    ----------
+    dry_run : bool
+        True : aucune écriture en base.
+    discover_agendas : bool
+        True : découverte OpenAgenda forcée (sinon le jour prévu).
+    max_attempts : int
+        Nombre maximal d'essais d'extraction.
+    sources : list[str]
+        Extracteurs à lancer (ex. `["openagenda"]`).
+    started_at : str
+        Début de la collecte (ISO 8601).
+    skipped_sources : list[str]
+        Sources sans configuration active, non lancées.
+    disabled_sources : list[str]
+        Sources coupées sur ce serveur (`SOURCES_DESACTIVEES`).
+    attempts : int
+        Nombre d'essais d'extraction déjà faits.
+    articles : list[dict[str, Any]]
+        Sortie brute des extracteurs.
+    failed_sources : list[str]
+        Sources en échec au dernier essai.
+    source_attempts : dict[str, int]
+        Essais par source (réessai ciblé de celles en échec).
+    extractor_stats : list[dict[str, Any]]
+        Bilan de chaque extracteur (suivi de la qualité).
+    coverage_db : dict[str, dict[str, int]]
+        Couverture de la semaine lue en base après chargement.
+    llm_usage : dict[str, dict[str, int]]
+        Tokens Mistral : `{modèle: {"input", "output"}}`.
+    events : list[dict[str, Any]]
+        Événements validés et dédoublonnés.
+    preparation : dict[str, Any]
+        Bilan de `event_pipeline.prepare_events`.
+    events_upserted : int
+        Événements écrits ou mis à jour en base.
+    events_expired : int
+        Événements passés retirés.
+    events_removed : int
+        Événements disparus de leur source.
+    source_drops : dict[str, tuple[int, int]]
+        Sources en forte baisse : `source -> (avant, maintenant)`.
+    purged : dict[str, int]
+        Lignes supprimées par la purge RGPD, par table.
+    events_embedded : int
+        Événements dont l'embedding a été calculé.
+    events_enriched : int
+        Événements enrichis par Mistral cette nuit.
+    events_capped : int
+        Événements retirés par le plafond (les plus lointains).
+    events_total : int
+        Taille de la base après la collecte.
+    ratings : dict[str, Any]
+        Notes des clients : nouvelles, moyenne, partenaires mal notés.
+    enrichment : dict[str, Any]
+        Bilan de l'enrichissement (refus, « pas une sortie »...).
+    vocabulary_size : int
+        Racines de mots des titres (sujets reconnus par la recherche).
+    search_gaps : dict[str, Any]
+        Recherches de la semaine restées sans réponse exacte.
+    drift : dict[str, Any]
+        Dérive des questions, réponses et collecte (agent/drift.py).
+    quality : dict[str, Any]
+        Contrôle du juge Mistral : score, taux par question, exemples de problèmes.
+    coverage : dict[str, dict[str, int]]
+        Sorties de la semaine : `{zone: {public: n}}`.
+    watch_alerts : list[str]
+        Alertes de surveillance (programmes, partenaires, couverture, coût).
+    cost_usd : float
+        Coût Mistral estimé de la nuit.
+    proposals : list[dict[str, Any]]
+        Réparations proposées, à valider par un humain.
+    search_report : dict[str, Any]
+        Le lundi : recherches sans réponse exacte (bilan par mail).
+    search_learning : list[str]
+        Le lundi : pistes tirées des recherches ratées (mail).
+    feedback_learning : list[str]
+        Le lundi : pouces bas rangés par cause (mail, 16/10/2026).
+    refused_comments : list[dict[str, Any]]
+        Le lundi : commentaires refusés, contestables (mail).
+    drift_report : dict[str, Any]
+        Le lundi : rapport de dérive envoyé par mail (19/10/2026).
+    node_durations : dict[str, float]
+        Secondes passées dans chaque nœud.
+    status : str
+        Statut de la collecte (`running`, `success`, `partial_success`, `failed`).
+    alerts : list[str]
+        Alertes du bilan.
+    run_id : int | None
+        Identifiant de l'exécution dans `collect_runs`.
+    errors : list[str]
+        Erreurs rencontrées.
+    load_error : str
+        Écriture en base impossible (17/10/2026) : nuit en échec, avec bilan.
+    """
 
     # Paramètres
     dry_run: bool                     # True : aucune écriture en base

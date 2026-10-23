@@ -139,8 +139,23 @@ Réponds uniquement avec un objet JSON :
 # ---------------------------------------------------------------------------
 
 def load_questions(path: Path = QUESTIONS_FILE) -> list[dict[str, Any]]:
-    """Questions du jeu d'évaluation, avec leur famille (titre de section du YAML)."""
+    """Questions du jeu d'évaluation, avec leur famille (titre de section du YAML).
 
+    Les familles ne sont pas dans les données YAML mais dans les commentaires
+    « # --- Famille --- » : le fichier est donc lu deux fois, en texte puis en YAML.
+
+    Parameters
+    ----------
+    path : Path
+        Le fichier YAML des questions. Par défaut `config/eval_recherche.yaml`.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Une entrée par question : `question`, `filtres` (dictionnaire) et `famille`.
+    """
+
+    # Repérer la famille de chaque question dans les commentaires de section
     family = ""
     families: list[str] = []
     for line in path.read_text(encoding="utf-8").splitlines():
@@ -149,6 +164,7 @@ def load_questions(path: Path = QUESTIONS_FILE) -> list[dict[str, Any]]:
             family = stripped.strip("# -").strip()
         elif stripped.startswith("- question:"):
             families.append(family)
+    # Lire les questions en YAML et leur associer leur famille, dans l'ordre
     items = yaml.safe_load(path.read_text(encoding="utf-8"))["questions"]
     return [{"question": str(item["question"]), "filtres": item.get("filtres") or {},
              "famille": families[index] if index < len(families) else ""}
@@ -156,7 +172,23 @@ def load_questions(path: Path = QUESTIONS_FILE) -> list[dict[str, Any]]:
 
 
 def grid_rows(num: int, item: Mapping[str, Any], cards: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
-    """Lignes de la grille pour une question : ses 3 premières cartes (ou une ligne vide)."""
+    """Lignes de la grille pour une question : ses 3 premières cartes (ou une ligne vide).
+
+    Parameters
+    ----------
+    num : int
+        Le numéro de la question dans le jeu.
+    item : Mapping[str, Any]
+        La question, avec `famille`, `question` et `filtres`.
+    cards : Sequence[Mapping[str, Any]]
+        Les cartes renvoyées par la recherche, dans l'ordre d'affichage.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Une ligne par carte (au plus `TOP`), colonnes `pertinent` et
+        `commentaire` vides ; une seule ligne de rang 0 s'il n'y a aucune carte.
+    """
 
     base = {"num": num, "famille": item["famille"], "question": item["question"],
             "filtres": json.dumps(item["filtres"], ensure_ascii=False) if item["filtres"] else ""}
@@ -171,6 +203,22 @@ def grid_rows(num: int, item: Mapping[str, Any], cards: Sequence[Mapping[str, An
 
 
 def prepare(connection: Any, questions: Sequence[Mapping[str, Any]], services: SearchServices) -> list[dict[str, Any]]:
+    """Passe chaque question par la vraie recherche et construit la grille.
+
+    Parameters
+    ----------
+    connection : Any
+        La connexion PostgreSQL utilisée par la recherche.
+    questions : Sequence[Mapping[str, Any]]
+        Les questions, au format renvoyé par `load_questions`.
+    services : SearchServices
+        Les services de recherche (sans traçage ni cache pour l'évaluation).
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Toutes les lignes de la grille, question après question.
+    """
     rows = []
     for num, item in enumerate(questions, start=1):
         result: dict[str, Any] = {}
@@ -186,7 +234,22 @@ SAMPLE_SEED = 2026
 
 def sample_questions(questions: Sequence[Mapping[str, Any]], count: int | None,
                      seed: int = SAMPLE_SEED) -> list[Mapping[str, Any]]:
-    """Échantillon tiré au hasard, toujours le même (graine fixe), dans l'ordre du fichier."""
+    """Échantillon tiré au hasard, toujours le même (graine fixe), dans l'ordre du fichier.
+
+    Parameters
+    ----------
+    questions : Sequence[Mapping[str, Any]]
+        Toutes les questions du jeu.
+    count : int | None
+        La taille de l'échantillon ; None, 0 ou plus que le total : tout est gardé.
+    seed : int
+        La graine du tirage. Par défaut `SAMPLE_SEED` (2026).
+
+    Returns
+    -------
+    list[Mapping[str, Any]]
+        Les questions tirées, dans leur ordre d'origine.
+    """
 
     if not count or count >= len(questions):
         return list(questions)
@@ -197,9 +260,24 @@ def sample_questions(questions: Sequence[Mapping[str, Any]], count: int | None,
 
 
 def carry_over(rows: Sequence[dict[str, Any]], previous: Sequence[Mapping[str, str]]) -> int:
-    """Reprend la note et le commentaire des cartes déjà annotées (même question,
+    """Reprend la note et le commentaire des cartes déjà annotées.
+
+    Une carte est reconnue à sa question et à son titre (même question,
     même titre) ; les cartes nouvelles restent à annoter. Renvoie le nombre de
-    notes reprises."""
+    notes reprises. Les lignes sont modifiées sur place.
+
+    Parameters
+    ----------
+    rows : Sequence[dict[str, Any]]
+        La nouvelle grille, complétée sur place.
+    previous : Sequence[Mapping[str, str]]
+        La grille déjà annotée ; seules ses lignes notées o / n sont reprises.
+
+    Returns
+    -------
+    int
+        Le nombre de notes reprises.
+    """
 
     known = {(str(row.get("question")), str(row.get("titre"))): row for row in previous
              if verdict(str(row.get("pertinent", ""))) is not None}
@@ -213,7 +291,15 @@ def carry_over(rows: Sequence[dict[str, Any]], previous: Sequence[Mapping[str, s
 
 
 def write_grid(rows: Sequence[Mapping[str, Any]], path: Path) -> None:
-    """Grille lisible par Excel en français : `;` et UTF-8 avec BOM."""
+    """Grille lisible par Excel en français : `;` et UTF-8 avec BOM.
+
+    Parameters
+    ----------
+    rows : Sequence[Mapping[str, Any]]
+        Les lignes de la grille, aux colonnes de `COLUMNS`.
+    path : Path
+        Le fichier CSV à écrire ; son dossier est créé au besoin.
+    """
 
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8-sig") as handle:
@@ -227,8 +313,22 @@ def write_grid(rows: Sequence[Mapping[str, Any]], path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 def read_grid(path: Path) -> list[dict[str, str]]:
-    """Grille annotée, enregistrée par Excel, OpenOffice ou LibreOffice : UTF-8
-    (avec ou sans BOM), sinon Windows-1252 ; séparateur `;` ou `,`."""
+    """Lit une grille annotée, quel que soit le tableur qui l'a enregistrée.
+
+    Grille annotée, enregistrée par Excel, OpenOffice ou LibreOffice : UTF-8
+    (avec ou sans BOM), sinon Windows-1252 ; séparateur `;` ou `,` (le plus
+    fréquent dans les 2 048 premiers caractères).
+
+    Parameters
+    ----------
+    path : Path
+        Le fichier CSV annoté.
+
+    Returns
+    -------
+    list[dict[str, str]]
+        Les lignes de la grille, indexées par nom de colonne.
+    """
 
     raw = path.read_bytes()
     try:
@@ -241,16 +341,45 @@ def read_grid(path: Path) -> list[dict[str, str]]:
 
 
 def verdict(value: str) -> bool | None:
-    """`o` / `n` (et variantes) ; None si la case est vide ou illisible."""
+    """`o` / `n` (et variantes) ; None si la case est vide ou illisible.
+
+    Parameters
+    ----------
+    value : str
+        Le contenu de la case (« o », « oui », « x », « n », « faux »...).
+
+    Returns
+    -------
+    bool | None
+        Vrai pour une valeur de `YES`, faux pour une valeur de `NO`, sinon None.
+    """
 
     text = (value or "").strip().lower()
     return True if text in YES else False if text in NO else None
 
 
 def score(rows: Sequence[Mapping[str, str]], column: str = "pertinent") -> dict[str, Any]:
-    """pertinence@3, questions satisfaites, détail par famille. Une question sans
-    proposition compte comme non satisfaite (0 carte pertinente sur 3)."""
+    """Calcule pertinence@3, questions satisfaites, détail par famille.
 
+    Une question sans proposition compte comme non satisfaite (0 carte
+    pertinente sur 3). Les cartes non annotées sont comptées à part et
+    n'entrent pas dans les scores.
+
+    Parameters
+    ----------
+    rows : Sequence[Mapping[str, str]]
+        Les lignes de la grille.
+    column : str
+        La colonne des verdicts : « pertinent » (humain, par défaut) ou « juge ».
+
+    Returns
+    -------
+    dict[str, Any]
+        Nombre de questions et de cartes jugées ou non annotées,
+        `pertinence_at_3`, `questions_satisfaites`, `objectif` et `par_famille`.
+    """
+
+    # Séparer cartes jugées et non annotées, puis regrouper les verdicts par question
     judged = [row for row in rows if str(row.get("rang")) != "0" and verdict(row.get(column, "")) is not None]
     missing = [row for row in rows if str(row.get("rang")) != "0" and verdict(row.get(column, "")) is None]
     by_question: dict[str, list[bool]] = {}
@@ -263,6 +392,7 @@ def score(rows: Sequence[Mapping[str, str]], column: str = "pertinent") -> dict[
             by_question[num] += [False] * TOP
         elif (value := verdict(row.get(column, ""))) is not None:
             by_question[num].append(value)
+    # Scores globaux, puis détail par famille de question
     cards = [value for values in by_question.values() for value in values]
     satisfied = [any(values) for values in by_question.values() if values]
     detail: dict[str, dict[str, Any]] = {}
@@ -291,12 +421,30 @@ def agreement(rows: Sequence[Mapping[str, str]], human: str = "pertinent", judge
     16/10/2026), le kappa reste proche de 0 même avec 95 % d'accord : l'accord
     « attendu par hasard » est déjà très haut. L'AC1 de Gwet ne souffre pas de
     ce biais ; on donne aussi combien des rejets humains le juge retrouve.
+
+    Parameters
+    ----------
+    rows : Sequence[Mapping[str, str]]
+        Les lignes de la grille, annotées par l'humain et par le juge.
+    human : str
+        La colonne des verdicts humains. Par défaut « pertinent ».
+    judge : str
+        La colonne des verdicts du juge. Par défaut « juge ».
+
+    Returns
+    -------
+    dict[str, Any]
+        `cartes`, `accord`, `kappa`, `ac1`, `rejets_humains` et
+        `rejets_retrouves` ; seulement `cartes`, `accord` et `kappa` (à None)
+        si aucune carte n'est notée des deux côtés.
     """
 
+    # Garder les cartes notées par l'humain et par le juge
     pairs = [(verdict(row.get(human, "")), verdict(row.get(judge, ""))) for row in rows]
     pairs = [(a, b) for a, b in pairs if a is not None and b is not None]
     if not pairs:
         return {"cartes": 0, "accord": None, "kappa": None}
+    # Accord observé, kappa de Cohen, AC1 de Gwet, puis rejets humains retrouvés
     observed = sum(a == b for a, b in pairs) / len(pairs)
     p_human = sum(a for a, _ in pairs) / len(pairs)
     p_judge = sum(b for _, b in pairs) / len(pairs)
@@ -316,7 +464,22 @@ FILTER_LABELS = {"public": "public", "outdoor": "en extérieur", "indoor": "en i
 
 
 def describe_filters(raw: str) -> str:
-    """Cases cochées utiles au juge (zone, public…), en français plutôt qu'en JSON."""
+    """Cases cochées utiles au juge (zone, public…), en français plutôt qu'en JSON.
+
+    Depuis la consigne v7, seules les cases de `FILTER_LABELS` (public,
+    extérieur, intérieur) sont gardées : la zone n'est plus transmise.
+
+    Parameters
+    ----------
+    raw : str
+        Les filtres de la grille, en JSON.
+
+    Returns
+    -------
+    str
+        Par exemple « public : famille, en extérieur : oui » ; le texte brut
+        s'il n'est pas un objet JSON.
+    """
 
     try:
         values = json.loads(raw)
@@ -333,10 +496,27 @@ def judge_rows(rows: list[dict[str, str]], call: Any = None) -> list[dict[str, s
 
     Le juge voit le titre, la catégorie, le public et le résumé ; ni la date, ni
     la commune, ni le prix, vérifiés par le code (v7).
+
+    Une réponse illisible laisse les cartes de la question sans verdict.
+
+    Parameters
+    ----------
+    rows : list[dict[str, str]]
+        Les lignes de la grille, complétées sur place.
+    call : Any
+        Fonction `(consigne, texte) -> str` qui interroge le modèle ; par défaut
+        Mistral (`PERTINENCE_JUDGE_MODEL`), avec pause et reprise sur 429. Les
+        tests la remplacent.
+
+    Returns
+    -------
+    list[dict[str, str]]
+        Les mêmes lignes, avec `juge` et `raison_juge` quand le juge a répondu.
     """
 
     prompt = JUDGE_PROMPT
 
+    # Par défaut, appeler Mistral en respectant ses limites de débit
     if call is None:
         import time
 
@@ -347,17 +527,20 @@ def judge_rows(rows: list[dict[str, str]], call: Any = None) -> list[dict[str, s
         pause = float(os.getenv("JUDGE_CALL_PAUSE_S", DEFAULT_CALL_PAUSE_S))
 
         def call(prompt: str, text: str) -> str:
+            """Interroge Mistral après une pause, avec reprise sur refus 429."""
             # 16/10/2026 : 429 dès les premiers appels avec mistral-large (offre
             # gratuite). Pause entre deux questions, puis 10 s, 20 s, 40 s… si
             # Mistral refuse encore (même mécanisme que la lecture des PDF).
             time.sleep(pause)
             return call_with_rate_limit(lambda p, t: call_mistral_json(p, t, model), prompt, text)[0]
 
+    # Regrouper les cartes par question : un appel par question
     cards = [(index, row) for index, row in enumerate(rows) if str(row.get("rang")) != "0"]
     questions: dict[str, list[tuple[int, dict[str, str]]]] = {}
     for index, row in cards:
         questions.setdefault(str(row.get("num") or row.get("question")), []).append((index, row))
     for chunk in questions.values():
+        # Décrire la demande et ses propositions, sans date, commune ni prix
         first = chunk[0][1]
         filters = describe_filters(first.get("filtres", ""))
         text = (f"Demande : {first['question']}"
@@ -367,6 +550,7 @@ def judge_rows(rows: list[dict[str, str]], call: Any = None) -> list[dict[str, s
                     + (f" - public : {row['public']}" if row.get("public") else "")
                     + f"\nRésumé : {row.get('resume') or '-'}"
                     for index, row in chunk))
+        # Lire les verdicts et les reporter sur les lignes correspondantes
         try:
             answer = json.loads(call(prompt, text))
             verdicts = {str(item.get("id")): item for item in answer.get("verdicts", [])}
@@ -381,6 +565,26 @@ def judge_rows(rows: list[dict[str, str]], call: Any = None) -> list[dict[str, s
 
 
 def save_history(report: Mapping[str, Any], grid: Path, note: str = "") -> Path:
+    """Ajoute une ligne au fichier `historique.csv` des calculs de pertinence.
+
+    L'en-tête est écrit à la création du fichier. La colonne `prompt_version`
+    reçoit la version de la consigne de rédaction de la recherche
+    (`PROMPT_VERSION`), pas celle du juge.
+
+    Parameters
+    ----------
+    report : Mapping[str, Any]
+        Le résultat de `score`, éventuellement complété par la clé `juge`.
+    grid : Path
+        La grille annotée dont vient le calcul.
+    note : str
+        Une note libre gardée dans l'historique. Par défaut vide.
+
+    Returns
+    -------
+    Path
+        Le chemin du fichier d'historique.
+    """
     BENCH_DIR.mkdir(parents=True, exist_ok=True)
     history = BENCH_DIR / "historique.csv"
     new = not history.exists()
@@ -401,7 +605,25 @@ def save_history(report: Mapping[str, Any], grid: Path, note: str = "") -> Path:
 
 def mlflow_record(report: Mapping[str, Any], grid: Path, judged: Path | None,
                   note: str = "") -> tuple[dict[str, Any], dict[str, Any], list[Path]]:
-    """Paramètres, métriques et fichiers d'un calcul, pour MLflow."""
+    """Paramètres, métriques et fichiers d'un calcul, pour MLflow.
+
+    Parameters
+    ----------
+    report : Mapping[str, Any]
+        Le résultat de `score`, éventuellement complété par la clé `juge`.
+    grid : Path
+        La grille annotée par l'humain.
+    judged : Path | None
+        La grille complétée par le juge, ou None sans juge.
+    note : str
+        Une note libre. Par défaut vide.
+
+    Returns
+    -------
+    tuple[dict[str, Any], dict[str, Any], list[Path]]
+        Les paramètres (dont modèle et version de consigne du juge), les
+        métriques (dont accord, kappa et AC1) et les fichiers à joindre.
+    """
 
     judge = report.get("juge") or {}
     accord = judge.get("accord") or {}
@@ -421,15 +643,25 @@ def mlflow_record(report: Mapping[str, Any], grid: Path, judged: Path | None,
 
 
 def print_score(report: Mapping[str, Any]) -> None:
+    """Affiche le score humain, son détail par famille et, s'il y a lieu, le juge.
+
+    Parameters
+    ----------
+    report : Mapping[str, Any]
+        Le résultat de `score`, éventuellement complété par la clé `juge`.
+    """
     def pct(value: Any) -> str:
+        """Formate une part en pourcentage entier, ou « - » si elle manque."""
         return "-" if value is None else f"{value:.0%}"
 
+    # Score de l'annotation humaine, global puis par famille
     print(f"{report['questions']} questions, {report['cartes_jugees']} cartes jugées"
           + (f" ({report['cartes_non_annotees']} non annotées)" if report["cartes_non_annotees"] else ""))
     print(f"  pertinence@3 : {pct(report['pertinence_at_3'])} (objectif {report['objectif']:.0%})")
     print(f"  questions avec au moins une carte pertinente : {pct(report['questions_satisfaites'])}")
     for family, values in report["par_famille"].items():
         print(f"  - {family} : {pct(values['pertinence'])} ({values['questions']} questions)")
+    # Score du juge et son accord avec l'humain
     judge = report.get("juge")
     if judge:
         accord = judge["accord"]
@@ -441,8 +673,14 @@ def print_score(report: Mapping[str, Any]) -> None:
 
 
 def main() -> None:
+    """Prépare une grille à annoter (`--preparer`) ou calcule son score (`--calculer`).
+
+    Avec `--juge`, la grille est aussi jugée par Mistral ; le score est ajouté
+    à l'historique CSV et enregistré dans MLflow.
+    """
     from config.environment import load_environment
 
+    # Lire les options de la ligne de commande
     parser = argparse.ArgumentParser(description="Pertinence des propositions : grille humaine et juge calibré.")
     action = parser.add_mutually_exclusive_group(required=True)
     action.add_argument("--preparer", action="store_true", help="Crée la grille à annoter (3 cartes par question).")
@@ -457,6 +695,7 @@ def main() -> None:
                         help="Avec --preparer : grille déjà annotée dont on reprend les notes (même question et titre).")
     args = parser.parse_args()
 
+    # Préparer : lancer les recherches, reprendre les notes connues, écrire la grille
     load_environment()
     if args.preparer:
         from agent.services import connect_postgres
@@ -475,6 +714,7 @@ def main() -> None:
               "Colonne « pertinent » : o ou n. Puis --calculer avec ce fichier.")
         return
 
+    # Calculer : score humain, puis verdicts du juge si demandé
     rows = read_grid(args.calculer)
     report = score(rows)
     judged = None
@@ -487,6 +727,7 @@ def main() -> None:
             writer.writeheader()
             writer.writerows(rows)
         print(f"Verdicts du juge : {judged}")
+    # Afficher, puis garder le résultat dans l'historique et dans MLflow
     print_score(report)
     print(f"Historique : {save_history(report, args.calculer, args.note).relative_to(ROOT)}")
     from scripts.suivi_mlflow import log_run

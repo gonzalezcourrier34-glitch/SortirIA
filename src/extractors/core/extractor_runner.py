@@ -1,5 +1,8 @@
 """Façade d'exécution des extracteurs.
 
+Lance un extracteur sans bloquer les suivants, journalise son bilan sur une ligne
+et renvoie ses articles avec un rapport `ExtractorExecution`.
+
 **Provenance** : repris de CheckIt.AI (projet 12, moteur de collecte), fichier `src/extractors/core/extractor_runner.py` (commit 93632c5).
 """
 
@@ -18,7 +21,18 @@ logger = get_logger(__name__)
 # Conversion
 
 def build_execution_report(result: ExtractorResult) -> ExtractorExecution:
-    """Convertit un ExtractorResult en rapport d'exécution."""
+    """Convertit un ExtractorResult en rapport d'exécution.
+
+    Parameters
+    ----------
+    result : ExtractorResult
+        Le résultat d'extraction à résumer.
+
+    Returns
+    -------
+    ExtractorExecution
+        Le rapport figé, sans les articles.
+    """
 
     return ExtractorExecution(
         extractor_name=result.name,
@@ -40,7 +54,18 @@ def build_execution_report(result: ExtractorResult) -> ExtractorExecution:
 def copy_articles(
     articles: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
-    """Retourne une copie superficielle de chaque article."""
+    """Retourne une copie superficielle de chaque article.
+
+    Parameters
+    ----------
+    articles : list[dict[str, Any]]
+        Les articles à copier.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Une nouvelle liste de copies des dictionnaires.
+    """
 
     return [article.copy() for article in articles]
 
@@ -52,8 +77,24 @@ def run_extractor(
     source_type: str,
     extractor: ArticleExtractor
 ) -> tuple[list[dict[str, Any]], ExtractorExecution]:
-    """Exécute un extracteur sans bloquer les suivants."""
+    """Exécute un extracteur sans bloquer les suivants.
 
+    Parameters
+    ----------
+    extractor_name : str
+        Nom de l'extracteur, repris dans les journaux et le rapport.
+    source_type : str
+        Type de source (api, dataset, scraping...).
+    extractor : ArticleExtractor
+        Fonction sans argument qui renvoie les articles ou un `ExtractorResult`.
+
+    Returns
+    -------
+    tuple[list[dict[str, Any]], ExtractorExecution]
+        Les copies des articles extraits, et le rapport d'exécution.
+    """
+
+    # Lancer l'extracteur ; une erreur devient un résultat en échec
     logger.info("Démarrage de l'extracteur %s.", extractor_name)
 
     result = execute_extractor_call(
@@ -63,6 +104,7 @@ def run_extractor(
     )
     execution = build_execution_report(result)
 
+    # Journaliser le bilan de l'extraction sur une seule ligne
     logger.info(
         "%s | statut=%s | analysés=%s | extraits=%s | rejetés=%s | "
         "requêtes=%s | temps=%.3fs | réussite=%.2f%% | raison=%s%s",

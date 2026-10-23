@@ -31,14 +31,33 @@ FALSE_VALUES: frozenset[str] = frozenset({
 # Conversion en booléen
 
 def parse_boolean(value: Any, default: bool = False) -> bool:
-    """Convertit une valeur courante en booléen."""
+    """Convertit une valeur courante en booléen.
 
+    Sont reconnus les booléens, les nombres 0 et 1, et les chaînes de
+    `TRUE_VALUES` / `FALSE_VALUES` (« oui », « off »...), sans tenir compte de
+    la casse ni des espaces autour.
+
+    Parameters
+    ----------
+    value : Any
+        La valeur à convertir.
+    default : bool
+        Valeur renvoyée si la valeur est absente ou non reconnue. Par défaut False.
+
+    Returns
+    -------
+    bool
+        Le booléen lu, ou `default`.
+    """
+
+    # Booléen déjà typé ou valeur absente
     if isinstance(value, bool):
         return value
 
     if value is None:
         return default
 
+    # Nombre : seuls 0 et 1 sont acceptés
     if isinstance(value, (int, float)) and not isinstance(value, bool):
         try:
             numeric_value = float(value)
@@ -50,6 +69,7 @@ def parse_boolean(value: Any, default: bool = False) -> bool:
 
         return default
 
+    # Chaîne : comparer aux listes de valeurs vraies et fausses
     if isinstance(value, str):
         normalized_value = value.strip().casefold()
 
@@ -65,7 +85,21 @@ def parse_boolean(value: Any, default: bool = False) -> bool:
 # Conversion en entier
 
 def parse_optional_integer(value: Any) -> int | None:
-    """Convertit une valeur facultative en entier positif ou nul."""
+    """Convertit une valeur facultative en entier positif ou nul.
+
+    Les booléens sont refusés ; « 3.0 » est accepté, « 3.5 » ne l'est pas.
+
+    Parameters
+    ----------
+    value : Any
+        La valeur à convertir (nombre ou chaîne).
+
+    Returns
+    -------
+    int | None
+        L'entier positif ou nul, ou None si la valeur est absente, non entière
+        ou négative.
+    """
 
     if value is None or isinstance(value, bool):
         return None
@@ -89,7 +123,21 @@ def parse_optional_integer(value: Any) -> int | None:
 
 
 def parse_non_negative_integer(value: Any, default: int = 0) -> int:
-    """Convertit une valeur en entier positif ou nul."""
+    """Convertit une valeur en entier positif ou nul.
+
+    Parameters
+    ----------
+    value : Any
+        La valeur à convertir.
+    default : int
+        Valeur de repli si `value` est illisible ; elle-même invalide, c'est 0.
+        Par défaut 0.
+
+    Returns
+    -------
+    int
+        L'entier lu, sinon `default`, sinon 0.
+    """
 
     parsed_value = parse_optional_integer(value)
 
@@ -101,7 +149,21 @@ def parse_non_negative_integer(value: Any, default: int = 0) -> int:
 
 
 def parse_positive_integer(value: Any, default: int = 1) -> int:
-    """Convertit une valeur en entier strictement positif."""
+    """Convertit une valeur en entier strictement positif.
+
+    Parameters
+    ----------
+    value : Any
+        La valeur à convertir.
+    default : int
+        Valeur de repli si `value` est illisible ou nulle ; elle-même invalide,
+        c'est 1. Par défaut 1.
+
+    Returns
+    -------
+    int
+        L'entier lu, sinon `default`, sinon 1.
+    """
 
     parsed_value = parse_optional_integer(value)
 
@@ -115,7 +177,18 @@ def parse_positive_integer(value: Any, default: int = 1) -> int:
 # Conversion en nombre flottant
 
 def parse_optional_float(value: Any) -> float | None:
-    """Convertit une valeur facultative en nombre flottant fini."""
+    """Convertit une valeur facultative en nombre flottant fini.
+
+    Parameters
+    ----------
+    value : Any
+        La valeur à convertir ; les booléens sont refusés.
+
+    Returns
+    -------
+    float | None
+        Le nombre lu, ou None s'il est absent, illisible, infini ou NaN.
+    """
 
     if value is None or isinstance(value, bool):
         return None
@@ -138,7 +211,21 @@ def parse_non_negative_float(
     value: Any,
     default: float = 0.0
 ) -> float:
-    """Convertit une valeur en nombre flottant positif ou nul."""
+    """Convertit une valeur en nombre flottant positif ou nul.
+
+    Parameters
+    ----------
+    value : Any
+        La valeur à convertir.
+    default : float
+        Valeur de repli si `value` est illisible ou négative ; elle-même
+        invalide, c'est 0.0. Par défaut 0.0.
+
+    Returns
+    -------
+    float
+        Le nombre lu, sinon `default`, sinon 0.0.
+    """
 
     parsed_value = parse_optional_float(value)
 
@@ -153,7 +240,21 @@ def parse_positive_float(
     value: Any,
     default: float = 1.0
 ) -> float:
-    """Convertit une valeur en nombre flottant strictement positif."""
+    """Convertit une valeur en nombre flottant strictement positif.
+
+    Parameters
+    ----------
+    value : Any
+        La valeur à convertir.
+    default : float
+        Valeur de repli si `value` est illisible, nulle ou négative ; elle-même
+        invalide, c'est 1.0. Par défaut 1.0.
+
+    Returns
+    -------
+    float
+        Le nombre lu, sinon `default`, sinon 1.0.
+    """
 
     parsed_value = parse_optional_float(value)
 
@@ -167,7 +268,18 @@ def parse_positive_float(
 # Normalisation des textes facultatifs
 
 def normalize_optional_text(value: Any) -> str | None:
-    """Retourne un texte nettoyé ou None."""
+    """Retourne un texte nettoyé ou None.
+
+    Parameters
+    ----------
+    value : Any
+        La valeur à convertir en texte.
+
+    Returns
+    -------
+    str | None
+        Le texte sans espaces autour, ou None s'il est absent ou vide.
+    """
 
     if value is None:
         return None

@@ -20,7 +20,16 @@ API = "https://api.mistral.ai/v1"
 
 
 def show(name: str, response: httpx.Response) -> None:
-    """Affiche le statut, les en-têtes de quota et l'erreur éventuelle."""
+    """Affiche le statut, les en-têtes de quota et l'erreur éventuelle.
+
+    Parameters
+    ----------
+    name : str
+        Le libellé de l'appel testé, affiché en titre.
+    response : httpx.Response
+        La réponse de l'API Mistral ; en cas d'échec, les 300 premiers
+        caractères du corps sont affichés.
+    """
 
     print(f"\n== {name} : HTTP {response.status_code}")
     for header, value in sorted(response.headers.items()):
@@ -31,12 +40,20 @@ def show(name: str, response: httpx.Response) -> None:
 
 
 def main() -> None:
+    """Teste les trois services Mistral utilisés par SortirIA.
+
+    Une petite requête chacun : liste des modèles, chat (modèle
+    `DOCUMENT_EXTRACTION_MODEL`, `mistral-small-latest` par défaut) et
+    embeddings. La clé n'est jamais affichée, seulement sa longueur.
+    """
+    # Lire la clé dans le .env, sans jamais l'afficher
     load_environment()
     key = get_environment_variable("MISTRAL_API_KEY") or ""
     if not key:
         print("MISTRAL_API_KEY absente du .env")
         return
     print(f"Clé trouvée ({len(key)} caractères, jamais affichée).")
+    # Appeler modèles, chat et embeddings, et afficher les limites de chacun
     headers = {"Authorization": f"Bearer {key}"}
     with httpx.Client(timeout=30) as client:
         show("liste des modèles", client.get(f"{API}/models", headers=headers))

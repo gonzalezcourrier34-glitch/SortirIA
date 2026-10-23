@@ -63,7 +63,18 @@ FIELDS = (
 
 
 def get_api_key() -> str:
-    """Retourne la clé DATAtourisme, ou lève une erreur claire si elle manque."""
+    """Retourne la clé DATAtourisme, ou lève une erreur claire si elle manque.
+
+    Returns
+    -------
+    str
+        La clé lue par `DATATOURISME_EXTRACTOR.api_key`.
+
+    Raises
+    ------
+    ApiAuthenticationError
+        Si la clé est absente, avec l'adresse où en obtenir une gratuitement.
+    """
 
     api_key = DATATOURISME_EXTRACTOR.api_key
     if not api_key:
@@ -78,7 +89,22 @@ def get_api_key() -> str:
 
 
 def is_in_window(occurrence: Mapping[str, Any], source: Mapping[str, Any], today: date | None = None) -> bool:
-    """Vrai si la séance n'est pas finie et commence dans les `days_forward` jours."""
+    """Vrai si la séance n'est pas finie et commence dans les `days_forward` jours.
+
+    Parameters
+    ----------
+    occurrence : Mapping[str, Any]
+        La séance, avec `start_at` et éventuellement `end_at` au format ISO.
+    source : Mapping[str, Any]
+        La configuration de la source (clé `days_forward`, 30 jours par défaut).
+    today : date | None
+        Jour de référence. Par défaut `None` : aujourd'hui à Paris.
+
+    Returns
+    -------
+    bool
+        Vrai si la séance chevauche la fenêtre [aujourd'hui ; aujourd'hui + `days_forward`].
+    """
 
     today = today or datetime.now(PARIS).date()
     days_forward = parse_non_negative_integer(source.get("days_forward"), DEFAULT_DAYS_FORWARD)
@@ -92,8 +118,23 @@ def fetch_area_pages(source: Mapping[str, Any], area: Mapping[str, float], api_k
 
     Garde-fou : on s'arrête si une page n'apporte aucun événement nouveau
     (lien « suivant » qui tournerait en rond), sans attendre `max_pages`.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        La configuration de la source (`endpoint`, `page_size`, `max_pages`, `language`).
+    area : Mapping[str, float]
+        La zone : `latitude`, `longitude` et `radius_km`.
+    api_key : str
+        La clé DATAtourisme, envoyée dans l'en-tête `X-API-Key`.
+
+    Yields
+    ------
+    dict[str, Any]
+        Chaque événement brut pas encore vu dans cette zone.
     """
 
+    # Préparer l'adresse, l'en-tête et les paramètres de la première page
     endpoint = normalize_value(source.get("endpoint")) or DEFAULT_ENDPOINT
     headers = {"X-API-Key": api_key, "Accept": "application/json"}
     page_size = min(max(parse_non_negative_integer(source.get("page_size"), DEFAULT_PAGE_SIZE), 1), 100)
@@ -107,6 +148,7 @@ def fetch_area_pages(source: Mapping[str, Any], area: Mapping[str, float], api_k
     }
     url = endpoint
     seen: set[str] = set()
+    # Suivre les pages tant qu'elles apportent des événements nouveaux
     for page in range(1, max_pages + 1):
         data = fetch_json_object(url=url, params=params, headers=headers)
         objects = [obj for obj in data.get("objects") or [] if isinstance(obj, Mapping)]
@@ -129,17 +171,41 @@ def iter_datatourisme_items(
     source: Mapping[str, Any],
     maximum_articles: int,
 ) -> Iterator[tuple[str, int, Mapping[str, Any]]]:
-    """Parcourt les séances des événements de toutes les zones."""
+    """Parcourt les séances des événements de toutes les zones.
+
+    Un événement vu dans une zone n'est pas relu dans la suivante ; seules
+    les séances dans la fenêtre de dates sont données.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        La configuration de la source (zones, fenêtre de dates, pagination).
+    maximum_articles : int
+        Nombre maximal de séances à donner ; 0 ou moins : aucune.
+
+    Yields
+    ------
+    tuple[str, int, Mapping[str, Any]]
+        Identifiant (`zone=...|uuid=...`), rang de la séance dans l'événement,
+        et l'événement brut complété de la séance sous la clé `_occurrence`.
+
+    Raises
+    ------
+    ApiAuthenticationError
+        Si la clé DATAtourisme manque (voir `get_api_key`).
+    """
 
     maximum = parse_non_negative_integer(maximum_articles, 0)
     if maximum <= 0:
         return
 
+    # Lire la clé et préparer les compteurs du bilan
     api_key = get_api_key()
     seen: set[str] = set()
     yielded = 0
     read_by_area: Counter[int] = Counter()
     outside_window = 0
+    # Parcourir zone par zone, événement par événement, puis séance par séance
     try:
         for area_index, area in enumerate(get_areas(source)):
             for item in fetch_area_pages(source, area, api_key):
@@ -159,6 +225,7 @@ def iter_datatourisme_items(
                         return
             logger.info("DATAtourisme, zone %s : %s événement(s) lu(s).", area_index, read_by_area[area_index])
     finally:
+        # Journaliser le bilan même si l'itération est interrompue
         logger.info(
             "DATAtourisme : %s séance(s) retenue(s), %s hors fenêtre de dates écartée(s).",
             yielded, outside_window,
@@ -171,7 +238,27 @@ def build_datatourisme_article(
     item_identifier: str,
     source: Mapping[str, Any],
 ) -> dict[str, Any]:
-    """Transforme une séance DATAtourisme en « article » du moteur, événement inclus."""
+    """Transforme une séance DATAtourisme en « article » du moteur, événement inclus.
+
+    L'`Event` complet est rangé dans `metadata["event"]` ; l'URL de l'article
+    est propre à chaque séance pour ne pas être dédoublonnée à tort.
+
+    Parameters
+    ----------
+    item : Any
+        L'événement brut, avec sa séance sous la clé `_occurrence`.
+    item_index : int
+        Rang de la séance (non utilisé).
+    item_identifier : str
+        Identifiant de repli si l'événement n'a ni identifiant ni URL.
+    source : Mapping[str, Any]
+        La configuration de la source (`source_id`, `name`, `language`, `role`).
+
+    Returns
+    -------
+    dict[str, Any]
+        L'article standard, ou un dictionnaire vide si la séance est inexploitable.
+    """
 
     del item_index
     if not isinstance(item, Mapping) or not isinstance(item.get("_occurrence"), Mapping):
@@ -207,7 +294,25 @@ def validate_datatourisme_item(
     filters: Mapping[str, Any],
     source: Mapping[str, Any],
 ) -> tuple[bool, str]:
-    """Contrôle minimal avant conversion : un titre, un identifiant, une séance."""
+    """Contrôle minimal avant conversion : un titre, un identifiant, une séance.
+
+    Dans le moteur API, ce contrôle est appelé après la construction de
+    l'article et la validation commune (voir `extract_api_from_source`).
+
+    Parameters
+    ----------
+    item : Any
+        L'événement brut, avec sa séance sous la clé `_occurrence`.
+    filters : Mapping[str, Any]
+        Les filtres de la source (non utilisés).
+    source : Mapping[str, Any]
+        La configuration de la source (non utilisée).
+
+    Returns
+    -------
+    tuple[bool, str]
+        Vrai et une chaîne vide si l'élément est complet, sinon faux et le motif.
+    """
 
     del filters, source
     if not isinstance(item, Mapping):
@@ -239,13 +344,30 @@ DATATOURISME_EXTRACTOR = ApiExtractor(
 
 
 def extract_articles_from_source(source: Mapping[str, Any]) -> ExtractorResult:
-    """Lance l'extraction depuis une configuration déjà chargée."""
+    """Lance l'extraction depuis une configuration déjà chargée.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        La configuration de la source DATAtourisme.
+
+    Returns
+    -------
+    ExtractorResult
+        Le bilan de l'extraction avec les articles retenus.
+    """
 
     return extract_api_from_source(source=source, adapter=DATATOURISME_ADAPTER)
 
 
 def extract_all_articles() -> ExtractorResult:
-    """Charge `config/sources.yaml` puis lance l'extraction DATAtourisme."""
+    """Charge `config/sources.yaml` puis lance l'extraction DATAtourisme.
+
+    Returns
+    -------
+    ExtractorResult
+        Le bilan de l'extraction, via l'exécuteur générique.
+    """
 
     return DATATOURISME_EXTRACTOR.run()
 

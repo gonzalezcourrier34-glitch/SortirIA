@@ -42,7 +42,18 @@ MULTIPLE_WHITESPACE_PATTERN = re.compile(r"\s+")
 # Nettoyage élémentaire
 
 def normalize_unicode(text: str) -> str:
-    """Uniformise les caractères Unicode équivalents."""
+    """Uniformise les caractères Unicode équivalents.
+
+    Parameters
+    ----------
+    text : str
+        Le texte à normaliser (forme NFKC).
+
+    Returns
+    -------
+    str
+        Le texte normalisé, ou le texte d'origine si la normalisation échoue.
+    """
 
     if not text:
         return ""
@@ -54,7 +65,21 @@ def normalize_unicode(text: str) -> str:
 
 
 def remove_invisible_characters(text: str) -> str:
-    """Supprime les caractères invisibles et de contrôle."""
+    """Supprime les caractères invisibles et de contrôle.
+
+    Les caractères invisibles disparaissent ; les caractères de contrôle
+    deviennent des espaces.
+
+    Parameters
+    ----------
+    text : str
+        Le texte à nettoyer.
+
+    Returns
+    -------
+    str
+        Le texte sans caractères invisibles ni de contrôle.
+    """
 
     if not text:
         return ""
@@ -66,7 +91,22 @@ def remove_invisible_characters(text: str) -> str:
 # Nettoyage textuel
 
 def _clean_text_content(text: str) -> str:
-    """Nettoie une chaîne déjà normalisée."""
+    """Nettoie une chaîne déjà normalisée.
+
+    Entités HTML décodées, balises retirées, Unicode normalisé, caractères
+    invisibles supprimés, espaces resserrés. En cas d'erreur, seuls les
+    espaces sont resserrés.
+
+    Parameters
+    ----------
+    text : str
+        Le texte à nettoyer.
+
+    Returns
+    -------
+    str
+        Le texte nettoyé.
+    """
 
     try:
         cleaned_text = unescape(text)
@@ -83,13 +123,37 @@ def _clean_text_content(text: str) -> str:
 
 @lru_cache(maxsize=CLEAN_TEXT_CACHE_SIZE)
 def _clean_cached_text(text: str) -> str:
-    """Nettoie et mémorise les textes de taille raisonnable."""
+    """Nettoie et mémorise les textes de taille raisonnable.
+
+    Parameters
+    ----------
+    text : str
+        Le texte à nettoyer (au plus `MAX_CACHED_TEXT_LENGTH` caractères).
+
+    Returns
+    -------
+    str
+        Le texte nettoyé, gardé en cache.
+    """
 
     return _clean_text_content(text)
 
 
 def clean_text(value: Any) -> str:
-    """Nettoie une valeur sans sérialiser les objets complexes."""
+    """Nettoie une valeur sans sérialiser les objets complexes.
+
+    Les textes courts passent par le cache, les longs sont nettoyés directement.
+
+    Parameters
+    ----------
+    value : Any
+        La valeur à nettoyer, convertie en texte par `normalize_value`.
+
+    Returns
+    -------
+    str
+        Le texte nettoyé, ou "" si la valeur est vide.
+    """
 
     text = normalize_value(value)
 
@@ -105,7 +169,23 @@ def clean_text(value: Any) -> str:
 # Nettoyage des articles
 
 def clean_article(article: Mapping[str, Any]) -> dict[str, Any]:
-    """Nettoie les champs textuels sans modifier l'article original."""
+    """Nettoie les champs textuels sans modifier l'article original.
+
+    Parameters
+    ----------
+    article : Mapping[str, Any]
+        L'article à nettoyer ; seuls les champs de `TEXT_FIELDS_TO_CLEAN` sont touchés.
+
+    Returns
+    -------
+    dict[str, Any]
+        Une copie de l'article aux champs textuels nettoyés.
+
+    Raises
+    ------
+    TypeError
+        Si `article` n'est pas un Mapping.
+    """
 
     if not isinstance(article, Mapping):
         raise TypeError("article doit être une structure de type Mapping.")
@@ -120,8 +200,26 @@ def clean_article(article: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def clean_articles(articles: list[Any]) -> list[dict[str, Any]]:
-    """Nettoie une collection d'articles normalisés."""
+    """Nettoie une collection d'articles normalisés.
 
+    Parameters
+    ----------
+    articles : list[Any]
+        Les articles, qui doivent tous être des Mapping.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Les articles nettoyés, dans le même ordre.
+
+    Raises
+    ------
+    TypeError
+        Si `articles` n'est pas une liste ou contient un élément qui n'est pas
+        un Mapping.
+    """
+
+    # Vérifier l'entrée : une liste d'articles tous normalisés
     if not isinstance(articles, list):
         raise TypeError("articles doit être une liste.")
 
@@ -141,6 +239,7 @@ def clean_articles(articles: list[Any]) -> list[dict[str, Any]]:
             f"{invalid_indexes[:10]}."
         )
 
+    # Nettoyer chaque article et journaliser le bilan
     results = [clean_article(article) for article in articles]
 
     logger.info(

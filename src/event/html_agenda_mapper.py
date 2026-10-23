@@ -58,6 +58,18 @@ def parse_card_date(value: Any, day_only: bool = False) -> tuple[datetime | None
     par défaut pour les événements sur plusieurs jours (vérifié le 14/10/2026 :
     une exposition n'ouvre pas à 6 h). Le jour est lu tel qu'écrit, sans
     conversion de fuseau.
+
+    Parameters
+    ----------
+    value : Any
+        Date brute de la fiche (chaîne ISO le plus souvent).
+    day_only : bool
+        Ignorer l'heure et ne garder que le jour. Par défaut False.
+
+    Returns
+    -------
+    tuple[datetime or None, bool]
+        La date (minuit si jour seul, None si illisible) et vrai si l'heure est connue.
     """
 
     text = clean_text(value)
@@ -69,7 +81,20 @@ def parse_card_date(value: Any, day_only: bool = False) -> tuple[datetime | None
 
 
 def select_text(node: Tag, selector: str | None) -> str:
-    """Texte du premier élément correspondant (vide si pas de sélecteur)."""
+    """Texte du premier élément correspondant (vide si pas de sélecteur).
+
+    Parameters
+    ----------
+    node : Tag
+        Élément HTML dans lequel chercher.
+    selector : str or None
+        Sélecteur CSS, ou None.
+
+    Returns
+    -------
+    str
+        Le texte nettoyé du premier élément trouvé, ou une chaîne vide.
+    """
 
     if not selector:
         return ""
@@ -78,7 +103,20 @@ def select_text(node: Tag, selector: str | None) -> str:
 
 
 def select_date(node: Tag, selector: str | None) -> str:
-    """Date d'un élément : attribut `content` ou `datetime` (schema.org, <time>), sinon son texte."""
+    """Date d'un élément : attribut `content` ou `datetime` (schema.org, <time>), sinon son texte.
+
+    Parameters
+    ----------
+    node : Tag
+        Élément HTML dans lequel chercher.
+    selector : str or None
+        Sélecteur CSS de l'élément daté, ou None.
+
+    Returns
+    -------
+    str
+        La date brute trouvée, ou une chaîne vide.
+    """
 
     if not selector:
         return ""
@@ -89,7 +127,24 @@ def select_date(node: Tag, selector: str | None) -> str:
 
 
 def parse_agenda_page(html: str, selectors: Mapping[str, Any], page_url: str = "") -> list[dict[str, str]]:
-    """Fiches brutes d'une page d'agenda : une par élément `selectors.article`."""
+    """Fiches brutes d'une page d'agenda : une par élément `selectors.article`.
+
+    Parameters
+    ----------
+    html : str
+        Code HTML de la page.
+    selectors : Mapping[str, Any]
+        Sélecteurs CSS de la source (`article`, `title`, `link`, `start_date`,
+        `end_date`, `category`, `text`, `venue`).
+    page_url : str
+        Adresse de la page, pour rendre les liens absolus. Par défaut vide.
+
+    Returns
+    -------
+    list[dict[str, str]]
+        Une fiche par événement : titre, lien, dates brutes, thème, résumé
+        (sans « Lire la suite »), lieu et adresse de la page.
+    """
 
     soup = BeautifulSoup(html, "html.parser")
     cards = []
@@ -117,8 +172,30 @@ def map_agenda_card(
     horizon: date,
     extracted_at: str = "",
 ) -> tuple[Event | None, str]:
-    """Fiche -> (Event, "") ou (None, motif) ; hors fenêtre -> (None, "")."""
+    """Fiche -> (Event, "") ou (None, motif) ; hors fenêtre -> (None, "").
 
+    Parameters
+    ----------
+    card : Mapping[str, Any]
+        Fiche brute produite par `parse_agenda_page`.
+    source : Mapping[str, Any]
+        Configuration de la source (`source_id`, `city`, `day_only`,
+        coordonnées, `credit` ou `name`).
+    today : date
+        Premier jour de la fenêtre de collecte.
+    horizon : date
+        Dernier jour de la fenêtre de collecte.
+    extracted_at : str
+        Date de l'extraction, recopiée dans l'événement. Par défaut vide.
+
+    Returns
+    -------
+    tuple[Event or None, str]
+        L'événement et une chaîne vide ; ou None et le motif du refus ;
+        ou None et une chaîne vide si l'événement est hors de la fenêtre.
+    """
+
+    # Écarter les fiches sans titre, sans lien ou sans date lisible
     title = LEADING_SYMBOLS_PATTERN.sub("", clean_text(card.get("title"))).strip()
     if not title:
         return None, REASON_NO_TITLE
@@ -129,6 +206,7 @@ def map_agenda_card(
     start, time_known = parse_card_date(card.get("start"), day_only)
     if start is None:
         return None, REASON_NO_DATE
+    # Ignorer ce qui est fini ou au-delà de l'horizon
     end, _ = parse_card_date(card.get("end"), day_only)
     if (end or start).date() < today or start.date() > horizon:
         return None, ""
@@ -141,6 +219,7 @@ def map_agenda_card(
     city = normalize_city(source.get("city"))
     category = clean_text(card.get("category"))
     start_at = to_iso(start)
+    # Construire l'événement (ville et coordonnées viennent de la source)
     return Event(
         event_id=build_event_id(build_dedup_key(title, start_at, venue or city)),
         source="scraper",

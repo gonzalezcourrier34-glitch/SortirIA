@@ -30,7 +30,20 @@ DEFAULT_EMBEDDING_MODEL = "mistral-embed"
 
 @dataclass(frozen=True, slots=True)
 class ExtractionOutput:
-    """Ce que renvoie une extraction, quel que soit le moteur utilisé."""
+    """Ce que renvoie une extraction, quel que soit le moteur utilisé.
+
+    Attributes
+    ----------
+    articles : list[dict[str, Any]]
+        Les articles bruts produits par les extracteurs.
+    failed_sources : list[str]
+        Identifiants des sources dont l'extracteur a échoué.
+    usage : dict[str, dict[str, int]]
+        Tokens Mistral consommés, par modèle (`{"input": n, "output": n}`).
+    extractor_stats : list[dict[str, Any]]
+        Bilan de chaque extracteur (statut, durée, éléments lus et gardés, motifs
+        de rejet, messages d'erreur).
+    """
 
     articles: list[dict[str, Any]]
     failed_sources: list[str] = field(default_factory=list)
@@ -43,7 +56,54 @@ class ExtractionOutput:
 
 @dataclass(slots=True)
 class CollectionServices:
-    """Regroupe les dépendances de l'agent."""
+    """Regroupe les dépendances de l'agent.
+
+    Le graphe ne parle qu'à cet objet : les tests y mettent de faux services,
+    la production les vrais (`build_default_services`).
+
+    Attributes
+    ----------
+    extract : Callable[[Sequence[str]], ExtractionOutput]
+        Lance les extracteurs demandés.
+    connect : Callable[[], AbstractContextManager[Any]]
+        Ouvre une connexion PostgreSQL (commit et fermeture en sortie).
+    embed : Callable[[list[str]], list[list[float]]]
+        Calcule les embeddings d'une liste de textes.
+    embedding_model : str
+        Nom du modèle d'embeddings. Par défaut `mistral-embed`.
+    default_sources : tuple[str, ...]
+        Sources lancées chaque nuit.
+    now : Callable[[], datetime]
+        Horloge (heure de Paris), remplaçable dans les tests.
+    is_configured : Callable[[str], bool]
+        Dit si une source a au moins une configuration active (par défaut : oui).
+    notify : Callable[[Mapping[str, Any]], Any]
+        Envoie le bilan de la nuit (par défaut : rien ; en production : un mail).
+    watch_inputs : Callable[[], Mapping[str, Any]]
+        Ce que l'agent surveille après le chargement (programmes PDF, fichiers
+        des partenaires) ; par défaut : rien.
+    enrich : Callable[[list[dict[str, Any]]], tuple[dict, dict]] | None
+        Enrichissement d'un lot d'événements par Mistral : renvoie
+        `({event_id: Enrichment}, consommation)` ; None : pas d'enrichissement.
+    probe : Callable[[str], bool] | None
+        Vérifie qu'une adresse répond avec un PDF ; None : pas de recherche de
+        nouvelle adresse.
+    discover_agendas : Callable[[], Mapping[str, int]] | None
+        Découverte hebdomadaire des agendas OpenAgenda non configurés ; None : jamais.
+    ratings_enabled : bool
+        Active le bilan nocturne des notes des clients. Par défaut False.
+    moderate : Callable[[str], tuple[str, dict[str, Any]]] | None
+        Modération des commentaires restés en attente ; None : pas de modération.
+    judge : Callable[[list[dict[str, Any]]], tuple[dict, dict]] | None
+        Juge de qualité d'un échantillon : renvoie `({event_id: Verdict},
+        consommation)` ; None : pas de contrôle.
+    tracker : Any
+        Suivi des exécutions (MLflow en production ; par défaut `NullTracker`).
+    learn_searches : Callable[[Mapping[str, Any], Any], Any] | None
+        Apprentissage du lundi sur les recherches ratées ; None : jamais.
+    pull_requests : Callable[[Any], Mapping[str, Any]] | None
+        Ouverture des pull requests de validation ; None : pas de jeton GitHub.
+    """
 
     # Lance les extracteurs demandés.
     extract: Callable[[Sequence[str]], ExtractionOutput]
@@ -97,7 +157,21 @@ class CollectionServices:
 # ---------------------------------------------------------------------------
 
 def extract_with_checkit(source_names: Sequence[str]) -> ExtractionOutput:
-    """Lance les extracteurs du moteur CheckIt.AI et renvoie leurs résultats."""
+    """Lance les extracteurs du moteur CheckIt.AI et renvoie leurs résultats.
+
+    Le relevé des tokens Mistral est remis à zéro avant l'extraction, pour ne
+    compter que cette exécution.
+
+    Parameters
+    ----------
+    source_names : Sequence[str]
+        Identifiants des sources à lancer (« openagenda », « document »...).
+
+    Returns
+    -------
+    ExtractionOutput
+        Articles, sources en échec, consommation Mistral et bilan par extracteur.
+    """
 
     from config.constants import EXTRACTOR_STATUS_FAILED
     from src.extractor_execution_service import extract_all_sources, normalize_extractor_names
@@ -142,7 +216,16 @@ def extract_with_checkit(source_names: Sequence[str]) -> ExtractionOutput:
 
 @contextmanager
 def connect_postgres() -> Iterable[Any]:
-    """Ouvre une connexion PostgreSQL (DATABASE_URL), validée si tout se passe bien."""
+    """Ouvre une connexion PostgreSQL (DATABASE_URL), validée si tout se passe bien.
+
+    En cas d'exception, la transaction est annulée et l'exception remonte ; la
+    connexion est fermée dans tous les cas.
+
+    Yields
+    ------
+    Any
+        La connexion psycopg2 ouverte.
+    """
 
     import psycopg2
 
@@ -161,7 +244,18 @@ def connect_postgres() -> Iterable[Any]:
 def embedding_client(model: str) -> Any:
     """Client d'embeddings, créé une seule fois par modèle : sa création
     télécharge le tokenizer depuis Hugging Face (une requête à chaque
-    recherche de l'interface sinon)."""
+    recherche de l'interface sinon).
+
+    Parameters
+    ----------
+    model : str
+        Nom du modèle d'embeddings Mistral.
+
+    Returns
+    -------
+    Any
+        Un client `MistralAIEmbeddings`, mis en cache.
+    """
 
     from langchain_mistralai import MistralAIEmbeddings
 
@@ -169,7 +263,20 @@ def embedding_client(model: str) -> Any:
 
 
 def embed_with_mistral(texts: list[str]) -> list[list[float]]:
-    """Calcule les embeddings avec Mistral (clé MISTRAL_API_KEY)."""
+    """Calcule les embeddings avec Mistral (clé MISTRAL_API_KEY).
+
+    Le modèle est lu dans `EMBEDDING_MODEL` (par défaut `mistral-embed`).
+
+    Parameters
+    ----------
+    texts : list[str]
+        Les textes à vectoriser.
+
+    Returns
+    -------
+    list[list[float]]
+        Un vecteur par texte, dans le même ordre.
+    """
 
     model = os.getenv("EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL)
     return embedding_client(model).embed_documents(texts)
@@ -183,6 +290,16 @@ def source_is_configured(name: str) -> bool:
     que si `data/partenaires/` contient au moins un fichier (sinon : dossier
     vide, fausse panne chaque nuit). Pour les API, on cherche une source active portant cet
     identifiant.
+
+    Parameters
+    ----------
+    name : str
+        Identifiant de l'extracteur (« rss », « openagenda », « partenaire »...).
+
+    Returns
+    -------
+    bool
+        True si au moins une source active correspond.
     """
 
     from config.paths import SOURCES_FILE
@@ -204,7 +321,21 @@ def source_is_configured(name: str) -> bool:
 def pending_partner_document(path: Path, partner: Mapping[str, Any]) -> dict[str, Any] | None:
     """Document partenaire (PDF, Word) lu par Mistral cette nuit et pas encore validé :
     de quoi proposer son import (nombre de séances, aperçu). None si déjà validé ou
-    pas encore lu (le cache évite tout nouvel appel à Mistral)."""
+    pas encore lu (le cache évite tout nouvel appel à Mistral).
+
+    Parameters
+    ----------
+    path : Path
+        Chemin du document dans le dossier des partenaires.
+    partner : Mapping[str, Any]
+        Configuration du partenaire auquel appartient le fichier.
+
+    Returns
+    -------
+    dict[str, Any] | None
+        Nom du partenaire, nom et empreinte du fichier, nombre de séances et de
+        rejets, aperçu des cinq premières séances ; None s'il n'y a rien à valider.
+    """
 
     from src.extractors.datasets.source.partner_documents import cached_rows, file_sha256, is_approved
     from src.extractors.datasets.source.partner_extractor import read_partner_file
@@ -223,7 +354,17 @@ def pending_partner_document(path: Path, partner: Mapping[str, Any]) -> dict[str
 
 def read_watch_inputs() -> dict[str, Any]:
     """Programmes PDF actifs (nom, fin de période), fichiers des partenaires (date de mise à jour)
-    et documents des partenaires lus par Mistral en attente de validation."""
+    et documents des partenaires lus par Mistral en attente de validation.
+
+    Renvoie aussi le jour de la découverte des agendas OpenAgenda, lu dans la
+    configuration de cette source.
+
+    Returns
+    -------
+    dict[str, Any]
+        Clés `documents`, `partner_files`, `partner_documents` et
+        `discovery_weekday` (None si OpenAgenda n'est pas actif).
+    """
 
     from config.paths import SOURCES_FILE
     from config.source_config import load_source_registry
@@ -235,6 +376,7 @@ def read_watch_inputs() -> dict[str, Any]:
         partner_for_file,
     )
 
+    # Programmes PDF actifs et date de fin de leur période
     registry = load_source_registry(SOURCES_FILE, require_secrets=False)
     documents = []
     for source in registry.by_type("document"):
@@ -243,6 +385,8 @@ def read_watch_inputs() -> dict[str, Any]:
             period = parse_period(data)
             documents.append({"name": data.get("name"), "end": period[1] if period else None,
                               "source_id": data.get("source_id"), "url": data.get("url")})
+    # Parcourir les sources : jour de découverte OpenAgenda, fichiers et
+    # documents des partenaires (ceux en attente de validation à part)
     partner_files = []
     partner_documents = []
     discovery_weekday = None
@@ -286,6 +430,16 @@ def discover_openagenda_agendas() -> dict[str, int]:
     Renvoie {uid: événements dans la zone} pour les agendas utiles absents de
     `agenda_uids` (les plus riches d'abord). La configuration n'est pas
     modifiée : l'agent en fait des propositions.
+
+    Returns
+    -------
+    dict[str, int]
+        `{uid: nombre d'événements dans la zone}`, du plus riche au moins riche.
+
+    Raises
+    ------
+    RuntimeError
+        Si la recherche des agendas a échoué.
     """
 
     from collections import Counter
@@ -305,7 +459,18 @@ def discover_openagenda_agendas() -> dict[str, int]:
 
 
 def enrich_events(rows: list[dict[str, Any]]) -> tuple[dict[str, Any], dict[str, dict[str, int]]]:
-    """Enrichissement réel : Mistral (`ENRICHMENT_MODEL`, mistral-small-latest par défaut)."""
+    """Enrichissement réel : Mistral (`ENRICHMENT_MODEL`, mistral-small-latest par défaut).
+
+    Parameters
+    ----------
+    rows : list[dict[str, Any]]
+        Les événements à enrichir.
+
+    Returns
+    -------
+    tuple[dict[str, Any], dict[str, dict[str, int]]]
+        `{event_id: Enrichment}` et la consommation de tokens par modèle.
+    """
 
     from src.event.event_enrichment import enrich_with_mistral
 
@@ -313,7 +478,18 @@ def enrich_events(rows: list[dict[str, Any]]) -> tuple[dict[str, Any], dict[str,
 
 
 def moderate_comment(text: str) -> tuple[str, dict[str, Any]]:
-    """Modération réelle d'un commentaire client (Mistral Moderation)."""
+    """Modération réelle d'un commentaire client (Mistral Moderation).
+
+    Parameters
+    ----------
+    text : str
+        Le commentaire à modérer.
+
+    Returns
+    -------
+    tuple[str, dict[str, Any]]
+        La décision de modération et le détail renvoyé par Mistral.
+    """
 
     from src.event.event_ratings import moderate_with_mistral
 
@@ -321,7 +497,18 @@ def moderate_comment(text: str) -> tuple[str, dict[str, Any]]:
 
 
 def judge_events(rows: list[dict[str, Any]]) -> tuple[dict[str, Any], dict[str, dict[str, int]]]:
-    """Juge réel : Mistral (`JUDGE_MODEL`, mistral-medium-latest par défaut)."""
+    """Juge réel : Mistral (`JUDGE_MODEL`, mistral-medium-latest par défaut).
+
+    Parameters
+    ----------
+    rows : list[dict[str, Any]]
+        L'échantillon d'événements à juger.
+
+    Returns
+    -------
+    tuple[dict[str, Any], dict[str, dict[str, int]]]
+        `{event_id: Verdict}` et la consommation de tokens par modèle.
+    """
 
     from src.event.quality_judge import judge_with_mistral
 
@@ -339,6 +526,20 @@ def find_agendas_for_words(words: Sequence[str]) -> dict[str, dict[str, dict[str
     termes : Montpellier, Sète, Thau…) ; pour chacun, une seule page filtrée
     par le mot (`oaq[what]`), puis le même filtre géographique que la
     collecte. Renvoie {mot: {agenda: {"events": n, "examples": [titres]}}}.
+
+    Au plus `MAX_AGENDAS_PER_WORD` agendas sont interrogés par mot ; un agenda
+    en erreur est ignoré.
+
+    Parameters
+    ----------
+    words : Sequence[str]
+        Les sujets à chercher.
+
+    Returns
+    -------
+    dict[str, dict[str, dict[str, Any]]]
+        Pour chaque mot trouvé, les agendas qui en parlent, avec le nombre
+        d'événements et trois titres d'exemple.
     """
 
     from src.event.event_normalizer import pick_localized
@@ -353,8 +554,10 @@ def find_agendas_for_words(words: Sequence[str]) -> dict[str, dict[str, dict[str
 
     source = dict(OPENAGENDA_EXTRACTOR.source)
     api_key = get_api_key()
+    # Trouver les agendas de la zone que la collecte ne lit pas encore
     configured = {str(uid).strip() for uid in source.get("agenda_uids") or []}
     agendas = [uid for uid in search_agenda_uids({**source, "agenda_uids": []}, api_key) if uid not in configured]
+    # Pour chaque mot, une page filtrée par agenda, puis le filtre géographique
     found: dict[str, dict[str, dict[str, Any]]] = {}
     for word in words:
         for uid in agendas[:MAX_AGENDAS_PER_WORD]:
@@ -370,7 +573,18 @@ def find_agendas_for_words(words: Sequence[str]) -> dict[str, dict[str, dict[str
 
 
 def known_title_words(words: Sequence[str]) -> set[str]:
-    """Mots présents dans les titres de la base (vocabulaire des titres)."""
+    """Mots présents dans les titres de la base (vocabulaire des titres).
+
+    Parameters
+    ----------
+    words : Sequence[str]
+        Les mots à vérifier.
+
+    Returns
+    -------
+    set[str]
+        Ceux qui apparaissent dans au moins un titre.
+    """
 
     from app.search_service import known_subjects
 
@@ -380,12 +594,26 @@ def known_title_words(words: Sequence[str]) -> set[str]:
 
 def learn_from_week(gaps: Mapping[str, Any], today: Any) -> Any:
     """Apprentissage réel : Mistral lit les pouces bas et les mots, la base
-    vérifie, OpenAgenda cherche (16/10/2026 : les pouces bas en plus)."""
+    vérifie, OpenAgenda cherche (16/10/2026 : les pouces bas en plus).
+
+    Parameters
+    ----------
+    gaps : Mapping[str, Any]
+        Bilan des recherches de la semaine (recherches ratées, pouces bas).
+    today : Any
+        Date du jour.
+
+    Returns
+    -------
+    Any
+        Le `LearningResult` de la semaine.
+    """
 
     from agent.feedback_learning import learn_with_feedback, read_feedback_with_mistral
     from agent.search_learning import learn_from_searches, read_words_with_mistral
 
     def learn(gaps: Mapping[str, Any], today: Any) -> Any:
+        """Apprend des recherches ratées avec les services réels (Mistral, base, OpenAgenda)."""
         return learn_from_searches(
             gaps, today, read_words=read_words_with_mistral, known_words=known_title_words,
             find_agendas=find_agendas_for_words if source_is_configured("openagenda") else None,
@@ -395,7 +623,17 @@ def learn_from_week(gaps: Mapping[str, Any], today: Any) -> Any:
 
 
 def build_default_services() -> CollectionServices:
-    """Services réels : moteur CheckIt.AI, PostgreSQL, Mistral."""
+    """Services réels : moteur CheckIt.AI, PostgreSQL, Mistral.
+
+    Le juge et l'enrichissement se coupent avec `JUGE_ACTIF` et
+    `ENRICHISSEMENT_ACTIF` (« false », « 0 » ou « non ») ; la découverte des
+    agendas n'est branchée que si OpenAgenda est configuré.
+
+    Returns
+    -------
+    CollectionServices
+        Les services de production.
+    """
 
     return CollectionServices(
         extract=extract_with_checkit,
@@ -418,7 +656,14 @@ def build_default_services() -> CollectionServices:
 
 
 def pull_requests_from_env() -> Callable[[Any], Mapping[str, Any]] | None:
-    """Les PR de l'agent si `GITHUB_TOKEN_AGENT` est réglé (agent/pull_requests.py)."""
+    """Les PR de l'agent si `GITHUB_TOKEN_AGENT` est réglé (agent/pull_requests.py).
+
+    Returns
+    -------
+    Callable[[Any], Mapping[str, Any]] | None
+        Une fonction qui, à partir d'une connexion, ouvre les PR manquantes et
+        renvoie leur bilan ; None sans jeton GitHub.
+    """
 
     from agent.pull_requests import github_from_env, sync_pull_requests
 

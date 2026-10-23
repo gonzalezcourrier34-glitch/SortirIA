@@ -11,4 +11,10 @@ Le package est découpé comme `src/article/` de CheckIt.AI :
 - `event_deduplicator` : fusion d'un même événement vu dans plusieurs sources ;
 - `openagenda_mapper` : conversion d'un événement brut OpenAgenda en `Event` ;
 - `event_repository` : écriture dans PostgreSQL et retrait des événements passés.
+
+S'y sont ajoutés les convertisseurs des autres sources (`datatourisme_mapper`,
+`document_mapper`, `ical_mapper`, `rss_event_mapper`, `html_agenda_mapper`,
+`partner_mapper`), la préparation des événements de la nuit (`event_pipeline`),
+le texte des embeddings (`event_embedding`), l'enrichissement et le juge Mistral
+(`event_enrichment`, `quality_judge`) et les notes des clients (`event_ratings`).
 """

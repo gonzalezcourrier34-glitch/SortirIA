@@ -102,16 +102,28 @@ def docx_paragraphs(data: bytes) -> list[str]:
 
     Un .docx est une archive zip ; le texte est dans `word/document.xml`. Une
     ligne de tableau devient un paragraphe (cellules séparées par « | »).
+
+    Parameters
+    ----------
+    data : bytes
+        Contenu brut du fichier .docx.
+
+    Returns
+    -------
+    list[str]
+        Les paragraphes non vides, dans l'ordre du document.
     """
 
     import io
 
+    # Ouvrir l'archive et lire le corps du document
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
         root = ElementTree.fromstring(archive.read("word/document.xml"))
     body = root.find(f"{WORD_NS}body")
     paragraphs: list[str] = []
 
     def text_of(element: ElementTree.Element) -> str:
+        """Concatène le texte d'un élément Word, tabulations et sauts en espaces."""
         parts = []
         for node in element.iter():
             if node.tag == f"{WORD_NS}t" and node.text:
@@ -120,6 +132,7 @@ def docx_paragraphs(data: bytes) -> list[str]:
                 parts.append(" ")
         return re.sub(r"\s+", " ", "".join(parts)).strip()
 
+    # Parcourir les blocs du corps : paragraphes, puis lignes de tableau
     for block in list(body) if body is not None else []:
         if block.tag == f"{WORD_NS}p":
             text = text_of(block)
@@ -134,7 +147,21 @@ def docx_paragraphs(data: bytes) -> list[str]:
 
 
 def document_pages(path: Path) -> list[str]:
-    """Texte du document, par « page » : pages d'un PDF, paquets de paragraphes d'un Word."""
+    """Texte du document, par « page » : pages d'un PDF, paquets de paragraphes d'un Word.
+
+    Un Word n'ayant pas de pages, ses paragraphes sont groupés par
+    `PARAGRAPHS_PER_PAGE`.
+
+    Parameters
+    ----------
+    path : Path
+        Chemin du document (.pdf ou .docx).
+
+    Returns
+    -------
+    list[str]
+        Le texte de chaque page non vide (PDF) ou de chaque paquet (Word).
+    """
 
     data = path.read_bytes()
     if path.suffix.lower() == ".pdf":
@@ -151,15 +178,56 @@ def document_pages(path: Path) -> list[str]:
 # ---------------------------------------------------------------------------
 
 def file_sha256(path: Path) -> str:
+    """Calcule l'empreinte SHA-256 d'un fichier.
+
+    Parameters
+    ----------
+    path : Path
+        Chemin du fichier.
+
+    Returns
+    -------
+    str
+        L'empreinte en hexadécimal.
+    """
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def cache_path(sha256: str) -> Path:
+    """Donne le fichier de cache d'un document lu par Mistral.
+
+    Le nom combine l'empreinte, la version du prompt et le modèle : changer l'un
+    des trois force une nouvelle lecture.
+
+    Parameters
+    ----------
+    sha256 : str
+        Empreinte du document.
+
+    Returns
+    -------
+    Path
+        Chemin du fichier JSON de cache dans `CACHE_DIR`.
+    """
     model = os.getenv("DOCUMENT_EXTRACTION_MODEL", DEFAULT_MODEL).replace("/", "_")
     return CACHE_DIR / f"{sha256[:16]}-{PROMPT_VERSION}-{model}.json"
 
 
 def default_llm(prompt: str, text: str) -> tuple[str, dict[str, int]]:
+    """Appelle Mistral avec la limite de fréquence du lecteur de documents.
+
+    Parameters
+    ----------
+    prompt : str
+        Consigne d'extraction.
+    text : str
+        Texte de la page à lire.
+
+    Returns
+    -------
+    tuple[str, dict[str, int]]
+        La réponse brute du modèle et la consommation de jetons.
+    """
     from src.extractors.documents.document_extractor import call_mistral, call_with_rate_limit
 
     return call_with_rate_limit(call_mistral, prompt, text)
@@ -172,8 +240,28 @@ def read_document_rows(path: Path, llm: LlmCall | None = None, today: date | Non
     Chaque ligne garde `page_llm` ; une ligne dont le titre est absent du texte
     de sa page est rendue avec `rejet_llm` = `titre_absent_du_texte`.
     Le résultat est mis en cache par empreinte du fichier.
+
+    Parameters
+    ----------
+    path : Path
+        Chemin du document (.pdf ou .docx).
+    llm : LlmCall | None
+        Fonction d'appel au modèle ; par défaut `default_llm` (Mistral).
+    today : date | None
+        Date de référence donnée au modèle pour les années manquantes ; par
+        défaut aujourd'hui à Paris.
+    use_cache : bool
+        Réutiliser une lecture déjà en cache. Par défaut True.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Les lignes au format du modèle partenaire, complétées du lien du
+        document ; une page à la réponse illisible donne une ligne de rejet
+        `REASON_INVALID_JSON`.
     """
 
+    # Réutiliser la lecture en cache si le document n'a pas changé
     sha256 = file_sha256(path)
     cached = cache_path(sha256)
     if use_cache and cached.exists():
@@ -184,10 +272,12 @@ def read_document_rows(path: Path, llm: LlmCall | None = None, today: date | Non
 
     from src.extractors.documents.document_extractor import record_token_usage
 
+    # Préparer le modèle et la consigne datée
     llm = llm or default_llm
     today = today or datetime.now(PARIS).date()
     prompt = EXTRACTION_PROMPT.format(today=today.strftime("%d/%m/%Y"))
     rows: list[dict[str, Any]] = []
+    # Lire chaque page ; rejeter les titres absents du texte (événements inventés)
     for number, page in enumerate(document_pages(path), start=1):
         answer, usage = llm(prompt, page[:MAX_CHUNK_CHARS])
         record_token_usage(os.getenv("DOCUMENT_EXTRACTION_MODEL", DEFAULT_MODEL), usage)
@@ -202,6 +292,7 @@ def read_document_rows(path: Path, llm: LlmCall | None = None, today: date | Non
             if not title_found_in_text(str(row.get("titre") or ""), page):
                 row["rejet_llm"] = REASON_TITLE_NOT_IN_TEXT
             rows.append(row)
+    # Écrire le cache de façon atomique (fichier temporaire puis remplacement)
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     temporary = cached.with_suffix(".tmp")
     temporary.write_text(json.dumps(rows, ensure_ascii=False), encoding="utf-8")
@@ -220,6 +311,19 @@ def with_document_link(rows: list[dict[str, Any]], path: Path) -> list[dict[str,
     séances, mais le lien « Programme et réservations : https://… » est écrit
     une fois, en bas du document ; aucune séance n'en avait, toutes étaient
     refusées (« lien manquant »). Ce lien est dans le texte : rien d'inventé.
+
+    Parameters
+    ----------
+    rows : list[dict[str, Any]]
+        Lignes lues dans le document.
+    path : Path
+        Chemin du document, relu pour y chercher les adresses https.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Les lignes, où un `lien` vide reçoit le premier lien du document ; les
+        lignes rejetées par le contrôle du modèle restent intactes.
     """
 
     links = [match.group(0).rstrip(".,;:") for page in document_pages(path) for match in URL.finditer(page)]
@@ -229,7 +333,19 @@ def with_document_link(rows: list[dict[str, Any]], path: Path) -> list[dict[str,
 
 
 def cached_rows(path: Path) -> list[dict[str, Any]] | None:
-    """Lignes déjà lues (cache), sans appeler Mistral ; None si le document n'a pas été lu."""
+    """Lignes déjà lues (cache), sans appeler Mistral ; None si le document n'a pas été lu.
+
+    Parameters
+    ----------
+    path : Path
+        Chemin du document.
+
+    Returns
+    -------
+    list[dict[str, Any]] | None
+        Les lignes en cache (sans ajout du lien du document), ou None si le
+        cache est absent ou illisible.
+    """
 
     cached = cache_path(file_sha256(path))
     if not cached.exists():
@@ -245,11 +361,38 @@ def cached_rows(path: Path) -> list[dict[str, Any]] | None:
 # ---------------------------------------------------------------------------
 
 def approvals_path(directory: Path) -> Path:
+    """Donne le chemin du registre des documents validés d'un dossier.
+
+    Parameters
+    ----------
+    directory : Path
+        Dossier des fichiers partenaires.
+
+    Returns
+    -------
+    Path
+        Chemin de `_documents_valides.json` dans ce dossier.
+    """
     return directory / APPROVALS_FILE_NAME
 
 
 def approved_documents(directory: Path) -> dict[str, str]:
-    """{nom du fichier: empreinte acceptée}."""
+    """{nom du fichier: empreinte acceptée}.
+
+    Lit le registre des documents validés ; un registre illisible est journalisé
+    et traité comme vide (aucun document validé).
+
+    Parameters
+    ----------
+    directory : Path
+        Dossier des fichiers partenaires.
+
+    Returns
+    -------
+    dict[str, str]
+        Le nom de chaque document accepté et son empreinte ; vide si le registre
+        manque ou est illisible.
+    """
 
     path = approvals_path(directory)
     if not path.exists():
@@ -263,11 +406,40 @@ def approved_documents(directory: Path) -> dict[str, str]:
 
 
 def is_approved(path: Path) -> bool:
+    """Indique si ce document, dans sa version actuelle, a été validé.
+
+    Parameters
+    ----------
+    path : Path
+        Chemin du document.
+
+    Returns
+    -------
+    bool
+        True si son empreinte actuelle est celle inscrite au registre.
+    """
     return approved_documents(path.parent).get(path.name) == file_sha256(path)
 
 
 def approve_document(directory: Path, file_name: str, sha256: str) -> tuple[bool, str]:
-    """Inscrit un document accepté (nom et empreinte). Renvoie (fait ?, explication)."""
+    """Inscrit un document accepté (nom et empreinte). Renvoie (fait ?, explication).
+
+    Refuse si le fichier a disparu ou changé depuis la proposition.
+
+    Parameters
+    ----------
+    directory : Path
+        Dossier des fichiers partenaires.
+    file_name : str
+        Nom du document dans ce dossier.
+    sha256 : str
+        Empreinte du document au moment de la proposition.
+
+    Returns
+    -------
+    tuple[bool, str]
+        True si le registre a été mis à jour, et un message lisible.
+    """
 
     target = directory / file_name
     if not target.is_file():
@@ -282,4 +454,16 @@ def approve_document(directory: Path, file_name: str, sha256: str) -> tuple[bool
 
 
 def is_document(path: Path) -> bool:
+    """Indique si le fichier est un document à lire par Mistral (PDF ou Word).
+
+    Parameters
+    ----------
+    path : Path
+        Chemin du fichier.
+
+    Returns
+    -------
+    bool
+        True pour une extension .pdf ou .docx.
+    """
     return path.suffix.lower() in DOCUMENT_EXTENSIONS

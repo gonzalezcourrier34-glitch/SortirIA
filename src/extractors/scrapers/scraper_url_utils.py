@@ -30,7 +30,24 @@ IGNORED_URL_FRAGMENTS: tuple[str, ...] = (
 
 
 def make_absolute_url(value: Any, page_url: Any, canonicalize: bool = False) -> str:
-    """Transforme une URL relative en URL HTTP valide."""
+    """Transforme une URL relative en URL HTTP valide.
+
+    Les entités HTML (`&amp;`) sont décodées avant la résolution.
+
+    Parameters
+    ----------
+    value : Any
+        URL lue dans la page, relative ou absolue.
+    page_url : Any
+        URL de la page qui sert de base.
+    canonicalize : bool
+        Canonise l'URL obtenue. Par défaut False.
+
+    Returns
+    -------
+    str
+        L'URL absolue HTTP(S), ou une chaîne vide si elle est invalide.
+    """
 
     raw_url = html.unescape(normalize_value(value))
     if not raw_url:
@@ -48,14 +65,39 @@ def make_absolute_url(value: Any, page_url: Any, canonicalize: bool = False) -> 
 
 
 def is_same_origin(url_a: str, url_b: str) -> bool:
-    """Vérifie que deux URL appartiennent à la même origine."""
+    """Vérifie que deux URL appartiennent à la même origine.
+
+    Parameters
+    ----------
+    url_a : str
+        Première URL.
+    url_b : str
+        Seconde URL.
+
+    Returns
+    -------
+    bool
+        Vrai si le schéma et l'hôte (port compris) sont identiques, sans tenir
+        compte de la casse.
+    """
 
     first, second = urlsplit(url_a), urlsplit(url_b)
     return (first.scheme.lower(), first.netloc.lower()) == (second.scheme.lower(), second.netloc.lower())
 
 
 def normalize_pattern_list(value: Any) -> list[str]:
-    """Normalise une liste de motifs."""
+    """Normalise une liste de motifs.
+
+    Parameters
+    ----------
+    value : Any
+        Un motif seul ou une liste de motifs.
+
+    Returns
+    -------
+    list[str]
+        Les motifs non vides en minuscules ; vide si la valeur est inattendue.
+    """
 
     values = [value] if isinstance(value, str) else value
     if not isinstance(values, (list, tuple, set)):
@@ -65,8 +107,29 @@ def normalize_pattern_list(value: Any) -> list[str]:
 
 
 def is_probable_article_url(article_url: str, listing_url: str, source: Mapping[str, Any]) -> bool:
-    """Vérifie qu'une URL ressemble à un article."""
+    """Vérifie qu'une URL ressemble à un article.
 
+    Écarte les URL hors origine (sauf `same_origin_only: false`), les pages de
+    service (tags, auteurs, recherche, contact...), celles qui ne passent pas
+    les motifs `include_url_patterns` / `exclude_url_patterns`, et celles
+    interdites par robots.txt quand il est respecté.
+
+    Parameters
+    ----------
+    article_url : str
+        URL candidate, déjà absolue.
+    listing_url : str
+        URL de la page de liste où le lien a été trouvé.
+    source : Mapping[str, Any]
+        Configuration de la source (motifs, origine, robots.txt).
+
+    Returns
+    -------
+    bool
+        Vrai si l'URL peut être téléchargée comme article.
+    """
+
+    # Écarter les URL invalides, hors origine ou de pages de service
     if not is_valid_http_url(article_url):
         return False
 
@@ -76,6 +139,7 @@ def is_probable_article_url(article_url: str, listing_url: str, source: Mapping[
     if any(fragment in urlsplit(article_url).path.lower() for fragment in IGNORED_URL_FRAGMENTS):
         return False
 
+    # Appliquer les motifs d'inclusion et d'exclusion de la source
     include_patterns = normalize_pattern_list(source.get("include_url_patterns"))
     exclude_patterns = normalize_pattern_list(source.get("exclude_url_patterns"))
 
@@ -85,16 +149,39 @@ def is_probable_article_url(article_url: str, listing_url: str, source: Mapping[
     if any(pattern in article_url.lower() for pattern in exclude_patterns):
         return False
 
+    # Vérifier robots.txt en dernier, c'est le contrôle le plus coûteux
     respect_robots, _ = get_scraper_http_options(source)
     return not respect_robots or is_url_allowed_by_robots(article_url)
 
 
 def discover_article_links(client: httpx.Client, source: Mapping[str, Any], maximum_articles: int) -> list[str]:
-    """Découvre les URL d'articles."""
+    """Découvre les URL d'articles.
+
+    Pour chaque page de départ (`start_urls`, sinon `base_url`) : sans
+    sélecteur `article`, la page elle-même est l'article ; sinon, elle est
+    téléchargée et les liens des blocs `article` (sélecteur `link`, par défaut
+    `a[href]`) sont filtrés par `is_probable_article_url`. Une page de liste
+    en erreur est sautée ; un sélecteur CSS invalide arrête la découverte.
+
+    Parameters
+    ----------
+    client : httpx.Client
+        Session HTTP partagée.
+    source : Mapping[str, Any]
+        Configuration de la source (pages de départ, sélecteurs, options).
+    maximum_articles : int
+        Nombre de liens au-delà duquel la recherche s'arrête.
+
+    Returns
+    -------
+    list[str]
+        Les URL d'articles canonisées, sans doublon, dans l'ordre de découverte.
+    """
 
     from bs4 import BeautifulSoup, Tag
     from soupsieve import SelectorSyntaxError
 
+    # Lire les pages de départ, les sélecteurs et les options HTTP
     raw_start_urls = source.get("start_urls") or source.get("base_url") or []
     start_urls = [raw_start_urls] if isinstance(raw_start_urls, str) else raw_start_urls
 
@@ -114,6 +201,7 @@ def discover_article_links(client: httpx.Client, source: Mapping[str, Any], maxi
     links: list[str] = []
     seen: set[str] = set()
 
+    # Parcourir chaque page de départ autorisée
     for start_url in start_urls:
         listing_url = canonicalize_url(start_url)
         if not listing_url:
@@ -128,6 +216,7 @@ def discover_article_links(client: httpx.Client, source: Mapping[str, Any], maxi
                 links.append(listing_url)
             continue
 
+        # Télécharger la page de liste et repérer les blocs d'articles
         try:
             raw_html, final_url = get_html(client, listing_url, respect_robots, delay)
         except ScraperPageError:
@@ -141,6 +230,7 @@ def discover_article_links(client: httpx.Client, source: Mapping[str, Any], maxi
         except SelectorSyntaxError:
             return links
 
+        # Collecter les liens de chaque bloc, filtrés et dédoublonnés
         for container in containers:
             if not isinstance(container, Tag):
                 continue

@@ -44,8 +44,19 @@ def conform_to_schema(event: Event) -> Event:
       venu d'un PDF ou d'un fichier partenaire ne doit pas bloquer la nuit ;
     - prix minimum au-dessus du maximum : échangés ; fin avant le début : fin oubliée ;
     - publics inconnus : retirés ; statut ou présence inconnus : valeur par défaut.
+
+    Parameters
+    ----------
+    event : Event
+        L'événement à corriger, modifié sur place.
+
+    Returns
+    -------
+    Event
+        Le même événement, corrigé.
     """
 
+    # Âges : hors bornes ou incohérents, ils sont oubliés
     ages = [age if isinstance(age, int) and 0 <= age <= MAX_AGE else None for age in (event.age_min, event.age_max)]
     if ages[0] is not None and ages[1] is not None and ages[0] > ages[1]:
         ages = [None, None]
@@ -58,6 +69,7 @@ def conform_to_schema(event: Event) -> Event:
     start, end = parse_event_datetime(event.start_at), parse_event_datetime(event.end_at)
     if start is not None and end is not None and end < start:
         event.end_at = ""
+    # Publics, statut et mode de présence ramenés aux listes de la base
     event.audiences = sorted({str(a) for a in (event.audiences or []) if str(a) in KNOWN_AUDIENCES})
     if event.status not in KNOWN_STATUSES:
         event.status = "programme"
@@ -82,6 +94,18 @@ def is_past(event: Event, now: datetime | None = None) -> bool:
     On regarde la fin si elle existe, sinon le début. Un événement sans heure
     connue reste visible toute la journée : « ce soir » ne doit pas disparaître
     à minuit une.
+
+    Parameters
+    ----------
+    event : Event
+        L'événement à examiner.
+    now : datetime or None
+        Heure de référence. Par défaut, l'heure courante à Paris.
+
+    Returns
+    -------
+    bool
+        Vrai si l'événement est fini ; faux s'il n'a pas de date lisible.
     """
 
     now = now or datetime.now(PARIS)
@@ -94,8 +118,26 @@ def is_past(event: Event, now: datetime | None = None) -> bool:
 
 
 def validate_event(event: Event, now: datetime | None = None) -> tuple[bool, str]:
-    """Vérifie un événement. Renvoie (True, "") ou (False, motif du refus)."""
+    """Vérifie un événement. Renvoie (True, "") ou (False, motif du refus).
 
+    Les règles sont appliquées dans l'ordre ; le premier refus donne le motif
+    (une des constantes `REASON_...`).
+
+    Parameters
+    ----------
+    event : Event
+        L'événement à vérifier.
+    now : datetime or None
+        Heure de référence pour écarter les événements passés. Par défaut,
+        l'heure courante.
+
+    Returns
+    -------
+    tuple[bool, str]
+        (True, "") si l'événement est exploitable, sinon (False, motif).
+    """
+
+    # Titre, annulation, et ce qui n'est pas une sortie de loisir
     if not event.title.strip():
         return False, REASON_MISSING_TITLE
     if event.status in CANCELLED_STATUSES:
@@ -114,6 +156,7 @@ def validate_event(event: Event, now: datetime | None = None) -> tuple[bool, str
     if not event.start_at:
         return False, REASON_MISSING_START
 
+    # Dates lisibles et dans le bon ordre
     start = parse_event_datetime(event.start_at)
     if start is None:
         return False, REASON_INVALID_START
@@ -121,6 +164,7 @@ def validate_event(event: Event, now: datetime | None = None) -> tuple[bool, str
     if end is not None and end < start:
         return False, REASON_END_BEFORE_START
 
+    # Lieu, lien et événement pas encore terminé
     if not (event.city or event.venue_name or event.address):
         return False, REASON_MISSING_PLACE
     if not is_valid_http_url(event.url):

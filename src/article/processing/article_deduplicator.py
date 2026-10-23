@@ -24,11 +24,28 @@ logger = get_logger(__name__)
 # Construction des clés
 
 def get_article_duplicate_keys(article: Mapping[str, Any]) -> set[str]:
-    """Construit les clés stables utilisées pour détecter les doublons."""
+    """Construit les clés stables utilisées pour détecter les doublons.
+
+    Trois clés possibles, préfixées par le rôle de l'article : son identifiant,
+    son URL canonique, et une empreinte MD5 de (rôle, source, titre, jour de
+    publication). Deux articles qui partagent une clé sont des doublons.
+
+    Parameters
+    ----------
+    article : Mapping[str, Any]
+        L'article dont on calcule les clés.
+
+    Returns
+    -------
+    set[str]
+        Les clés trouvées ; vide si l'article n'est pas un Mapping ou n'a ni
+        identifiant, ni URL, ni titre.
+    """
 
     if not isinstance(article, Mapping):
         return set()
 
+    # Lire les champs qui identifient l'article
     duplicate_keys: set[str] = set()
     role = get_article_role(article)
     role_prefix = f"{role}:" if role else ""
@@ -39,6 +56,7 @@ def get_article_duplicate_keys(article: Mapping[str, Any]) -> set[str]:
     title = normalize_whitespace(article.get("title")).casefold()
     published_day = normalize_whitespace(article.get("published_at"))[:10]
 
+    # Une clé par identifiant disponible : id, URL, empreinte du titre
     if article_id:
         duplicate_keys.add(f"{role_prefix}id:{article_id}")
 
@@ -63,7 +81,25 @@ def is_duplicate_article(
     article: Mapping[str, Any],
     seen_keys: set[str]
 ) -> bool:
-    """Vérifie si un article a déjà été rencontré."""
+    """Vérifie si un article a déjà été rencontré.
+
+    Parameters
+    ----------
+    article : Mapping[str, Any]
+        L'article à tester.
+    seen_keys : set[str]
+        Les clés des articles déjà enregistrés.
+
+    Returns
+    -------
+    bool
+        True si l'une des clés de l'article est déjà connue.
+
+    Raises
+    ------
+    TypeError
+        Si `article` n'est pas un Mapping ou `seen_keys` pas un ensemble.
+    """
 
     if not isinstance(article, Mapping):
         raise TypeError("article doit être une structure de type Mapping.")
@@ -77,7 +113,20 @@ def register_article(
     article: Mapping[str, Any],
     seen_keys: set[str]
 ) -> None:
-    """Enregistre les clés d'un article déjà traité."""
+    """Enregistre les clés d'un article déjà traité.
+
+    Parameters
+    ----------
+    article : Mapping[str, Any]
+        L'article traité.
+    seen_keys : set[str]
+        Les clés connues, complétées sur place.
+
+    Raises
+    ------
+    TypeError
+        Si `article` n'est pas un Mapping ou `seen_keys` pas un ensemble.
+    """
 
     if not isinstance(article, Mapping):
         raise TypeError("article doit être une structure de type Mapping.")
@@ -90,8 +139,31 @@ def register_article(
 # Déduplication d'une collection
 
 def deduplicate_articles(articles: list[Any]) -> list[dict[str, Any]]:
-    """Supprime les doublons en conservant leur dernière version."""
+    """Supprime les doublons en conservant leur dernière version.
 
+    La dernière version d'un groupe de doublons prend la place du premier
+    article du groupe ; les clés du groupe sont fusionnées, si bien qu'un
+    article qui relie deux groupes (même URL que l'un, même titre que l'autre)
+    les réunit.
+
+    Parameters
+    ----------
+    articles : list[Any]
+        Les articles, qui doivent tous être des Mapping.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Les articles uniques (copies), dans l'ordre de première apparition.
+
+    Raises
+    ------
+    TypeError
+        Si `articles` n'est pas une liste ou contient un élément qui n'est pas
+        un Mapping.
+    """
+
+    # Vérifier l'entrée : une liste d'articles tous normalisés
     if not isinstance(articles, list):
         raise TypeError("articles doit être une liste.")
 
@@ -111,6 +183,8 @@ def deduplicate_articles(articles: list[Any]) -> list[dict[str, Any]]:
             f"{invalid_indexes[:10]}."
         )
 
+    # Parcourir les articles : un nouvel article prend une place, un doublon
+    # remplace la version gardée et fusionne les groupes qu'il relie
     unique_articles: list[dict[str, Any] | None] = []
     keys_by_index: list[set[str]] = []
     index_by_key: dict[str, int] = {}
@@ -151,6 +225,7 @@ def deduplicate_articles(articles: list[Any]) -> list[dict[str, Any]]:
         for key in keys_by_index[article_index]:
             index_by_key[key] = article_index
 
+    # Retirer les places libérées par les fusions
     deduplicated_articles = [
         article
         for article in unique_articles

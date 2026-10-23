@@ -26,7 +26,23 @@ ScraperArticleValidator = Callable[
 
 @dataclass(frozen=True, slots=True)
 class ScraperAdapter:
-    """Décrit le comportement propre à un scraper HTML."""
+    """Décrit le comportement propre à un scraper HTML.
+
+    Attributes
+    ----------
+    source_id : str
+        Identifiant de la source ; ne peut pas être vide.
+    default_name : str
+        Nom affiché ; vide, il reprend `source_id`.
+    iter_items : ScraperIterator
+        Renvoie les éléments bruts de la page (ou des pages) à lire.
+    build_article : ScraperArticleBuilder
+        Transforme un élément en article standard.
+    validate_item : ScraperItemValidator | None
+        Validation d'un élément avant construction. Par défaut aucune.
+    validate_article : ScraperArticleValidator | None
+        Validation propre de l'article construit. Par défaut aucune.
+    """
 
     source_id: str
     default_name: str
@@ -36,7 +52,16 @@ class ScraperAdapter:
     validate_article: ScraperArticleValidator | None = None
 
     def __post_init__(self) -> None:
-        """Normalise et valide l'adaptateur."""
+        """Normalise et valide l'adaptateur.
+
+        Raises
+        ------
+        ValueError
+            Si `source_id` est vide.
+        TypeError
+            Si une fonction obligatoire n'est pas appelable, ou si une fonction
+            facultative n'est ni appelable ni `None`.
+        """
 
         source_id = normalize_value(self.source_id)
         default_name = normalize_value(self.default_name) or source_id

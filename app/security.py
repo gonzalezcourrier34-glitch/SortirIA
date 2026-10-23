@@ -46,7 +46,8 @@ def require_api_key(api_key: str | None = Security(api_key_header)) -> str:
     Parameters
     ----------
     api_key : str | None
-        Clé API transmise par le client dans le header HTTP.
+        Clé API transmise par le client dans le header HTTP `x-api-key`,
+        injectée par FastAPI ; `None` si le header est absent.
 
     Returns
     -------
@@ -56,9 +57,11 @@ def require_api_key(api_key: str | None = Security(api_key_header)) -> str:
     Raises
     ------
     HTTPException
-        401 Unauthorized si la clé API est absente ou invalide.
+        500 Internal Server Error si la clé du serveur (`API_KEY`) n'est pas
+        configurée ; 401 Unauthorized si la clé API est absente ou invalide.
     """
     
+    # Refuser tout si le serveur n'a pas de clé : mieux vaut une erreur qu'une API ouverte
     if not API_KEY:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

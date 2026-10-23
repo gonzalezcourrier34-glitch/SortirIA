@@ -110,7 +110,19 @@ URL_CREDENTIALS_PATTERN = re.compile(
 # Validation des domaines
 
 def normalize_hostname(hostname: str) -> str:
-    """Normalise et valide un nom d'hôte ou une adresse IP."""
+    """Normalise et valide un nom d'hôte ou une adresse IP.
+
+    Parameters
+    ----------
+    hostname : str
+        Le nom d'hôte ou l'adresse IP à contrôler.
+
+    Returns
+    -------
+    str
+        L'adresse IP compressée, ou le domaine en minuscules et en IDNA ;
+        vide si le nom est invalide (étiquette mal formée, plus de 253 caractères).
+    """
 
     normalized_hostname = hostname.strip().rstrip(".").casefold()
 
@@ -129,6 +141,7 @@ def normalize_hostname(hostname: str) -> str:
     except UnicodeError:
         return ""
 
+    # Vérifie la longueur totale puis chaque étiquette du domaine.
     if len(ascii_hostname) > 253:
         return ""
 
@@ -144,8 +157,24 @@ def normalize_hostname(hostname: str) -> str:
 
 
 def parse_http_url(url: Any) -> ParseResult | None:
-    """Analyse une URL HTTP ou HTTPS absolue valide."""
+    """Analyse une URL HTTP ou HTTPS absolue valide.
 
+    Sont refusés : les caractères de contrôle, espaces et barres obliques
+    inverses, les schémas autres que http(s), les identifiants intégrés, les
+    noms d'hôte invalides et les ports hors de 1 à 65535.
+
+    Parameters
+    ----------
+    url : Any
+        La valeur à analyser ; tout ce qui n'est pas une chaîne est refusé.
+
+    Returns
+    -------
+    ParseResult | None
+        L'URL découpée par `urlparse`, ou None si elle n'est pas valide.
+    """
+
+    # Écarter les valeurs vides et les caractères interdits
     if not isinstance(url, str):
         return None
 
@@ -160,6 +189,7 @@ def parse_http_url(url: Any) -> ParseResult | None:
     ):
         return None
 
+    # Découper l'URL et exiger un schéma http(s) et un hôte
     try:
         parsed_url = urlparse(normalized_url)
     except (TypeError, ValueError):
@@ -177,6 +207,7 @@ def parse_http_url(url: Any) -> ParseResult | None:
     if parsed_url.username is not None or parsed_url.password is not None:
         return None
 
+    # Contrôler le nom d'hôte et le port
     if not normalize_hostname(parsed_url.hostname):
         return None
 
@@ -192,7 +223,18 @@ def parse_http_url(url: Any) -> ParseResult | None:
 
 
 def is_valid_http_url(url: Any) -> bool:
-    """Indique si une valeur est une URL HTTP ou HTTPS absolue valide."""
+    """Indique si une valeur est une URL HTTP ou HTTPS absolue valide.
+
+    Parameters
+    ----------
+    url : Any
+        La valeur à contrôler.
+
+    Returns
+    -------
+    bool
+        Vrai si `parse_http_url` l'accepte.
+    """
 
     return parse_http_url(url) is not None
 
@@ -204,7 +246,23 @@ def build_normalized_netloc(
     scheme: str,
     port: int | None
 ) -> str:
-    """Construit une autorité réseau normalisée."""
+    """Construit une autorité réseau normalisée.
+
+    Parameters
+    ----------
+    hostname : str
+        Le nom d'hôte ou l'adresse IP.
+    scheme : str
+        Le schéma en minuscules, pour reconnaître le port standard.
+    port : int | None
+        Le port explicite, ou None.
+
+    Returns
+    -------
+    str
+        « hôte » ou « hôte:port » (IPv6 entre crochets, ports 80 et 443
+        standards retirés) ; vide si l'hôte est invalide.
+    """
 
     normalized_hostname = normalize_hostname(hostname)
 
@@ -232,8 +290,22 @@ def build_normalized_netloc(
 
 
 def normalize_url(url: Any) -> str:
-    """Retourne une URL valide dont le schéma et le domaine sont normalisés."""
+    """Retourne une URL valide dont le schéma et le domaine sont normalisés.
 
+    Le chemin, les paramètres et le fragment sont gardés tels quels.
+
+    Parameters
+    ----------
+    url : Any
+        L'URL à normaliser.
+
+    Returns
+    -------
+    str
+        L'URL normalisée, ou une chaîne vide si elle est invalide.
+    """
+
+    # Valider l'URL et normaliser schéma, hôte et port
     parsed_url = parse_http_url(url)
 
     if parsed_url is None or parsed_url.hostname is None:
@@ -255,6 +327,7 @@ def normalize_url(url: Any) -> str:
     if not netloc:
         return ""
 
+    # Réassembler l'URL sans toucher au reste
     return urlunparse((
         scheme,
         netloc,
@@ -268,7 +341,19 @@ def normalize_url(url: Any) -> str:
 # Lecture des URL
 
 def get_url_domain(url: Any) -> str:
-    """Retourne le domaine normalisé d'une URL valide."""
+    """Retourne le domaine normalisé d'une URL valide.
+
+    Parameters
+    ----------
+    url : Any
+        L'URL à lire.
+
+    Returns
+    -------
+    str
+        Le domaine (ou l'adresse IP) normalisé, ou une chaîne vide si l'URL
+        est invalide.
+    """
 
     parsed_url = parse_http_url(url)
 
@@ -281,7 +366,18 @@ def get_url_domain(url: Any) -> str:
 # Détection des paramètres
 
 def is_tracking_query_parameter(parameter: str) -> bool:
-    """Indique si un paramètre appartient au suivi publicitaire."""
+    """Indique si un paramètre appartient au suivi publicitaire.
+
+    Parameters
+    ----------
+    parameter : str
+        Le nom du paramètre de requête.
+
+    Returns
+    -------
+    bool
+        Vrai s'il est dans `TRACKING_QUERY_PARAMETERS` ou commence par « utm_ ».
+    """
 
     normalized_parameter = parameter.strip().casefold()
 
@@ -292,7 +388,18 @@ def is_tracking_query_parameter(parameter: str) -> bool:
 
 
 def is_sensitive_query_parameter(parameter: str) -> bool:
-    """Indique si un paramètre peut contenir une information sensible."""
+    """Indique si un paramètre peut contenir une information sensible.
+
+    Parameters
+    ----------
+    parameter : str
+        Le nom du paramètre de requête.
+
+    Returns
+    -------
+    bool
+        Vrai s'il est dans `SENSITIVE_QUERY_PARAMETERS` (clé, jeton, mot de passe...).
+    """
 
     return parameter.strip().casefold() in SENSITIVE_QUERY_PARAMETERS
 
@@ -300,7 +407,21 @@ def is_sensitive_query_parameter(parameter: str) -> bool:
 # Sécurisation des journaux
 
 def _sanitize_url_with_patterns(value: str) -> str:
-    """Masque les secrets dans une URL difficile à analyser."""
+    """Masque les secrets dans une URL difficile à analyser.
+
+    Repli par expressions régulières : identifiants avant « @ » et valeurs
+    des paramètres sensibles sont remplacés par « *** ».
+
+    Parameters
+    ----------
+    value : str
+        L'URL brute.
+
+    Returns
+    -------
+    str
+        L'URL avec les secrets masqués.
+    """
 
     sanitized_value = URL_CREDENTIALS_PATTERN.sub(
         rf"\1{REDACTED_URL_VALUE}@",
@@ -314,8 +435,24 @@ def _sanitize_url_with_patterns(value: str) -> str:
 
 
 def sanitize_url_for_logging(url: Any) -> str:
-    """Masque les informations sensibles avant journalisation."""
+    """Masque les informations sensibles avant journalisation.
 
+    Identifiants intégrés et valeurs des paramètres sensibles sont remplacés
+    par « *** ». Une URL qui ne se découpe pas proprement passe par le repli
+    à expressions régulières.
+
+    Parameters
+    ----------
+    url : Any
+        L'URL à journaliser.
+
+    Returns
+    -------
+    str
+        L'URL sans secret, ou une chaîne vide si elle est absente.
+    """
+
+    # Découper l'URL ; en cas d'échec, masquer par expressions régulières
     if url is None:
         return ""
 
@@ -337,6 +474,7 @@ def sanitize_url_for_logging(url: Any) -> str:
     if not hostname:
         return _sanitize_url_with_patterns(raw_url)
 
+    # Reconstruire l'autorité réseau sans les identifiants
     netloc = hostname
 
     # Encadre les adresses IPv6.
@@ -355,6 +493,7 @@ def sanitize_url_for_logging(url: Any) -> str:
     if parsed_url.username is not None or parsed_url.password is not None:
         netloc = f"{REDACTED_URL_VALUE}@{netloc}"
 
+    # Masquer les valeurs des paramètres sensibles, puis réassembler
     query_parameters = [
         (
             key,
@@ -383,8 +522,24 @@ def sanitize_url_for_logging(url: Any) -> str:
 # Canonicalisation
 
 def canonicalize_url(url: Any) -> str:
-    """Retourne une représentation stable pour la déduplication."""
+    """Retourne une représentation stable pour la déduplication.
 
+    Deux URL qui ne diffèrent que par la casse du domaine, le port standard,
+    les traceurs publicitaires, l'ordre des paramètres, la barre oblique
+    finale ou le fragment donnent le même résultat.
+
+    Parameters
+    ----------
+    url : Any
+        L'URL à canonicaliser.
+
+    Returns
+    -------
+    str
+        L'URL canonique, ou une chaîne vide si elle est invalide.
+    """
+
+    # Valider l'URL et normaliser schéma, hôte et port
     parsed_url = parse_http_url(url)
 
     if parsed_url is None or parsed_url.hostname is None:
@@ -430,6 +585,7 @@ def canonicalize_url(url: Any) -> str:
         doseq=True
     )
 
+    # Retirer la barre oblique finale et le fragment, puis réassembler
     path = parsed_url.path or "/"
 
     if path != "/":

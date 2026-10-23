@@ -88,19 +88,53 @@ SECTORS = ("animation", "soiree", "enfants", "culture", "sport", "autre")
 # ---------------------------------------------------------------------------
 
 def partner_key(value: Any) -> str:
-    """Clé de rapprochement fichier / configuration : « Saint-Louis » = « saint_louis »."""
+    """Clé de rapprochement fichier / configuration : « Saint-Louis » = « saint_louis ».
+
+    Parameters
+    ----------
+    value : Any
+        Nom de fichier ou nom déclaré.
+
+    Returns
+    -------
+    str
+        Le texte en minuscules réduit à ses lettres a-z et chiffres.
+    """
 
     return re.sub(r"[^a-z0-9]", "", normalize_value(value).casefold())
 
 
 def name_from_file(stem: str) -> str:
-    """Nom lisible tiré du nom de fichier : « bar_truc-muche » -> « Bar Truc Muche »."""
+    """Nom lisible tiré du nom de fichier : « bar_truc-muche » -> « Bar Truc Muche ».
+
+    Parameters
+    ----------
+    stem : str
+        Nom du fichier sans extension.
+
+    Returns
+    -------
+    str
+        Les mots séparés par des espaces, chacun avec une majuscule ; `stem` tel
+        quel s'il n'y a aucun mot.
+    """
 
     return " ".join(word.capitalize() for word in re.split(r"[_\-\s]+", stem) if word) or stem
 
 
 def declared_partners(source: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
-    """Réglages facultatifs de `partners` dans la configuration, par clé de fichier."""
+    """Réglages facultatifs de `partners` dans la configuration, par clé de fichier.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Configuration de la source (liste `partners`, chaque entrée avec `file`).
+
+    Returns
+    -------
+    dict[str, dict[str, Any]]
+        Les réglages de chaque partenaire, indexés par `partner_key(file)`.
+    """
 
     declared = {}
     for partner in source.get("partners") or []:
@@ -110,7 +144,21 @@ def declared_partners(source: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
 
 
 def partner_for_file(path: Path, source: Mapping[str, Any]) -> dict[str, Any]:
-    """Partenaire d'un fichier : son nom de fichier, complété par la configuration."""
+    """Partenaire d'un fichier : son nom de fichier, complété par la configuration.
+
+    Parameters
+    ----------
+    path : Path
+        Chemin du fichier du partenaire.
+    source : Mapping[str, Any]
+        Configuration de la source.
+
+    Returns
+    -------
+    dict[str, Any]
+        Les réglages déclarés, plus `file`, `name`, `sector` (« autre » si
+        inconnu), `formula` et `enabled` (vrai sauf `enabled: false` explicite).
+    """
 
     settings = declared_partners(source).get(partner_key(path.stem), {})
     sector = normalize_value(settings.get("sector")).lower()
@@ -125,7 +173,23 @@ def partner_for_file(path: Path, source: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def find_partner_files(directory: Path, source: Mapping[str, Any]) -> list[Path]:
-    """Fichiers de partenaires à la racine du dossier (sous-dossiers ignorés)."""
+    """Fichiers de partenaires à la racine du dossier (sous-dossiers ignorés).
+
+    Sont écartés : les extensions non prises en charge, les noms commençant par
+    « _ », « . » ou « ~$ », et les partenaires désactivés dans la configuration.
+
+    Parameters
+    ----------
+    directory : Path
+        Dossier des fichiers partenaires.
+    source : Mapping[str, Any]
+        Configuration de la source.
+
+    Returns
+    -------
+    list[Path]
+        Les fichiers à importer, triés par nom.
+    """
 
     files = []
     for path in sorted(directory.iterdir()):
@@ -141,7 +205,18 @@ def find_partner_files(directory: Path, source: Mapping[str, Any]) -> list[Path]
 
 
 def has_partner_files(source: Mapping[str, Any]) -> bool:
-    """Vrai si le dossier existe et contient au moins un fichier à importer (pour l'agent)."""
+    """Vrai si le dossier existe et contient au moins un fichier à importer (pour l'agent).
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Configuration de la source (clé `path`).
+
+    Returns
+    -------
+    bool
+        False aussi si le dossier est absent ou mal configuré.
+    """
 
     try:
         directory = resolve_dataset_directory(source, str(source.get("name", SOURCE_ID)))
@@ -155,6 +230,22 @@ def read_json_rows(path: Path) -> list[dict[str, Any]]:
 
     Exemples acceptés : `[{"titre": ...}, ...]` ou `{"evenements": [...]}`
     (les clés sont celles du modèle, comme les colonnes d'un tableur).
+
+    Parameters
+    ----------
+    path : Path
+        Chemin du fichier JSON (UTF-8, avec ou sans BOM).
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Les objets de la liste ; les éléments qui ne sont pas des objets sont
+        ignorés.
+
+    Raises
+    ------
+    ValueError
+        Si le fichier ne contient pas de liste (ou si le JSON est invalide).
     """
 
     data = json.loads(path.read_text(encoding="utf-8-sig"))
@@ -172,6 +263,19 @@ def read_table(path: Path) -> tuple[list[str], list[dict[str, Any]]]:
     UTF-8 avec ou sans BOM, sinon Windows-1252. Les cellules sont gardées telles quelles (dates
     Excel comprises) : `partner_mapper` se charge de les lire et de les
     nettoyer.
+
+    PDF et Word sont lus par Mistral (`read_document_rows`) ; leurs en-têtes sont
+    alors ceux du modèle partenaire.
+
+    Parameters
+    ----------
+    path : Path
+        Chemin du fichier (.xlsx, .xls, .csv, .json, .pdf ou .docx).
+
+    Returns
+    -------
+    tuple[list[str], list[dict[str, Any]]]
+        Les en-têtes normalisés, et les lignes indexées par ces en-têtes.
     """
 
     import pandas as pd
@@ -198,7 +302,18 @@ def read_table(path: Path) -> tuple[list[str], list[dict[str, Any]]]:
 
 
 def file_sha256(path: Path) -> str:
-    """Empreinte du fichier : un même fichier n'est compté qu'une fois en base."""
+    """Empreinte du fichier : un même fichier n'est compté qu'une fois en base.
+
+    Parameters
+    ----------
+    path : Path
+        Chemin du fichier.
+
+    Returns
+    -------
+    str
+        L'empreinte SHA-256 en hexadécimal.
+    """
 
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -214,8 +329,29 @@ def read_partner_file(path: Path, partner: Mapping[str, Any], today: Any = None,
     Le fichier est lu en entier avant de rendre ses lignes, pour joindre à
     chaque événement le bilan du fichier (lignes lues, gardées, refusées),
     enregistré ensuite dans `partner_imports`.
+
+    Parameters
+    ----------
+    path : Path
+        Chemin du fichier du partenaire.
+    partner : Mapping[str, Any]
+        Le partenaire (voir `partner_for_file`) : nom, secteur, lieu, commune...
+    today : Any
+        Date de référence pour écarter les séances passées ; par défaut
+        aujourd'hui à Paris.
+    require_approval : bool
+        Exiger la validation humaine d'un PDF ou Word avant de rendre ses
+        événements. Par défaut True ; `check_file` passe False.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Un élément par ligne utile : `{"event", "line"}` ou `{"rejected", "line"}`
+        (avec parfois `detail`). Un seul rejet si des colonnes obligatoires
+        manquent, ou si le document attend sa validation (avec un aperçu).
     """
 
+    # Lire le fichier et vérifier les colonnes obligatoires
     now = datetime.now(PARIS)
     today = today or now.date()
     updated_at = datetime.fromtimestamp(path.stat().st_mtime, PARIS).date().isoformat()
@@ -225,6 +361,7 @@ def read_partner_file(path: Path, partner: Mapping[str, Any], today: Any = None,
         logger.error("%s : colonnes obligatoires absentes : %s.", path.name, ", ".join(absent))
         return [{"rejected": REASON_MISSING_COLUMNS, "line": 1, "detail": ", ".join(absent)}]
 
+    # Convertir chaque ligne en événement, en rejet motivé, ou l'écarter (passée)
     document = is_document(path)
     items, reasons, past = [], Counter(), 0
     for number, row in enumerate(rows, start=1 if document else 2):   # tableur : ligne 1 = en-têtes
@@ -248,6 +385,7 @@ def read_partner_file(path: Path, partner: Mapping[str, Any], today: Any = None,
         else:
             past += 1
 
+    # Document pas encore validé : ne rien publier, rendre un aperçu à proposer
     kept = sum(1 for item in items if "event" in item)
     if document and require_approval and not is_approved(path):
         # Lu par Mistral mais pas encore validé : rien n'est publié ; l'agent
@@ -257,6 +395,7 @@ def read_partner_file(path: Path, partner: Mapping[str, Any], today: Any = None,
         return [{"rejected": REASON_TO_APPROVE, "line": 0,
                  "detail": f"{kept} séance(s) lue(s) par Mistral, à valider (uv run python -m agent.proposals)",
                  "preview": [item["event"] for item in items if "event" in item]}]
+    # Joindre à chaque événement le bilan du fichier (enregistré dans partner_imports)
     summary = {
         "name": partner.get("name"), "file": partner.get("file"), "sector": partner.get("sector"),
         "website": partner.get("website", ""), "sponsored_until": partner.get("sponsored_until"),
@@ -276,7 +415,23 @@ def read_partner_file(path: Path, partner: Mapping[str, Any], today: Any = None,
 
 
 def iter_partner_items(files: list[Path], source: Mapping[str, Any]) -> Iterator[tuple[str, int, dict[str, Any]]]:
-    """Éléments de tous les fichiers, au format du moteur : (identifiant, index, élément)."""
+    """Éléments de tous les fichiers, au format du moteur : (identifiant, index, élément).
+
+    Un fichier illisible donne un seul élément rejeté (`REASON_UNREADABLE_FILE`)
+    sans empêcher la lecture des autres.
+
+    Parameters
+    ----------
+    files : list[Path]
+        Fichiers retenus par `find_partner_files`.
+    source : Mapping[str, Any]
+        Configuration de la source.
+
+    Yields
+    ------
+    tuple[str, int, dict[str, Any]]
+        L'identifiant `fichier:L<ligne>`, le numéro de ligne et l'élément.
+    """
 
     for path in files:
         try:
@@ -290,7 +445,22 @@ def iter_partner_items(files: list[Path], source: Mapping[str, Any]) -> Iterator
 
 
 def validate_partner_item(item: Any, filters: Mapping[str, Any], source: Mapping[str, Any]) -> tuple[bool, str]:
-    """Une ligne refusée remonte au moteur avec son motif (compté dans le bilan)."""
+    """Une ligne refusée remonte au moteur avec son motif (compté dans le bilan).
+
+    Parameters
+    ----------
+    item : Any
+        Élément produit par `iter_partner_items`.
+    filters : Mapping[str, Any]
+        Filtres de la source (non utilisés).
+    source : Mapping[str, Any]
+        Configuration de la source (non utilisée).
+
+    Returns
+    -------
+    tuple[bool, str]
+        `(False, motif)` pour une ligne rejetée, sinon `(True, "")`.
+    """
 
     del filters, source
     if isinstance(item, Mapping) and item.get("rejected"):
@@ -299,7 +469,25 @@ def validate_partner_item(item: Any, filters: Mapping[str, Any], source: Mapping
 
 
 def build_partner_article(item: Mapping[str, Any], index: int, identifier: str, source: Mapping[str, Any]) -> dict[str, Any]:
-    """Transforme une ligne validée en « article » du moteur, événement inclus."""
+    """Transforme une ligne validée en « article » du moteur, événement inclus.
+
+    Parameters
+    ----------
+    item : Mapping[str, Any]
+        Élément validé, avec son `event` et sa `line`.
+    index : int
+        Position de l'élément (non utilisée).
+    identifier : str
+        Identifiant `fichier:L<ligne>`.
+    source : Mapping[str, Any]
+        Configuration de la source (nom, rôle).
+
+    Returns
+    -------
+    dict[str, Any]
+        L'article standard, avec l'URL propre à la séance et l'événement
+        sérialisé dans `metadata`.
+    """
 
     del index
     event = item["event"]
@@ -336,7 +524,13 @@ PARTNER_EXTRACTOR = DatasetExtractor(
 
 
 def extract_all_articles():
-    """Lit tous les fichiers des partenaires déclarés (point d'entrée du registre)."""
+    """Lit tous les fichiers des partenaires déclarés (point d'entrée du registre).
+
+    Returns
+    -------
+    ExtractorResult
+        Le résultat du moteur datasets pour la source « partenaire ».
+    """
 
     return PARTNER_EXTRACTOR.run()
 
@@ -346,7 +540,18 @@ def extract_all_articles():
 # ---------------------------------------------------------------------------
 
 def configured_partner(path: Path) -> dict[str, Any]:
-    """Partenaire d'un fichier d'après la configuration (sinon : son nom de fichier)."""
+    """Partenaire d'un fichier d'après la configuration (sinon : son nom de fichier).
+
+    Parameters
+    ----------
+    path : Path
+        Chemin du fichier.
+
+    Returns
+    -------
+    dict[str, Any]
+        Le partenaire ; une configuration illisible est journalisée et ignorée.
+    """
 
     try:
         return partner_for_file(path, PARTNER_EXTRACTOR.get_source())
@@ -360,8 +565,22 @@ def check_file(path: Path, partner: Mapping[str, Any] | None = None) -> str:
 
     Sans site déclaré pour ce partenaire dans la configuration, chaque ligne
     doit avoir son lien.
+
+    Parameters
+    ----------
+    path : Path
+        Chemin du fichier à vérifier.
+    partner : Mapping[str, Any] | None
+        Le partenaire ; par défaut celui déduit de la configuration.
+
+    Returns
+    -------
+    str
+        Le rapport sur plusieurs lignes : bilan, lignes à corriger avec leur
+        motif, puis un échantillon de séances prêtes (5, ou 50 pour un document).
     """
 
+    # Lire le fichier sans exiger de validation (aucune écriture en base)
     partner = partner or configured_partner(path)
     items = read_partner_file(path, partner, require_approval=False)
     kept = [item for item in items if "event" in item]
@@ -370,6 +589,7 @@ def check_file(path: Path, partner: Mapping[str, Any] | None = None) -> str:
     if is_document(path):
         state = "déjà validé" if is_approved(path) else "à valider avant import (proposition de l'agent)"
         lines[0] += f" Document lu par Mistral, {state}."
+    # Détailler les lignes à corriger, puis un échantillon des séances prêtes
     for item in rejected:
         detail = f" ({item['detail']})" if item.get("detail") else ""
         lines.append(f"  ligne {item['line']} : {item['rejected']}{detail}")
@@ -380,6 +600,11 @@ def check_file(path: Path, partner: Mapping[str, Any] | None = None) -> str:
 
 
 def main() -> None:
+    """Point d'entrée en ligne de commande.
+
+    Avec `--verifier`, affiche le rapport d'un fichier reçu ; sans option, lance
+    l'import complet et affiche son bilan.
+    """
     parser = argparse.ArgumentParser(description="Fichiers des partenaires SortirIA.")
     parser.add_argument("--verifier", type=Path, help="Vérifie un fichier reçu (aucune écriture en base).")
     args = parser.parse_args()

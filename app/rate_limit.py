@@ -35,9 +35,25 @@ MAX_TRACKED_KEYS = 10_000   # au-delà, les visiteurs les plus anciens sont oubl
 
 
 class SlidingWindowLimiter:
-    """Au plus `limit` appels par `window_s` secondes et par clé (fenêtre glissante)."""
+    """Au plus `limit` appels par `window_s` secondes et par clé (fenêtre glissante).
+
+    Chaque clé (adresse d'un visiteur, ou « tous » pour le plafond global) garde
+    l'heure de ses appels récents ; les plus anciennes sortent de la fenêtre au fil
+    du temps. Le compteur est protégé par un verrou : FastAPI exécute les
+    dépendances synchrones dans plusieurs fils.
+
+    Parameters
+    ----------
+    limit : int
+        Nombre d'appels permis dans la fenêtre ; 0 ou moins désactive la limite.
+    window_s : float
+        Durée de la fenêtre glissante, en secondes.
+    clock : Callable[[], float]
+        L'horloge utilisée ; par défaut `time.monotonic` (remplaçable dans les tests).
+    """
 
     def __init__(self, limit: int, window_s: float, clock: Callable[[], float] = time.monotonic) -> None:
+        """Prépare un compteur vide (paramètres : voir la classe)."""
         self.limit = limit
         self.window_s = window_s
         self.clock = clock
@@ -45,18 +61,35 @@ class SlidingWindowLimiter:
         self._lock = threading.Lock()
 
     def hit(self, key: str) -> float:
-        """Compte un appel. Renvoie 0 s'il est accepté, sinon les secondes à attendre."""
+        """Compte un appel. Renvoie 0 s'il est accepté, sinon les secondes à attendre.
+
+        Un appel refusé n'est pas compté. Au-delà de `MAX_TRACKED_KEYS` clés, les
+        moins récemment vues sont oubliées pour borner la mémoire.
+
+        Parameters
+        ----------
+        key : str
+            La clé à compter (adresse du visiteur, ou « tous »).
+
+        Returns
+        -------
+        float
+            0 si l'appel est accepté ; sinon les secondes à attendre (au moins 1).
+        """
 
         if self.limit <= 0:
             return 0.0
         now = self.clock()
         with self._lock:
+            # Retirer de la fenêtre les appels trop anciens
             calls = self._calls.pop(key, None) or deque()
             while calls and calls[0] <= now - self.window_s:
                 calls.popleft()
+            # Refuser si la limite est atteinte, sans compter l'appel
             if len(calls) >= self.limit:
                 self._calls[key] = calls
                 return max(calls[0] + self.window_s - now, 1.0)
+            # Accepter : noter l'appel, puis oublier les clés les plus anciennes
             calls.append(now)
             self._calls[key] = calls            # remis en fin : les plus récents restent
             while len(self._calls) > MAX_TRACKED_KEYS:
@@ -64,11 +97,26 @@ class SlidingWindowLimiter:
             return 0.0
 
     def reset(self) -> None:
+        """Oublie tous les appels comptés (utile entre deux tests)."""
         with self._lock:
             self._calls.clear()
 
 
 def env_int(name: str, default: int) -> int:
+    """Lit un entier dans une variable d'environnement.
+
+    Parameters
+    ----------
+    name : str
+        Nom de la variable (par exemple `LIMITE_RECHERCHES_MINUTE`).
+    default : int
+        Valeur utilisée si la variable est absente ou n'est pas un entier.
+
+    Returns
+    -------
+    int
+        L'entier lu, ou `default`.
+    """
     try:
         return int(os.getenv(name, str(default)))
     except ValueError:
@@ -86,7 +134,18 @@ ALL_LIMITERS = (SEARCH_PER_MINUTE, SEARCH_PER_HOUR, SEARCH_GLOBAL_PER_HOUR, WRIT
 
 
 def client_key(request: Request) -> str:
-    """Adresse du visiteur : première de `X-Forwarded-For`, sinon celle de la connexion."""
+    """Adresse du visiteur : première de `X-Forwarded-For`, sinon celle de la connexion.
+
+    Parameters
+    ----------
+    request : Request
+        La requête FastAPI reçue.
+
+    Returns
+    -------
+    str
+        L'adresse IP du visiteur, ou « inconnu » si elle n'est pas connue.
+    """
 
     forwarded = request.headers.get("x-forwarded-for", "")
     first = forwarded.split(",")[0].strip()
@@ -96,11 +155,36 @@ def client_key(request: Request) -> str:
 
 
 def refuse(wait_s: float, message: str) -> HTTPException:
+    """Construit la réponse 429 avec l'en-tête `Retry-After` (secondes arrondies au-dessus).
+
+    Parameters
+    ----------
+    wait_s : float
+        Secondes à attendre avant de réessayer.
+    message : str
+        Le message affiché au visiteur.
+
+    Returns
+    -------
+    HTTPException
+        L'exception 429, à lever par l'appelant.
+    """
     return HTTPException(status_code=429, detail=message, headers={"Retry-After": str(int(wait_s + 0.999))})
 
 
 def limit_search(request: Request) -> None:
-    """Dépendance FastAPI de la recherche : par visiteur, puis pour tout le service."""
+    """Dépendance FastAPI de la recherche : par visiteur, puis pour tout le service.
+
+    Parameters
+    ----------
+    request : Request
+        La requête FastAPI reçue.
+
+    Raises
+    ------
+    HTTPException
+        Code 429 si le visiteur ou le service a dépassé sa limite.
+    """
 
     key = client_key(request)
     for limiter in (SEARCH_PER_MINUTE, SEARCH_PER_HOUR):
@@ -113,7 +197,18 @@ def limit_search(request: Request) -> None:
 
 
 def limit_writes(request: Request) -> None:
-    """Avis et pouces : par visiteur."""
+    """Dépendance FastAPI des écritures (avis et pouces) : limite par visiteur.
+
+    Parameters
+    ----------
+    request : Request
+        La requête FastAPI reçue.
+
+    Raises
+    ------
+    HTTPException
+        Code 429 si le visiteur a dépassé sa limite.
+    """
 
     wait = WRITES_PER_MINUTE.hit(client_key(request))
     if wait:
@@ -121,7 +216,18 @@ def limit_writes(request: Request) -> None:
 
 
 def limit_reads(request: Request) -> None:
-    """Lectures (détail, sources, partenaires) : par visiteur, plafond large."""
+    """Dépendance FastAPI des lectures (détail, sources, partenaires) : par visiteur, plafond large.
+
+    Parameters
+    ----------
+    request : Request
+        La requête FastAPI reçue.
+
+    Raises
+    ------
+    HTTPException
+        Code 429 si le visiteur a dépassé sa limite.
+    """
 
     wait = READS_PER_MINUTE.hit(client_key(request))
     if wait:

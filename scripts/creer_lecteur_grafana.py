@@ -33,7 +33,19 @@ SCHEMA = "sortiria"
 
 
 def grant_statements(database: str) -> list[str]:
-    """Droits du compte : se connecter, lire le schéma, et rien d'autre."""
+    """Droits du compte : se connecter, lire le schéma, et rien d'autre.
+
+    Parameters
+    ----------
+    database : str
+        Le nom de la base sur laquelle accorder la connexion.
+
+    Returns
+    -------
+    list[str]
+        Les requêtes SQL à exécuter : connexion, lecture du schéma (y compris
+        les tables futures), délai maximal de 30 s et transactions en lecture seule.
+    """
 
     return [
         f'GRANT CONNECT ON DATABASE "{database}" TO {ROLE}',
@@ -53,8 +65,23 @@ def scram_sha256(password: str, iterations: int = 4096, salt: bytes | None = Non
     Le mot de passe en clair n'est jamais envoyé au serveur : seule cette
     empreinte part dans `ALTER ROLE … PASSWORD`, et c'est elle qui apparaîtrait
     dans un journal des requêtes (calcul de la RFC 5802, comme `psql \\password`).
+
+    Parameters
+    ----------
+    password : str
+        Le mot de passe en clair.
+    iterations : int
+        Le nombre d'itérations PBKDF2. Par défaut 4096, comme PostgreSQL.
+    salt : bytes | None
+        Le sel ; par défaut, 16 octets aléatoires (le fixer sert aux tests).
+
+    Returns
+    -------
+    str
+        L'empreinte « SCRAM-SHA-256$itérations:sel$StoredKey:ServerKey ».
     """
 
+    # Dériver la clé salée, puis les clés client, stockée et serveur
     salt = salt if salt is not None else secrets.token_bytes(16)
     salted = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iterations)
     client_key = hmac.new(salted, b"Client Key", hashlib.sha256).digest()
@@ -62,13 +89,25 @@ def scram_sha256(password: str, iterations: int = 4096, salt: bytes | None = Non
     server_key = hmac.new(salted, b"Server Key", hashlib.sha256).digest()
 
     def b64(data: bytes) -> str:
+        """Encode des octets en base64 ASCII."""
         return base64.b64encode(data).decode("ascii")
 
     return f"SCRAM-SHA-256${iterations}:{b64(salt)}${b64(stored_key)}:{b64(server_key)}"
 
 
 def create_reader(connection: Any, password: str) -> None:
-    """Crée le compte s'il manque, fixe son mot de passe et ses droits."""
+    """Crée le compte s'il manque, fixe son mot de passe et ses droits.
+
+    Peut être relancé sans risque : le compte existant est gardé, seuls son
+    mot de passe et ses droits sont remis.
+
+    Parameters
+    ----------
+    connection : Any
+        Une connexion psycopg2 d'administration, en mode autocommit.
+    password : str
+        Le mot de passe en clair ; seule son empreinte SCRAM est envoyée.
+    """
 
     with connection.cursor() as cursor:
         cursor.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", (ROLE,))
@@ -82,14 +121,25 @@ def create_reader(connection: Any, password: str) -> None:
 
 
 def main() -> None:
+    """Demande le mot de passe au clavier puis crée ou met à jour le compte.
+
+    Raises
+    ------
+    SystemExit
+        Si les deux saisies diffèrent ou si le mot de passe a moins de
+        12 caractères.
+    """
+    # Charger l'environnement (DATABASE_URL d'administration)
     from config.environment import load_environment
 
     load_environment()
     import psycopg2
 
+    # Saisir deux fois le mot de passe, sans écho
     password = getpass.getpass(f"Mot de passe du compte {ROLE} : ")
     if len(password) < 12 or password != getpass.getpass("Encore une fois : "):
         raise SystemExit("Mots de passe différents, ou moins de 12 caractères : rien n'a été fait.")
+    # Créer le compte et ses droits, puis fermer la connexion quoi qu'il arrive
     connection = psycopg2.connect(os.environ["DATABASE_URL"])
     try:
         connection.autocommit = True

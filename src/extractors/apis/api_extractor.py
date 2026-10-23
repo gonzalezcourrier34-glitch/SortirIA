@@ -107,7 +107,11 @@ _API_REQUEST_ERRORS: ContextVar[tuple[str, ...]] = ContextVar(
 # Exceptions propres aux API
 
 class ApiExtractionStoppedError(RuntimeError):
-    """Demande l'arrêt immédiat de l'extracteur API courant."""
+    """Demande l'arrêt immédiat de l'extracteur API courant.
+
+    Classe mère des erreurs qui rendent inutile la suite des requêtes
+    (clé refusée, quota épuisé, paramètres invalides, maintenance...).
+    """
 
     def __init__(
         self,
@@ -115,6 +119,17 @@ class ApiExtractionStoppedError(RuntimeError):
         reason: str,
         status_code: int | None = None
     ) -> None:
+        """Mémorise la source, le motif et le code HTTP de l'arrêt.
+
+        Parameters
+        ----------
+        source_name : str
+            Nom de la source ; « API inconnue » s'il est vide.
+        reason : str
+            Motif de l'arrêt ; un texte par défaut s'il est vide.
+        status_code : int | None
+            Code HTTP de la réponse, s'il est connu. Par défaut `None`.
+        """
         self.source_name = normalize_value(source_name) or "API inconnue"
         self.reason = normalize_value(reason) or "Erreur API non communiquée"
         self.status_code = status_code
@@ -146,7 +161,11 @@ class ApiMaintenanceError(ApiExtractionStoppedError):
 
         
 class ApiRequestError(RuntimeError):
-    """Signale l'échec non fatal d'une requête API isolée."""
+    """Signale l'échec non fatal d'une requête API isolée.
+
+    Contrairement à `ApiExtractionStoppedError`, l'extraction continue avec
+    les requêtes suivantes.
+    """
 
     def __init__(
         self,
@@ -155,6 +174,19 @@ class ApiRequestError(RuntimeError):
         status_code: int | None = None,
         parameters: Mapping[str, Any] | None = None
     ) -> None:
+        """Mémorise la source, le motif, le code HTTP et les paramètres de la requête.
+
+        Parameters
+        ----------
+        source_name : str
+            Nom de la source ; « API inconnue » s'il est vide.
+        reason : str
+            Motif de l'échec ; un texte par défaut s'il est vide.
+        status_code : int | None
+            Code HTTP de la réponse, s'il est connu. Par défaut `None`.
+        parameters : Mapping[str, Any] | None
+            Paramètres de la requête en échec, copiés. Par défaut `None`.
+        """
         self.source_name = normalize_value(source_name) or "API inconnue"
         self.reason = normalize_value(reason) or "Erreur API non communiquée"
         self.status_code = status_code
@@ -165,8 +197,24 @@ class ApiRequestError(RuntimeError):
 # Normalisation des erreurs API
 
 def normalize_api_error_message(value: Any) -> str:
-    """Transforme une réponse d'erreur API en texte exploitable."""
+    """Transforme une réponse d'erreur API en texte exploitable.
 
+    Les champs usuels (`code`, `message`, `detail`, `errors`...) sont lus
+    récursivement ; les mots génériques (« error », « failed ») ne sont gardés
+    que faute de mieux.
+
+    Parameters
+    ----------
+    value : Any
+        Corps d'erreur : dictionnaire, liste ou valeur simple.
+
+    Returns
+    -------
+    str
+        Les morceaux de message, sans doublon, séparés par « | ».
+    """
+
+    # Dictionnaire : parcourir les champs connus, détail avant générique
     if isinstance(value, Mapping):
         detailed_parts: list[str] = []
         generic_parts: list[str] = []
@@ -204,6 +252,7 @@ def normalize_api_error_message(value: Any) -> str:
         parts = detailed_parts or generic_parts
         return " | ".join(dict.fromkeys(parts))
 
+    # Collection : concaténer les messages de chaque élément
     if isinstance(value, (list, tuple, set)):
         parts = [normalize_api_error_message(item) for item in value]
         return " | ".join(dict.fromkeys(part for part in parts if part))
@@ -211,7 +260,19 @@ def normalize_api_error_message(value: Any) -> str:
     return normalize_value(value)
 
 def extract_api_error_codes(value: Any) -> set[str]:
-    """Extrait récursivement les codes machine d'une erreur API."""
+    """Extrait récursivement les codes machine d'une erreur API.
+
+    Parameters
+    ----------
+    value : Any
+        Corps d'erreur : dictionnaire, liste ou valeur simple.
+
+    Returns
+    -------
+    set[str]
+        Les valeurs des champs de type code (`code`, `status`, `type`...), en
+        majuscules, tirets et espaces remplacés par « _ ».
+    """
 
     codes: set[str] = set()
 
@@ -247,7 +308,21 @@ def extract_api_error_codes(value: Any) -> set[str]:
     return codes
 
 def get_http_error_message(error: httpx.HTTPStatusError) -> str:
-    """Extrait un message HTTP exploitable sans exposer de secret."""
+    """Extrait un message HTTP exploitable sans exposer de secret.
+
+    Ordre d'essai : corps JSON, puis texte brut (1000 caractères au plus),
+    puis libellé du statut HTTP.
+
+    Parameters
+    ----------
+    error : httpx.HTTPStatusError
+        L'erreur HTTP levée par httpx.
+
+    Returns
+    -------
+    str
+        Le message, URL et secrets masqués.
+    """
 
     try:
         message = normalize_api_error_message(error.response.json())
@@ -267,7 +342,20 @@ def get_http_error_message(error: httpx.HTTPStatusError) -> str:
     return normalize_value(error.response.reason_phrase)
 
 def contains_api_error_pattern(message: str, patterns: Sequence[str]) -> bool:
-    """Vérifie si un message contient l'un des motifs fournis."""
+    """Vérifie si un message contient l'un des motifs fournis.
+
+    Parameters
+    ----------
+    message : str
+        Le message d'erreur.
+    patterns : Sequence[str]
+        Les motifs recherchés, sans tenir compte de la casse.
+
+    Returns
+    -------
+    bool
+        Vrai si au moins un motif apparaît dans le message.
+    """
 
     normalized_message = normalize_value(message).lower()
     return any(pattern.lower() in normalized_message for pattern in patterns)
@@ -278,8 +366,41 @@ def raise_if_fatal_api_error(
     source_name: str,
     status_code: int | None = None
 ) -> str:
-    """Lève une exception spécialisée pour une erreur API fatale."""
+    """Lève une exception spécialisée pour une erreur API fatale.
 
+    L'erreur est classée dans cet ordre : authentification (401, 403 ou motif
+    connu), limitation de fréquence (429), quota (402), paramètres invalides
+    (400, 404, 422), maintenance (502, 503, 504). Sinon elle n'est pas fatale.
+
+    Parameters
+    ----------
+    error : Any
+        Une `httpx.HTTPStatusError` ou un corps d'erreur renvoyé par l'API.
+    source_name : str
+        Nom de la source, reporté dans l'exception.
+    status_code : int | None
+        Code HTTP, si `error` n'est pas une erreur httpx. Par défaut `None`.
+
+    Returns
+    -------
+    str
+        Le motif de l'erreur, quand elle n'est pas fatale.
+
+    Raises
+    ------
+    ApiAuthenticationError
+        Clé, compte ou abonnement refusé.
+    ApiRateLimitError
+        Limitation temporaire de fréquence.
+    ApiQuotaExceededError
+        Quota épuisé.
+    ApiInvalidParametersError
+        Paramètres de requête refusés.
+    ApiMaintenanceError
+        Service temporairement indisponible.
+    """
+
+    # Extraire le corps brut, le message et les codes machine de l'erreur
     raw_error: Any = error
 
     if isinstance(error, httpx.HTTPStatusError):
@@ -392,7 +513,22 @@ def raise_if_fatal_api_error(
 # Validation de la configuration API
 
 def validate_api_secret(secret: Any, secret_name: str, source_name: str) -> bool:
-    """Vérifie qu'une clé ou un secret API est exploitable."""
+    """Vérifie qu'une clé ou un secret API est exploitable.
+
+    Parameters
+    ----------
+    secret : Any
+        La valeur du secret.
+    secret_name : str
+        Nom du secret, pour le journal.
+    source_name : str
+        Nom de la source, pour le journal.
+
+    Returns
+    -------
+    bool
+        Vrai si le secret est valide ; sinon une erreur est journalisée.
+    """
 
     if is_valid_secret(secret):
         return True
@@ -406,7 +542,18 @@ def validate_api_secret(secret: Any, secret_name: str, source_name: str) -> bool
 
 
 def is_secret_key(key: Any) -> bool:
-    """Indique si une clé de paramètre semble contenir un secret."""
+    """Indique si une clé de paramètre semble contenir un secret.
+
+    Parameters
+    ----------
+    key : Any
+        Nom du paramètre (par exemple `key`, `token`).
+
+    Returns
+    -------
+    bool
+        Vrai si le nom contient un des motifs de `API_SECRET_KEY_PATTERNS`.
+    """
 
     normalized_key = normalize_value(key).lower()
     return any(
@@ -416,7 +563,18 @@ def is_secret_key(key: Any) -> bool:
 
 
 def mask_secret(value: Any) -> str:
-    """Masque une valeur sensible avant son écriture dans les logs."""
+    """Masque une valeur sensible avant son écriture dans les logs.
+
+    Parameters
+    ----------
+    value : Any
+        La valeur sensible.
+
+    Returns
+    -------
+    str
+        `********`, ou une chaîne vide si la valeur est vide.
+    """
 
     normalized_value = normalize_value(value)
 
@@ -429,7 +587,19 @@ def mask_secret(value: Any) -> str:
 def mask_mapping_secrets(
     values: Mapping[str, Any] | None
 ) -> dict[str, Any]:
-    """Retourne une copie d'un dictionnaire avec ses secrets masqués."""
+    """Retourne une copie d'un dictionnaire avec ses secrets masqués.
+
+    Parameters
+    ----------
+    values : Mapping[str, Any] | None
+        Les paramètres à copier.
+
+    Returns
+    -------
+    dict[str, Any]
+        La copie, clés en texte et valeurs sensibles masquées ; vide si
+        `values` n'est pas un dictionnaire.
+    """
 
     if not isinstance(values, Mapping):
         return {}
@@ -445,7 +615,13 @@ def mask_mapping_secrets(
 
 
 def reset_api_request_count() -> object:
-    """Réinitialise le compteur de requêtes pour une exécution API."""
+    """Réinitialise le compteur de requêtes pour une exécution API.
+
+    Returns
+    -------
+    object
+        Le jeton de `ContextVar.set`, qui permet de restaurer la valeur précédente.
+    """
 
     return _API_REQUEST_COUNT.set(0)
 
@@ -457,19 +633,42 @@ def increment_api_request_count() -> None:
 
 
 def get_api_request_count() -> int:
-    """Retourne le nombre de requêtes HTTP de l'exécution courante."""
+    """Retourne le nombre de requêtes HTTP de l'exécution courante.
+
+    Returns
+    -------
+    int
+        Le nombre de requêtes envoyées depuis la dernière réinitialisation.
+    """
 
     return _API_REQUEST_COUNT.get()
 
 
 def reset_api_request_errors() -> object:
-    """Réinitialise les erreurs de requêtes isolées de l'exécution courante."""
+    """Réinitialise les erreurs de requêtes isolées de l'exécution courante.
+
+    Returns
+    -------
+    object
+        Le jeton de `ContextVar.set`, qui permet de restaurer la valeur précédente.
+    """
 
     return _API_REQUEST_ERRORS.set(())
 
 
 def record_api_request_error(error: Any) -> str:
-    """Enregistre une erreur non fatale sans exposer de secret."""
+    """Enregistre une erreur non fatale sans exposer de secret.
+
+    Parameters
+    ----------
+    error : Any
+        Une erreur httpx, un corps d'erreur ou un message.
+
+    Returns
+    -------
+    str
+        Le message enregistré, URL et secrets masqués.
+    """
 
     if isinstance(error, httpx.HTTPStatusError):
         message = get_http_error_message(error)
@@ -487,7 +686,13 @@ def record_api_request_error(error: Any) -> str:
 
 
 def get_api_request_errors() -> list[str]:
-    """Retourne les erreurs de requêtes isolées enregistrées."""
+    """Retourne les erreurs de requêtes isolées enregistrées.
+
+    Returns
+    -------
+    list[str]
+        Les messages d'erreur de l'exécution courante, dans l'ordre.
+    """
 
     return list(_API_REQUEST_ERRORS.get())
 
@@ -499,7 +704,28 @@ def normalize_string_list(
     lowercase: bool = False,
     uppercase: bool = False
 ) -> list[str]:
-    """Transforme une valeur en liste unique de textes nettoyés."""
+    """Transforme une valeur en liste unique de textes nettoyés.
+
+    Parameters
+    ----------
+    value : Any
+        Une chaîne séparée par des virgules ou une collection de valeurs ;
+        tout autre type donne une liste vide.
+    lowercase : bool
+        Mettre les textes en minuscules. Par défaut `False`.
+    uppercase : bool
+        Mettre les textes en majuscules. Par défaut `False`.
+
+    Returns
+    -------
+    list[str]
+        Les textes non vides, sans doublon, dans l'ordre d'origine.
+
+    Raises
+    ------
+    ValueError
+        Si `lowercase` et `uppercase` sont activés ensemble.
+    """
 
     if lowercase and uppercase:
         raise ValueError(
@@ -534,7 +760,18 @@ def normalize_string_list(
 def get_queries_configuration(
     source: Mapping[str, Any]
 ) -> list[dict[str, Any]]:
-    """Retourne les requêtes structurées d'une source API."""
+    """Retourne les requêtes structurées d'une source API.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        La configuration de la source (clé `queries`, dictionnaire ou liste).
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Une copie de chaque requête ; vide si la clé est absente ou mal formée.
+    """
 
     queries = source.get("queries", [])
     if isinstance(queries, Mapping):
@@ -555,7 +792,29 @@ def get_query_configuration_values(
     lowercase: bool = False,
     uppercase: bool = False
 ) -> list[str]:
-    """Lit d'abord les requêtes structurées puis les clés racine."""
+    """Lit d'abord les requêtes structurées puis les clés racine.
+
+    Les valeurs des clés racine ne servent que si aucune requête structurée
+    n'en donne.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        La configuration de la source.
+    plural_key : str
+        Nom de la clé au pluriel (par exemple `languages`).
+    singular_key : str
+        Nom de la clé au singulier, lu à défaut. Par défaut vide (non lu).
+    lowercase : bool
+        Mettre les valeurs en minuscules. Par défaut `False`.
+    uppercase : bool
+        Mettre les valeurs en majuscules. Par défaut `False`.
+
+    Returns
+    -------
+    list[str]
+        Les valeurs nettoyées, sans doublon.
+    """
 
     values: list[str] = []
     for query in get_queries_configuration(source):
@@ -585,7 +844,19 @@ def get_query_configuration_values(
 
 
 def get_query_keywords(source: Mapping[str, Any]) -> list[str]:
-    """Retourne les mots-clés structurés ou historiques d'une source."""
+    """Retourne les mots-clés structurés ou historiques d'une source.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        La configuration de la source : `keywords`, `keyword`, `query` ou `q`
+        dans les requêtes structurées, sinon `keywords` ou `query` à la racine.
+
+    Returns
+    -------
+    list[str]
+        Les mots-clés nettoyés, sans doublon.
+    """
 
     values: list[str] = []
     for query in get_queries_configuration(source):
@@ -608,7 +879,18 @@ def get_query_keywords(source: Mapping[str, Any]) -> list[str]:
 def get_pagination_configuration(
     source: Mapping[str, Any]
 ) -> Mapping[str, Any]:
-    """Retourne la pagination imbriquée d'une source API."""
+    """Retourne la pagination imbriquée d'une source API.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        La configuration de la source.
+
+    Returns
+    -------
+    Mapping[str, Any]
+        Le bloc `pagination`, ou un dictionnaire vide s'il est absent ou invalide.
+    """
 
     pagination = source.get("pagination", {})
     return pagination if isinstance(pagination, Mapping) else {}
@@ -619,7 +901,22 @@ def get_pagination_value(
     *keys: str,
     default: Any = None
 ) -> Any:
-    """Lit la pagination imbriquée puis les anciennes clés racine."""
+    """Lit la pagination imbriquée puis les anciennes clés racine.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        La configuration de la source.
+    *keys : str
+        Noms possibles du réglage, essayés dans l'ordre.
+    default : Any
+        Valeur renvoyée si aucune clé n'est trouvée. Par défaut `None`.
+
+    Returns
+    -------
+    Any
+        La première valeur trouvée dans `pagination`, puis à la racine, sinon `default`.
+    """
 
     pagination = get_pagination_configuration(source)
     for key in keys:
@@ -632,7 +929,25 @@ def get_pagination_value(
 
 
 def join_normalized_values(value: Any, separator: str = ",") -> str:
-    """Réunit une collection de valeurs uniques dans une chaîne."""
+    """Réunit une collection de valeurs uniques dans une chaîne.
+
+    Parameters
+    ----------
+    value : Any
+        Une chaîne séparée par des virgules ou une collection de valeurs.
+    separator : str
+        Séparateur utilisé. Par défaut « , ».
+
+    Returns
+    -------
+    str
+        Les valeurs nettoyées, sans doublon, jointes par le séparateur.
+
+    Raises
+    ------
+    TypeError
+        Si `separator` n'est pas une chaîne.
+    """
 
     if not isinstance(separator, str):
         raise TypeError("separator doit être une chaîne de caractères.")
@@ -641,7 +956,18 @@ def join_normalized_values(value: Any, separator: str = ",") -> str:
 
 
 def get_api_max_articles(source: Mapping[str, Any]) -> int:
-    """Retourne le nombre maximal d'articles à extraire."""
+    """Retourne le nombre maximal d'articles à extraire.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        La configuration de la source (clé `max_articles`).
+
+    Returns
+    -------
+    int
+        La limite configurée, ou `MAX_ARTICLES_PER_SOURCE` par défaut.
+    """
 
     return parse_non_negative_integer(
         source.get("max_articles", MAX_ARTICLES_PER_SOURCE),
@@ -650,7 +976,21 @@ def get_api_max_articles(source: Mapping[str, Any]) -> int:
 
 
 def get_api_max_article_age_days(source: Mapping[str, Any]) -> int:
-    """Retourne l'âge maximal autorisé pour une source API."""
+    """Retourne l'âge maximal autorisé pour une source API.
+
+    La valeur de la source ne peut pas dépasser la limite globale
+    `MAX_ARTICLE_AGE_DAYS` (quand celle-ci est positive).
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        La configuration de la source (clé `max_article_age_days`).
+
+    Returns
+    -------
+    int
+        L'âge maximal en jours.
+    """
 
     configured = parse_non_negative_integer(
         source.get("max_article_age_days", MAX_ARTICLE_AGE_DAYS),
@@ -674,7 +1014,24 @@ def calculate_page_size(
     default: int,
     maximum: int
 ) -> int:
-    """Calcule une taille de page comprise dans toutes les limites."""
+    """Calcule une taille de page comprise dans toutes les limites.
+
+    Parameters
+    ----------
+    configured_value : Any
+        Taille de page demandée par la configuration.
+    remaining_articles : int
+        Nombre d'articles qu'il reste à récupérer.
+    default : int
+        Taille utilisée si la valeur configurée est invalide.
+    maximum : int
+        Taille maximale acceptée par l'API.
+
+    Returns
+    -------
+    int
+        La plus petite des trois limites (configurée, restante, maximale), au moins 1.
+    """
 
     default_size = max(parse_non_negative_integer(default, 1), 1)
     maximum_size = max(
@@ -694,7 +1051,22 @@ def calculate_page_size(
 
 
 def normalize_page_limit(value: Any, default: int, maximum: int) -> int:
-    """Normalise un nombre maximal de pages."""
+    """Normalise un nombre maximal de pages.
+
+    Parameters
+    ----------
+    value : Any
+        Nombre de pages configuré.
+    default : int
+        Valeur utilisée si la configuration est invalide.
+    maximum : int
+        Plafond du nombre de pages.
+
+    Returns
+    -------
+    int
+        Un nombre de pages compris entre 1 et `maximum`.
+    """
 
     default_limit = max(parse_non_negative_integer(default, 1), 1)
     maximum_limit = max(
@@ -709,7 +1081,18 @@ def normalize_page_limit(value: Any, default: int, maximum: int) -> int:
 # Requêtes HTTP
 
 def is_retryable_http_error(error: BaseException) -> bool:
-    """Indique si une erreur HTTP temporaire peut être retentée."""
+    """Indique si une erreur HTTP temporaire peut être retentée.
+
+    Parameters
+    ----------
+    error : BaseException
+        L'exception levée pendant la requête.
+
+    Returns
+    -------
+    bool
+        Vrai pour un délai dépassé, une erreur réseau, un HTTP 408, 429 ou 5xx.
+    """
 
     if isinstance(error, (httpx.TimeoutException, httpx.NetworkError)):
         return True
@@ -737,8 +1120,42 @@ def fetch_json_object(
     headers: Mapping[str, str] | None = None,
     timeout: float = REQUEST_TIMEOUT
 ) -> dict[str, Any]:
-    """Effectue une requête GET et retourne un objet JSON."""
+    """Effectue une requête GET et retourne un objet JSON.
 
+    Les erreurs temporaires (réseau, 408, 429, 5xx) sont retentées par le
+    décorateur `retry`, avec une attente exponentielle.
+
+    Parameters
+    ----------
+    url : str
+        L'URL HTTP(S) de l'API.
+    params : Mapping[str, Any] | None
+        Paramètres de la requête. Par défaut `None`.
+    headers : Mapping[str, str] | None
+        En-têtes ajoutés à `HTTP_HEADERS`. Par défaut `None`.
+    timeout : float
+        Délai maximal en secondes. Par défaut `REQUEST_TIMEOUT`.
+
+    Returns
+    -------
+    dict[str, Any]
+        L'objet JSON de la réponse ; vide pour un HTTP 204.
+
+    Raises
+    ------
+    ValueError
+        Si l'URL ou le délai sont invalides, ou si la réponse n'est pas un objet JSON.
+    TypeError
+        Si `params` ou `headers` ne sont pas des dictionnaires.
+    ApiExtractionStoppedError
+        Pour une erreur fatale (authentification, quota, maintenance...).
+    ApiRequestError
+        Pour une requête refusée (HTTP 400, 404, 422) sans arrêt de l'extraction.
+    httpx.HTTPStatusError
+        Pour les autres erreurs HTTP.
+    """
+
+    # Valider l'URL, les paramètres et le délai
     normalized_url = normalize_value(url)
 
     if not is_valid_http_url(normalized_url):
@@ -762,6 +1179,7 @@ def fetch_json_object(
     ):
         raise ValueError("timeout doit être un nombre positif et fini.")
 
+    # Préparer et envoyer la requête
     request_headers = {**HTTP_HEADERS, **dict(headers or {})}
     request_params = dict(params or {})
     request_timeout = float(timeout)
@@ -796,6 +1214,7 @@ def fetch_json_object(
         except ValueError:
             response_data = None
 
+        # Classer les erreurs HTTP : fatale, requête refusée, ou autre
         if response.status_code >= 400:
             error_payload = (
                 response_data
@@ -819,6 +1238,7 @@ def fetch_json_object(
 
             response.raise_for_status()
 
+        # Vérifier que la réponse est bien un objet JSON
         if "text/html" in content_type:
             raise ValueError(
                 "La réponse de l'API contient du HTML au lieu de JSON."
@@ -842,7 +1262,32 @@ def execute_independent_api_requests(
     request_function: Callable[[Mapping[str, Any]], Sequence[ApiItem]],
     source_name: str
 ) -> list[ApiItem]:
-    """Exécute des requêtes indépendantes et conserve les réussites."""
+    """Exécute des requêtes indépendantes et conserve les réussites.
+
+    Une requête rejetée est journalisée et enregistrée comme erreur isolée ;
+    seule une erreur fatale (`ApiExtractionStoppedError`) arrête la boucle.
+
+    Parameters
+    ----------
+    requests : Sequence[Mapping[str, Any]]
+        Les paramètres de chaque requête.
+    request_function : Callable[[Mapping[str, Any]], Sequence[ApiItem]]
+        Fonction qui exécute une requête et renvoie ses éléments.
+    source_name : str
+        Nom de la source, pour le journal.
+
+    Returns
+    -------
+    list[ApiItem]
+        Les éléments de toutes les requêtes réussies.
+
+    Raises
+    ------
+    TypeError
+        Si `request_function` n'est pas appelable.
+    ApiExtractionStoppedError
+        Remontée telle quelle pour arrêter l'extraction.
+    """
 
     if not callable(request_function):
         raise TypeError("request_function doit être une fonction appelable.")
@@ -858,6 +1303,7 @@ def execute_independent_api_requests(
             record_api_request_error(message)
             continue
 
+        # Retirer les paramètres vides avant l'appel
         request_parameters = {
             key: value
             for key, value in parameters.items()
@@ -934,7 +1380,20 @@ def execute_independent_api_requests(
 # Validation des réponses API
 
 def filter_mapping_items(items: Any, source_name: str) -> list[dict[str, Any]]:
-    """Conserve uniquement les dictionnaires d'une réponse API."""
+    """Conserve uniquement les dictionnaires d'une réponse API.
+
+    Parameters
+    ----------
+    items : Any
+        Les résultats renvoyés par l'API, attendus sous forme de liste.
+    source_name : str
+        Nom de la source, pour le journal.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Les éléments qui sont des dictionnaires ; vide si `items` n'est pas une liste.
+    """
 
     if not isinstance(items, list):
         logger.error(
@@ -961,7 +1420,37 @@ def extract_api_from_source(
     source: Mapping[str, Any],
     adapter: ApiAdapter,
 ) -> ApiExtractionResult:
-    """Extrait, valide et déduplique les articles d'une source API."""
+    """Extrait, valide et déduplique les articles d'une source API.
+
+    Chaque élément renvoyé par l'adaptateur est converti en article, validé
+    (règles communes puis règles de l'API) et dédoublonné. Une erreur fatale
+    survenue après au moins un article donne un résultat partiel ; sans
+    article, elle est relancée pour l'exécuteur générique.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        La configuration de la source.
+    adapter : ApiAdapter
+        L'adaptateur propre au format de l'API.
+
+    Returns
+    -------
+    ApiExtractionResult
+        Un `ExtractorResult` avec les articles retenus, les motifs de rejet,
+        le nombre de requêtes et le statut (réussite, partielle, vide, échec).
+
+    Raises
+    ------
+    TypeError
+        Si `adapter` ou `source` ne sont pas du bon type.
+    ValueError
+        Si la configuration des filtres est invalide.
+    ApiExtractionStoppedError
+        Si une erreur fatale survient avant qu'aucun article ne soit retenu.
+    RuntimeError
+        Pour une erreur réseau ou de lecture pendant l'extraction.
+    """
 
     # Validation des entrées
     if not isinstance(adapter, ApiAdapter):
@@ -1303,7 +1792,26 @@ def extract_api_from_source(
 
 @dataclass(slots=True)
 class ApiExtractor:
-    """Représente une API utilisant le moteur d'extraction commun."""
+    """Représente une API utilisant le moteur d'extraction commun.
+
+    Charge la configuration de la source à la demande (avec cache) et expose
+    ses réglages sous forme de propriétés pour les adaptateurs.
+
+    Attributes
+    ----------
+    source_id : str
+        Identifiant de la source dans le fichier de configuration.
+    default_name : str
+        Nom affiché par défaut ; reprend `source_id` s'il est vide.
+    adapter : ApiAdapter
+        L'adaptateur propre au format de l'API.
+    section_name : str
+        Section du fichier de configuration. Par défaut `api_sources`.
+    sources_file : Any
+        Chemin du fichier de configuration. Par défaut `SOURCES_FILE`.
+    _source : Mapping[str, Any] | None
+        Configuration chargée, mise en cache (hors constructeur).
+    """
 
     source_id: str
     default_name: str
@@ -1318,7 +1826,18 @@ class ApiExtractor:
     )
 
     def __post_init__(self) -> None:
-        """Normalise l'identité et contrôle la cohérence de l'adaptateur."""
+        """Normalise l'identité et contrôle la cohérence de l'adaptateur.
+
+        Un adaptateur dont l'identifiant diffère de celui de l'extracteur est
+        accepté, avec un avertissement.
+
+        Raises
+        ------
+        ValueError
+            Si l'identifiant, la section ou le fichier de configuration manquent.
+        TypeError
+            Si `adapter` n'est pas un `ApiAdapter`.
+        """
 
         self.source_id = normalize_value(self.source_id)
 
@@ -1353,7 +1872,18 @@ class ApiExtractor:
     # Chargement de la configuration
 
     def load_source(self, force_reload: bool = False) -> Mapping[str, Any]:
-        """Charge et met en cache la configuration de l'API."""
+        """Charge et met en cache la configuration de l'API.
+
+        Parameters
+        ----------
+        force_reload : bool
+            Relire le fichier même si la configuration est en cache. Par défaut `False`.
+
+        Returns
+        -------
+        Mapping[str, Any]
+            La configuration validée de la source.
+        """
 
         if self._source is not None and not force_reload:
             return self._source
@@ -1366,20 +1896,45 @@ class ApiExtractor:
         return self._source
 
     def reload_source(self) -> Mapping[str, Any]:
-        """Recharge explicitement la configuration depuis le fichier."""
+        """Recharge explicitement la configuration depuis le fichier.
+
+        Returns
+        -------
+        Mapping[str, Any]
+            La configuration relue.
+        """
 
         return self.load_source(force_reload=True)
 
     @property
     def source(self) -> Mapping[str, Any]:
-        """Retourne la configuration courante de l'API."""
+        """Retourne la configuration courante de l'API.
+
+        Returns
+        -------
+        Mapping[str, Any]
+            La configuration, chargée au premier accès.
+        """
 
         return self.load_source()
 
     # Lecture générique de la configuration
 
     def get_value(self, *keys: str, default: Any = None) -> Any:
-        """Retourne la première valeur trouvée parmi plusieurs clés."""
+        """Retourne la première valeur trouvée parmi plusieurs clés.
+
+        Parameters
+        ----------
+        *keys : str
+            Noms de clés essayés dans l'ordre.
+        default : Any
+            Valeur renvoyée si aucune clé n'est présente. Par défaut `None`.
+
+        Returns
+        -------
+        Any
+            La valeur trouvée, ou `default`.
+        """
 
         for key in keys:
             if key in self.source:
@@ -1388,12 +1943,38 @@ class ApiExtractor:
         return default
 
     def get_string(self, *keys: str, default: str = "") -> str:
-        """Retourne la première valeur textuelle disponible."""
+        """Retourne la première valeur textuelle disponible.
+
+        Parameters
+        ----------
+        *keys : str
+            Noms de clés essayés dans l'ordre.
+        default : str
+            Valeur par défaut. Par défaut vide.
+
+        Returns
+        -------
+        str
+            La valeur nettoyée.
+        """
 
         return normalize_value(self.get_value(*keys, default=default))
 
     def get_integer(self, *keys: str, default: int = 0) -> int:
-        """Retourne la première valeur entière non négative."""
+        """Retourne la première valeur entière non négative.
+
+        Parameters
+        ----------
+        *keys : str
+            Noms de clés essayés dans l'ordre.
+        default : int
+            Valeur par défaut, aussi utilisée si la valeur est invalide. Par défaut 0.
+
+        Returns
+        -------
+        int
+            L'entier lu.
+        """
 
         return parse_non_negative_integer(
             self.get_value(*keys, default=default),
@@ -1401,7 +1982,20 @@ class ApiExtractor:
         )
 
     def get_boolean(self, *keys: str, default: bool = False) -> bool:
-        """Retourne la première valeur booléenne disponible."""
+        """Retourne la première valeur booléenne disponible.
+
+        Parameters
+        ----------
+        *keys : str
+            Noms de clés essayés dans l'ordre.
+        default : bool
+            Valeur par défaut, aussi utilisée si la valeur est illisible. Par défaut `False`.
+
+        Returns
+        -------
+        bool
+            Le booléen lu.
+        """
 
         return parse_boolean(
             self.get_value(*keys, default=default),
@@ -1414,7 +2008,22 @@ class ApiExtractor:
         lowercase: bool = False,
         uppercase: bool = False
     ) -> list[str]:
-        """Retourne une liste textuelle normalisée."""
+        """Retourne une liste textuelle normalisée.
+
+        Parameters
+        ----------
+        *keys : str
+            Noms de clés essayés dans l'ordre.
+        lowercase : bool
+            Mettre les textes en minuscules. Par défaut `False`.
+        uppercase : bool
+            Mettre les textes en majuscules. Par défaut `False`.
+
+        Returns
+        -------
+        list[str]
+            Les textes nettoyés, sans doublon.
+        """
 
         return normalize_string_list(
             self.get_value(*keys),
@@ -1426,69 +2035,138 @@ class ApiExtractor:
 
     @property
     def name(self) -> str:
-        """Retourne le nom affiché de l'API."""
+        """Retourne le nom affiché de l'API.
+
+        Returns
+        -------
+        str
+            Le nom configuré, ou `default_name`.
+        """
 
         return self.get_string("name") or self.default_name
 
     @property
     def configured_source_id(self) -> str:
-        """Retourne l'identifiant déclaré dans la configuration."""
+        """Retourne l'identifiant déclaré dans la configuration.
+
+        Returns
+        -------
+        str
+            La clé `source_id` de la configuration, ou l'identifiant de l'extracteur.
+        """
 
         return self.get_string("source_id") or self.source_id
 
     @property
     def enabled(self) -> bool:
-        """Indique si la source est activée."""
+        """Indique si la source est activée.
+
+        Returns
+        -------
+        bool
+            La clé `enabled` ; faux par défaut.
+        """
 
         return self.get_boolean("enabled", default=False)
 
     @property
     def role(self) -> str:
-        """Retourne le rôle des articles produits."""
+        """Retourne le rôle des articles produits.
+
+        Returns
+        -------
+        str
+            La clé `role`, ou « acquisition » par défaut.
+        """
 
         return self.get_string("role") or "acquisition"
 
     @property
     def endpoint(self) -> str:
-        """Retourne le point d'accès validé de l'API."""
+        """Retourne le point d'accès validé de l'API.
+
+        Returns
+        -------
+        str
+            La première des clés `endpoint`, `base_url` ou `url`.
+        """
 
         return self.get_string("endpoint", "base_url", "url")
 
     @property
     def base_url(self) -> str:
-        """Conserve l'ancien alias utilisé par certains adaptateurs."""
+        """Conserve l'ancien alias utilisé par certains adaptateurs.
+
+        Returns
+        -------
+        str
+            La même valeur que `endpoint`.
+        """
 
         return self.endpoint
 
     @property
     def max_articles(self) -> int:
-        """Retourne le nombre maximal d'articles à extraire."""
+        """Retourne le nombre maximal d'articles à extraire.
+
+        Returns
+        -------
+        int
+            La limite de la source (voir `get_api_max_articles`).
+        """
 
         return get_api_max_articles(self.source)
 
     @property
     def max_article_age_days(self) -> int:
-        """Retourne l'âge maximal autorisé pour les articles."""
+        """Retourne l'âge maximal autorisé pour les articles.
+
+        Returns
+        -------
+        int
+            L'âge maximal en jours (voir `get_api_max_article_age_days`).
+        """
 
         return get_api_max_article_age_days(self.source)
 
     @property
     def filters(self) -> Mapping[str, Any]:
-        """Retourne les filtres appliqués à cette source."""
+        """Retourne les filtres appliqués à cette source.
+
+        Returns
+        -------
+        Mapping[str, Any]
+            La configuration des filtres, ou un dictionnaire vide si elle est invalide.
+        """
 
         filters = get_filter_configuration(self.source)
         return filters if isinstance(filters, Mapping) else {}
 
     @property
     def api_key_secret_name(self) -> str:
-        """Retourne le nom du secret déclaré pour cette API."""
+        """Retourne le nom du secret déclaré pour cette API.
+
+        Returns
+        -------
+        str
+            La clé `api_key_secret_name`, ou une chaîne vide.
+        """
 
         return self.get_string("api_key_secret_name")
 
 
     @property
     def api_key(self) -> str:
-        """Résout et retourne la clé API depuis l'environnement d'exécution."""
+        """Résout et retourne la clé API depuis l'environnement d'exécution.
+
+        Le secret est cherché sous son nom, puis dans la variable d'environnement
+        du même nom en majuscules ; il est déclaré obligatoire.
+
+        Returns
+        -------
+        str
+            La clé, ou une chaîne vide si aucun secret n'est déclaré.
+        """
 
         secret_name = self.api_key_secret_name
         if not secret_name:
@@ -1505,7 +2183,13 @@ class ApiExtractor:
 
     @property
     def languages(self) -> list[str]:
-        """Retourne les langues structurées ou historiques."""
+        """Retourne les langues structurées ou historiques.
+
+        Returns
+        -------
+        list[str]
+            Les codes de langue en minuscules.
+        """
 
         return get_query_configuration_values(
             self.source,
@@ -1516,13 +2200,25 @@ class ApiExtractor:
 
     @property
     def language(self) -> str:
-        """Retourne la première langue configurée."""
+        """Retourne la première langue configurée.
+
+        Returns
+        -------
+        str
+            La première langue, ou une chaîne vide.
+        """
 
         return self.languages[0] if self.languages else ""
 
     @property
     def countries(self) -> list[str]:
-        """Retourne les pays structurés ou historiques."""
+        """Retourne les pays structurés ou historiques.
+
+        Returns
+        -------
+        list[str]
+            Les codes de pays en minuscules.
+        """
 
         return get_query_configuration_values(
             self.source,
@@ -1533,13 +2229,25 @@ class ApiExtractor:
 
     @property
     def country(self) -> str:
-        """Retourne le premier pays configuré."""
+        """Retourne le premier pays configuré.
+
+        Returns
+        -------
+        str
+            Le premier pays, ou une chaîne vide.
+        """
 
         return self.countries[0] if self.countries else ""
 
     @property
     def categories(self) -> list[str]:
-        """Retourne les catégories structurées ou historiques."""
+        """Retourne les catégories structurées ou historiques.
+
+        Returns
+        -------
+        list[str]
+            Les catégories en minuscules.
+        """
 
         return get_query_configuration_values(
             self.source,
@@ -1550,25 +2258,49 @@ class ApiExtractor:
 
     @property
     def category(self) -> str:
-        """Retourne la première catégorie configurée."""
+        """Retourne la première catégorie configurée.
+
+        Returns
+        -------
+        str
+            La première catégorie, ou une chaîne vide.
+        """
 
         return self.categories[0] if self.categories else ""
 
     @property
     def queries_configuration(self) -> list[dict[str, Any]]:
-        """Retourne les requêtes API structurées du contrat validé."""
+        """Retourne les requêtes API structurées du contrat validé.
+
+        Returns
+        -------
+        list[dict[str, Any]]
+            Les requêtes de la clé `queries`.
+        """
 
         return get_queries_configuration(self.source)
 
     @property
     def keywords(self) -> list[str]:
-        """Retourne les mots-clés structurés ou historiques."""
+        """Retourne les mots-clés structurés ou historiques.
+
+        Returns
+        -------
+        list[str]
+            Les mots-clés nettoyés, sans doublon.
+        """
 
         return get_query_keywords(self.source)
 
     @property
     def keyword(self) -> str:
-        """Retourne le premier mot-clé configuré."""
+        """Retourne le premier mot-clé configuré.
+
+        Returns
+        -------
+        str
+            Le premier mot-clé, ou une chaîne vide.
+        """
 
         return self.keywords[0] if self.keywords else ""
 
@@ -1576,12 +2308,31 @@ class ApiExtractor:
 
     @property
     def pagination(self) -> Mapping[str, Any]:
-        """Retourne la pagination validée de la source."""
+        """Retourne la pagination validée de la source.
+
+        Returns
+        -------
+        Mapping[str, Any]
+            Le bloc `pagination`, ou un dictionnaire vide.
+        """
 
         return get_pagination_configuration(self.source)
 
     def get_pagination_value(self, *keys: str, default: Any = None) -> Any:
-        """Lit la pagination imbriquée puis les anciennes clés racine."""
+        """Lit la pagination imbriquée puis les anciennes clés racine.
+
+        Parameters
+        ----------
+        *keys : str
+            Noms possibles du réglage, essayés dans l'ordre.
+        default : Any
+            Valeur renvoyée si aucune clé n'est trouvée. Par défaut `None`.
+
+        Returns
+        -------
+        Any
+            La valeur trouvée, ou `default`.
+        """
 
         return get_pagination_value(self.source, *keys, default=default)
 
@@ -1592,7 +2343,24 @@ class ApiExtractor:
         maximum: int,
         *keys: str
     ) -> int:
-        """Calcule une taille de page adaptée aux limites de l'API."""
+        """Calcule une taille de page adaptée aux limites de l'API.
+
+        Parameters
+        ----------
+        remaining_articles : int
+            Nombre d'articles qu'il reste à récupérer.
+        default : int
+            Taille utilisée si rien n'est configuré.
+        maximum : int
+            Taille maximale acceptée par l'API.
+        *keys : str
+            Clés de configuration à lire ; par défaut `page_size` puis `max_per_request`.
+
+        Returns
+        -------
+        int
+            La taille de page retenue (voir `calculate_page_size`).
+        """
 
         configured_keys = keys or ("page_size", "max_per_request")
 
@@ -1612,7 +2380,22 @@ class ApiExtractor:
         maximum: int,
         *keys: str
     ) -> int:
-        """Retourne le nombre maximal de pages à parcourir."""
+        """Retourne le nombre maximal de pages à parcourir.
+
+        Parameters
+        ----------
+        default : int
+            Nombre de pages utilisé si rien n'est configuré.
+        maximum : int
+            Plafond du nombre de pages.
+        *keys : str
+            Clés de configuration à lire ; par défaut `max_pages`.
+
+        Returns
+        -------
+        int
+            Le nombre de pages retenu (voir `normalize_page_limit`).
+        """
 
         configured_keys = keys or ("max_pages",)
 
@@ -1628,7 +2411,20 @@ class ApiExtractor:
     # Exécution API
 
     def validate_source(self, source: Mapping[str, Any]) -> None:
-        """Valide les éléments techniques communs à toutes les API."""
+        """Valide les éléments techniques communs à toutes les API.
+
+        Parameters
+        ----------
+        source : Mapping[str, Any]
+            La configuration de la source.
+
+        Raises
+        ------
+        TypeError
+            Si la configuration n'est pas un dictionnaire.
+        ValueError
+            Si aucune URL HTTP(S) valide n'est donnée (`endpoint`, `base_url` ou `url`).
+        """
 
         if not isinstance(source, Mapping):
             raise TypeError(
@@ -1651,7 +2447,18 @@ class ApiExtractor:
         self,
         source: Mapping[str, Any]
     ) -> ApiExtractionResult:
-        """Valide puis exécute le moteur commun sur une source chargée."""
+        """Valide puis exécute le moteur commun sur une source chargée.
+
+        Parameters
+        ----------
+        source : Mapping[str, Any]
+            La configuration de la source.
+
+        Returns
+        -------
+        ApiExtractionResult
+            Le résultat de `extract_api_from_source`.
+        """
 
         self.validate_source(source)
 
@@ -1661,12 +2468,27 @@ class ApiExtractor:
         )
 
     def extract(self) -> ApiExtractionResult:
-        """Exécute directement l'API avec la configuration courante."""
+        """Exécute directement l'API avec la configuration courante.
+
+        Returns
+        -------
+        ApiExtractionResult
+            Le résultat de l'extraction, sans passer par l'exécuteur générique.
+        """
 
         return self.extract_from_source(self.source)
 
     def run(self) -> ExtractorResult:
-        """Délègue l'orchestration au service générique des extracteurs."""
+        """Délègue l'orchestration au service générique des extracteurs.
+
+        La configuration est relue à chaque exécution ; statuts, erreurs et
+        rapport sont gérés par `execute_configured_extractor`.
+
+        Returns
+        -------
+        ExtractorResult
+            Le bilan de l'exécution.
+        """
 
         return execute_configured_extractor(
             extractor_name=self.default_name,

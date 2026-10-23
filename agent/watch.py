@@ -82,6 +82,21 @@ def check_documents(documents: Iterable[Mapping[str, Any]], today: date) -> list
 
     `documents` : nom et fin de période de chaque programme configuré
     (`{"name": ..., "end": date}`).
+
+    Un programme sans date de fin lisible est ignoré ; l'alerte part
+    `DOCUMENT_EXPIRY_WARNING_DAYS` jours (21) avant la fin.
+
+    Parameters
+    ----------
+    documents : Iterable[Mapping[str, Any]]
+        Les programmes PDF configurés, avec leur nom et leur fin de période.
+    today : date
+        Date du jour.
+
+    Returns
+    -------
+    list[str]
+        Une alerte par programme terminé ou proche de sa fin.
     """
 
     alerts = []
@@ -113,13 +128,30 @@ def check_partners(
     `files` : un élément par fichier déposé (`name`, `file_name`, `updated`
     = date de dernière modification). Les séances à venir sont comptées parmi
     les événements de la nuit, d'après `partner_info.file_name`.
+
+    Parameters
+    ----------
+    files : Iterable[Mapping[str, Any]]
+        Les fichiers déposés par les partenaires.
+    events : Iterable[Mapping[str, Any]]
+        Les événements préparés cette nuit.
+    today : date
+        Date du jour.
+
+    Returns
+    -------
+    list[str]
+        Une alerte par fichier sans séance à venir ou non mis à jour depuis
+        plus de `PARTNER_STALE_DAYS` jours (30).
     """
 
+    # Compter les séances à venir de chaque fichier partenaire
     upcoming: dict[str, int] = {}
     for event in events:
         info = event.get("partner_info") or {}
         if info.get("file_name"):
             upcoming[info["file_name"]] = upcoming.get(info["file_name"], 0) + 1
+    # Alerter : plus de séance d'abord, sinon fichier trop ancien
     alerts = []
     for item in files:
         name, file_name = item.get("name") or item.get("file_name"), item.get("file_name")
@@ -137,7 +169,18 @@ def check_partners(
 # ---------------------------------------------------------------------------
 
 def zone_of(event: Mapping[str, Any]) -> str:
-    """Zone d'un événement : d'après sa commune, sinon d'après ses coordonnées."""
+    """Zone d'un événement : d'après sa commune, sinon d'après ses coordonnées.
+
+    Parameters
+    ----------
+    event : Mapping[str, Any]
+        L'événement (`city`, `latitude`, `longitude`).
+
+    Returns
+    -------
+    str
+        `montpellier`, `bassin_de_thau` ou `hors_zone`.
+    """
 
     city = normalize_for_comparison(event.get("city"))
     if city in MONTPELLIER_COMMUNES:
@@ -155,7 +198,22 @@ def zone_of(event: Mapping[str, Any]) -> str:
 
 
 def is_in_week(event: Mapping[str, Any], today: date, days: int = COVERAGE_DAYS) -> bool:
-    """L'événement a-t-il lieu (au moins un jour) dans les `days` prochains jours ?"""
+    """L'événement a-t-il lieu (au moins un jour) dans les `days` prochains jours ?
+
+    Parameters
+    ----------
+    event : Mapping[str, Any]
+        L'événement (`start_at`, `end_at` facultatif).
+    today : date
+        Date du jour.
+    days : int
+        Largeur de la fenêtre. Par défaut 7 jours.
+
+    Returns
+    -------
+    bool
+        True si la période de l'événement croise la fenêtre ; False sans date de début.
+    """
 
     start = parse_event_datetime(event.get("start_at"))
     if start is None:
@@ -165,7 +223,20 @@ def is_in_week(event: Mapping[str, Any], today: date, days: int = COVERAGE_DAYS)
 
 
 def coverage(events: Iterable[Mapping[str, Any]], today: date) -> dict[str, dict[str, int]]:
-    """Nombre de sorties de la semaine par zone et par public : {zone: {public: n}}."""
+    """Nombre de sorties de la semaine par zone et par public : {zone: {public: n}}.
+
+    Parameters
+    ----------
+    events : Iterable[Mapping[str, Any]]
+        Les événements à compter.
+    today : date
+        Date du jour (début de la semaine regardée).
+
+    Returns
+    -------
+    dict[str, dict[str, int]]
+        Les quatre cases (Montpellier / Thau × famille / soirée), à 0 si vides.
+    """
 
     counts = {zone: dict.fromkeys(AUDIENCES, 0) for zone in ZONES}
     for event in events:
@@ -179,7 +250,15 @@ def coverage(events: Iterable[Mapping[str, Any]], today: date) -> dict[str, dict
 
 
 def coverage_minimum() -> int:
-    """Seuil d'alerte de couverture (`COUVERTURE_MIN_SEMAINE` dans .env, 10 par défaut ; 0 : désactivé)."""
+    """Seuil d'alerte de couverture (`COUVERTURE_MIN_SEMAINE` dans .env).
+
+    10 par défaut ; 0 : désactivé.
+
+    Returns
+    -------
+    int
+        Le seuil ; la valeur par défaut si la variable n'est pas un entier.
+    """
 
     try:
         return int(os.getenv("COUVERTURE_MIN_SEMAINE", COVERAGE_MIN_EVENTS))
@@ -188,7 +267,20 @@ def coverage_minimum() -> int:
 
 
 def check_coverage(counts: Mapping[str, Mapping[str, int]], minimum: int | None = None) -> list[str]:
-    """Alertes pour les cases trop pauvres (ex. moins de 10 sorties « soirée » sur Thau)."""
+    """Alertes pour les cases trop pauvres (ex. moins de 10 sorties « soirée » sur Thau).
+
+    Parameters
+    ----------
+    counts : Mapping[str, Mapping[str, int]]
+        La couverture calculée par `coverage`.
+    minimum : int | None
+        Seuil d'alerte ; None : celui de `coverage_minimum`.
+
+    Returns
+    -------
+    list[str]
+        Une alerte par case sous le seuil.
+    """
 
     minimum = coverage_minimum() if minimum is None else minimum
     alerts = []
@@ -211,13 +303,36 @@ def estimate_tokens(texts: Iterable[str]) -> int:
 
     L'API d'embeddings utilisée ne renvoie pas le nombre exact : c'est une
     estimation, indiquée comme telle dans le bilan.
+
+    Parameters
+    ----------
+    texts : Iterable[str]
+        Les textes envoyés à l'API.
+
+    Returns
+    -------
+    int
+        Nombre de tokens estimé.
     """
 
     return sum(len(text) for text in texts) // 4
 
 
 def nightly_cost(usage: Mapping[str, Mapping[str, int]]) -> float:
-    """Coût estimé en dollars : `usage` = {modèle: {"input": n, "output": n}}."""
+    """Coût estimé en dollars : `usage` = {modèle: {"input": n, "output": n}}.
+
+    Un modèle absent de `PRICES_USD_PER_MILLION` est compté au prix d'un grand modèle.
+
+    Parameters
+    ----------
+    usage : Mapping[str, Mapping[str, int]]
+        Tokens consommés par modèle.
+
+    Returns
+    -------
+    float
+        Coût estimé, arrondi à 4 décimales.
+    """
 
     total = 0.0
     for model, tokens in usage.items():
@@ -227,7 +342,13 @@ def nightly_cost(usage: Mapping[str, Mapping[str, int]]) -> float:
 
 
 def nightly_budget() -> float:
-    """Budget d'une nuit en dollars (`MISTRAL_BUDGET_NUIT_USD` dans .env, 0,50 par défaut)."""
+    """Budget d'une nuit en dollars (`MISTRAL_BUDGET_NUIT_USD` dans .env, 0,50 par défaut).
+
+    Returns
+    -------
+    float
+        Le budget ; la valeur par défaut si la variable n'est pas un nombre.
+    """
 
     try:
         return float(os.getenv("MISTRAL_BUDGET_NUIT_USD", DEFAULT_NIGHTLY_BUDGET_USD))
@@ -236,7 +357,20 @@ def nightly_budget() -> float:
 
 
 def check_cost(cost: float, budget: float | None = None) -> list[str]:
-    """Alerte si la nuit a coûté plus que le budget."""
+    """Alerte si la nuit a coûté plus que le budget.
+
+    Parameters
+    ----------
+    cost : float
+        Coût estimé de la nuit, en dollars.
+    budget : float | None
+        Budget en dollars ; None : celui de `nightly_budget`.
+
+    Returns
+    -------
+    list[str]
+        Une alerte si le budget est dépassé, sinon une liste vide.
+    """
 
     budget = nightly_budget() if budget is None else budget
     if cost > budget:
@@ -252,7 +386,13 @@ DEFAULT_QUALITY_MIN = 0.80
 
 
 def quality_minimum() -> float:
-    """Score de qualité minimal (`QUALITE_MIN` dans .env, 0,80 par défaut)."""
+    """Score de qualité minimal (`QUALITE_MIN` dans .env, 0,80 par défaut).
+
+    Returns
+    -------
+    float
+        Le score minimal ; la valeur par défaut si la variable n'est pas un nombre.
+    """
 
     try:
         return float(os.getenv("QUALITE_MIN", DEFAULT_QUALITY_MIN))
@@ -261,7 +401,22 @@ def quality_minimum() -> float:
 
 
 def check_quality(quality: Mapping[str, Any], minimum: float | None = None) -> list[str]:
-    """Alerte si le score de l'échantillon jugé est sous le minimum."""
+    """Alerte si le score de l'échantillon jugé est sous le minimum.
+
+    L'alerte cite au plus trois problèmes relevés par le juge.
+
+    Parameters
+    ----------
+    quality : Mapping[str, Any]
+        Bilan du juge (`score`, `checked`, `problems`).
+    minimum : float | None
+        Score minimal ; None : celui de `quality_minimum`.
+
+    Returns
+    -------
+    list[str]
+        Une alerte si le score est sous le minimum, sinon une liste vide.
+    """
 
     minimum = quality_minimum() if minimum is None else minimum
     score = quality.get("score")
@@ -282,7 +437,13 @@ CAPACITY_WARNING_RATIO = 0.90
 
 
 def max_events() -> int:
-    """Plafond de la base (`SORTIRIA_MAX_EVENEMENTS` dans .env, 10 000 par défaut)."""
+    """Plafond de la base (`SORTIRIA_MAX_EVENEMENTS` dans .env, 10 000 par défaut).
+
+    Returns
+    -------
+    int
+        Le plafond, au moins 1 ; la valeur par défaut si la variable n'est pas un entier.
+    """
 
     try:
         return max(int(os.getenv("SORTIRIA_MAX_EVENEMENTS", DEFAULT_MAX_EVENTS)), 1)
@@ -291,7 +452,24 @@ def max_events() -> int:
 
 
 def check_capacity(total: int | None, capped: int, maximum: int | None = None) -> list[str]:
-    """Alertes : plafond atteint (événements lointains retirés), ou base presque pleine."""
+    """Alertes : plafond atteint (événements lointains retirés), ou base presque pleine.
+
+    « Presque pleine » : au moins 90 % du plafond (`CAPACITY_WARNING_RATIO`).
+
+    Parameters
+    ----------
+    total : int | None
+        Taille de la base après la collecte ; None si inconnue.
+    capped : int
+        Événements retirés cette nuit par le plafond.
+    maximum : int | None
+        Plafond ; None : celui de `max_events`.
+
+    Returns
+    -------
+    list[str]
+        Au plus une alerte.
+    """
 
     maximum = max_events() if maximum is None else maximum
     if capped:
@@ -310,7 +488,18 @@ def check_capacity(total: int | None, capped: int, maximum: int | None = None) -
 def check_ratings(ratings: Mapping[str, Any]) -> list[str]:
     """Alertes sur les notes : partenaires mal notés (2,5/5 ou moins sur 5 notes
     au moins) ; sorties mal notées (2/5 ou moins sur 3 notes, 16/10/2026),
-    signalées le jour d'une nouvelle note : fiche fausse ou source peu fiable ?"""
+    signalées le jour d'une nouvelle note : fiche fausse ou source peu fiable ?
+
+    Parameters
+    ----------
+    ratings : Mapping[str, Any]
+        Bilan des notes (`low_rated_partners`, `low_rated_events`).
+
+    Returns
+    -------
+    list[str]
+        Une alerte par partenaire puis par sortie mal notés.
+    """
 
     alerts = [
         f"Partenaire « {item['partner']} » mal noté par les clients : {float(item['average']):.1f}/5 "
@@ -333,13 +522,35 @@ SEARCH_REPORT_DAYS = 7
 
 
 def search_report_due(today: date) -> bool:
-    """Le bilan de la recherche part une fois par semaine, le lundi."""
+    """Le bilan de la recherche part une fois par semaine, le lundi.
+
+    Parameters
+    ----------
+    today : date
+        Date du jour.
+
+    Returns
+    -------
+    bool
+        True le lundi.
+    """
 
     return today.weekday() == SEARCH_REPORT_WEEKDAY
 
 
 def merge_usage(*usages: Mapping[str, Mapping[str, int]]) -> dict[str, dict[str, int]]:
-    """Additionne plusieurs relevés {modèle: {"input": n, "output": n}}."""
+    """Additionne plusieurs relevés {modèle: {"input": n, "output": n}}.
+
+    Parameters
+    ----------
+    *usages : Mapping[str, Mapping[str, int]]
+        Les relevés à additionner (un relevé vide ou None est ignoré).
+
+    Returns
+    -------
+    dict[str, dict[str, int]]
+        Le relevé total, par modèle.
+    """
 
     merged: dict[str, dict[str, int]] = {}
     for usage in usages:

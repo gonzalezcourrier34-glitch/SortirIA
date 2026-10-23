@@ -74,7 +74,19 @@ CONFIRM_ABOVE = 100
 
 
 def load_questions(files: Sequence[Path] = QUESTION_FILES) -> list[dict[str, Any]]:
-    """Questions et filtres des jeux d'évaluation."""
+    """Questions et filtres des jeux d'évaluation.
+
+    Parameters
+    ----------
+    files : Sequence[Path]
+        Fichiers YAML à lire. Par défaut `config/eval_recherche.yaml` et
+        `config/eval_mots.yaml`.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Une entrée par question, avec ses clés `question` et `filtres`.
+    """
 
     items = []
     for path in files:
@@ -84,7 +96,25 @@ def load_questions(files: Sequence[Path] = QUESTION_FILES) -> list[dict[str, Any
 
 
 def pick(items: Sequence[Mapping[str, Any]], n: int, seed: int = 16) -> list[Mapping[str, Any]]:
-    """`n` questions dans un ordre fixe (même tirage d'un lancement à l'autre)."""
+    """`n` questions dans un ordre fixe (même tirage d'un lancement à l'autre).
+
+    Les questions sont mélangées une fois, puis répétées en boucle si `n` dépasse
+    leur nombre.
+
+    Parameters
+    ----------
+    items : Sequence[Mapping[str, Any]]
+        Les questions disponibles.
+    n : int
+        Nombre de questions voulues.
+    seed : int
+        Graine du mélange. Par défaut 16.
+
+    Returns
+    -------
+    list[Mapping[str, Any]]
+        Les `n` questions, dans l'ordre où les poser.
+    """
 
     order = list(items)
     random.Random(seed).shuffle(order)
@@ -92,7 +122,20 @@ def pick(items: Sequence[Mapping[str, Any]], n: int, seed: int = 16) -> list[Map
 
 
 def percentile(values: Sequence[float], share: float) -> float:
-    """Centile par interpolation (comme percentile_cont de PostgreSQL)."""
+    """Centile par interpolation (comme percentile_cont de PostgreSQL).
+
+    Parameters
+    ----------
+    values : Sequence[float]
+        Les valeurs mesurées.
+    share : float
+        Le centile voulu, entre 0 et 1 (0.95 pour le P95).
+
+    Returns
+    -------
+    float
+        La valeur du centile, ou 0.0 si la liste est vide.
+    """
 
     ordered = sorted(values)
     if not ordered:
@@ -103,7 +146,18 @@ def percentile(values: Sequence[float], share: float) -> float:
 
 
 def embedding_cost(question: str) -> float:
-    """Coût estimé de l'embedding de la question (4 caractères par token environ)."""
+    """Coût estimé de l'embedding de la question (4 caractères par token environ).
+
+    Parameters
+    ----------
+    question : str
+        La question envoyée à `mistral-embed`.
+
+    Returns
+    -------
+    float
+        Le coût estimé, en dollars.
+    """
 
     from agent.watch import estimate_tokens
 
@@ -112,8 +166,34 @@ def embedding_cost(question: str) -> float:
 
 def measure_one(connection: Any, item: Mapping[str, Any], services: SearchServices,
                 models: list[str], clock: Any = time.perf_counter) -> dict[str, Any]:
-    """Une recherche : temps total et par étape, coût, cache ou non."""
+    """Une recherche : temps total et par étape, coût, cache ou non.
 
+    Le temps d'une étape va de la fin de l'étape précédente (ou du départ) à
+    l'événement `progress` qui la déclare terminée. La réponse est considérée
+    servie par le cache si un message d'étape mentionne « cache ».
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion PostgreSQL ouverte.
+    item : Mapping[str, Any]
+        La question et ses filtres (clés `question` et `filtres`).
+    services : SearchServices
+        Les services de recherche (embedding, rédaction, cache).
+    models : list[str]
+        Liste partagée avec le rédacteur : vidée ici, puis remplie avec le modèle
+        réellement utilisé.
+    clock : Any
+        Horloge en secondes. Par défaut `time.perf_counter`.
+
+    Returns
+    -------
+    dict[str, Any]
+        La ligne de mesure : temps total et par étape (ms), cache, nombre de
+        cartes, réponse dégradée, tokens, modèle et coût en dollars.
+    """
+
+    # Lancer la recherche en notant l'heure de fin de chaque étape
     models.clear()
     started = clock()
     done: dict[str, float] = {}
@@ -125,12 +205,14 @@ def measure_one(connection: Any, item: Mapping[str, Any], services: SearchServic
             from_cache = from_cache or "cache" in str(event.get("message", ""))
         elif event.get("event") == "completed":
             result = event["result"]
+    # Convertir les heures de fin en durée par étape
     total = clock() - started
     steps, previous = {}, started
     for step in STEPS:
         if step in done:
             steps[step] = round((done[step] - previous) * 1000, 1)
             previous = done[step]
+    # Calculer le coût : rédaction (tokens rendus) et embedding (estimé, rien si cache)
     tokens = result.get("tokens") or {}
     write_cost = request_cost(models[0], tokens) if models and tokens else 0.0
     embed_cost = 0.0 if from_cache or services.embed is None else embedding_cost(str(item["question"]))
@@ -140,7 +222,18 @@ def measure_one(connection: Any, item: Mapping[str, Any], services: SearchServic
 
 
 def summarize(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
-    """Médiane, P95 et maximum ; temps moyen par étape ; coût moyen et pour 1 000."""
+    """Médiane, P95 et maximum ; temps moyen par étape ; coût moyen et pour 1 000.
+
+    Parameters
+    ----------
+    rows : Sequence[Mapping[str, Any]]
+        Les lignes rendues par `measure_one`.
+
+    Returns
+    -------
+    dict[str, Any]
+        Les indicateurs du passage ; seulement `{"questions": 0}` si `rows` est vide.
+    """
 
     if not rows:
         return {"questions": 0}
@@ -163,26 +256,65 @@ def summarize(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
 
 
 def mixed_cost(miss: Mapping[str, Any], hit: Mapping[str, Any], repeated: float) -> float:
-    """Coût pour 1 000 questions quand une part `repeated` est servie par le cache."""
+    """Coût pour 1 000 questions quand une part `repeated` est servie par le cache.
+
+    Parameters
+    ----------
+    miss : Mapping[str, Any]
+        Résumé du premier passage (sans cache).
+    hit : Mapping[str, Any]
+        Résumé du second passage (servi par le cache).
+    repeated : float
+        Part des questions déjà posées, entre 0 et 1.
+
+    Returns
+    -------
+    float
+        Le coût pondéré pour 1 000 questions, en dollars.
+    """
 
     return round((1 - repeated) * float(miss.get("cout_1000_usd", 0)) + repeated * float(hit.get("cout_1000_usd", 0)), 4)
 
 
 def run(n: int, *, cache: bool, write: bool, model: str = "") -> dict[str, Any]:
-    """Lance la mesure et rend le rapport."""
+    """Lance la mesure et rend le rapport.
+
+    Avec le cache, les mêmes questions passent deux fois : le second passage
+    mesure les réponses servies par le cache.
+
+    Parameters
+    ----------
+    n : int
+        Nombre de questions à poser.
+    cache : bool
+        Active le cache des réponses (et le second passage).
+    write : bool
+        Fait rédiger la réponse par Mistral ; sinon, recherche seule.
+    model : str
+        Modèle de rédaction, placé dans SEARCH_MODEL. Par défaut "" (modèle du .env).
+
+    Returns
+    -------
+    dict[str, Any]
+        Le rapport : paramètres du lancement, résumés par passage, détail par
+        question et, avec le cache, le coût selon la part de questions répétées.
+    """
 
     from agent.services import connect_postgres
 
+    # Préparer les services : modèle choisi et rédacteur qui note le modèle utilisé
     if model:
         os.environ["SEARCH_MODEL"] = model
     models: list[str] = []
 
     def writer(question: str, filters: Any, cards: Any) -> tuple[str, dict[str, int], str]:
+        """Rédige avec Mistral et note le modèle réellement utilisé dans `models`."""
         raw, usage, used = write_with_mistral(question, filters, cards)
         models.append(used)
         return raw, usage, used
 
     services = SearchServices(embed=embed_question, write=writer if write else None, log=False, cache=cache)
+    # Poser les questions (deux passages avec le cache)
     questions = pick(load_questions(), n)
     passes: dict[str, list[dict[str, Any]]] = {"premier_passage": []}
     with connect_postgres() as connection:
@@ -192,6 +324,7 @@ def run(n: int, *, cache: bool, write: bool, model: str = "") -> dict[str, Any]:
                 print(f"  {index}/{n} questions…", flush=True)
         if cache:
             passes["second_passage"] = [measure_one(connection, item, services, models) for item in questions]
+    # Assembler le rapport et, avec le cache, le coût selon la part de répétitions
     report: dict[str, Any] = {
         "date": datetime.now(PARIS).isoformat(timespec="seconds"),
         "questions": n, "cache": cache, "redaction": write,
@@ -208,12 +341,27 @@ def run(n: int, *, cache: bool, write: bool, model: str = "") -> dict[str, Any]:
 
 
 def save(report: Mapping[str, Any], note: str = "") -> Path:
-    """Rapport complet en JSON et une ligne dans l'historique."""
+    """Rapport complet en JSON et une ligne dans l'historique.
 
+    Parameters
+    ----------
+    report : Mapping[str, Any]
+        Le rapport rendu par `run`.
+    note : str
+        Note libre gardée dans l'historique. Par défaut "".
+
+    Returns
+    -------
+    Path
+        Le chemin du fichier JSON écrit dans `benchmarks/cout_latence/`.
+    """
+
+    # Écrire le rapport complet, horodaté
     BENCH_DIR.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(PARIS).strftime("%Y-%m-%d_%Hh%M")
     path = BENCH_DIR / f"{stamp}.json"
     path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    # Ajouter une ligne à historique.csv (avec l'en-tête si le fichier est nouveau)
     first = report["resultats"]["premier_passage"]
     second = report["resultats"].get("second_passage", {})
     history = BENCH_DIR / "historique.csv"
@@ -230,6 +378,13 @@ def save(report: Mapping[str, Any], note: str = "") -> Path:
 
 
 def print_report(report: Mapping[str, Any]) -> None:
+    """Affiche le résumé de chaque passage et, avec le cache, le coût selon les répétitions.
+
+    Parameters
+    ----------
+    report : Mapping[str, Any]
+        Le rapport rendu par `run`.
+    """
     for name, summary in report["resultats"].items():
         print(f"\n{name.replace('_', ' ').capitalize()} : {summary['questions']} questions")
         print(f"  temps : médiane {summary['mediane_ms']:.0f} ms, P95 {summary['p95_ms']:.0f} ms, "
@@ -244,8 +399,13 @@ def print_report(report: Mapping[str, Any]) -> None:
 
 
 def main() -> None:
+    """Lit les arguments, annonce le coût estimé, lance la mesure et garde le rapport.
+
+    Au-delà de CONFIRM_ABOVE questions, la mesure ne part qu'avec `--oui`.
+    """
     from config.environment import load_environment
 
+    # Lire les arguments
     parser = argparse.ArgumentParser(description="Mesure du coût et du temps de réponse de la recherche.")
     parser.add_argument("--n", type=int, default=100, help="Nombre de questions (défaut : 100).")
     parser.add_argument("--cache", action="store_true", help="Avec le cache : deux passages des mêmes questions.")
@@ -255,12 +415,14 @@ def main() -> None:
     parser.add_argument("--oui", action="store_true", help=f"Lance sans confirmer au-delà de {CONFIRM_ABOVE} questions.")
     args = parser.parse_args()
 
+    # Annoncer le coût et demander confirmation pour les gros lancements
     load_environment()
     estimate = 0.0 if args.sans_redaction else args.n * COST_PER_QUESTION_GUESS
     print(f"{args.n} questions, coût Mistral estimé : environ {estimate:.2f} $ (non tracées dans rag_requests).")
     if args.n > CONFIRM_ABOVE and not args.oui:
         print(f"Au-delà de {CONFIRM_ABOVE} questions, ajoutez --oui pour confirmer.")
         return
+    # Mesurer, afficher et enregistrer
     report = run(args.n, cache=args.cache, write=not args.sans_redaction, model=args.modele)
     print_report(report)
     print(f"\nRapport gardé : {save(report, args.note).relative_to(ROOT)}")

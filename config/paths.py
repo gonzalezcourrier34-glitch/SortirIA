@@ -22,7 +22,20 @@ def get_configurable_path(
     environment_variable: str,
     default_path: Path
 ) -> Path:
-    """Retourne un chemin configurable via une variable d'environnement."""
+    """Retourne un chemin configurable via une variable d'environnement.
+
+    Parameters
+    ----------
+    environment_variable : str
+        Nom de la variable qui peut redéfinir le chemin (par exemple `CHECKIT_DATA_DIR`).
+    default_path : Path
+        Chemin utilisé si la variable est absente ou vide.
+
+    Returns
+    -------
+    Path
+        Le chemin lu dans la variable (avec `~` développé), sinon `default_path`.
+    """
 
     value = os.getenv(environment_variable)
 

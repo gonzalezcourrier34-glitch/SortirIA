@@ -53,7 +53,18 @@ MAX_OCCURRENCES = 366  # garde-fou contre une règle de répétition sans fin
 # ---------------------------------------------------------------------------
 
 def unfold_lines(text: str) -> list[str]:
-    """Recolle les lignes continuées (qui commencent par un espace ou une tabulation)."""
+    """Recolle les lignes continuées (qui commencent par un espace ou une tabulation).
+
+    Parameters
+    ----------
+    text : str
+        Contenu brut du fichier .ics (fins de ligne quelconques).
+
+    Returns
+    -------
+    list[str]
+        Les lignes logiques, sans les lignes vides.
+    """
 
     lines: list[str] = []
     for raw in text.replace("\r\n", "\n").replace("\r", "\n").split("\n"):
@@ -65,13 +76,37 @@ def unfold_lines(text: str) -> list[str]:
 
 
 def unescape(value: str) -> str:
-    """Retire les échappements iCal (`\\n`, `\\,`, `\\;`, `\\\\`)."""
+    """Retire les échappements iCal (`\\n`, `\\,`, `\\;`, `\\\\`).
+
+    Parameters
+    ----------
+    value : str
+        Valeur d'une propriété iCal.
+
+    Returns
+    -------
+    str
+        La valeur avec de vrais sauts de ligne, virgules et points-virgules.
+    """
 
     return re.sub(r"\\([nN,;\\])", lambda m: "\n" if m.group(1) in "nN" else m.group(1), value)
 
 
 def parse_property(line: str) -> tuple[str, dict[str, str], str]:
-    """`DTSTART;TZID=Europe/Paris:20261024T203000` -> (nom, paramètres, valeur)."""
+    """`DTSTART;TZID=Europe/Paris:20261024T203000` -> (nom, paramètres, valeur).
+
+    Parameters
+    ----------
+    line : str
+        Une ligne logique du calendrier (déjà recollée).
+
+    Returns
+    -------
+    tuple[str, dict[str, str], str]
+        Le nom de la propriété en majuscules, ses paramètres (clés en
+        majuscules, guillemets retirés) et sa valeur brute ; valeur vide si la
+        ligne n'a pas de deux-points.
+    """
 
     # Les deux-points d'un paramètre entre guillemets ne séparent pas la valeur.
     in_quotes = False
@@ -83,6 +118,7 @@ def parse_property(line: str) -> tuple[str, dict[str, str], str]:
             break
     else:
         return line.upper(), {}, ""
+    # Séparer le nom de ses paramètres `CLE=valeur`
     name, *raw_params = head.split(";")
     params = {}
     for raw in raw_params:
@@ -96,6 +132,16 @@ def parse_calendar(text: str) -> list[dict[str, Any]]:
 
     Chaque événement est un dictionnaire `{NOM: (paramètres, valeur)}` ;
     `EXDATE`, qui peut apparaître plusieurs fois, est une liste.
+
+    Parameters
+    ----------
+    text : str
+        Contenu brut du fichier .ics.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Les événements du calendrier ; les blocs imbriqués (VALARM...) sont ignorés.
     """
 
     events: list[dict[str, Any]] = []
@@ -131,8 +177,22 @@ def parse_ical_datetime(params: Mapping[str, str], value: str) -> tuple[datetime
     - `20261024T183000Z` : heure UTC ;
     - `TZID=Europe/Paris:20261024T203000` : heure dans ce fuseau ;
     - `20261024T203000` sans fuseau : heure « flottante », lue à Paris.
+
+    Parameters
+    ----------
+    params : Mapping[str, str]
+        Paramètres de la propriété (`VALUE`, `TZID`).
+    value : str
+        Valeur de la date.
+
+    Returns
+    -------
+    tuple[datetime or None, bool]
+        La date à l'heure de Paris (None si illisible) et vrai si l'heure est connue.
+        Un fuseau inconnu est remplacé par Paris.
     """
 
+    # Lire les trois écritures possibles : jour seul, UTC, heure locale
     value = value.strip()
     try:
         if params.get("VALUE", "").upper() == "DATE" or re.fullmatch(r"\d{8}", value):
@@ -144,6 +204,7 @@ def parse_ical_datetime(params: Mapping[str, str], value: str) -> tuple[datetime
         moment = datetime.strptime(value[:15], "%Y%m%dT%H%M%S")  # noqa: DTZ007 (fuseau ajouté plus bas)
     except ValueError:
         return None, False
+    # Appliquer le fuseau TZID s'il est reconnu, sinon Paris
     zone = PARIS
     if params.get("TZID"):
         try:
@@ -154,7 +215,18 @@ def parse_ical_datetime(params: Mapping[str, str], value: str) -> tuple[datetime
 
 
 def parse_rrule(value: str) -> dict[str, str]:
-    """`FREQ=WEEKLY;BYDAY=TU,TH;COUNT=10` -> dictionnaire."""
+    """`FREQ=WEEKLY;BYDAY=TU,TH;COUNT=10` -> dictionnaire.
+
+    Parameters
+    ----------
+    value : str
+        Valeur de la propriété `RRULE`.
+
+    Returns
+    -------
+    dict[str, str]
+        Les parties de la règle, clés en majuscules.
+    """
 
     return {key.upper(): val for key, _, val in (part.partition("=") for part in value.split(";")) if key}
 
@@ -170,8 +242,25 @@ def expand_occurrences(
     Cas gérés : FREQ=DAILY ou WEEKLY, INTERVAL, COUNT, UNTIL, BYDAY (pour
     WEEKLY). Une règle plus rare (mensuelle...) ne donne que la première date :
     mieux vaut une proposition de moins qu'une date inventée.
+
+    Parameters
+    ----------
+    start : datetime
+        Début de la première séance (`DTSTART`).
+    rrule : str
+        Règle de répétition brute ; vide pour un événement non répété.
+    exdates : list[datetime]
+        Dates exclues (`EXDATE`), comparées à la minute près.
+    window_end : datetime
+        Fin de la fenêtre de collecte : aucune date au-delà.
+
+    Returns
+    -------
+    list[datetime]
+        Les débuts des séances, dans l'ordre, au plus `MAX_OCCURRENCES`.
     """
 
+    # Lire la règle ; une fréquence non gérée ne donne que la première date
     if not rrule:
         return [start]
     rule = parse_rrule(rrule)
@@ -186,10 +275,12 @@ def expand_occurrences(
     last = min(dt for dt in (window_end, until) if dt is not None)
     excluded = {dt.replace(second=0, microsecond=0) for dt in exdates}
 
+    # Jours de la semaine concernés (BYDAY), par défaut celui du début
     days = sorted({WEEKDAYS[d[-2:]] for d in rule.get("BYDAY", "").split(",") if d[-2:] in WEEKDAYS})
     if frequency == "WEEKLY" and not days:
         days = [start.weekday()]
 
+    # Avancer jour par jour ou semaine par semaine jusqu'à la limite (fin, COUNT, garde-fou)
     occurrences: list[datetime] = []
     produced = 0
     week_start = start - timedelta(days=start.weekday())
@@ -210,6 +301,7 @@ def expand_occurrences(
             if candidate > last or (count is not None and produced >= count):
                 stop = True
                 break
+            # Une date exclue compte quand même pour COUNT (comme dans la RFC)
             produced += 1
             if candidate.replace(second=0, microsecond=0) not in excluded:
                 occurrences.append(candidate)
@@ -224,6 +316,20 @@ def expand_occurrences(
 # ---------------------------------------------------------------------------
 
 def _value(vevent: Mapping[str, Any], name: str) -> str:
+    """Valeur texte d'une propriété d'un événement, échappements retirés.
+
+    Parameters
+    ----------
+    vevent : Mapping[str, Any]
+        Événement lu par `parse_calendar`.
+    name : str
+        Nom de la propriété (« SUMMARY », « URL »...).
+
+    Returns
+    -------
+    str
+        La valeur nettoyée, ou une chaîne vide si la propriété est absente.
+    """
     entry = vevent.get(name)
     return unescape(entry[1]).strip() if entry else ""
 
@@ -233,8 +339,25 @@ def get_occurrences(
     today: date,
     days_forward: int,
 ) -> list[dict[str, Any]]:
-    """Séances d'un événement dans la fenêtre [aujourd'hui ; + days_forward]."""
+    """Séances d'un événement dans la fenêtre [aujourd'hui ; + days_forward].
 
+    Parameters
+    ----------
+    vevent : Mapping[str, Any]
+        Événement lu par `parse_calendar`.
+    today : date
+        Premier jour de la fenêtre.
+    days_forward : int
+        Nombre de jours couverts après aujourd'hui.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Une entrée par séance : `start_at`, `end_at` (ISO, vide si inconnue)
+        et `time_known`. Vide si l'événement n'a pas de début lisible.
+    """
+
+    # Lire le début et la fin de la première séance
     if not vevent.get("DTSTART"):
         return []
     start, time_known = parse_ical_datetime(*vevent["DTSTART"])
@@ -254,10 +377,12 @@ def get_occurrences(
             end = None
     duration = (end - start) if end is not None and end >= start else None
 
+    # Fixer la fenêtre et lire les dates exclues
     window_start = datetime.combine(today, time.min, tzinfo=PARIS)
     window_end = window_start + timedelta(days=days_forward + 1)
     exdates = [dt for params, value in vevent.get("EXDATE", []) for dt in [parse_ical_datetime(params, value.split(",")[0])[0]] if dt]
 
+    # Développer la répétition et garder les séances qui touchent la fenêtre
     occurrences = []
     for occurrence_start in expand_occurrences(start, _value(vevent, "RRULE"), exdates, window_end):
         occurrence_end = occurrence_start + duration if duration is not None else None
@@ -276,6 +401,18 @@ def get_occurrences(
 # ---------------------------------------------------------------------------
 
 def _to_float(value: Any) -> float | None:
+    """Convertir une valeur en nombre décimal, ou None si vide ou illisible.
+
+    Parameters
+    ----------
+    value : Any
+        Valeur à convertir (texte, nombre, None).
+
+    Returns
+    -------
+    float or None
+        Le nombre, ou None.
+    """
     try:
         return float(value) if value not in (None, "") else None
     except (TypeError, ValueError):
@@ -289,7 +426,25 @@ def map_ical_event(
     *,
     extracted_at: str = "",
 ) -> Event | None:
-    """Transforme une séance d'un événement iCal en `Event`."""
+    """Transforme une séance d'un événement iCal en `Event`.
+
+    Parameters
+    ----------
+    vevent : Mapping[str, Any]
+        Événement lu par `parse_calendar`.
+    occurrence : Mapping[str, Any]
+        Séance produite par `get_occurrences` (`start_at`, `end_at`, `time_known`).
+    source : Mapping[str, Any]
+        Configuration de la source : lieu par défaut, coordonnées, site web,
+        catégorie par défaut, langue, crédit.
+    extracted_at : str
+        Date de l'extraction, recopiée dans l'événement. Par défaut vide.
+
+    Returns
+    -------
+    Event or None
+        L'événement, ou None s'il n'a pas de titre.
+    """
 
     title = _value(vevent, "SUMMARY")
     if not title:
@@ -312,6 +467,7 @@ def map_ical_event(
         lat_text, _, lon_text = vevent["GEO"][1].partition(";")
         latitude, longitude = _to_float(lat_text) or latitude, _to_float(lon_text) or longitude
 
+    # Lien (sinon le site de la source), statut, catégorie et prix
     url = _value(vevent, "URL")
     if not is_valid_http_url(url):
         url = clean_text(source.get("website"))
@@ -325,6 +481,7 @@ def map_ical_event(
     uid = _value(vevent, "UID")
     dedup_key = build_dedup_key(title, start_at, venue_name or city)
 
+    # Construire l'événement de cette séance
     return Event(
         event_id=build_event_id(dedup_key),
         # Tous les calendriers sont rangés sous la source « ical » déclarée

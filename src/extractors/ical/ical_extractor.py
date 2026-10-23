@@ -54,7 +54,23 @@ REQUEST_TIMEOUT_S = 30.0
     reraise=True,
 )
 def fetch_calendar_text(url: str) -> str:
-    """Télécharge un calendrier (trois essais en cas de coupure réseau)."""
+    """Télécharge un calendrier (trois essais en cas de coupure réseau).
+
+    Parameters
+    ----------
+    url : str
+        Adresse du fichier .ics.
+
+    Returns
+    -------
+    str
+        Texte du calendrier (décodé en UTF-8 si le serveur ne précise rien).
+
+    Raises
+    ------
+    httpx.HTTPStatusError
+        Si le serveur répond par une erreur HTTP.
+    """
 
     response = httpx.get(url, headers=dict(HTTP_HEADERS), timeout=REQUEST_TIMEOUT_S, follow_redirects=True)
     response.raise_for_status()
@@ -63,7 +79,25 @@ def fetch_calendar_text(url: str) -> str:
 
 
 def iter_ical_items(source: Mapping[str, Any]) -> list[dict[str, Any]]:
-    """Séances du calendrier dans la fenêtre de dates (une par élément)."""
+    """Séances du calendrier dans la fenêtre de dates (une par élément).
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Entrée de `ical_sources` (url, `days_forward`...). La fenêtre est de
+        30 jours par défaut.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Un élément `{"vevent", "occurrence"}` par séance, y compris les séances
+        d'un événement répété.
+
+    Raises
+    ------
+    ValueError
+        Si le document téléchargé n'est pas un calendrier iCal.
+    """
 
     text = fetch_calendar_text(normalize_value(source.get("url")))
     if "BEGIN:VCALENDAR" not in text.upper():
@@ -78,7 +112,20 @@ def iter_ical_items(source: Mapping[str, Any]) -> list[dict[str, Any]]:
 
 
 def validate_ical_entry(item: Any, source: Mapping[str, Any]) -> tuple[bool, str]:
-    """Contrôle minimal : un titre et une séance."""
+    """Contrôle minimal : un titre et une séance.
+
+    Parameters
+    ----------
+    item : Any
+        Élément produit par `iter_ical_items`.
+    source : Mapping[str, Any]
+        Source du calendrier (inutilisée, imposée par l'adaptateur).
+
+    Returns
+    -------
+    tuple[bool, str]
+        Vrai et motif vide si l'élément est retenu, sinon faux et le motif du rejet.
+    """
 
     del source
     if not isinstance(item, Mapping) or not isinstance(item.get("vevent"), Mapping):
@@ -89,7 +136,21 @@ def validate_ical_entry(item: Any, source: Mapping[str, Any]) -> tuple[bool, str
 
 
 def build_ical_article(item: Mapping[str, Any], source: Mapping[str, Any]) -> dict[str, Any]:
-    """Transforme une séance en « article » du moteur, événement inclus."""
+    """Transforme une séance en « article » du moteur, événement inclus.
+
+    Parameters
+    ----------
+    item : Mapping[str, Any]
+        Séance validée (`vevent` et `occurrence`).
+    source : Mapping[str, Any]
+        Source du calendrier (nom, identifiant, lieu par défaut...).
+
+    Returns
+    -------
+    dict[str, Any]
+        Article standard, l'événement dans `metadata["event"]` ; dictionnaire
+        vide si la séance ne donne pas d'événement (le moteur le rejette).
+    """
 
     event = map_ical_event(item["vevent"], item["occurrence"], source, extracted_at=datetime.now(PARIS).isoformat())
     if event is None:
@@ -122,13 +183,30 @@ ICAL_EXTRACTOR = FileSourceExtractor(adapter=ICAL_ADAPTER, source_type=SOURCE_TY
 
 
 def extract_articles_from_sources(sources: list[Mapping[str, Any]]) -> ExtractorResult:
-    """Lit une liste de calendriers déjà chargée."""
+    """Lit une liste de calendriers déjà chargée.
+
+    Parameters
+    ----------
+    sources : list[Mapping[str, Any]]
+        Entrées de type `ical_sources`.
+
+    Returns
+    -------
+    ExtractorResult
+        Articles extraits, statut et bilan des rejets.
+    """
 
     return extract_file_sources(sources, ICAL_ADAPTER, SOURCE_TYPE_ICAL)
 
 
 def extract_all_articles() -> ExtractorResult:
-    """Lit tous les calendriers de `ical_sources`."""
+    """Lit tous les calendriers de `ical_sources`.
+
+    Returns
+    -------
+    ExtractorResult
+        Articles extraits, statut et bilan des rejets.
+    """
 
     return ICAL_EXTRACTOR.run()
 

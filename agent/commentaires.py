@@ -28,6 +28,22 @@ from config.environment import load_environment
 
 
 def describe(row: Mapping[str, Any]) -> str:
+    """Mettre en forme un commentaire sur une ligne, pour la revue humaine.
+
+    La ligne donne le numéro, la date, la sortie, la note, le texte, puis les
+    catégories signalées par Mistral et la date d'une éventuelle revue humaine.
+
+    Parameters
+    ----------
+    row : Mapping[str, Any]
+        Ligne de la base (`rating_id`, `updated_at`, `title`, `city`, `stars`,
+        `comment`, `moderation`).
+
+    Returns
+    -------
+    str
+        La ligne lisible à afficher.
+    """
     moderation = row.get("moderation") or {}
     flagged = ", ".join(moderation.get("flagged") or [])
     human = moderation.get("revue_humaine") or {}
@@ -43,6 +59,13 @@ def describe(row: Mapping[str, Any]) -> str:
 
 
 def main() -> None:
+    """Lister les commentaires modérés, ou publier / masquer l'un d'eux.
+
+    Sans option, liste les commentaires refusés de la période ; `--publies`
+    liste les publiés ; `--publier N` et `--masquer N` enregistrent la décision
+    humaine, qui prend effet tout de suite sur le site.
+    """
+    # Déclarer les options (une seule action à la fois)
     parser = argparse.ArgumentParser(description="Revue humaine des commentaires modérés par Mistral.")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--publies", action="store_true", help="Liste les commentaires publiés (30 jours).")
@@ -56,6 +79,7 @@ def main() -> None:
     from src.event import event_repository as repository
 
     with connect_postgres() as connection:
+        # Décision humaine sur un commentaire : publier ou masquer
         if args.publier is not None or args.masquer is not None:
             number = args.publier if args.publier is not None else args.masquer
             status = "publie" if args.publier is not None else "refuse"
@@ -65,6 +89,7 @@ def main() -> None:
             else:
                 print(f"Pas de commentaire n° {number}.")
             return
+        # Sinon, lister les commentaires refusés (ou publiés) de la période
         status = "publie" if args.publies else "refuse"
         rows = repository.fetch_comments(connection, status, args.jours)
         label = "publié" if args.publies else "refusé"

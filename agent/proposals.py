@@ -43,7 +43,25 @@ from config.paths import SOURCES_FILE
 
 
 def replace_url_in_config(old: str, new: str, path: Path = SOURCES_FILE) -> tuple[bool, str]:
-    """Remplace une adresse dans la configuration. Renvoie (fait ?, explication)."""
+    """Remplace une adresse dans la configuration. Renvoie (fait ?, explication).
+
+    Le remplacement n'a lieu que si l'ancienne adresse figure exactement une
+    fois ; le fichier est lu et écrit en octets pour garder ses fins de ligne.
+
+    Parameters
+    ----------
+    old : str
+        Adresse actuelle, à remplacer.
+    new : str
+        Nouvelle adresse.
+    path : Path
+        Fichier de configuration. Par défaut `config/sources.yaml` (`SOURCES_FILE`).
+
+    Returns
+    -------
+    tuple[bool, str]
+        Vrai si le fichier a été modifié, et une explication lisible.
+    """
 
     raw = path.read_bytes()
     text = raw.decode("utf-8")
@@ -59,14 +77,37 @@ AGENDA_LINE = re.compile(r'^(\s*)-\s*["\']?(\d+)["\']?')
 
 def add_agenda_to_config(uid: str, events: Any, found_on: str,
                          path: Path = SOURCES_FILE) -> tuple[bool, str]:
-    """Ajoute un agenda à la fin de `agenda_uids`. Renvoie (fait ?, explication)."""
+    """Ajoute un agenda à la fin de `agenda_uids`. Renvoie (fait ?, explication).
 
+    La ligne ajoutée reprend l'indentation des précédentes et porte un
+    commentaire (nombre d'événements, date de la découverte) ; les fins de
+    ligne du fichier sont conservées.
+
+    Parameters
+    ----------
+    uid : str
+        Identifiant de l'agenda OpenAgenda.
+    events : Any
+        Nombre d'événements trouvés, recopié dans le commentaire.
+    found_on : str
+        Date de la découverte, recopiée dans le commentaire.
+    path : Path
+        Fichier de configuration. Par défaut `config/sources.yaml` (`SOURCES_FILE`).
+
+    Returns
+    -------
+    tuple[bool, str]
+        Vrai si l'agenda a été ajouté, et une explication lisible.
+    """
+
+    # Lire le fichier en gardant ses fins de ligne, et trouver l'unique liste agenda_uids
     raw = path.read_bytes().decode("utf-8")
     newline = "\r\n" if "\r\n" in raw else "\n"
     lines = raw.split(newline)
     starts = [index for index, line in enumerate(lines) if line.strip() == "agenda_uids:"]
     if len(starts) != 1:
         return False, f"{len(starts)} liste(s) agenda_uids dans {path.name} : à ajouter à la main."
+    # Parcourir la liste jusqu'à sa dernière ligne (et refuser un doublon)
     last, indent = starts[0], None
     for index in range(starts[0] + 1, len(lines)):
         match = AGENDA_LINE.match(lines[index])
@@ -77,6 +118,7 @@ def add_agenda_to_config(uid: str, events: Any, found_on: str,
         last, indent = index, match.group(1)
     if indent is None:
         return False, f"liste agenda_uids vide ou écrite autrement dans {path.name} : à ajouter à la main."
+    # Insérer la nouvelle ligne après la dernière et réécrire le fichier
     entry = f'{indent}- "{uid}"'
     lines.insert(last + 1, f"{entry:<20} # {events} (découverte du {found_on})")
     path.write_bytes(newline.join(lines).encode("utf-8"))
@@ -84,11 +126,32 @@ def add_agenda_to_config(uid: str, events: Any, found_on: str,
 
 
 def apply_proposal(proposal: Mapping[str, Any], path: Path = SOURCES_FILE) -> tuple[bool, str]:
-    """Applique une proposition acceptée. Renvoie (appliquée ?, explication)."""
+    """Applique une proposition acceptée. Renvoie (appliquée ?, explication).
 
+    Types reconnus : `remplacer_url`, `ajouter_agenda`,
+    `valider_document_partenaire` et `ajouter_synonyme` ; les autres sont à
+    faire à la main.
+
+    Parameters
+    ----------
+    proposal : Mapping[str, Any]
+        La proposition, dont `action` (dictionnaire ou JSON) décrit la modification.
+    path : Path
+        Fichier de configuration des sources. Par défaut `SOURCES_FILE`.
+        Ne sert pas pour `ajouter_synonyme` (fichier des synonymes) ni pour
+        `valider_document_partenaire`.
+
+    Returns
+    -------
+    tuple[bool, str]
+        Vrai si la modification a été appliquée, et une explication lisible.
+    """
+
+    # Lire l'action (stockée en JSON dans la base)
     action = proposal.get("action") or {}
     if isinstance(action, str):
         action = json.loads(action)
+    # Appliquer selon le type d'action
     if action.get("type") == "remplacer_url" and action.get("old") and action.get("new"):
         return replace_url_in_config(str(action["old"]), str(action["new"]), path)
     if action.get("type") == "ajouter_agenda" and action.get("new"):
@@ -113,20 +176,42 @@ def add_synonym_to_config(word: str, target: str, times: Any, found_on: str,
 
     La recherche relit ce fichier dès qu'il change : le synonyme sert à la
     question suivante, sans redémarrer l'API.
+
+    Parameters
+    ----------
+    word : str
+        Mot tapé par les visiteurs.
+    target : str
+        Mot connu de la base qu'il doit aussi chercher.
+    times : Any
+        Nombre de recherches, recopié dans le commentaire.
+    found_on : str
+        Date de la proposition, recopiée dans le commentaire.
+    path : Path | None
+        Fichier des synonymes ; `None` par défaut pour `config/synonymes.yaml`
+        (`SYNONYMS_FILE`).
+
+    Returns
+    -------
+    tuple[bool, str]
+        Vrai si le synonyme a été ajouté, et une explication lisible.
     """
 
     from app.query_understanding import SYNONYMS_FILE, learned_synonyms, plain
 
+    # Normaliser les deux mots et refuser ce qui est illisible ou déjà connu
     path = path or SYNONYMS_FILE
     word, target = plain(word), plain(target)
     if not word or not target or not re.fullmatch(r"[a-z0-9 ]+", f"{word} {target}"):
         return False, f"synonyme « {word} » -> « {target} » illisible : à ajouter à la main."
     if word in learned_synonyms(path):
         return False, f"« {word} » est déjà dans {path.name}."
+    # Lire le fichier (ou partir d'un fichier vide) en gardant ses fins de ligne
     raw = path.read_bytes().decode("utf-8") if path.exists() else "synonymes:\n"
     newline = "\r\n" if "\r\n" in raw else "\n"
     if not re.search(r"^synonymes:", raw, re.MULTILINE):
         return False, f"clé « synonymes: » absente de {path.name} : à ajouter à la main."
+    # Ajouter l'entrée commentée à la fin et réécrire le fichier
     entry = f"  {word}: {target}"
     raw = raw.rstrip("\r\n") + newline + f"{entry:<30} # cherché {times} fois (proposé le {found_on})" + newline
     path.write_bytes(raw.encode("utf-8"))
@@ -134,7 +219,14 @@ def add_synonym_to_config(word: str, target: str, times: Any, found_on: str,
 
 
 def partner_directory() -> Path | None:
-    """Dossier des fichiers des partenaires, d'après `config/sources.yaml`."""
+    """Dossier des fichiers des partenaires, d'après `config/sources.yaml`.
+
+    Returns
+    -------
+    Path | None
+        Le dossier de la source `partenaire`, ou `None` si elle est absente ou
+        si son dossier ne peut pas être résolu.
+    """
 
     from config.source_config import load_source_registry
     from src.extractors.datasets.dataset_file_utils import resolve_dataset_directory
@@ -150,7 +242,18 @@ def partner_directory() -> Path | None:
 
 
 def describe(proposal: Mapping[str, Any]) -> str:
-    """Une ligne lisible par proposition."""
+    """Une ligne lisible par proposition.
+
+    Parameters
+    ----------
+    proposal : Mapping[str, Any]
+        La proposition (`proposal_id`, `created_at`, `action`, `pr_url`).
+
+    Returns
+    -------
+    str
+        Numéro, date et description de l'action, suivis du lien de la pull request s'il y en a une.
+    """
 
     created = str(proposal.get("created_at") or "")[:16]
     link = f"\n      pull request : {proposal['pr_url']}" if proposal.get("pr_url") else ""
@@ -158,6 +261,12 @@ def describe(proposal: Mapping[str, Any]) -> str:
 
 
 def main() -> None:
+    """Lister les propositions en attente, ou en accepter / refuser une.
+
+    Une proposition qui a une pull request se décide sur GitHub : la commande
+    renvoie alors vers la PR sans rien changer.
+    """
+    # Déclarer les options (une seule décision à la fois)
     parser = argparse.ArgumentParser(description="Réparations proposées par l'agent de collecte.")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--accepter", type=int, metavar="N", help="Accepte et applique la proposition N.")
@@ -169,6 +278,7 @@ def main() -> None:
     from src.event import event_repository as repository
 
     with connect_postgres() as connection:
+        # Lire les propositions en attente (la table peut ne pas encore exister)
         try:
             pending = {item["proposal_id"]: item for item in repository.fetch_proposals(connection)}
         except Exception as error:
@@ -177,12 +287,14 @@ def main() -> None:
             print("La table des propositions n'existe pas encore : lancer d'abord "
                   "« uv run python -m scripts.init_db ».")
             return
+        # Sans décision : lister les propositions
         if args.accepter is None and args.refuser is None:
             if not pending:
                 print("Aucune proposition en attente.")
             for proposal in pending.values():
                 print(describe(proposal))
             return
+        # Retrouver la proposition visée
         number = args.accepter if args.accepter is not None else args.refuser
         proposal = pending.get(number)
         if proposal is None:
@@ -199,6 +311,7 @@ def main() -> None:
             repository.set_proposal_status(connection, number, "refusee")
             print(f"Proposition n° {number} refusée.")
             return
+        # Accepter : appliquer, puis noter si c'est fait ou à faire à la main
         applied, explanation = apply_proposal(proposal)
         repository.set_proposal_status(connection, number, "appliquee" if applied else "acceptee")
         print(f"Proposition n° {number} {'appliquée' if applied else 'acceptée'} : {explanation}")

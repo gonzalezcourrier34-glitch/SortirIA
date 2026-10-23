@@ -45,6 +45,25 @@ def wait_for_database(url: str, timeout_s: float = 90.0, pause_s: float = 2.0) -
     exécute les fichiers de `sql/sortiria/` puis redémarre. Pendant ce temps,
     le port 5432 accepte la connexion puis la ferme (« server closed the
     connection unexpectedly »). On réessaie donc jusqu'à `timeout_s` secondes.
+
+    Parameters
+    ----------
+    url : str
+        Adresse de connexion PostgreSQL (DATABASE_URL).
+    timeout_s : float
+        Délai total d'attente, en secondes. Par défaut 90 s.
+    pause_s : float
+        Pause entre deux essais, en secondes. Par défaut 2 s.
+
+    Returns
+    -------
+    Any
+        La connexion psycopg2 ouverte.
+
+    Raises
+    ------
+    psycopg2.OperationalError
+        Si la base n'accepte toujours pas la connexion une fois le délai écoulé.
     """
 
     import psycopg2
@@ -61,7 +80,18 @@ def wait_for_database(url: str, timeout_s: float = 90.0, pause_s: float = 2.0) -
 
 
 def schema_files(sql_dir: Path = SQL_DIR) -> list[Path]:
-    """Fichiers SQL du schéma, dans l'ordre de leur numéro."""
+    """Fichiers SQL du schéma, dans l'ordre de leur numéro.
+
+    Parameters
+    ----------
+    sql_dir : Path
+        Dossier des fichiers SQL. Par défaut `sql/sortiria/`.
+
+    Returns
+    -------
+    list[Path]
+        Les fichiers `NN_*.sql`, triés par nom (donc par numéro).
+    """
 
     return sorted(sql_dir.glob("[0-9][0-9]_*.sql"))
 
@@ -72,6 +102,18 @@ def apply_schema(connection: Any, sql_dir: Path = SQL_DIR) -> list[str]:
     La connexion doit être en autocommit : chaque fichier gère lui-même sa
     transaction (BEGIN ... COMMIT), si bien qu'une erreur annule le fichier
     en cours sans toucher aux précédents.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion psycopg2 ouverte, en autocommit.
+    sql_dir : Path
+        Dossier des fichiers SQL. Par défaut `sql/sortiria/`.
+
+    Returns
+    -------
+    list[str]
+        Les noms des fichiers exécutés, dans l'ordre.
     """
 
     applied = []
@@ -83,7 +125,18 @@ def apply_schema(connection: Any, sql_dir: Path = SQL_DIR) -> list[str]:
 
 
 def list_schema_objects(connection: Any) -> dict[str, list[str]]:
-    """Tables et vues présentes dans le schéma `sortiria`."""
+    """Tables et vues présentes dans le schéma `sortiria`.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion psycopg2 ouverte.
+
+    Returns
+    -------
+    dict[str, list[str]]
+        Les noms triés, sous les clés `tables` et `views`.
+    """
 
     with connection.cursor() as cursor:
         cursor.execute(
@@ -98,7 +151,18 @@ def list_schema_objects(connection: Any) -> dict[str, list[str]]:
 
 
 def missing_objects(found: dict[str, list[str]]) -> list[str]:
-    """Objets attendus mais absents (liste vide = schéma complet)."""
+    """Objets attendus mais absents (liste vide = schéma complet).
+
+    Parameters
+    ----------
+    found : dict[str, list[str]]
+        Tables et vues trouvées, comme renvoyées par `list_schema_objects`.
+
+    Returns
+    -------
+    list[str]
+        Les tables puis les vues attendues qui manquent.
+    """
 
     return [name for name in EXPECTED_TABLES if name not in found["tables"]] + [
         name for name in EXPECTED_VIEWS if name not in found["views"]
@@ -106,10 +170,18 @@ def missing_objects(found: dict[str, list[str]]) -> list[str]:
 
 
 def main() -> int:
+    """Applique le schéma (sauf avec `--verifier`) puis vérifie qu'il est complet.
+
+    Returns
+    -------
+    int
+        Code de sortie : 0 si toutes les tables et vues attendues sont là, 1 sinon.
+    """
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--verifier", action="store_true", help="liste les tables et vues sans rien modifier")
     args = parser.parse_args()
 
+    # Se connecter (en attendant la base) et appliquer les fichiers SQL
     load_dotenv()
     connection = wait_for_database(os.environ["DATABASE_URL"])
     connection.autocommit = True
@@ -121,6 +193,7 @@ def main() -> int:
     finally:
         connection.close()
 
+    # Afficher ce qui est en base et signaler les objets manquants
     print(f"tables : {', '.join(found['tables'])}")
     print(f"vues   : {', '.join(found['views'])}")
     missing = missing_objects(found)

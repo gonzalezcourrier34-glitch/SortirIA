@@ -42,13 +42,30 @@ BOOLEAN_VALIDATION_POLICY_FIELDS = (
 def build_validation_policy(
     policy: Mapping[str, Any] | None = None
 ) -> dict[str, Any]:
-    """Construit une politique de validation complète."""
+    """Construit une politique de validation complète.
 
+    Les réglages fournis remplacent ceux par défaut ; les longueurs minimales
+    sont converties en entiers positifs et les options en booléens, avec repli
+    sur la valeur par défaut si la conversion échoue.
+
+    Parameters
+    ----------
+    policy : Mapping[str, Any] | None
+        Réglages à appliquer ; None : la politique par défaut.
+
+    Returns
+    -------
+    dict[str, Any]
+        La politique complète, toutes clés de `DEFAULT_VALIDATION_POLICY` présentes.
+    """
+
+    # Partir de la politique par défaut, surchargée par les réglages fournis
     validation_policy = DEFAULT_VALIDATION_POLICY.copy()
 
     if isinstance(policy, Mapping):
         validation_policy.update(policy)
 
+    # Convertir les longueurs minimales, puis les options booléennes
     integer_fields = {
         "min_title_length": MIN_TITLE_LENGTH,
         "min_text_length": MIN_TEXT_LENGTH,

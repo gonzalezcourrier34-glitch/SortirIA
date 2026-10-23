@@ -36,7 +36,28 @@ ROBOTS_MAX_SIZE_BYTES = 1_000_000
 
 @dataclass(frozen=True, slots=True)
 class RobotsPolicy:
-    """Politique robots.txt mise en cache pour une origine."""
+    """Politique robots.txt mise en cache pour une origine.
+
+    Attributes
+    ----------
+    parser : RobotFileParser
+        Parseur des règles (réel, ou synthétique « tout permis » / « tout
+        interdit » quand le fichier manque ou est illisible).
+    robots_url : str
+        URL du robots.txt lu (finale, après redirection).
+    available : bool
+        Vrai si un robots.txt a réellement été lu, ou si son accès est refusé.
+    allow_without_file : bool
+        Vrai quand le site ne publie pas de robots.txt (404 ou 410).
+    crawl_delay : float
+        Délai demandé entre deux requêtes, en secondes (0 si aucun).
+    expires_at : float
+        Instant d'expiration, sur l'horloge `monotonic()`.
+    reason : str
+        Motif de la politique (`ROBOTS_REASON_*`). Par défaut « autorisé ».
+    error : str
+        Message d'erreur éventuel. Vide par défaut.
+    """
 
     parser: RobotFileParser
     robots_url: str
@@ -50,7 +71,25 @@ class RobotsPolicy:
 
 @dataclass(frozen=True, slots=True)
 class RobotsDecision:
-    """Décision détaillée concernant l'accès à une URL."""
+    """Décision détaillée concernant l'accès à une URL.
+
+    Attributes
+    ----------
+    allowed : bool
+        Vrai si l'URL peut être téléchargée.
+    reason : str
+        Motif de la décision (`ROBOTS_REASON_*`).
+    url : str
+        URL examinée.
+    origin : str
+        Origine de l'URL (schéma et hôte), vide si l'URL est invalide.
+    robots_url : str
+        URL du robots.txt consulté.
+    crawl_delay : float
+        Délai demandé entre deux requêtes, en secondes. Par défaut 0.
+    error : str
+        Message d'erreur éventuel. Vide par défaut.
+    """
 
     allowed: bool
     reason: str
@@ -62,7 +101,13 @@ class RobotsDecision:
 
     @property
     def denied(self) -> bool:
-        """Indique si l'accès est refusé."""
+        """Indique si l'accès est refusé.
+
+        Returns
+        -------
+        bool
+            L'inverse de `allowed`.
+        """
 
         return not self.allowed
 
@@ -79,7 +124,19 @@ _CACHE_LOCK = Lock()
 # URL
 
 def get_origin(url: str) -> str:
-    """Extrait l'origine normalisée d'une URL HTTP."""
+    """Extrait l'origine normalisée d'une URL HTTP.
+
+    Parameters
+    ----------
+    url : str
+        URL complète.
+
+    Returns
+    -------
+    str
+        Schéma et hôte en minuscules (`https://exemple.fr`), ou une chaîne
+        vide si l'URL n'est pas une URL HTTP valide.
+    """
 
     if not is_valid_http_url(url):
         return ""
@@ -99,7 +156,18 @@ def get_origin(url: str) -> str:
 
 
 def get_robots_url(origin: str) -> str:
-    """Construit l'URL robots.txt d'une origine."""
+    """Construit l'URL robots.txt d'une origine.
+
+    Parameters
+    ----------
+    origin : str
+        Origine produite par `get_origin`.
+
+    Returns
+    -------
+    str
+        L'URL `<origine>/robots.txt`, ou une chaîne vide.
+    """
 
     if not origin:
         return ""
@@ -108,7 +176,19 @@ def get_robots_url(origin: str) -> str:
 
 
 def get_effective_port(url: str) -> int | None:
-    """Retourne le port explicite ou le port par défaut d'une URL."""
+    """Retourne le port explicite ou le port par défaut d'une URL.
+
+    Parameters
+    ----------
+    url : str
+        URL à analyser.
+
+    Returns
+    -------
+    int | None
+        Le port indiqué, sinon 80 pour HTTP et 443 pour HTTPS ; `None` pour
+        un autre schéma ou une URL illisible.
+    """
 
     try:
         parsed = urlsplit(url)
@@ -132,7 +212,23 @@ def is_allowed_robots_redirect(
     original_url: str,
     final_url: str
 ) -> bool:
-    """Autorise uniquement une redirection sûre vers le même hôte."""
+    """Autorise uniquement une redirection sûre vers le même hôte.
+
+    Sont acceptés : même hôte, même schéma et même port, ou le passage de
+    HTTP (port 80) à HTTPS (port 443) sur le même hôte.
+
+    Parameters
+    ----------
+    original_url : str
+        URL du robots.txt demandée.
+    final_url : str
+        URL atteinte après redirections.
+
+    Returns
+    -------
+    bool
+        Vrai si la redirection reste sur le même site.
+    """
 
     try:
         original = urlsplit(original_url)
@@ -165,7 +261,20 @@ def build_default_parser(
     robots_url: str,
     allow: bool
 ) -> RobotFileParser:
-    """Crée un parseur synthétique autorisant ou refusant tout accès."""
+    """Crée un parseur synthétique autorisant ou refusant tout accès.
+
+    Parameters
+    ----------
+    robots_url : str
+        URL du robots.txt représenté.
+    allow : bool
+        Vrai pour « Allow: / », faux pour « Disallow: / ».
+
+    Returns
+    -------
+    RobotFileParser
+        Le parseur prêt à l'emploi.
+    """
 
     parser = RobotFileParser()
     parser.set_url(robots_url)
@@ -187,7 +296,35 @@ def build_policy(
     reason: str = ROBOTS_REASON_ALLOWED,
     error: str = ""
 ) -> RobotsPolicy:
-    """Construit une politique synthétique mise en cache."""
+    """Construit une politique synthétique mise en cache.
+
+    Sert quand aucun robots.txt exploitable n'a été lu (absent, refusé,
+    illisible, URL invalide).
+
+    Parameters
+    ----------
+    robots_url : str
+        URL du robots.txt concerné.
+    allow : bool
+        Autorise (vrai) ou refuse (faux) tout accès.
+    available : bool
+        Indique si un robots.txt a été trouvé.
+    allow_without_file : bool
+        Vrai quand le site ne publie pas de robots.txt. Par défaut False.
+    crawl_delay : float
+        Délai entre requêtes, ramené à 0 s'il est négatif. Par défaut 0.
+    ttl_seconds : int
+        Durée de vie en cache. Par défaut `ROBOTS_CACHE_TTL_SECONDS` (1 h).
+    reason : str
+        Motif de la politique. Par défaut `ROBOTS_REASON_ALLOWED`.
+    error : str
+        Message d'erreur éventuel. Vide par défaut.
+
+    Returns
+    -------
+    RobotsPolicy
+        La politique construite.
+    """
 
     return RobotsPolicy(
         parser=build_default_parser(robots_url, allow),
@@ -207,26 +344,74 @@ def get_origin_lock(
     locks: dict[str, Lock],
     origin: str
 ) -> Lock:
-    """Retourne ou crée le verrou associé à une origine."""
+    """Retourne ou crée le verrou associé à une origine.
+
+    Parameters
+    ----------
+    locks : dict[str, Lock]
+        Dictionnaire de verrous (chargement ou requêtes).
+    origin : str
+        Origine concernée.
+
+    Returns
+    -------
+    Lock
+        Le verrou de cette origine, créé au premier appel.
+    """
 
     with _CACHE_LOCK:
         return locks.setdefault(origin, Lock())
 
 
 def get_policy_lock(origin: str) -> Lock:
-    """Retourne le verrou de chargement d'une politique."""
+    """Retourne le verrou de chargement d'une politique.
+
+    Parameters
+    ----------
+    origin : str
+        Origine concernée.
+
+    Returns
+    -------
+    Lock
+        Le verrou qui évite de télécharger deux fois le même robots.txt.
+    """
 
     return get_origin_lock(_POLICY_LOCKS, origin)
 
 
 def get_request_lock(origin: str) -> Lock:
-    """Retourne le verrou d'application du crawl-delay."""
+    """Retourne le verrou d'application du crawl-delay.
+
+    Parameters
+    ----------
+    origin : str
+        Origine concernée.
+
+    Returns
+    -------
+    Lock
+        Le verrou qui sérialise les attentes vers cette origine.
+    """
 
     return get_origin_lock(_REQUEST_LOCKS, origin)
 
 
 def get_cached_policy(origin: str) -> RobotsPolicy | None:
-    """Retourne une politique non expirée."""
+    """Retourne une politique non expirée.
+
+    Une politique expirée est retirée du cache au passage.
+
+    Parameters
+    ----------
+    origin : str
+        Origine concernée.
+
+    Returns
+    -------
+    RobotsPolicy | None
+        La politique en cache, ou `None` si absente ou expirée.
+    """
 
     with _CACHE_LOCK:
         policy = _POLICY_CACHE.get(origin)
@@ -245,7 +430,20 @@ def cache_policy(
     origin: str,
     policy: RobotsPolicy
 ) -> RobotsPolicy:
-    """Enregistre une politique dans le cache."""
+    """Enregistre une politique dans le cache.
+
+    Parameters
+    ----------
+    origin : str
+        Origine concernée.
+    policy : RobotsPolicy
+        Politique à conserver.
+
+    Returns
+    -------
+    RobotsPolicy
+        La même politique, pour chaîner l'appel.
+    """
 
     with _CACHE_LOCK:
         _POLICY_CACHE[origin] = policy
@@ -256,7 +454,13 @@ def cache_policy(
 # Téléchargement
 
 def get_robots_headers() -> dict[str, str]:
-    """Retourne les en-têtes utilisés pour robots.txt."""
+    """Retourne les en-têtes utilisés pour robots.txt.
+
+    Returns
+    -------
+    dict[str, str]
+        Les en-têtes du projet, avec le User-Agent et un `Accept` texte.
+    """
 
     return {
         **HTTP_HEADERS,
@@ -266,7 +470,19 @@ def get_robots_headers() -> dict[str, str]:
 
 
 def parse_content_length(response: httpx.Response) -> int | None:
-    """Lit Content-Length lorsqu'il est exploitable."""
+    """Lit Content-Length lorsqu'il est exploitable.
+
+    Parameters
+    ----------
+    response : httpx.Response
+        Réponse HTTP reçue.
+
+    Returns
+    -------
+    int | None
+        La taille annoncée (jamais négative), ou `None` si absente ou
+        illisible.
+    """
 
     value = response.headers.get("Content-Length")
 
@@ -282,8 +498,28 @@ def parse_content_length(response: httpx.Response) -> int | None:
 
 
 def read_limited_content(response: httpx.Response) -> bytes:
-    """Lit une réponse en streaming sans dépasser la taille maximale."""
+    """Lit une réponse en streaming sans dépasser la taille maximale.
 
+    La limite est `ROBOTS_MAX_SIZE_BYTES` (1 Mo), vérifiée sur la taille
+    annoncée puis pendant la lecture.
+
+    Parameters
+    ----------
+    response : httpx.Response
+        Réponse ouverte en streaming.
+
+    Returns
+    -------
+    bytes
+        Le contenu brut du fichier.
+
+    Raises
+    ------
+    ValueError
+        Si le fichier annoncé ou lu dépasse la taille maximale.
+    """
+
+    # Refuser d'emblée un fichier annoncé trop gros
     announced_size = parse_content_length(response)
 
     if (
@@ -294,6 +530,7 @@ def read_limited_content(response: httpx.Response) -> bytes:
             "Fichier robots.txt annoncé comme trop volumineux."
         )
 
+    # Lire morceau par morceau en surveillant la taille cumulée
     content = bytearray()
 
     for chunk in response.iter_bytes():
@@ -314,7 +551,21 @@ def decode_robots_content(
     response: httpx.Response,
     content: bytes
 ) -> str:
-    """Décode le contenu de robots.txt avec un encodage sûr."""
+    """Décode le contenu de robots.txt avec un encodage sûr.
+
+    Parameters
+    ----------
+    response : httpx.Response
+        Réponse HTTP, dont l'encodage annoncé est essayé d'abord.
+    content : bytes
+        Contenu brut lu.
+
+    Returns
+    -------
+    str
+        Le texte décodé ; en UTF-8 avec remplacement si l'encodage annoncé
+        échoue.
+    """
 
     encoding = response.encoding or "utf-8"
 
@@ -325,7 +576,18 @@ def decode_robots_content(
 
 
 def looks_like_html(content: str) -> bool:
-    """Détecte une page HTML renvoyée à la place de robots.txt."""
+    """Détecte une page HTML renvoyée à la place de robots.txt.
+
+    Parameters
+    ----------
+    content : str
+        Texte décodé.
+
+    Returns
+    -------
+    bool
+        Vrai si le texte commence par une balise HTML usuelle.
+    """
 
     normalized = content.lstrip().lower()
 
@@ -342,8 +604,31 @@ def build_loaded_policy(
     robots_url: str,
     content: bytes
 ) -> RobotsPolicy:
-    """Construit une politique depuis une réponse robots.txt valide."""
+    """Construit une politique depuis une réponse robots.txt valide.
 
+    Le crawl-delay propre à notre User-Agent prime sur celui de `*`.
+
+    Parameters
+    ----------
+    response : httpx.Response
+        Réponse HTTP du robots.txt.
+    robots_url : str
+        URL demandée, utilisée si l'URL finale est vide.
+    content : bytes
+        Contenu brut lu.
+
+    Returns
+    -------
+    RobotsPolicy
+        La politique lue, valable `ROBOTS_CACHE_TTL_SECONDS`.
+
+    Raises
+    ------
+    ValueError
+        Si une page HTML a été reçue à la place du robots.txt.
+    """
+
+    # Décoder et écarter une page HTML servie à la place du fichier
     decoded_content = decode_robots_content(response, content)
 
     if looks_like_html(decoded_content):
@@ -351,10 +636,12 @@ def build_loaded_policy(
             "Une page HTML a été reçue à la place de robots.txt."
         )
 
+    # Analyser les règles
     parser = RobotFileParser()
     parser.set_url(str(response.url))
     parser.parse(decoded_content.splitlines())
 
+    # Lire le crawl-delay : notre User-Agent d'abord, puis `*`
     delay = parser.crawl_delay(USER_AGENT)
 
     if delay is None:
@@ -377,8 +664,26 @@ def build_loaded_policy(
 
 
 def fetch_robots_policy(url: str) -> RobotsPolicy:
-    """Télécharge robots.txt et retourne une politique exploitable."""
+    """Télécharge robots.txt et retourne une politique exploitable.
 
+    Ne lève jamais d'exception : 404 ou 410 donnent « tout permis », 401 ou
+    403 « tout interdit », et toute autre erreur (redirection vers un autre
+    site, statut d'erreur, fichier trop gros ou HTML, panne réseau) une
+    politique « indisponible » qui refuse l'accès, gardée 60 secondes
+    seulement.
+
+    Parameters
+    ----------
+    url : str
+        URL quelconque du site concerné.
+
+    Returns
+    -------
+    RobotsPolicy
+        La politique à appliquer pour l'origine de l'URL.
+    """
+
+    # Écarter une URL invalide
     origin = get_origin(url)
     robots_url = get_robots_url(origin)
 
@@ -392,6 +697,7 @@ def fetch_robots_policy(url: str) -> RobotsPolicy:
             error="URL invalide."
         )
 
+    # Télécharger le fichier en streaming
     try:
         with httpx.Client(
             headers=get_robots_headers(),
@@ -401,6 +707,7 @@ def fetch_robots_policy(url: str) -> RobotsPolicy:
             with client.stream("GET", robots_url) as response:
                 final_url = str(response.url)
 
+                # Refuser une redirection vers un autre site
                 if not is_allowed_robots_redirect(
                     robots_url,
                     final_url
@@ -417,6 +724,7 @@ def fetch_robots_policy(url: str) -> RobotsPolicy:
                         )
                     )
 
+                # Interpréter le statut : absent, refusé, en erreur ou lisible
                 if response.status_code in {404, 410}:
                     logger.debug(
                         "Aucun robots.txt publié pour %s.",
@@ -484,6 +792,7 @@ def fetch_robots_policy(url: str) -> RobotsPolicy:
         )
         error_message = f"{type(error).__name__}: {error}"
 
+    # Échec : politique « indisponible » qui refuse, gardée peu de temps
     logger.debug(
         "Politique robots.txt indisponible pour %s : %s",
         origin,
@@ -501,7 +810,21 @@ def fetch_robots_policy(url: str) -> RobotsPolicy:
 
 
 def get_robots_policy(url: str) -> RobotsPolicy:
-    """Retourne la politique en cache ou la charge une seule fois."""
+    """Retourne la politique en cache ou la charge une seule fois.
+
+    Le cache est revérifié sous le verrou de l'origine, pour qu'un seul
+    thread télécharge le robots.txt.
+
+    Parameters
+    ----------
+    url : str
+        URL quelconque du site concerné.
+
+    Returns
+    -------
+    RobotsPolicy
+        La politique de l'origine (refus pour une URL invalide).
+    """
 
     origin = get_origin(url)
 
@@ -534,8 +857,23 @@ def get_robots_policy(url: str) -> RobotsPolicy:
 # Décision
 
 def get_robots_decision(url: str) -> RobotsDecision:
-    """Retourne une décision détaillée sans produire d'avertissement."""
+    """Retourne une décision détaillée sans produire d'avertissement.
 
+    Une URL invalide, un robots.txt refusé ou indisponible, ou une erreur de
+    vérification donnent un refus avec son motif.
+
+    Parameters
+    ----------
+    url : str
+        URL à télécharger.
+
+    Returns
+    -------
+    RobotsDecision
+        La décision, son motif et le crawl-delay applicable.
+    """
+
+    # Écarter une URL invalide
     normalized_url = str(url or "").strip()
     origin = get_origin(normalized_url)
 
@@ -549,6 +887,7 @@ def get_robots_decision(url: str) -> RobotsDecision:
             error="URL invalide."
         )
 
+    # Refuser si la politique elle-même est un refus ou une indisponibilité
     policy = get_robots_policy(normalized_url)
 
     if policy.reason in {
@@ -566,6 +905,7 @@ def get_robots_decision(url: str) -> RobotsDecision:
             error=policy.error
         )
 
+    # Appliquer les règles du fichier à notre User-Agent
     try:
         allowed = policy.parser.can_fetch(
             USER_AGENT,
@@ -607,6 +947,16 @@ def is_url_allowed_by_robots(url: str) -> bool:
     Cette façade booléenne reste disponible pour compatibilité.
     Les nouveaux appels doivent privilégier get_robots_decision()
     afin de conserver le motif précis du refus.
+
+    Parameters
+    ----------
+    url : str
+        URL à télécharger.
+
+    Returns
+    -------
+    bool
+        Vrai si l'accès est autorisé.
     """
 
     return get_robots_decision(url).allowed
@@ -615,7 +965,18 @@ def is_url_allowed_by_robots(url: str) -> bool:
 # Crawl-delay
 
 def normalize_delay(value: float) -> float:
-    """Normalise un délai positif et fini."""
+    """Normalise un délai positif et fini.
+
+    Parameters
+    ----------
+    value : float
+        Délai en secondes.
+
+    Returns
+    -------
+    float
+        Le délai s'il est strictement positif et fini, sinon 0.
+    """
 
     try:
         delay = float(value)
@@ -632,13 +993,26 @@ def wait_for_crawl_delay(
     url: str,
     minimum_delay: float = 0.0
 ) -> None:
-    """Attend avant la prochaine requête vers la même origine."""
+    """Attend avant la prochaine requête vers la même origine.
+
+    Le délai retenu est le plus grand entre le crawl-delay du robots.txt et
+    `minimum_delay` ; l'attente est mesurée depuis la dernière requête vers
+    cette origine.
+
+    Parameters
+    ----------
+    url : str
+        URL qui va être téléchargée.
+    minimum_delay : float
+        Délai minimal voulu par la source, en secondes. Par défaut 0.
+    """
 
     origin = get_origin(url)
 
     if not origin:
         return
 
+    # Calculer le délai à respecter
     policy = get_robots_policy(url)
     delay = max(
         normalize_delay(policy.crawl_delay),
@@ -648,6 +1022,7 @@ def wait_for_crawl_delay(
     if delay <= 0:
         return
 
+    # Attendre le reste du délai, puis noter l'heure de cette requête
     with get_request_lock(origin):
         with _CACHE_LOCK:
             previous_request = _LAST_REQUEST_AT.get(origin)
@@ -664,7 +1039,13 @@ def wait_for_crawl_delay(
 
 
 def register_request(url: str) -> None:
-    """Enregistre la fin d'une requête pour son origine."""
+    """Enregistre la fin d'une requête pour son origine.
+
+    Parameters
+    ----------
+    url : str
+        URL qui vient d'être téléchargée.
+    """
 
     origin = get_origin(url)
 
@@ -678,7 +1059,15 @@ def register_request(url: str) -> None:
 # Réinitialisation
 
 def clear_robots_cache(origin: str | None = None) -> None:
-    """Vide tous les états robots.txt ou ceux d'une origine."""
+    """Vide tous les états robots.txt ou ceux d'une origine.
+
+    Les verrous ne sont pas retirés. Utile surtout pour les tests.
+
+    Parameters
+    ----------
+    origin : str | None
+        Origine ou URL à oublier. Par défaut `None`, qui vide tout.
+    """
 
     with _CACHE_LOCK:
         if origin is None:

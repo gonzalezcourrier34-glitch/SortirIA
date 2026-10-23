@@ -35,7 +35,19 @@ DEFAULT_MAX_HTML_ARTICLES = 1
 # Limites
 
 def get_max_articles(source: Mapping[str, Any]) -> int:
-    """Retourne le nombre maximal d'articles demandé."""
+    """Retourne le nombre maximal d'articles demandé.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Configuration de la source (clé `max_articles`, par défaut
+        `DEFAULT_MAX_HTML_ARTICLES`, soit 1).
+
+    Returns
+    -------
+    int
+        La valeur configurée, plafonnée à `MAX_ARTICLES_PER_SOURCE`.
+    """
 
     configured = parse_non_negative_integer(
         source.get("max_articles", DEFAULT_MAX_HTML_ARTICLES),
@@ -45,7 +57,20 @@ def get_max_articles(source: Mapping[str, Any]) -> int:
 
 
 def get_max_article_age_days(source: Mapping[str, Any]) -> int:
-    """Retourne l'âge maximal autorisé pour un article."""
+    """Retourne l'âge maximal autorisé pour un article.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Configuration de la source (clé `max_article_age_days`, par défaut
+        `MAX_ARTICLE_AGE_DAYS`).
+
+    Returns
+    -------
+    int
+        L'âge maximal en jours, plafonné au réglage global quand celui-ci est
+        positif ; 0 signifie « pas de limite ».
+    """
 
     configured = parse_non_negative_integer(
         source.get("max_article_age_days", MAX_ARTICLE_AGE_DAYS),
@@ -61,7 +86,20 @@ def get_max_article_age_days(source: Mapping[str, Any]) -> int:
 # Dates
 
 def parse_iso_datetime(value: Any) -> datetime | None:
-    """Convertit une date ISO en date UTC."""
+    """Convertit une date ISO en date UTC.
+
+    Le suffixe `Z` est accepté ; une date sans fuseau est considérée en UTC.
+
+    Parameters
+    ----------
+    value : Any
+        Date au format ISO 8601.
+
+    Returns
+    -------
+    datetime | None
+        La date avec fuseau UTC, ou `None` si la valeur est vide ou illisible.
+    """
 
     normalized = normalize_value(value)
 
@@ -85,8 +123,25 @@ def validate_article_age(
     article: Mapping[str, Any],
     max_article_age_days: int
 ) -> tuple[bool, str]:
-    """Vérifie que la date respecte la période autorisée."""
+    """Vérifie que la date respecte la période autorisée.
 
+    Un article sans date est accepté ; une date illisible, dans le futur (plus
+    de 5 minutes d'avance) ou trop ancienne est refusée.
+
+    Parameters
+    ----------
+    article : Mapping[str, Any]
+        Article à contrôler (champ `published_at`).
+    max_article_age_days : int
+        Âge maximal en jours ; 0 ou moins désactive le contrôle d'ancienneté.
+
+    Returns
+    -------
+    tuple[bool, str]
+        Validité de l'article et motif du rejet le cas échéant.
+    """
+
+    # Lire la date de publication, absente ou illisible
     published_at = normalize_value(article.get("published_at"))
 
     if not published_at:
@@ -97,6 +152,7 @@ def validate_article_age(
     if published_date is None:
         return False, "date_publication_invalide"
 
+    # Comparer à maintenant : ni future, ni trop ancienne
     now = get_current_datetime()
 
     if published_date > now + timedelta(minutes=5):
@@ -116,7 +172,21 @@ def validate_article_age(
 def iter_standard_scraper_items(
     source: Mapping[str, Any]
 ) -> Iterable[tuple[httpx.Client, str]]:
-    """Découvre les URL d'articles avec une session HTTP réutilisable."""
+    """Découvre les URL d'articles avec une session HTTP réutilisable.
+
+    Le client HTTP reste ouvert tant que le générateur est parcouru, pour être
+    réutilisé lors du téléchargement de chaque article.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Configuration de la source (pages de liste, sélecteurs, limite).
+
+    Yields
+    ------
+    tuple[httpx.Client, str]
+        Le client HTTP partagé et l'URL d'un article découvert.
+    """
 
     with create_http_client() as client:
         article_urls = discover_article_links(
@@ -133,7 +203,23 @@ def build_standard_scraper_article(
     item: tuple[httpx.Client, str],
     source: Mapping[str, Any]
 ) -> dict[str, Any]:
-    """Télécharge et construit un article depuis une URL HTML."""
+    """Télécharge et construit un article depuis une URL HTML.
+
+    Les erreurs de téléchargement (`ScraperPageError` levée par `get_html`)
+    remontent au moteur, qui les compte comme rejet.
+
+    Parameters
+    ----------
+    item : tuple[httpx.Client, str]
+        Client HTTP partagé et URL de l'article.
+    source : Mapping[str, Any]
+        Configuration de la source.
+
+    Returns
+    -------
+    dict[str, Any]
+        L'article standard, ou un dictionnaire vide si l'URL est invalide.
+    """
 
     client, article_url = item
     article_url = canonicalize_url(article_url)
@@ -168,7 +254,20 @@ def validate_standard_scraper_item(
     item: tuple[httpx.Client, str],
     source: Mapping[str, Any]
 ) -> tuple[bool, str]:
-    """Vérifie la structure et l'URL d'un élément HTML standard."""
+    """Vérifie la structure et l'URL d'un élément HTML standard.
+
+    Parameters
+    ----------
+    item : tuple[httpx.Client, str]
+        Élément attendu : un client HTTP et une URL.
+    source : Mapping[str, Any]
+        Configuration de la source ; non utilisée.
+
+    Returns
+    -------
+    tuple[bool, str]
+        Validité de l'élément et motif du rejet le cas échéant.
+    """
 
     del source
 
@@ -190,7 +289,20 @@ def validate_standard_scraper_article(
     article: Mapping[str, Any],
     source: Mapping[str, Any]
 ) -> tuple[bool, str]:
-    """Vérifie l'âge maximal d'un article HTML standard."""
+    """Vérifie l'âge maximal d'un article HTML standard.
+
+    Parameters
+    ----------
+    article : Mapping[str, Any]
+        Article construit.
+    source : Mapping[str, Any]
+        Configuration de la source (âge maximal).
+
+    Returns
+    -------
+    tuple[bool, str]
+        Validité de l'article et motif du rejet le cas échéant.
+    """
 
     return validate_article_age(
         article,
@@ -204,7 +316,20 @@ def create_standard_scraper_adapter(
     source_id: str,
     default_name: str
 ) -> ScraperAdapter:
-    """Crée un adaptateur piloté par la configuration YAML."""
+    """Crée un adaptateur piloté par la configuration YAML.
+
+    Parameters
+    ----------
+    source_id : str
+        Identifiant technique de la source.
+    default_name : str
+        Nom affiché de l'extracteur.
+
+    Returns
+    -------
+    ScraperAdapter
+        Un adaptateur branché sur les fonctions standard de ce module.
+    """
 
     return ScraperAdapter(
         source_id=source_id,

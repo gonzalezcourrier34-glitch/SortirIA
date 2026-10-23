@@ -29,7 +29,22 @@ def get_first_article_value(
     article: Mapping[str, Any],
     fields: tuple[str, ...]
 ) -> str:
-    """Retourne la première valeur renseignée parmi plusieurs champs."""
+    """Retourne la première valeur renseignée parmi plusieurs champs.
+
+    Les espaces sont normalisés ; un champ vide ou blanc est sauté.
+
+    Parameters
+    ----------
+    article : Mapping[str, Any]
+        L'article à lire.
+    fields : tuple[str, ...]
+        Les champs à essayer, dans l'ordre de préférence.
+
+    Returns
+    -------
+    str
+        La première valeur non vide, ou "" (y compris si `article` n'est pas un Mapping).
+    """
 
     if not isinstance(article, Mapping):
         return ""
@@ -42,20 +57,54 @@ def get_first_article_value(
 
 
 def get_article_identifier(article: Mapping[str, Any]) -> str:
-    """Retourne un identifiant court utilisable dans les logs."""
+    """Retourne un identifiant court utilisable dans les logs.
+
+    Parameters
+    ----------
+    article : Mapping[str, Any]
+        L'article à identifier.
+
+    Returns
+    -------
+    str
+        Les 80 premiers caractères du premier identifiant trouvé, sinon
+        l'identifiant par défaut (`DEFAULT_ARTICLE_IDENTIFIER`).
+    """
 
     identifier = get_first_article_value(article, ARTICLE_IDENTIFIER_FIELDS)
     return identifier[:80] if identifier else DEFAULT_ARTICLE_IDENTIFIER
 
 
 def get_article_text(article: Mapping[str, Any]) -> str:
-    """Retourne le meilleur contenu textuel disponible."""
+    """Retourne le meilleur contenu textuel disponible.
+
+    Parameters
+    ----------
+    article : Mapping[str, Any]
+        L'article à lire.
+
+    Returns
+    -------
+    str
+        Le premier champ texte renseigné (`ARTICLE_TEXT_FIELDS`), ou "".
+    """
 
     return get_first_article_value(article, ARTICLE_TEXT_FIELDS)
 
 
 def get_article_source(article: Mapping[str, Any]) -> str:
-    """Retourne le nom normalisé de la source."""
+    """Retourne le nom normalisé de la source.
+
+    Parameters
+    ----------
+    article : Mapping[str, Any]
+        L'article à lire.
+
+    Returns
+    -------
+    str
+        Le champ `source`, espaces normalisés, ou "".
+    """
 
     return (
         normalize_whitespace(article.get("source"))
@@ -65,13 +114,35 @@ def get_article_source(article: Mapping[str, Any]) -> str:
 
 
 def get_article_url(article: Mapping[str, Any]) -> str:
-    """Retourne l'URL principale de l'article."""
+    """Retourne l'URL principale de l'article.
+
+    Parameters
+    ----------
+    article : Mapping[str, Any]
+        L'article à lire.
+
+    Returns
+    -------
+    str
+        Le premier champ d'URL renseigné (`ARTICLE_URL_FIELDS`), ou "".
+    """
 
     return get_first_article_value(article, ARTICLE_URL_FIELDS)
 
 
 def get_article_role(article: Mapping[str, Any]) -> str:
-    """Retourne le rôle métier standard de l'article."""
+    """Retourne le rôle métier standard de l'article.
+
+    Parameters
+    ----------
+    article : Mapping[str, Any]
+        L'article à lire (`role`, sinon `dataset_role`).
+
+    Returns
+    -------
+    str
+        Le rôle en minuscules (casefold), ou "".
+    """
 
     if not isinstance(article, Mapping):
         return ""
@@ -83,7 +154,18 @@ def get_article_role(article: Mapping[str, Any]) -> str:
 # Vérification des valeurs
 
 def has_image_reference(article: Mapping[str, Any]) -> bool:
-    """Vérifie qu'une URL ou un chemin d'image est présent."""
+    """Vérifie qu'une URL ou un chemin d'image est présent.
+
+    Parameters
+    ----------
+    article : Mapping[str, Any]
+        L'article à lire (`image_url`, `image_path`).
+
+    Returns
+    -------
+    bool
+        True si l'un des deux champs est renseigné.
+    """
 
     if not isinstance(article, Mapping):
         return False
@@ -95,7 +177,18 @@ def has_image_reference(article: Mapping[str, Any]) -> bool:
 
 
 def is_empty_value(value: Any) -> bool:
-    """Vérifie si une valeur est absente ou vide."""
+    """Vérifie si une valeur est absente ou vide.
+
+    Parameters
+    ----------
+    value : Any
+        La valeur à tester.
+
+    Returns
+    -------
+    bool
+        True pour une valeur manquante, une chaîne blanche ou une collection vide.
+    """
 
     if is_missing_value(value):
         return True
@@ -108,6 +201,17 @@ def is_empty_value(value: Any) -> bool:
 
 
 def is_deleted_value(value: Any) -> bool:
-    """Détecte les contenus explicitement marqués comme supprimés."""
+    """Détecte les contenus explicitement marqués comme supprimés.
+
+    Parameters
+    ----------
+    value : Any
+        La valeur à tester.
+
+    Returns
+    -------
+    bool
+        True si la valeur figure parmi `DELETED_ARTICLE_VALUES` (casse ignorée).
+    """
 
     return normalize_whitespace(value).casefold() in DELETED_ARTICLE_VALUES

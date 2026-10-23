@@ -60,7 +60,22 @@ WORDPRESS_UPLOAD = re.compile(r"^(?P<base>https?://.+/uploads/)(?P<year>\d{4})/(
 
 @dataclass(slots=True)
 class Diagnosis:
-    """Une panne comprise : où, quoi, que faire, et éventuellement une réparation proposée."""
+    """Une panne comprise : où, quoi, que faire, et éventuellement une réparation proposée.
+
+    Attributes
+    ----------
+    source_name : str
+        Nom de la source en panne, tel qu'il apparaît dans le bilan des extracteurs.
+    kind : str
+        Famille de la panne (une des constantes `KIND_...`).
+    message : str
+        Message d'erreur d'origine.
+    advice : str
+        Action conseillée pour cette famille de panne (tirée de `ADVICE`).
+    proposal : dict[str, Any]
+        Réparation proposée, à valider par un humain (`type`, `source_id`, `old`,
+        `new`) ; vide si aucune.
+    """
 
     source_name: str
     kind: str
@@ -69,6 +84,13 @@ class Diagnosis:
     proposal: dict[str, Any] = field(default_factory=dict)   # {"type", "source_id", "old", "new"}
 
     def as_alert(self) -> str:
+        """Rédiger l'alerte d'une ligne qui figure dans le bilan de la nuit.
+
+        Returns
+        -------
+        str
+            Le diagnostic et le conseil, suivis de la nouvelle adresse proposée s'il y en a une.
+        """
         text = f"Diagnostic {self.source_name} ({self.kind}) : {self.advice}"
         if self.proposal:
             text += f" Proposition : remplacer l'adresse par {self.proposal['new']} (à valider)."
@@ -76,7 +98,21 @@ class Diagnosis:
 
 
 def classify(message: str) -> str:
-    """Famille de panne d'après le message d'erreur."""
+    """Famille de panne d'après le message d'erreur.
+
+    Les motifs de `PATTERNS` sont essayés dans l'ordre : le premier qui
+    correspond l'emporte.
+
+    Parameters
+    ----------
+    message : str
+        Message d'erreur de l'extracteur (peut être vide).
+
+    Returns
+    -------
+    str
+        La famille de panne (`KIND_...`), `KIND_UNKNOWN` si aucun motif ne correspond.
+    """
 
     for kind, pattern in PATTERNS:
         if pattern.search(message or ""):
@@ -88,6 +124,16 @@ def failures(extractor_stats: Iterable[Mapping[str, Any]]) -> list[tuple[str, st
     """(source, message) de chaque échec : extracteur en échec, ou source en échec dans un lot.
 
     Les messages d'un lot ont la forme « Nom de la source : message ».
+
+    Parameters
+    ----------
+    extractor_stats : Iterable[Mapping[str, Any]]
+        Bilan de chaque extracteur (`name`, `status`, `message`, `errors`).
+
+    Returns
+    -------
+    list[tuple[str, str]]
+        Un couple (nom de la source, message d'erreur) par échec.
     """
 
     found = []
@@ -106,6 +152,23 @@ def candidate_urls(url: str, around: date, months_back: int = 6, months_forward:
 
     « .../uploads/2026/08/agenda.pdf » -> « .../uploads/2026/09/agenda.pdf »,
     « .../2026/07/... », etc., du plus proche au plus lointain.
+
+    Parameters
+    ----------
+    url : str
+        Ancienne adresse du document, de la forme `.../uploads/AAAA/MM/fichier`.
+    around : date
+        Date autour de laquelle chercher (en général aujourd'hui).
+    months_back : int
+        Nombre de mois à remonter. Par défaut 6.
+    months_forward : int
+        Nombre de mois à avancer. Par défaut 2.
+
+    Returns
+    -------
+    list[str]
+        Les adresses candidates, sans l'adresse d'origine ; vide si l'adresse
+        n'a pas la forme WordPress.
     """
 
     match = WORDPRESS_UPLOAD.match(url)
@@ -122,7 +185,22 @@ def candidate_urls(url: str, around: date, months_back: int = 6, months_forward:
 
 
 def find_moved_document(url: str, probe: Callable[[str], bool], today: date) -> str:
-    """Nouvelle adresse vérifiée d'un document déplacé (chaîne vide si rien trouvé)."""
+    """Nouvelle adresse vérifiée d'un document déplacé (chaîne vide si rien trouvé).
+
+    Parameters
+    ----------
+    url : str
+        Ancienne adresse du document.
+    probe : Callable[[str], bool]
+        Vérifie qu'une adresse répond bien avec le document (voir `probe_pdf`).
+    today : date
+        Date autour de laquelle chercher les dossiers mensuels.
+
+    Returns
+    -------
+    str
+        La première adresse candidate validée par `probe`, ou une chaîne vide.
+    """
 
     for candidate in candidate_urls(url, today):
         if probe(candidate):
@@ -136,13 +214,36 @@ def diagnose(
     probe: Callable[[str], bool] | None,
     today: date,
 ) -> list[Diagnosis]:
-    """Diagnostic de chaque échec de la nuit, avec une réparation proposée quand c'est possible."""
+    """Diagnostic de chaque échec de la nuit, avec une réparation proposée quand c'est possible.
+
+    Seuls les documents déplacés reçoivent une proposition (nouvelle adresse) ;
+    elle n'est jamais appliquée ici, un humain doit l'accepter.
+
+    Parameters
+    ----------
+    extractor_stats : Iterable[Mapping[str, Any]]
+        Bilan de chaque extracteur pour la nuit.
+    configured_sources : Iterable[Mapping[str, Any]]
+        Sources configurées (`name`, `url`, `source_id`), pour retrouver
+        l'adresse et l'identifiant de la source en panne.
+    probe : Callable[[str], bool] | None
+        Vérifie une adresse candidate ; `None` pour ne rien chercher.
+    today : date
+        Date du jour, point de départ de la recherche des dossiers mensuels.
+
+    Returns
+    -------
+    list[Diagnosis]
+        Un diagnostic par échec, dans l'ordre des échecs.
+    """
 
     sources = list(configured_sources)
     diagnoses = []
     for name, message in failures(extractor_stats):
+        # Classer la panne et joindre le conseil de sa famille
         kind = classify(message)
         diagnosis = Diagnosis(source_name=name, kind=kind, message=message, advice=ADVICE[kind])
+        # Document déplacé : retrouver la source, puis chercher et vérifier la nouvelle adresse
         if kind == KIND_MOVED and probe is not None:
             urls = URL_PATTERN.findall(message)
             source = next((s for s in sources if s.get("name") == name), None) or next(
@@ -157,7 +258,21 @@ def diagnose(
 
 
 def probe_pdf(url: str) -> bool:
-    """Vrai si l'adresse répond 200 avec un PDF (requête HEAD, puis début du fichier)."""
+    """Vrai si l'adresse répond 200 avec un PDF (requête HEAD, puis début du fichier).
+
+    Si le serveur refuse HEAD (405), on lit les 5 premiers octets et on cherche
+    la signature `%PDF`. Toute erreur réseau vaut « non ».
+
+    Parameters
+    ----------
+    url : str
+        Adresse à vérifier.
+
+    Returns
+    -------
+    bool
+        Vrai si l'adresse répond avec un PDF.
+    """
 
     import httpx
 

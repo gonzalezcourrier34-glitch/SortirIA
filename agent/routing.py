@@ -31,14 +31,27 @@ def source_statuses(state: CollectionState) -> dict[str, str]:
     nom complet de l'extracteur (« OpenAgenda - Montpellier et bassin de Thau »).
     « partiel » : l'extracteur a rendu des événements, mais une partie de sa
     lecture a échoué (un PDF sur deux en 404, un agenda OpenAgenda en 429...).
+
+    Parameters
+    ----------
+    state : CollectionState
+        État de la collecte (`sources`, `extractor_stats`, `failed_sources`).
+
+    Returns
+    -------
+    dict[str, str]
+        Statut de chaque source prévue, indexé par son identifiant.
     """
 
+    # Statut connu par le bilan des extracteurs, indexé par source
     by_source: dict[str, str] = {}
     for stat in state.get("extractor_stats", []):
         source_id = stat.get("source_id")
         if source_id:
             by_source[str(source_id)] = str(stat.get("status", ""))
+    # Noms des sources en échec, normalisés pour la comparaison de secours
     failed_names = [normalize_for_comparison(name) for name in state.get("failed_sources", [])]
+    # Statut de chaque source prévue : bilan d'abord, liste des échecs à défaut
     statuses = {}
     for source_id in state.get("sources", []):
         status = by_source.get(source_id)
@@ -56,7 +69,18 @@ def source_statuses(state: CollectionState) -> dict[str, str]:
 
 
 def failed_source_ids(state: CollectionState) -> list[str]:
-    """Identifiants des sources prévues qui sont en échec (à relancer)."""
+    """Identifiants des sources prévues qui sont en échec (à relancer).
+
+    Parameters
+    ----------
+    state : CollectionState
+        État de la collecte.
+
+    Returns
+    -------
+    list[str]
+        Identifiants des sources au statut « echec » (les « partiel » n'y sont pas).
+    """
 
     return [source_id for source_id, status in source_statuses(state).items() if status == STATUS_FAILED]
 
@@ -71,6 +95,16 @@ def route_after_extraction(state: CollectionState) -> str:
     - des éléments ont été extraits : on prépare ;
     - rien après le dernier essai : on écrit un bilan d'échec (l'agent ne
       plante jamais sans laisser de trace).
+
+    Parameters
+    ----------
+    state : CollectionState
+        État de la collecte après l'extraction (`attempts`, `max_attempts`, `articles`).
+
+    Returns
+    -------
+    str
+        `ROUTE_RETRY`, `ROUTE_PREPARE` ou `ROUTE_REPORT`.
     """
 
     has_attempt_left = state.get("attempts", 0) < state.get("max_attempts", DEFAULT_MAX_ATTEMPTS)

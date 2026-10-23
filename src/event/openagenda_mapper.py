@@ -37,6 +37,18 @@ def get_path(data: Any, *paths: Sequence[str]) -> Any:
     """Renvoie la première valeur non vide trouvée parmi plusieurs chemins.
 
     Exemple : `get_path(event, ("city",), ("location", "city"))`.
+
+    Parameters
+    ----------
+    data : Any
+        Dictionnaire (éventuellement imbriqué) à explorer.
+    *paths : Sequence[str]
+        Chemins de clés à essayer, dans l'ordre.
+
+    Returns
+    -------
+    Any
+        La première valeur ni None, ni vide ; None si aucun chemin n'aboutit.
     """
 
     for path in paths:
@@ -52,6 +64,18 @@ def get_path(data: Any, *paths: Sequence[str]) -> Any:
 
 
 def _to_float(value: Any) -> float | None:
+    """Convertir une valeur en nombre décimal, ou None si vide ou illisible.
+
+    Parameters
+    ----------
+    value : Any
+        Valeur à convertir (texte, nombre, None).
+
+    Returns
+    -------
+    float or None
+        Le nombre, ou None.
+    """
     try:
         return float(value) if value not in (None, "") else None
     except (TypeError, ValueError):
@@ -63,6 +87,16 @@ def build_image_url(image: Any) -> str:
 
     OpenAgenda donne soit une URL directe, soit `{"base": ..., "filename": ...}` :
     l'URL complète est alors la concaténation des deux.
+
+    Parameters
+    ----------
+    image : Any
+        Champ image de l'événement (URL ou dictionnaire).
+
+    Returns
+    -------
+    str
+        L'URL de l'image, ou une chaîne vide si elle n'est pas une URL http(s) valide.
     """
 
     if isinstance(image, Mapping):
@@ -84,6 +118,16 @@ def get_tag_labels(item: Mapping[str, Any]) -> list[str]:
 
     Constat de l'audit du 13/10/2026 : le champ `category` est vide, la
     catégorie est rangée dans les étiquettes (ex. « Exposition »).
+
+    Parameters
+    ----------
+    item : Mapping[str, Any]
+        Événement brut OpenAgenda.
+
+    Returns
+    -------
+    list[str]
+        Les libellés nettoyés, sans doublons, dans l'ordre d'apparition.
     """
 
     labels: list[str] = []
@@ -99,7 +143,20 @@ def get_tag_labels(item: Mapping[str, Any]) -> list[str]:
 
 
 def get_category(item: Mapping[str, Any], language: str = "fr") -> str:
-    """Catégorie : champ `category` s'il est rempli, sinon la première étiquette."""
+    """Catégorie : champ `category` s'il est rempli, sinon la première étiquette.
+
+    Parameters
+    ----------
+    item : Mapping[str, Any]
+        Événement brut OpenAgenda.
+    language : str
+        Langue voulue pour un texte multilingue. Par défaut « fr ».
+
+    Returns
+    -------
+    str
+        La catégorie, ou une chaîne vide.
+    """
 
     category = pick_localized(get_path(item, ("category",), ("eventType",), ("type",)), language)
     if category:
@@ -116,8 +173,19 @@ def get_start_and_end(item: Mapping[str, Any]) -> tuple[str, str, bool]:
     2. `firstTiming` / `lastTiming` ;
     3. `firstDate` / `lastDate`, éventuellement complétés par
        `firstTimeStart` / `lastTimeEnd`.
+
+    Parameters
+    ----------
+    item : Mapping[str, Any]
+        Événement brut OpenAgenda.
+
+    Returns
+    -------
+    tuple[str, str, bool]
+        Début et fin en ISO 8601 (vides si inconnus), et vrai si l'heure est connue.
     """
 
+    # 1. Créneaux précis
     timings = item.get("timings")
     if isinstance(timings, list) and timings:
         starts = [parse_event_datetime(t.get("start") or t.get("begin")) for t in timings if isinstance(t, Mapping)]
@@ -127,11 +195,13 @@ def get_start_and_end(item: Mapping[str, Any]) -> tuple[str, str, bool]:
         if starts:
             return to_iso(min(starts)), to_iso(max(ends)) if ends else "", True
 
+    # 2. Premier et dernier créneau
     first = get_path(item, ("firstTiming", "begin"), ("firstTiming", "start"))
     last = get_path(item, ("lastTiming", "end"))
     if first:
         return to_iso(parse_event_datetime(first)), to_iso(parse_event_datetime(last)), has_time(first)
 
+    # 3. Premier et dernier jour, complétés par les heures si elles sont données
     first_date = clean_text(get_path(item, ("firstDate",), ("first_date",)))
     last_date = clean_text(get_path(item, ("lastDate",), ("last_date",)))
     first_time = clean_text(item.get("firstTimeStart"))
@@ -190,6 +260,18 @@ FAMILY_MAX_AGE = 12
 
 
 def _to_int(value: Any) -> int | None:
+    """Convertir une valeur en entier, ou None si vide ou illisible.
+
+    Parameters
+    ----------
+    value : Any
+        Valeur à convertir (texte, nombre, None).
+
+    Returns
+    -------
+    int or None
+        L'entier, ou None.
+    """
     try:
         return int(value) if value not in (None, "") else None
     except (TypeError, ValueError):
@@ -197,19 +279,52 @@ def _to_int(value: Any) -> int | None:
 
 
 def get_status(item: Mapping[str, Any]) -> str:
-    """Statut lisible (« annule », « complet »...). Par défaut : « programme »."""
+    """Statut lisible (« annule », « complet »...). Par défaut : « programme ».
+
+    Parameters
+    ----------
+    item : Mapping[str, Any]
+        Événement brut OpenAgenda (champ `status`, code de 1 à 6).
+
+    Returns
+    -------
+    str
+        Une valeur de `OPENAGENDA_STATUS`.
+    """
 
     return OPENAGENDA_STATUS.get(_to_int(item.get("status")) or 1, "programme")
 
 
 def get_attendance(item: Mapping[str, Any]) -> str:
-    """Mode de participation : sur place, en ligne ou les deux."""
+    """Mode de participation : sur place, en ligne ou les deux.
+
+    Parameters
+    ----------
+    item : Mapping[str, Any]
+        Événement brut OpenAgenda (champ `attendanceMode`, code de 1 à 3).
+
+    Returns
+    -------
+    str
+        Une valeur de `OPENAGENDA_ATTENDANCE` ; « sur_place » par défaut.
+    """
 
     return OPENAGENDA_ATTENDANCE.get(_to_int(item.get("attendanceMode")) or 1, "sur_place")
 
 
 def get_age_range(item: Mapping[str, Any]) -> tuple[int | None, int | None]:
-    """Âge minimal et maximal (`age: {"min": 6, "max": 12}`), ou (None, None)."""
+    """Âge minimal et maximal (`age: {"min": 6, "max": 12}`), ou (None, None).
+
+    Parameters
+    ----------
+    item : Mapping[str, Any]
+        Événement brut OpenAgenda.
+
+    Returns
+    -------
+    tuple[int or None, int or None]
+        Les âges minimal et maximal ; (None, None) s'ils sont absents ou incohérents.
+    """
 
     age = item.get("age")
     if not isinstance(age, Mapping):
@@ -222,7 +337,19 @@ def get_age_range(item: Mapping[str, Any]) -> tuple[int | None, int | None]:
 
 def get_accessibility(item: Mapping[str, Any]) -> list[str]:
     """Handicaps pris en charge. OpenAgenda donne une liste de codes
-    (`["mi", "vi"]`) ou un dictionnaire (`{"mi": true, "vi": false}`)."""
+    (`["mi", "vi"]`) ou un dictionnaire (`{"mi": true, "vi": false}`).
+
+    Parameters
+    ----------
+    item : Mapping[str, Any]
+        Événement brut OpenAgenda.
+
+    Returns
+    -------
+    list[str]
+        Les libellés de `OPENAGENDA_ACCESSIBILITY`, sans doublons ; les codes
+        inconnus sont ignorés.
+    """
 
     raw = item.get("accessibility")
     codes = [code for code, ok in raw.items() if ok] if isinstance(raw, Mapping) else list(raw or [])
@@ -231,6 +358,20 @@ def get_accessibility(item: Mapping[str, Any]) -> list[str]:
 
 
 def _contains_word(text: str, words: Sequence[str]) -> bool:
+    """Dire si le texte contient l'un des mots (ou groupes de mots), en mot entier.
+
+    Parameters
+    ----------
+    text : str
+        Texte déjà normalisé (`normalize_for_comparison`).
+    words : Sequence[str]
+        Mots cherchés, normalisés eux aussi.
+
+    Returns
+    -------
+    bool
+        Vrai si au moins un mot est présent.
+    """
     padded = f" {text} "
     return any(f" {word} " in padded for word in words)
 
@@ -250,17 +391,37 @@ def infer_audiences(
     - famille : âge maximal <= 12 ans, ou un mot comme « jeune public » ;
       jamais si l'âge minimal est 18 ans ou plus ;
     - soiree : début à 21 h ou plus tard, ou un mot comme « soirée », « DJ ».
+
+    Parameters
+    ----------
+    texts : Sequence[str]
+        Textes où chercher les mots (titre, catégorie, mots-clés...).
+    start_at : str
+        Début de l'événement, en ISO 8601.
+    time_known : bool
+        Vrai si l'heure de début est connue (sinon elle n'est pas prise en compte).
+    age_min : int or None
+        Âge minimal, s'il est connu.
+    age_max : int or None
+        Âge maximal, s'il est connu.
+
+    Returns
+    -------
+    list[str]
+        Les publics déduits, parmi « famille » et « soiree ».
     """
 
     text = normalize_for_comparison(" ".join(texts))
     audiences: list[str] = []
 
+    # Famille : âge maximal bas ou mot du jeune public, sauf événement réservé aux adultes
     adults_only = age_min is not None and age_min >= 18
     if not adults_only and (
         (age_max is not None and age_max <= FAMILY_MAX_AGE) or _contains_word(text, FAMILY_WORDS)
     ):
         audiences.append("famille")
 
+    # Soirée : début tardif (heure de Paris) ou mot de la nuit
     start = parse_event_datetime(start_at)
     late_start = bool(
         time_known and start
@@ -278,8 +439,26 @@ def map_openagenda_event(
     extracted_at: str = "",
     language: str = "fr",
 ) -> Event | None:
-    """Transforme un événement OpenAgenda en `Event`. Renvoie None s'il n'a pas de titre."""
+    """Transforme un événement OpenAgenda en `Event`. Renvoie None s'il n'a pas de titre.
 
+    Parameters
+    ----------
+    item : Mapping[str, Any]
+        Événement brut renvoyé par l'API OpenAgenda.
+    source : str
+        Nom de la source enregistré dans l'événement. Par défaut « openagenda ».
+    extracted_at : str
+        Date de l'extraction, recopiée dans l'événement. Par défaut vide.
+    language : str
+        Langue voulue pour les textes multilingues. Par défaut « fr ».
+
+    Returns
+    -------
+    Event or None
+        L'événement, ou None s'il n'a pas de titre.
+    """
+
+    # Titre, texte et dates
     title = pick_localized(get_path(item, ("title",)), language)
     if not title:
         return None
@@ -290,6 +469,7 @@ def map_openagenda_event(
     )
     start_at, end_at, time_known = get_start_and_end(item)
 
+    # Lieu et prix
     venue_name = clean_text(get_path(item, ("location", "name"), ("location_name",), ("locationName",)))
     address = clean_text(get_path(item, ("location", "address"), ("address",)))
     city = normalize_city(get_path(item, ("location", "city"), ("city",)))
@@ -298,6 +478,7 @@ def map_openagenda_event(
     price_text = pick_localized(get_path(item, ("conditions",), ("pricing",)), language)
     price_min, price_max, is_free = parse_price(price_text)
 
+    # Mots-clés, liens et image
     keywords_raw = get_path(item, ("keywords", language), ("keywords",)) or []
     keywords = [clean_text(k) for k in keywords_raw if clean_text(k)] if isinstance(keywords_raw, list) else []
     # Les étiquettes OpenAgenda (« Exposition », « Concert »...) servent aussi de mots-clés.
@@ -307,6 +488,7 @@ def map_openagenda_event(
     url = clean_text(get_path(item, ("canonicalUrl",), ("url",), ("link",)))
     image_url = build_image_url(get_path(item, ("image",), ("thumbnail",)))
 
+    # Identité, âges, catégorie et publics, puis construction de l'événement
     dedup_key = build_dedup_key(title, start_at, venue_name or city)
     age_min, age_max = get_age_range(item)
     category = get_category(item, language)

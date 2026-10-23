@@ -1,5 +1,9 @@
 """Contrat métier commun des articles CheckIt.AI.
 
+Constantes seulement : champs standards et obligatoires d'un article, alias
+acceptés, champs à nettoyer, champs où chercher le texte, l'identifiant ou
+l'URL, langues et rôles pris en charge.
+
 **Provenance** : repris de CheckIt.AI (projet 12, moteur de collecte), fichier `src/article/schema/article_schema.py` (commit 93632c5).
 """
 

@@ -49,7 +49,18 @@ MULTIPLE_HYPHENS_PATTERN = re.compile(r"-+")
 # Normalisation commune
 
 def normalize_unicode(value: Any) -> str:
-    """Convertit une valeur en texte Unicode normalisé NFC."""
+    """Convertit une valeur en texte Unicode normalisé NFC.
+
+    Parameters
+    ----------
+    value : Any
+        La valeur à convertir ; None donne une chaîne vide.
+
+    Returns
+    -------
+    str
+        Le texte en forme NFC (accents composés).
+    """
 
     if value is None:
         return ""
@@ -58,21 +69,60 @@ def normalize_unicode(value: Any) -> str:
 
 
 def collapse_separators(value: str) -> str:
-    """Réduit les suites de soulignements et de tirets."""
+    """Réduit les suites de soulignements et de tirets.
+
+    Parameters
+    ----------
+    value : str
+        Le texte à simplifier.
+
+    Returns
+    -------
+    str
+        Le texte où « ___ » devient « _ » et « --- » devient « - ».
+    """
 
     value = MULTIPLE_UNDERSCORES_PATTERN.sub("_", value)
     return MULTIPLE_HYPHENS_PATTERN.sub("-", value)
 
 
 def clean_path_component(value: str) -> str:
-    """Supprime les extrémités interdites ou dangereuses."""
+    """Supprime les extrémités interdites ou dangereuses.
+
+    Parameters
+    ----------
+    value : str
+        Le composant de chemin à nettoyer.
+
+    Returns
+    -------
+    str
+        Le composant sans espaces, points, soulignements ni tirets aux
+        extrémités ; vide s'il ne restait que « . » ou « .. ».
+    """
 
     cleaned_value = value.strip(" ._-")
     return "" if cleaned_value in {"", ".", ".."} else cleaned_value
 
 
 def protect_windows_reserved_name(name: str, prefix: str) -> str:
-    """Préfixe un nom réservé par Windows."""
+    """Préfixe un nom réservé par Windows.
+
+    Les noms comme « con » ou « com1 », même suivis d'une extension, sont
+    interdits sous Windows : ils reçoivent un préfixe.
+
+    Parameters
+    ----------
+    name : str
+        Le nom à protéger.
+    prefix : str
+        Le préfixe ajouté devant un nom réservé, séparé par « _ ».
+
+    Returns
+    -------
+    str
+        Le nom inchangé, ou préfixé s'il est réservé ; vide si `name` est vide.
+    """
 
     normalized_name = normalize_unicode(name).strip()
 
@@ -92,14 +142,43 @@ def protect_windows_reserved_name(name: str, prefix: str) -> str:
 # Limitation des longueurs
 
 def truncate_name(name: str, max_length: int) -> str:
-    """Tronque un nom à la longueur maximale autorisée."""
+    """Tronque un nom à la longueur maximale autorisée.
+
+    Parameters
+    ----------
+    name : str
+        Le nom à tronquer.
+    max_length : int
+        La longueur maximale ; une valeur invalide vaut 1.
+
+    Returns
+    -------
+    str
+        Le nom limité à `max_length` caractères.
+    """
 
     safe_max_length = parse_positive_integer(max_length, default=1)
     return name[:safe_max_length]
 
 
 def truncate_filename(filename: str, max_length: int) -> str:
-    """Tronque un nom de fichier en préservant son extension."""
+    """Tronque un nom de fichier en préservant son extension.
+
+    Si l'extension est absente ou aussi longue que la limite, le nom est
+    simplement coupé.
+
+    Parameters
+    ----------
+    filename : str
+        Le nom de fichier à tronquer.
+    max_length : int
+        La longueur maximale ; une valeur invalide vaut 1.
+
+    Returns
+    -------
+    str
+        Le nom de fichier d'au plus `max_length` caractères.
+    """
 
     safe_max_length = parse_positive_integer(max_length, default=1)
 
@@ -123,8 +202,23 @@ def normalize_source_name(
     source: Any,
     max_length: int = MAX_SOURCE_NAME_LENGTH
 ) -> str:
-    """Transforme une source en nom de dossier sûr et stable."""
+    """Transforme une source en nom de dossier sûr et stable.
 
+    Parameters
+    ----------
+    source : Any
+        Le nom de la source.
+    max_length : int
+        La longueur maximale du résultat. Par défaut 120.
+
+    Returns
+    -------
+    str
+        Un nom en minuscules, fait de lettres, chiffres, « _ » et « - » ;
+        « unknown » si rien d'utilisable ne reste.
+    """
+
+    # Mettre en minuscules et remplacer les caractères interdits
     normalized_source = normalize_unicode(source).strip().casefold()
 
     if not normalized_source:
@@ -137,6 +231,7 @@ def normalize_source_name(
     if not normalized_source:
         return DEFAULT_SOURCE_NAME
 
+    # Éviter les noms réservés par Windows, puis limiter la longueur
     normalized_source = protect_windows_reserved_name(
         normalized_source,
         prefix="source"
@@ -153,8 +248,23 @@ def normalize_filename(
     filename: Any,
     max_length: int = MAX_FILENAME_LENGTH
 ) -> str:
-    """Transforme une valeur en nom de fichier sûr."""
+    """Transforme une valeur en nom de fichier sûr.
 
+    Parameters
+    ----------
+    filename : Any
+        Le nom de fichier proposé.
+    max_length : int
+        La longueur maximale du résultat, extension comprise. Par défaut 255.
+
+    Returns
+    -------
+    str
+        Un nom en minuscules sans caractère interdit, espace ni point initial ;
+        « file » si rien d'utilisable ne reste.
+    """
+
+    # Mettre en minuscules et remplacer caractères interdits et espaces
     normalized_filename = normalize_unicode(filename).strip().casefold()
 
     if not normalized_filename:
@@ -172,6 +282,7 @@ def normalize_filename(
     if not normalized_filename:
         return DEFAULT_FILENAME
 
+    # Éviter les noms réservés par Windows, puis tronquer en gardant l'extension
     normalized_filename = protect_windows_reserved_name(
         normalized_filename,
         prefix="file"

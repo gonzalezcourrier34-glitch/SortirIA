@@ -68,7 +68,19 @@ NORMALIZED_MISSING_TEXT_VALUES: frozenset[str] = frozenset(
 # Détection des valeurs complexes
 
 def is_unsupported_text_collection(value: Any) -> bool:
-    """Indique si une collection complexe ne doit pas devenir du texte."""
+    """Indique si une collection complexe ne doit pas devenir du texte.
+
+    Parameters
+    ----------
+    value : Any
+        La valeur à examiner.
+
+    Returns
+    -------
+    bool
+        Vrai pour un dictionnaire, une liste, un tuple ou un ensemble ; faux
+        pour les chaînes et les valeurs binaires.
+    """
 
     return (
         isinstance(value, UNSUPPORTED_TEXT_COLLECTIONS)
@@ -79,7 +91,18 @@ def is_unsupported_text_collection(value: Any) -> bool:
 # Détection des valeurs absentes
 
 def _is_non_finite_number(value: Any) -> bool:
-    """Détecte les nombres flottants non finis."""
+    """Détecte les nombres flottants non finis.
+
+    Parameters
+    ----------
+    value : Any
+        La valeur à examiner.
+
+    Returns
+    -------
+    bool
+        Vrai pour un flottant infini ou NaN.
+    """
 
     if not isinstance(value, float):
         return False
@@ -88,7 +111,21 @@ def _is_non_finite_number(value: Any) -> bool:
 
 
 def _is_self_unequal(value: Any) -> bool:
-    """Détecte les valeurs de type NaN qui ne sont pas égales à elles-mêmes."""
+    """Détecte les valeurs de type NaN qui ne sont pas égales à elles-mêmes.
+
+    Le résultat de la comparaison n'est retenu que s'il est un booléen Python
+    ou NumPy, pour ne pas se tromper sur les tableaux.
+
+    Parameters
+    ----------
+    value : Any
+        La valeur à examiner.
+
+    Returns
+    -------
+    bool
+        Vrai si `value != value` vaut vrai.
+    """
 
     try:
         comparison_result = value != value
@@ -108,20 +145,45 @@ def _is_self_unequal(value: Any) -> bool:
 
 
 def _has_missing_type(value: Any) -> bool:
-    """Détecte certains types externes représentant une donnée absente."""
+    """Détecte certains types externes représentant une donnée absente.
+
+    Parameters
+    ----------
+    value : Any
+        La valeur à examiner.
+
+    Returns
+    -------
+    bool
+        Vrai pour les types pandas `NaTType` et `NAType`.
+    """
 
     return type(value).__name__.casefold() in MISSING_TYPE_NAMES
 
 
 def is_missing_value(value: Any) -> bool:
-    """Détecte les principales représentations d'une donnée absente."""
+    """Détecte les principales représentations d'une donnée absente.
 
+    Parameters
+    ----------
+    value : Any
+        La valeur à examiner.
+
+    Returns
+    -------
+    bool
+        Vrai pour None, NaN, l'infini, les types absents de pandas et les textes
+        de `MISSING_TEXT_VALUES` ; faux pour les collections.
+    """
+
+    # Cas évidents : None d'un côté, collections de l'autre
     if value is None:
         return True
 
     if is_unsupported_text_collection(value):
         return False
 
+    # Valeurs numériques ou externes qui représentent l'absence
     if _is_non_finite_number(value):
         return True
 
@@ -131,6 +193,7 @@ def is_missing_value(value: Any) -> bool:
     if _has_missing_type(value):
         return True
 
+    # Textes conventionnels d'absence (« null », « n/a »...)
     try:
         normalized_value = str(value).strip().casefold()
     except (TypeError, ValueError, RuntimeError):
@@ -142,7 +205,18 @@ def is_missing_value(value: Any) -> bool:
 # Conversion des valeurs simples
 
 def _decode_bytes(value: bytes | bytearray | memoryview) -> str:
-    """Décode une valeur binaire en UTF-8 sans lever d'exception."""
+    """Décode une valeur binaire en UTF-8 sans lever d'exception.
+
+    Parameters
+    ----------
+    value : bytes | bytearray | memoryview
+        La valeur binaire à décoder.
+
+    Returns
+    -------
+    str
+        Le texte décodé (caractères invalides remplacés), ou "" en cas d'échec.
+    """
 
     try:
         return bytes(value).decode("utf-8", errors="replace").strip()
@@ -151,7 +225,19 @@ def _decode_bytes(value: bytes | bytearray | memoryview) -> str:
 
 
 def normalize_value(value: Any) -> str:
-    """Convertit une valeur simple en chaîne propre."""
+    """Convertit une valeur simple en chaîne propre.
+
+    Parameters
+    ----------
+    value : Any
+        La valeur à convertir.
+
+    Returns
+    -------
+    str
+        Le texte sans espaces autour ; "" pour une valeur absente, une
+        collection ou une conversion impossible.
+    """
 
     if is_missing_value(value):
         return ""
@@ -171,7 +257,18 @@ def normalize_value(value: Any) -> str:
 # Normalisation des espaces
 
 def collapse_whitespace(text: str) -> str:
-    """Réduit toutes les suites d'espaces à un espace simple."""
+    """Réduit toutes les suites d'espaces à un espace simple.
+
+    Parameters
+    ----------
+    text : str
+        Le texte à simplifier.
+
+    Returns
+    -------
+    str
+        Le texte avec des espaces simples, sans espaces autour.
+    """
 
     if not text:
         return ""
@@ -180,7 +277,18 @@ def collapse_whitespace(text: str) -> str:
 
 
 def normalize_whitespace(value: Any) -> str:
-    """Convertit une valeur en texte puis normalise ses espaces."""
+    """Convertit une valeur en texte puis normalise ses espaces.
+
+    Parameters
+    ----------
+    value : Any
+        La valeur à convertir.
+
+    Returns
+    -------
+    str
+        Le texte nettoyé, avec des espaces simples.
+    """
 
     return collapse_whitespace(normalize_value(value))
 
@@ -188,6 +296,17 @@ def normalize_whitespace(value: Any) -> str:
 # Normalisation pour les comparaisons
 
 def normalize_casefold(value: Any) -> str:
-    """Normalise une valeur textuelle pour une comparaison insensible à la casse."""
+    """Normalise une valeur textuelle pour une comparaison insensible à la casse.
+
+    Parameters
+    ----------
+    value : Any
+        La valeur à normaliser.
+
+    Returns
+    -------
+    str
+        Le texte nettoyé, aux espaces simples, passé en `casefold`.
+    """
 
     return normalize_whitespace(value).casefold()

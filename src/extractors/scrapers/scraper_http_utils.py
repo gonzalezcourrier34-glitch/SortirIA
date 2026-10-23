@@ -61,16 +61,33 @@ _SCRAPER_REQUESTS_COUNT: ContextVar[int] = ContextVar(
 
 
 class ScraperPageError(Exception):
-    """Erreur contrôlée associée au traitement d'une page HTML."""
+    """Erreur contrôlée associée au traitement d'une page HTML.
+
+    Elle porte un motif court (`reason`) que le moteur reprend tel quel comme
+    motif de rejet dans ses statistiques.
+    """
 
     def __init__(self, reason: str, message: str):
+        """Crée l'erreur avec son motif technique et son message lisible.
+
+        Parameters
+        ----------
+        reason : str
+            Motif court (`robots_interdit`, `page_vide`...) ; à défaut
+            « page_inexploitable ».
+        message : str
+            Message détaillé pour les journaux.
+        """
         super().__init__(message)
         self.reason = normalize_value(reason) or "page_inexploitable"
 
 
 # Métriques
 def reset_scraper_requests_count() -> None:
-    """Réinitialise le compteur HTTP de l'extraction courante."""
+    """Réinitialise le compteur HTTP de l'extraction courante.
+
+    Le compteur est une `ContextVar`, donc propre au contexte d'exécution.
+    """
 
     _SCRAPER_REQUESTS_COUNT.set(0)
 
@@ -82,7 +99,13 @@ def increment_scraper_requests_count() -> None:
 
 
 def get_scraper_requests_count() -> int:
-    """Retourne le nombre de tentatives HTTP de l'extraction courante."""
+    """Retourne le nombre de tentatives HTTP de l'extraction courante.
+
+    Returns
+    -------
+    int
+        Nombre de requêtes réellement envoyées, réessais compris.
+    """
 
     return _SCRAPER_REQUESTS_COUNT.get()
 
@@ -91,7 +114,20 @@ def get_scraper_requests_count() -> int:
 def get_scraper_http_options(
     source: Mapping[str, Any]
 ) -> tuple[bool, float]:
-    """Retourne les options HTTP configurées."""
+    """Retourne les options HTTP configurées.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Configuration de la source (`respect_robots_txt`, par défaut vrai ;
+        `request_delay_seconds`, par défaut 1 seconde).
+
+    Returns
+    -------
+    tuple[bool, float]
+        Respect de robots.txt, et délai minimal entre requêtes (jamais
+        négatif ; 1.0 si la valeur est illisible).
+    """
 
     respect_robots = parse_boolean(
         source.get("respect_robots_txt"),
@@ -110,7 +146,14 @@ def get_scraper_http_options(
 
 
 def create_http_client() -> httpx.Client:
-    """Construit une session HTTP réutilisable."""
+    """Construit une session HTTP réutilisable.
+
+    Returns
+    -------
+    httpx.Client
+        Client avec les en-têtes du projet, des en-têtes `Accept` orientés
+        HTML, le délai `REQUEST_TIMEOUT` et le suivi des redirections.
+    """
 
     return httpx.Client(
         headers={
@@ -125,7 +168,19 @@ def create_http_client() -> httpx.Client:
 
 # Erreurs
 def is_retryable_http_error(error: BaseException) -> bool:
-    """Indique si une erreur HTTP peut être retentée."""
+    """Indique si une erreur HTTP peut être retentée.
+
+    Parameters
+    ----------
+    error : BaseException
+        Erreur levée pendant la requête.
+
+    Returns
+    -------
+    bool
+        Vrai pour un dépassement de délai, une erreur réseau, un statut 429 ou
+        un statut 5xx.
+    """
 
     if isinstance(
         error,
@@ -141,11 +196,27 @@ def is_retryable_http_error(error: BaseException) -> bool:
 
 
 def is_antibot_page(raw_html: str) -> bool:
-    """Détecte les principales pages anti-bot."""
+    """Détecte les principales pages anti-bot.
+
+    Cherche des phrases typiques (« just a moment », « verify you are
+    human »...) dans le titre et les 20 000 premiers caractères du texte, puis
+    des éléments de captcha ou de « challenge ».
+
+    Parameters
+    ----------
+    raw_html : str
+        HTML brut de la page reçue.
+
+    Returns
+    -------
+    bool
+        Vrai si la page ressemble à une barrière anti-robot.
+    """
 
     if not raw_html:
         return False
 
+    # Chercher les phrases typiques dans le titre et le début du texte
     soup = BeautifulSoup(raw_html, "html.parser")
 
     title = clean_text(
@@ -163,6 +234,7 @@ def is_antibot_page(raw_html: str) -> bool:
     if any(marker in searchable for marker in ANTI_BOT_MARKERS):
         return True
 
+    # Sinon, repérer un captcha ou un script de challenge dans la structure
     return bool(
         soup.select_one(
             "[id*='captcha'],[class*='captcha'],"
@@ -192,8 +264,38 @@ def fetch_html(
     respect_robots: bool = True,
     request_delay_seconds: float = 1.0
 ) -> tuple[str, str]:
-    """Télécharge une page HTML."""
+    """Télécharge une page HTML.
 
+    Les erreurs réseau, les délais dépassés et les statuts 429 ou 5xx sont
+    retentés jusqu'à `MAX_RETRIES` fois avec une attente exponentielle
+    (décorateur `retry`) ; chaque tentative est comptée.
+
+    Parameters
+    ----------
+    client : httpx.Client
+        Session HTTP à utiliser.
+    url : str
+        URL déjà canonisée de la page.
+    respect_robots : bool
+        Vérifie robots.txt avant la requête. Par défaut True.
+    request_delay_seconds : float
+        Délai minimal entre deux requêtes vers le même site. Par défaut 1 s.
+
+    Returns
+    -------
+    tuple[str, str]
+        Le HTML brut et l'URL finale après redirections.
+
+    Raises
+    ------
+    ScraperPageError
+        Si robots.txt interdit l'accès, si le contenu n'est pas du HTML, si la
+        page est vide ou si c'est une page anti-bot.
+    httpx.HTTPError
+        Erreurs HTTP et réseau, laissées remonter pour `get_html`.
+    """
+
+    # Respecter robots.txt et le délai de politesse
     if respect_robots and not is_url_allowed_by_robots(url):
         raise ScraperPageError(
             "robots_interdit",
@@ -205,6 +307,7 @@ def fetch_html(
         minimum_delay=request_delay_seconds
     )
 
+    # Envoyer la requête, en la comptant et en la notant pour le crawl-delay
     increment_scraper_requests_count()
 
     try:
@@ -214,6 +317,7 @@ def fetch_html(
 
     response.raise_for_status()
 
+    # Refuser ce qui n'est pas une vraie page HTML exploitable
     content_type = (
         response.headers
         .get("Content-Type", "")
@@ -257,8 +361,36 @@ def get_html(
     respect_robots: bool = True,
     request_delay_seconds: float = 1.0
 ) -> tuple[str, str]:
-    """Télécharge une page en normalisant les erreurs."""
+    """Télécharge une page en normalisant les erreurs.
 
+    Toute erreur HTTP, réseau ou de décodage est convertie en
+    `ScraperPageError` avec un motif court ; un statut 403 ou 429 est classé
+    « page_antibot ».
+
+    Parameters
+    ----------
+    client : httpx.Client
+        Session HTTP à utiliser.
+    url : Any
+        URL de la page, canonisée avant la requête.
+    respect_robots : bool
+        Vérifie robots.txt avant la requête. Par défaut True.
+    request_delay_seconds : float
+        Délai minimal entre deux requêtes vers le même site. Par défaut 1 s.
+
+    Returns
+    -------
+    tuple[str, str]
+        Le HTML brut et l'URL finale après redirections.
+
+    Raises
+    ------
+    ScraperPageError
+        Si l'URL est invalide ou si le téléchargement échoue, quelle qu'en
+        soit la cause.
+    """
+
+    # Valider l'URL avant toute requête
     normalized_url = canonicalize_url(url)
 
     if not normalized_url:
@@ -270,6 +402,7 @@ def get_html(
             )
         )
 
+    # Télécharger, puis traduire chaque famille d'erreur en motif de rejet
     try:
         return fetch_html(
             client,

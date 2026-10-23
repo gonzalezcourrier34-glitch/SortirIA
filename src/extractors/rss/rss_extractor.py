@@ -81,7 +81,19 @@ HTML_PREFIX_PATTERN = re.compile(
 
 @dataclass(frozen=True, slots=True)
 class DownloadedFeed:
-    """Contenu HTTP brut d'un flux et métadonnées utiles au parsing."""
+    """Contenu HTTP brut d'un flux et métadonnées utiles au parsing.
+
+    Attributes
+    ----------
+    content : bytes
+        Corps brut de la réponse.
+    content_type : str
+        Type MIME déclaré, sans paramètres, en minuscules.
+    encoding : str
+        Encodage déclaré ou détecté par httpx.
+    final_url : str
+        Adresse finale, après redirections.
+    """
 
     content: bytes
     content_type: str
@@ -92,7 +104,18 @@ class DownloadedFeed:
 # Nettoyage et URL
 
 def clean_html(value: Any) -> str:
-    """Nettoie un fragment HTML ou textuel."""
+    """Nettoie un fragment HTML ou textuel.
+
+    Parameters
+    ----------
+    value : Any
+        Fragment à nettoyer.
+
+    Returns
+    -------
+    str
+        Texte brut nettoyé.
+    """
 
     return clean_text(value)
 
@@ -102,7 +125,22 @@ def resolve_http_url(
     base_url: Any = "",
     canonicalize: bool = False
 ) -> str:
-    """Résout une URL relative et vérifie son schéma HTTP."""
+    """Résout une URL relative et vérifie son schéma HTTP.
+
+    Parameters
+    ----------
+    value : Any
+        Adresse lue dans le flux (entités HTML décodées).
+    base_url : Any
+        Adresse de référence pour résoudre une adresse relative. Par défaut vide.
+    canonicalize : bool
+        Vrai pour renvoyer la forme canonique de l'adresse. Par défaut faux.
+
+    Returns
+    -------
+    str
+        Adresse HTTP(S) absolue, ou chaîne vide si elle est absente ou invalide.
+    """
 
     raw_url = html.unescape(normalize_value(value))
     if not raw_url:
@@ -121,8 +159,23 @@ def resolve_http_url(
 # Lecture des champs RSS
 
 def get_entry_url(entry: Mapping[str, Any]) -> str:
-    """Retourne le lien principal d'une entrée RSS ou Atom."""
+    """Retourne le lien principal d'une entrée RSS ou Atom.
 
+    Ordre de préférence : `link`, puis le premier lien `alternate`, puis le
+    premier lien valide.
+
+    Parameters
+    ----------
+    entry : Mapping[str, Any]
+        Entrée analysée par Feedparser.
+
+    Returns
+    -------
+    str
+        Adresse canonique, ou chaîne vide.
+    """
+
+    # Lien direct de l'entrée
     direct_url = resolve_http_url(entry.get("link"), canonicalize=True)
     if direct_url:
         return direct_url
@@ -131,6 +184,7 @@ def get_entry_url(entry: Mapping[str, Any]) -> str:
     if not isinstance(links, list):
         return ""
 
+    # Premier lien « alternate » valide
     for link in links:
         if not isinstance(link, Mapping):
             continue
@@ -140,6 +194,7 @@ def get_entry_url(entry: Mapping[str, Any]) -> str:
         if alternate_url:
             return alternate_url
 
+    # À défaut, premier lien valide quel que soit son type
     for link in links:
         if not isinstance(link, Mapping):
             continue
@@ -151,7 +206,18 @@ def get_entry_url(entry: Mapping[str, Any]) -> str:
 
 
 def get_entry_identifier(entry: Mapping[str, Any]) -> str:
-    """Retourne le meilleur identifiant stable disponible."""
+    """Retourne le meilleur identifiant stable disponible.
+
+    Parameters
+    ----------
+    entry : Mapping[str, Any]
+        Entrée analysée par Feedparser.
+
+    Returns
+    -------
+    str
+        `id`, sinon `guid`, sinon le lien principal ; vide si rien n'est trouvé.
+    """
 
     return (
         normalize_value(entry.get("id"))
@@ -161,7 +227,19 @@ def get_entry_identifier(entry: Mapping[str, Any]) -> str:
 
 
 def get_entry_text(entry: Mapping[str, Any]) -> str:
-    """Retourne le contenu textuel le plus complet."""
+    """Retourne le contenu textuel le plus complet.
+
+    Parameters
+    ----------
+    entry : Mapping[str, Any]
+        Entrée analysée par Feedparser.
+
+    Returns
+    -------
+    str
+        Premier contenu (`content`) non vide, sinon le résumé ou la description,
+        nettoyés du HTML ; vide si rien n'est trouvé.
+    """
 
     content_items = entry.get("content", [])
     if isinstance(content_items, list):
@@ -183,7 +261,21 @@ def get_entry_text(entry: Mapping[str, Any]) -> str:
 # Images déclarées dans le flux
 
 def extract_image_from_html(value: Any, base_url: Any = "") -> str:
-    """Extrait la première image exploitable d'un fragment HTML."""
+    """Extrait la première image exploitable d'un fragment HTML.
+
+    Parameters
+    ----------
+    value : Any
+        Fragment HTML (éventuellement échappé).
+    base_url : Any
+        Adresse de référence pour les adresses relatives. Par défaut vide.
+
+    Returns
+    -------
+    str
+        Adresse de la première balise `img` (src, data-src, data-original, puis
+        premier candidat de srcset), ou chaîne vide.
+    """
 
     raw_html = normalize_value(value)
     if not raw_html:
@@ -208,7 +300,20 @@ def extract_image_from_html(value: Any, base_url: Any = "") -> str:
 
 
 def get_media_url(items: Any, base_url: Any = "") -> str:
-    """Retourne la première URL valide d'une collection média."""
+    """Retourne la première URL valide d'une collection média.
+
+    Parameters
+    ----------
+    items : Any
+        Liste `media_content` ou `media_thumbnail` de Feedparser.
+    base_url : Any
+        Adresse de référence pour les adresses relatives. Par défaut vide.
+
+    Returns
+    -------
+    str
+        Première adresse valide (`url` ou `href`), ou chaîne vide.
+    """
 
     if not isinstance(items, list):
         return ""
@@ -224,8 +329,23 @@ def get_media_url(items: Any, base_url: Any = "") -> str:
 
 
 def get_enclosure_image_url(entry: Mapping[str, Any], base_url: str) -> str:
-    """Retourne une image déclarée comme enclosure."""
+    """Retourne une image déclarée comme enclosure.
 
+    Parameters
+    ----------
+    entry : Mapping[str, Any]
+        Entrée analysée par Feedparser.
+    base_url : str
+        Adresse de référence pour les adresses relatives.
+
+    Returns
+    -------
+    str
+        Adresse de la première enclosure d'image (type absent ou `image/...`),
+        ou chaîne vide.
+    """
+
+    # Liens de relation « enclosure »
     links = entry.get("links", [])
     if isinstance(links, list):
         for link in links:
@@ -246,6 +366,7 @@ def get_enclosure_image_url(entry: Mapping[str, Any], base_url: str) -> str:
             if image_url:
                 return image_url
 
+    # Champ `enclosures` de Feedparser
     enclosures = entry.get("enclosures", [])
     if isinstance(enclosures, list):
         for enclosure in enclosures:
@@ -267,8 +388,20 @@ def get_enclosure_image_url(entry: Mapping[str, Any], base_url: str) -> str:
 
 
 def get_entry_image_url(entry: Mapping[str, Any]) -> str:
-    """Retourne la meilleure image disponible sans la rendre obligatoire."""
+    """Retourne la meilleure image disponible sans la rendre obligatoire.
 
+    Parameters
+    ----------
+    entry : Mapping[str, Any]
+        Entrée analysée par Feedparser.
+
+    Returns
+    -------
+    str
+        Adresse de l'image, ou chaîne vide si l'entrée n'en déclare aucune.
+    """
+
+    # Images média déclarées (media:content, media:thumbnail), puis enclosures
     entry_url = get_entry_url(entry)
 
     for field_name in ("media_content", "media_thumbnail"):
@@ -280,6 +413,7 @@ def get_entry_image_url(entry: Mapping[str, Any]) -> str:
     if image_url:
         return image_url
 
+    # À défaut, première image trouvée dans le HTML du contenu ou du résumé
     content_items = entry.get("content", [])
     if isinstance(content_items, list):
         for content_item in content_items:
@@ -300,8 +434,21 @@ def get_entry_image_url(entry: Mapping[str, Any]) -> str:
 # Auteur, catégorie et date
 
 def get_entry_author(entry: Mapping[str, Any]) -> str:
-    """Retourne l'auteur déclaré dans le flux."""
+    """Retourne l'auteur déclaré dans le flux.
 
+    Parameters
+    ----------
+    entry : Mapping[str, Any]
+        Entrée analysée par Feedparser.
+
+    Returns
+    -------
+    str
+        `author`, `author_detail.name` ou `dc_creator`, sinon les noms de
+        `authors` séparés par des virgules ; vide si rien n'est déclaré.
+    """
+
+    # Champs d'auteur unique, par ordre de préférence
     author = normalize_value(entry.get("author"))
     if author:
         return author
@@ -316,6 +463,7 @@ def get_entry_author(entry: Mapping[str, Any]) -> str:
     if author:
         return author
 
+    # À défaut, liste des auteurs, sans doublon
     authors = entry.get("authors", [])
     if not isinstance(authors, list):
         return ""
@@ -333,7 +481,21 @@ def get_entry_category(
     entry: Mapping[str, Any],
     configured_category: Any
 ) -> str:
-    """Privilégie la catégorie configurée puis celles du flux."""
+    """Privilégie la catégorie configurée puis celles du flux.
+
+    Parameters
+    ----------
+    entry : Mapping[str, Any]
+        Entrée analysée par Feedparser.
+    configured_category : Any
+        Catégorie fixée dans la configuration de la source.
+
+    Returns
+    -------
+    str
+        La catégorie configurée, sinon les étiquettes du flux séparées par des
+        virgules ; vide si rien n'est trouvé.
+    """
 
     configured = normalize_value(configured_category)
     if configured:
@@ -353,7 +515,18 @@ def get_entry_category(
 
 
 def get_entry_date(entry: Mapping[str, Any]) -> str:
-    """Retourne la première date RSS normalisable."""
+    """Retourne la première date RSS normalisable.
+
+    Parameters
+    ----------
+    entry : Mapping[str, Any]
+        Entrée analysée par Feedparser.
+
+    Returns
+    -------
+    str
+        Date ISO 8601 (publication, mise à jour ou création), ou chaîne vide.
+    """
 
     for field_name in (
         "published",
@@ -371,7 +544,21 @@ def get_entry_date(entry: Mapping[str, Any]) -> str:
 # Règle métier propre au RSS
 
 def get_max_article_age_days(source: Mapping[str, Any]) -> int:
-    """Retourne l'âge maximal autorisé pour cette source RSS."""
+    """Retourne l'âge maximal autorisé pour cette source RSS.
+
+    La valeur de la source ne peut pas dépasser le plafond global
+    `MAX_ARTICLE_AGE_DAYS` quand celui-ci est positif.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Configuration de la source (`max_article_age_days`).
+
+    Returns
+    -------
+    int
+        Âge maximal en jours ; 0 signifie sans limite.
+    """
 
     configured = parse_non_negative_integer(
         source.get("max_article_age_days", MAX_ARTICLE_AGE_DAYS),
@@ -386,7 +573,24 @@ def validate_article_age(
     article: Mapping[str, Any],
     max_article_age_days: int
 ) -> tuple[bool, str]:
-    """Vérifie la cohérence et l'ancienneté de la date de publication."""
+    """Vérifie la cohérence et l'ancienneté de la date de publication.
+
+    Un article sans date est accepté ; une date future est tolérée à
+    5 minutes près.
+
+    Parameters
+    ----------
+    article : Mapping[str, Any]
+        Article construit (`published_at`).
+    max_article_age_days : int
+        Âge maximal en jours ; 0 désactive le contrôle d'ancienneté.
+
+    Returns
+    -------
+    tuple[bool, str]
+        Vrai et motif vide si la date convient, sinon faux et le motif
+        (date invalide, future ou trop ancienne).
+    """
 
     published_at = normalize_value(article.get("published_at"))
     if not published_at:
@@ -411,7 +615,18 @@ def validate_article_age(
 # Téléchargement HTTP
 
 def is_retryable_http_error(error: BaseException) -> bool:
-    """Autorise les reprises uniquement sur les erreurs temporaires."""
+    """Autorise les reprises uniquement sur les erreurs temporaires.
+
+    Parameters
+    ----------
+    error : BaseException
+        Erreur levée par la requête.
+
+    Returns
+    -------
+    bool
+        Vrai pour un délai dépassé, une erreur réseau, un HTTP 429 ou 5xx.
+    """
 
     if isinstance(error, (httpx.TimeoutException, httpx.NetworkError)):
         return True
@@ -432,7 +647,25 @@ def is_retryable_http_error(error: BaseException) -> bool:
     reraise=True
 )
 def _download_feed_request(url: str) -> httpx.Response:
-    """Effectue la requête HTTP brute avec reprise sur les erreurs temporaires."""
+    """Effectue la requête HTTP brute avec reprise sur les erreurs temporaires.
+
+    Chaque essai est compté dans le compteur de requêtes RSS.
+
+    Parameters
+    ----------
+    url : str
+        Adresse du flux.
+
+    Returns
+    -------
+    httpx.Response
+        Réponse au statut de succès.
+
+    Raises
+    ------
+    httpx.HTTPStatusError
+        Si la réponse finale est une erreur HTTP.
+    """
 
     headers = {
         **HTTP_HEADERS,
@@ -454,7 +687,32 @@ def _download_feed_request(url: str) -> httpx.Response:
 
 
 def download_feed(url: str, source_name: str = "source RSS") -> DownloadedFeed:
-    """Télécharge un flux et convertit les erreurs finales en erreurs RSS."""
+    """Télécharge un flux et convertit les erreurs finales en erreurs RSS.
+
+    Parameters
+    ----------
+    url : str
+        Adresse du flux.
+    source_name : str
+        Nom de la source, pour les messages. Par défaut « source RSS ».
+
+    Returns
+    -------
+    DownloadedFeed
+        Contenu brut, type MIME, encodage et adresse finale.
+
+    Raises
+    ------
+    RssExtractionStoppedError
+        Sous-classe spécialisée pour un HTTP fatal (accès refusé, quota,
+        maintenance, erreur serveur) ; voir `raise_if_fatal_rss_error`.
+    RssRequestError
+        Pour une autre erreur HTTP, non fatale.
+    RssTimeoutError
+        Si le délai est dépassé.
+    RssNetworkError
+        Pour une erreur réseau.
+    """
 
     try:
         response = _download_feed_request(url)
@@ -491,13 +749,35 @@ def download_feed(url: str, source_name: str = "source RSS") -> DownloadedFeed:
 # Contrôle et parsing XML
 
 def looks_like_html(content: bytes) -> bool:
-    """Détecte une page HTML à partir de ses premiers octets."""
+    """Détecte une page HTML à partir de ses premiers octets.
+
+    Parameters
+    ----------
+    content : bytes
+        Contenu téléchargé.
+
+    Returns
+    -------
+    bool
+        Vrai si le début (BOM ignoré) est un doctype HTML ou une balise `html`.
+    """
 
     return bool(HTML_PREFIX_PATTERN.match(content[:4096].lstrip(UTF8_BOM)))
 
 
 def looks_like_xml(content: bytes) -> bool:
-    """Détecte une structure XML, RSS, Atom ou RDF probable."""
+    """Détecte une structure XML, RSS, Atom ou RDF probable.
+
+    Parameters
+    ----------
+    content : bytes
+        Contenu téléchargé.
+
+    Returns
+    -------
+    bool
+        Vrai si le début commence par `<?xml`, `<rss`, `<feed` ou `<rdf:rdf`.
+    """
 
     sample = content[:4096].lstrip(UTF8_BOM + b" \t\r\n").lower()
     return sample.startswith((b"<?xml", b"<rss", b"<feed", b"<rdf:rdf"))
@@ -506,7 +786,21 @@ def validate_feed_content_type(
     downloaded_feed: DownloadedFeed,
     source_name: str
 ) -> None:
-    """Valide le type MIME tout en tolérant un XML mal déclaré."""
+    """Valide le type MIME tout en tolérant un XML mal déclaré.
+
+    Parameters
+    ----------
+    downloaded_feed : DownloadedFeed
+        Flux téléchargé.
+    source_name : str
+        Nom de la source, pour les messages.
+
+    Raises
+    ------
+    RssInvalidContentTypeError
+        Si une page HTML est reçue, ou si le type MIME est incompatible et le
+        contenu ne ressemble pas à du XML.
+    """
 
     # Lecture des métadonnées
     content_type = downloaded_feed.content_type
@@ -555,7 +849,18 @@ def validate_feed_content_type(
         )
 
 def clean_xml_prefix(content: bytes) -> tuple[bytes, bool]:
-    """Retire le BOM UTF-8 et les espaces avant la déclaration XML."""
+    """Retire le BOM UTF-8 et les espaces avant la déclaration XML.
+
+    Parameters
+    ----------
+    content : bytes
+        Contenu téléchargé.
+
+    Returns
+    -------
+    tuple[bytes, bool]
+        Le contenu nettoyé, et vrai s'il a été modifié.
+    """
 
     cleaned_content = content
     changed = False
@@ -573,7 +878,18 @@ def clean_xml_prefix(content: bytes) -> tuple[bytes, bool]:
 
 
 def validate_xml_normally(content: bytes) -> tuple[bool, Exception | None]:
-    """Tente un parsing XML strict sans altérer le contenu."""
+    """Tente un parsing XML strict sans altérer le contenu.
+
+    Parameters
+    ----------
+    content : bytes
+        Contenu à analyser.
+
+    Returns
+    -------
+    tuple[bool, Exception | None]
+        Vrai et None si le XML est valide, sinon faux et l'erreur d'analyse.
+    """
 
     try:
         ElementTree.fromstring(content)
@@ -587,7 +903,31 @@ def parse_with_feedparser(
     source_name: str,
     tolerant_mode: bool
 ) -> Mapping[str, Any]:
-    """Analyse un flux avec Feedparser et contrôle son mode bozo."""
+    """Analyse un flux avec Feedparser et contrôle son mode bozo.
+
+    Un flux « bozo » (XML défectueux) est accepté s'il contient des entrées.
+
+    Parameters
+    ----------
+    content : bytes
+        Contenu du flux.
+    source_name : str
+        Nom de la source, pour les messages.
+    tolerant_mode : bool
+        Vrai si le XML strict a échoué avant cet appel (simple avertissement).
+
+    Returns
+    -------
+    Mapping[str, Any]
+        Flux analysé par Feedparser.
+
+    Raises
+    ------
+    RssParsingError
+        Si Feedparser lève une exception ou renvoie un type inattendu.
+    RssInvalidFeedError
+        Si le flux est défectueux et ne contient aucune entrée.
+    """
 
     # Parsing Feedparser
     try:
@@ -649,7 +989,30 @@ def parse_feed_content(
     downloaded_feed: DownloadedFeed,
     source_name: str
 ) -> Mapping[str, Any]:
-    """Valide puis analyse le contenu brut avec repli tolérant."""
+    """Valide puis analyse le contenu brut avec repli tolérant.
+
+    Essaie d'abord le XML strict, puis après retrait du BOM et des espaces
+    initiaux, enfin le mode tolérant de Feedparser.
+
+    Parameters
+    ----------
+    downloaded_feed : DownloadedFeed
+        Flux téléchargé.
+    source_name : str
+        Nom de la source, pour les messages.
+
+    Returns
+    -------
+    Mapping[str, Any]
+        Flux analysé par Feedparser.
+
+    Raises
+    ------
+    RssInvalidFeedError
+        Si le flux est vide (ou invalide sans entrée, via `parse_with_feedparser`).
+    RssInvalidContentTypeError
+        Si une page HTML a été reçue à la place du flux.
+    """
 
     content = downloaded_feed.content
 
@@ -716,7 +1079,20 @@ def parse_feed(
     source_url: str,
     source_name: str
 ) -> Mapping[str, Any]:
-    """Télécharge puis analyse un flux RSS ou Atom."""
+    """Télécharge puis analyse un flux RSS ou Atom.
+
+    Parameters
+    ----------
+    source_url : str
+        Adresse du flux.
+    source_name : str
+        Nom de la source, pour les messages.
+
+    Returns
+    -------
+    Mapping[str, Any]
+        Flux analysé par Feedparser.
+    """
 
     # Téléchargement du flux
     downloaded_feed = download_feed(source_url, source_name)
@@ -746,7 +1122,20 @@ def build_rss_article(
     entry: Mapping[str, Any],
     source: Mapping[str, Any]
 ) -> dict[str, Any]:
-    """Transforme une entrée RSS au format standard CheckIt.AI."""
+    """Transforme une entrée RSS au format standard CheckIt.AI.
+
+    Parameters
+    ----------
+    entry : Mapping[str, Any]
+        Entrée analysée par Feedparser.
+    source : Mapping[str, Any]
+        Configuration de la source (nom, langue, catégorie, rôle).
+
+    Returns
+    -------
+    dict[str, Any]
+        Article standard, ou dictionnaire vide si l'entrée n'a pas d'identifiant.
+    """
 
     if not isinstance(entry, Mapping):
         return {}
@@ -773,8 +1162,27 @@ def build_rss_article(
 
 
 def iter_rss_items(source: Mapping[str, Any]) -> Sequence[Mapping[str, Any]]:
-    """Télécharge un flux puis retourne uniquement ses entrées mappées."""
+    """Télécharge un flux puis retourne uniquement ses entrées mappées.
 
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Configuration de la source (nom, url).
+
+    Returns
+    -------
+    Sequence[Mapping[str, Any]]
+        Entrées du flux qui sont des dictionnaires ; les autres sont ignorées.
+
+    Raises
+    ------
+    ValueError
+        Si l'adresse du flux est absente ou invalide.
+    TypeError
+        Si le flux analysé ne contient pas une liste d'entrées.
+    """
+
+    # Vérifier l'adresse, puis télécharger et analyser le flux
     source_name = normalize_value(source.get("name")) or "source RSS"
     source_url = resolve_http_url(source.get("url"))
     if not source_url:
@@ -786,6 +1194,7 @@ def iter_rss_items(source: Mapping[str, Any]) -> Sequence[Mapping[str, Any]]:
     if feed is None:
         return []
 
+    # Garder les entrées exploitables et signaler les autres
     raw_entries = getattr(feed, "entries", [])
     if not isinstance(raw_entries, list):
         raise TypeError(
@@ -811,7 +1220,20 @@ def validate_rss_entry(
     entry: Any,
     source: Mapping[str, Any]
 ) -> tuple[bool, str]:
-    """Vérifie qu'une entrée RSS possède un identifiant exploitable."""
+    """Vérifie qu'une entrée RSS possède un identifiant exploitable.
+
+    Parameters
+    ----------
+    entry : Any
+        Entrée du flux.
+    source : Mapping[str, Any]
+        Configuration de la source (inutilisée, imposée par l'adaptateur).
+
+    Returns
+    -------
+    tuple[bool, str]
+        Vrai et motif vide si l'entrée est exploitable, sinon faux et le motif.
+    """
 
     del source
     if not isinstance(entry, Mapping):
@@ -825,7 +1247,20 @@ def validate_rss_article_age(
     article: Mapping[str, Any],
     source: Mapping[str, Any]
 ) -> tuple[bool, str]:
-    """Applique la règle d'ancienneté propre aux publications RSS."""
+    """Applique la règle d'ancienneté propre aux publications RSS.
+
+    Parameters
+    ----------
+    article : Mapping[str, Any]
+        Article construit.
+    source : Mapping[str, Any]
+        Configuration de la source (`max_article_age_days`).
+
+    Returns
+    -------
+    tuple[bool, str]
+        Vrai et motif vide si la date convient, sinon faux et le motif.
+    """
 
     return validate_article_age(
         article=article,
@@ -854,7 +1289,18 @@ RSS_EXTRACTOR = RssExtractor(
 def extract_articles_from_source(
     source: Mapping[str, Any]
 ) -> list[dict[str, Any]]:
-    """Extrait une source RSS déjà chargée."""
+    """Extrait une source RSS déjà chargée.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Configuration de la source.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Articles retenus.
+    """
 
     return RSS_EXTRACTOR.extract_source(source)
 
@@ -862,20 +1308,43 @@ def extract_articles_from_source(
 def extract_articles_from_sources(
     sources: Sequence[Mapping[str, Any]]
 ) -> list[dict[str, Any]]:
-    """Extrait plusieurs sources RSS déjà chargées."""
+    """Extrait plusieurs sources RSS déjà chargées.
+
+    Parameters
+    ----------
+    sources : Sequence[Mapping[str, Any]]
+        Configurations des sources.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Articles retenus, sans doublon entre sources.
+    """
 
     return RSS_EXTRACTOR.extract_sources(sources)
 
 
 def load_rss_sources() -> list[dict[str, Any]]:
-    """Recharge puis retourne les configurations RSS."""
+    """Recharge puis retourne les configurations RSS.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Configuration de chaque source RSS.
+    """
 
     RSS_EXTRACTOR.reload_sources()
     return RSS_EXTRACTOR.get_sources()
 
 
 def extract_all_articles() -> ExtractorResult:
-    """Lance toutes les sources RSS actives."""
+    """Lance toutes les sources RSS actives.
+
+    Returns
+    -------
+    ExtractorResult
+        Résultat agrégé de toutes les sources RSS.
+    """
 
     return RSS_EXTRACTOR.run()
 

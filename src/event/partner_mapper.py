@@ -96,7 +96,20 @@ STATUS_WORDS = {"complet": "complet", "annule": "annule", "reporte": "reporte"}
 # ---------------------------------------------------------------------------
 
 def normalize_header(name: Any) -> str:
-    """Nom de colonne comparable : « Heure début » -> « heure_debut »."""
+    """Nom de colonne comparable : « Heure début » -> « heure_debut ».
+
+    Les noms « maison » connus sont traduits grâce à `COLUMN_ALIASES`.
+
+    Parameters
+    ----------
+    name : Any
+        Intitulé de colonne tel qu'écrit dans le fichier.
+
+    Returns
+    -------
+    str
+        Le nom en minuscules sans accents, mots reliés par « _ ».
+    """
 
     text = unicodedata.normalize("NFKD", str(name or "")).encode("ascii", "ignore").decode()
     text = re.sub(r"[^a-z0-9]+", "_", text.lower()).strip("_")
@@ -104,7 +117,18 @@ def normalize_header(name: Any) -> str:
 
 
 def cell_text(value: Any) -> str:
-    """Texte d'une cellule (les cellules vides de pandas valent NaN)."""
+    """Texte d'une cellule (les cellules vides de pandas valent NaN).
+
+    Parameters
+    ----------
+    value : Any
+        Contenu brut de la cellule.
+
+    Returns
+    -------
+    str
+        Le texte nettoyé ; chaîne vide pour None ou NaN.
+    """
 
     if value is None or (isinstance(value, float) and math.isnan(value)):
         return ""
@@ -112,7 +136,18 @@ def cell_text(value: Any) -> str:
 
 
 def parse_cell_date(value: Any) -> date | None:
-    """Date d'une cellule : objet Excel, « 25/10/2026 », « 25-10-26 » ou « 2026-10-25 »."""
+    """Date d'une cellule : objet Excel, « 25/10/2026 », « 25-10-26 » ou « 2026-10-25 ».
+
+    Parameters
+    ----------
+    value : Any
+        Contenu brut de la cellule (`datetime`, `date` ou texte).
+
+    Returns
+    -------
+    date or None
+        Le jour, ou None si la cellule est vide ou illisible.
+    """
 
     if isinstance(value, datetime):
         return value.date()
@@ -134,6 +169,21 @@ def parse_cell_time(value: Any) -> time | None:
     """Heure d'une cellule : objet Excel, « 20:30 », « 20h30 », « 20h », « 20.30 ».
 
     Lève ValueError si la cellule est remplie mais illisible.
+
+    Parameters
+    ----------
+    value : Any
+        Contenu brut de la cellule (`datetime`, `time` ou texte).
+
+    Returns
+    -------
+    time or None
+        L'heure à la minute près, ou None si la cellule est vide.
+
+    Raises
+    ------
+    ValueError
+        Si le texte n'est pas une heure, ou une heure hors de 00:00-23:59.
     """
 
     if isinstance(value, datetime):
@@ -153,7 +203,18 @@ def parse_cell_time(value: Any) -> time | None:
 
 
 def parse_cell_bool(value: Any) -> bool | None:
-    """« oui », « x », « vrai »... -> True ; « non »... -> False ; vide -> None."""
+    """« oui », « x », « vrai »... -> True ; « non »... -> False ; vide -> None.
+
+    Parameters
+    ----------
+    value : Any
+        Contenu brut de la cellule.
+
+    Returns
+    -------
+    bool or None
+        La réponse lue, ou None si la cellule est vide ou ambiguë.
+    """
 
     text = normalize_for_comparison(cell_text(value))
     if text in TRUE_WORDS:
@@ -164,7 +225,18 @@ def parse_cell_bool(value: Any) -> bool | None:
 
 
 def parse_cell_int(value: Any) -> int | None:
-    """Entier d'une cellule (« 6 », « 6 ans », 6.0) ; None si vide ou illisible."""
+    """Entier d'une cellule (« 6 », « 6 ans », 6.0) ; None si vide ou illisible.
+
+    Parameters
+    ----------
+    value : Any
+        Contenu brut de la cellule.
+
+    Returns
+    -------
+    int or None
+        Le premier nombre entier trouvé, ou None.
+    """
 
     match = re.search(r"\d+", cell_text(value))
     return int(match.group(0)) if match else None
@@ -174,6 +246,16 @@ def tidy_title(value: Any) -> str:
     """Titre nettoyé : espaces en trop retirés, titre TOUT EN MAJUSCULES adouci.
 
     « SOIRÉE  SALSA » -> « Soirée salsa ». Un sigle court (« DJ ») est gardé.
+
+    Parameters
+    ----------
+    value : Any
+        Contenu brut de la cellule « titre ».
+
+    Returns
+    -------
+    str
+        Le titre nettoyé (puces et tirets de tête et de fin retirés).
     """
 
     title = cell_text(value).strip(" -–•*")
@@ -183,7 +265,18 @@ def tidy_title(value: Any) -> str:
 
 
 def tidy_link(value: Any) -> str:
-    """Lien nettoyé : « www.exemple.fr » devient « https://www.exemple.fr »."""
+    """Lien nettoyé : « www.exemple.fr » devient « https://www.exemple.fr ».
+
+    Parameters
+    ----------
+    value : Any
+        Contenu brut de la cellule « lien ».
+
+    Returns
+    -------
+    str
+        Le lien sans espaces, préfixé par « https:// » s'il commençait par « www. ».
+    """
 
     link = cell_text(value).replace(" ", "")
     if link.lower().startswith("www."):
@@ -192,13 +285,35 @@ def tidy_link(value: Any) -> str:
 
 
 def missing_columns(headers: list[str]) -> list[str]:
-    """Colonnes obligatoires absentes de l'en-tête du fichier."""
+    """Colonnes obligatoires absentes de l'en-tête du fichier.
+
+    Parameters
+    ----------
+    headers : list[str]
+        Noms de colonnes déjà normalisés (`normalize_header`).
+
+    Returns
+    -------
+    list[str]
+        Les colonnes de `REQUIRED_COLUMNS` qui manquent (vide si tout y est).
+    """
 
     return [column for column in REQUIRED_COLUMNS if column not in headers]
 
 
 def is_empty_row(row: Mapping[str, Any]) -> bool:
-    """Ligne entièrement vide (fréquent en bas d'un tableur)."""
+    """Ligne entièrement vide (fréquent en bas d'un tableur).
+
+    Parameters
+    ----------
+    row : Mapping[str, Any]
+        Une ligne du fichier, `{colonne: cellule}`.
+
+    Returns
+    -------
+    bool
+        Vrai si aucune cellule n'a de texte.
+    """
 
     return not any(cell_text(value) for value in row.values())
 
@@ -211,7 +326,18 @@ FORMULAS = ("gratuit", "mis_en_avant", "premium")
 
 def partner_formula(partner: Mapping[str, Any]) -> str:
     """Formule déclarée ; sans formule, une date `sponsored_until` vaut « mis_en_avant »
-    (configuration d'avant le 17/10/2026)."""
+    (configuration d'avant le 17/10/2026).
+
+    Parameters
+    ----------
+    partner : Mapping[str, Any]
+        Configuration du partenaire (`formule` ou `formula`, `sponsored_until`).
+
+    Returns
+    -------
+    str
+        Une valeur de `FORMULAS`.
+    """
 
     value = "_".join(str(partner.get("formule") or partner.get("formula") or "").strip().lower()
                      .replace("-", " ").replace("é", "e").split())
@@ -221,7 +347,20 @@ def partner_formula(partner: Mapping[str, Any]) -> str:
 
 
 def is_sponsored(partner: Mapping[str, Any], today: date) -> bool:
-    """Le partenariat payant est-il en cours (formule payante et `sponsored_until` dans le futur) ?"""
+    """Le partenariat payant est-il en cours (formule payante et `sponsored_until` dans le futur) ?
+
+    Parameters
+    ----------
+    partner : Mapping[str, Any]
+        Configuration du partenaire.
+    today : date
+        Jour de référence (la date de fin est incluse).
+
+    Returns
+    -------
+    bool
+        Vrai si la formule n'est pas « gratuit » et que `sponsored_until` n'est pas passée.
+    """
 
     until = parse_cell_date(partner.get("sponsored_until"))
     return partner_formula(partner) != "gratuit" and until is not None and until >= today
@@ -243,8 +382,28 @@ def map_partner_row(
 
     Une séance déjà passée renvoie (None, "") : ce n'est pas une erreur du
     partenaire, la ligne est simplement ignorée.
+
+    Parameters
+    ----------
+    row : Mapping[str, Any]
+        Une ligne du fichier, colonnes normalisées (`normalize_header`).
+    partner : Mapping[str, Any]
+        Configuration du partenaire (`name`, `website`, `file`, formule...).
+    today : date
+        Jour de référence : les séances finies avant sont ignorées.
+    updated_at : str
+        Date de mise à jour du fichier, citée avec la source. Par défaut vide.
+    extracted_at : str
+        Date de l'extraction, recopiée dans l'événement. Par défaut vide.
+
+    Returns
+    -------
+    tuple[Event or None, str]
+        L'événement et une chaîne vide ; ou None et le motif du refus (une
+        constante `REASON_...`) ; ou None et une chaîne vide si la séance est passée.
     """
 
+    # Vérifier les cellules obligatoires et le format de chacune
     title = tidy_title(row.get("titre"))
     if not title:
         return None, REASON_MISSING_TITLE
@@ -271,9 +430,11 @@ def map_partner_row(
         return None, REASON_BAD_LINK
     if not link and not is_valid_http_url(tidy_link(partner.get("website"))):
         return None, REASON_MISSING_LINK   # chaque proposition doit renvoyer quelque part
+    # Séance passée : ignorée sans motif
     if (last_day or day) < today:
         return None, ""
 
+    # Début et fin (fin du dernier jour si l'heure de fin manque)
     start = datetime.combine(day, start_time or time.min, tzinfo=PARIS)
     end = None
     if last_day and last_day > day:
@@ -281,6 +442,7 @@ def map_partner_row(
     elif end_time and start_time and end_time > start_time:
         end = datetime.combine(day, end_time, tzinfo=PARIS)
 
+    # Prix : la case « gratuit » l'emporte sur le texte du prix
     price_text = cell_text(row.get("prix"))
     price_min, price_max, is_free = parse_price(price_text)
     free_flag = parse_cell_bool(row.get("gratuit"))
@@ -289,6 +451,7 @@ def map_partner_row(
         if free_flag:
             price_min = price_max = 0.0
 
+    # Publics : règles communes, complétées par la colonne « public » du partenaire
     category = cell_text(row.get("categorie"))
     public = cell_text(row.get("public"))
     start_at = to_iso(start)
@@ -301,6 +464,7 @@ def map_partner_row(
         audiences.append("soiree")
     status = STATUS_WORDS.get(normalize_for_comparison(cell_text(row.get("statut"))), "programme")
 
+    # Construire l'événement
     event_id = build_event_id(build_dedup_key(title, start_at, venue))
     return Event(
         event_id=event_id,

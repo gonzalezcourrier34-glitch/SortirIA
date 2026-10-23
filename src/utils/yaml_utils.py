@@ -29,6 +29,20 @@ def load_yaml_file(
 
     En cas d'erreur ou de contenu invalide, un dictionnaire vide est
     systématiquement retourné.
+
+    La lecture passe par `yaml.safe_load`, qui refuse les balises Python
+    arbitraires ; chaque erreur est journalisée.
+
+    Parameters
+    ----------
+    file_path : str | Path
+        Le chemin du fichier YAML ; `~` est développé.
+
+    Returns
+    -------
+    dict[str, Any]
+        Le contenu du fichier, ou {} s'il est introuvable, illisible, vide ou
+        s'il ne contient pas un dictionnaire.
     """
 
     # Normalisation du chemin
