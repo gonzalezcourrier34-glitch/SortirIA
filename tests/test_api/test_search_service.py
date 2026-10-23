@@ -9,7 +9,8 @@ from typing import Any, Self
 import pytest
 
 from app import search_answer, search_cards, search_filters, search_query, search_service
-from app.query_understanding import QueryPlan
+from app.query_understanding import QueryPlan, merge_with_filters, understand
+from app.search_answer import fallback_answer
 from app.search_filters import PARIS, SearchFilters
 from app.search_service import SearchServices
 
@@ -209,6 +210,32 @@ def test_search_survives_mistral_outage() -> None:
     result = events[-1]["result"]
     assert result["degraded"] is True and "Balade contée [1]" in result["answer"]
     assert result["suggestions"] and "vector" not in connection.queries[0][1]
+
+
+def test_mistral_outage_is_logged(caplog: pytest.LogCaptureFixture) -> None:
+    """23/10/2026 : les réponses simplifiées ne laissaient aucune trace de leur cause."""
+
+    def broken(*args):
+        raise RuntimeError("503 Service Unavailable")
+
+    with caplog.at_level("WARNING"):
+        run(FakeConnection([row("e1")]), SearchServices(embed=broken, write=broken, now=lambda: NOW))
+    messages = [record.getMessage() for record in caplog.records]
+    assert any("Rédaction par Mistral impossible" in message for message in messages)
+    assert any("Vecteur de la question impossible" in message for message in messages)
+    assert any("503" in str(record.exc_info[1]) for record in caplog.records if record.exc_info)
+
+
+def test_fallback_says_when_nothing_is_exact() -> None:
+    """Sans Mistral, des idées voisines ne sont pas présentées comme la réponse exacte."""
+
+    plan = merge_with_filters(understand("une pièce de théâtre", NOW), public=None, zone=None,
+                              period_bounds=search_filters.period_bounds("3mois", NOW),
+                              period_label="les 3 prochains mois", free_only=False)
+    cards = [{"title": "Festival des sciences", "ref": 1}]
+    neighbours, _ = fallback_answer(cards, plan, exact=False)
+    assert neighbours.startswith("Je n'ai rien trouvé d'exact") and "Festival des sciences [1]" in neighbours
+    assert fallback_answer(cards, plan)[0].startswith("Voici ce que j'ai trouvé")
 
 
 def test_search_without_result() -> None:

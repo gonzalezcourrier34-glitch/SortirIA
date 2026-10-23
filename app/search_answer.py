@@ -262,8 +262,12 @@ def order_cards(cards: list[dict[str, Any]], answer: str) -> tuple[list[dict[str
 
 
 def fallback_answer(cards: Sequence[Mapping[str, Any]],
-                    filters: QueryPlan | SearchFilters) -> tuple[str, list[str]]:
+                    filters: QueryPlan | SearchFilters, *, exact: bool = True) -> tuple[str, list[str]]:
     """Réponse sans Mistral (service indisponible) : simple et toujours exacte.
+
+    Quand rien ne répond exactement, la phrase le dit (23/10/2026) : « Voici ce
+    que j'ai trouvé » devant un festival pour « une pièce de théâtre » laissait
+    croire à une réponse exacte.
 
     Parameters
     ----------
@@ -271,6 +275,9 @@ def fallback_answer(cards: Sequence[Mapping[str, Any]],
         Les cartes retenues (les 3 premières sont citées).
     filters : QueryPlan | SearchFilters
         Les contraintes, résumées dans la phrase.
+    exact : bool
+        Vrai si les cartes répondent exactement à la demande ; faux pour des
+        idées voisines. Par défaut vrai.
 
     Returns
     -------
@@ -283,6 +290,9 @@ def fallback_answer(cards: Sequence[Mapping[str, Any]],
                    f"{filters.describe()}. Essayez d'élargir la période ou la zone.")
         return message, ["Sur 3 mois ?", "Partout ?"]
     names = ", ".join(f"{card['title']} [{card['ref']}]" for card in cards[:3])
+    if not exact:
+        return (f"Je n'ai rien trouvé d'exact pour {filters.describe()}. "
+                f"Quelques idées voisines : {names}."), []
     return f"Voici ce que j'ai trouvé pour {filters.describe()} : {names}.", []
 
 

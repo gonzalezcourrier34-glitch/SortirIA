@@ -86,6 +86,9 @@ from app.search_query import (
     type_keywords,
     widen_for_subject,
 )
+from src.logger import get_logger
+
+logger = get_logger(__name__)
 
 # Étapes affichées par l'interface (même ordre que frontend/src/app/search.model.ts).
 STEP_UNDERSTAND = "comprendre"
@@ -364,7 +367,10 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
             # Pratique : le sens va vers ce qui permet de la faire (pas vers les concerts).
             hint = f" ({PRACTICES[plan.practice][2]})" if plan.practice in PRACTICES else ""
             vector = services.embed(embed_text + hint)
-        except Exception:  # noqa: BLE001 (sans vecteur, mots-clés et date : la recherche continue)
+        except Exception:  # sans vecteur, mots-clés et date : la recherche continue
+            # Tracer la cause dans les journaux : la réponse, elle, continue sans le sens
+            logger.warning("Vecteur de la question impossible : recherche par mots-clés seulement.",
+                           exc_info=True)
             degraded = True
     candidates, params = fetch_candidates(connection, plan, vector)
     relaxed = ""
@@ -495,16 +501,19 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
                                     widened=widened, asked=asked_plan.describe())
             raw, tokens, model = services.write(asked, plan, cards)
             answer, suggestions = parse_answer(raw, len(cards))
-        except Exception:  # noqa: BLE001 (Mistral absent ou réponse illisible : réponse simple)
+        except Exception:  # Mistral absent ou réponse illisible : réponse simple
+            # Tracer la cause (23/10/2026 : toutes les réponses étaient simplifiées, sans
+            # aucune trace dans les journaux), puis répondre sans Mistral
+            logger.warning("Rédaction par Mistral impossible : réponse simplifiée.", exc_info=True)
             degraded = True
-            answer, suggestions = fallback_answer(cards, plan)
+            answer, suggestions = fallback_answer(cards, plan, exact=exact)
     elif nothing_on_subject:
         subject = " ".join(precise_words) or category_label(plan.categories)
         answer = (f"Je n'ai trouvé aucun événement sur « {subject} » dans notre base, ni pour "
                   f"{asked_plan.describe()}, ni sur les 3 prochains mois dans toute la zone.")
         suggestions = []
     else:
-        answer, suggestions = fallback_answer(cards, plan)
+        answer, suggestions = fallback_answer(cards, plan, exact=exact)
     suggestions = suggestions or default_suggestions(plan)
     cards, answer = order_cards(cards, answer)
     yield progress(STEP_WRITE, "completed",
