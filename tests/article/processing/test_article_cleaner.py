@@ -5,18 +5,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+# Fixtures
+from collections.abc import Generator, Mapping
 from typing import Any
-
 
 import pytest
 
 import src.article.processing.article_cleaner as module
 
-
-# Fixtures
-
-from collections.abc import Generator
 
 @pytest.fixture(autouse=True)
 def clear_clean_text_cache() -> Generator[None, None, None]:

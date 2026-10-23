@@ -170,7 +170,8 @@ def parse_datetime(value: Any) -> datetime | None:
     try:
         return normalize_datetime(
             datetime.fromisoformat(
-                value.replace("Z", "+00:00")
+                # Remplacement voulu : fromisoformat refuse une date seule en « Z »
+                value.replace("Z", "+00:00")  # noqa: FURB162  dates seules en Z
             )
         )
     except ValueError:

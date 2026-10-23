@@ -14,9 +14,8 @@ import src.extractors.core.extractor_models as module
 from config.constants import (
     EXTRACTOR_STATUS_FAILED,
     EXTRACTOR_STATUS_PARTIAL_SUCCESS,
-    EXTRACTOR_STATUS_SUCCESS
+    EXTRACTOR_STATUS_SUCCESS,
 )
-
 
 # ExtractorConfiguration
 
@@ -613,7 +612,7 @@ def test_extractor_execution_rejects_invalid_duration(
     ]
 )
 def test_extractor_execution_normalizes_duration(
-    value: int | float,
+    value: float,
     expected: float
 ) -> None:
     execution = build_execution(

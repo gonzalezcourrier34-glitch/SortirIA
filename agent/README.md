@@ -38,7 +38,7 @@ injectés, nœuds, routage séparé, tout testable sans réseau.
 | `pull_requests.py` | La validation par pull request : une PR par proposition (le changement exact et le diagnostic), relue la nuit suivante (Merge = appliquée, Close = refusée, PR en conflit refaite sur `main` à jour), liens dans le mail. Jeton `GITHUB_TOKEN_AGENT` |
 | `feedback_learning.py` | Le lundi : les pouces bas rangés par cause par Mistral ; leurs mots rejoignent l'apprentissage de la recherche |
 | `commentaires.py` | La revue humaine des commentaires : `uv run python -m agent.commentaires` (refusés), `--publier N`, `--masquer N` |
-| `proposals.py` | La validation humaine en ligne de commande : `uv run python -m agent.proposals` (`--accepter N`, `--refuser N`) ; applique un agenda (`config/sources.yaml`), une adresse de PDF ou un synonyme (`config/synonymes.yaml`) |
+| `proposals.py` | La validation humaine en ligne de commande : `uv run python -m agent.proposals` (`--accepter N`, `--refuser N`) ; applique un agenda (`config/sources.yaml`), une adresse de PDF ou un synonyme (`config/synonymes.yaml`) ; décrit chaque proposition en une phrase (`describe_action`, lue par le bilan et les pull requests) |
 | `drift.py` | La dérive : chaque nuit, les 7 derniers jours comparés aux 28 précédents (questions, réponses, collecte ; PSI) ; le lundi, dans le mail, et une alerte si elle est forte. À la demande : `uv run python -m agent.drift` |
 | `report.py` | Le bilan envoyé par mail |
 | `__main__.py` | Lancement manuel : `uv run python -m agent` (`--essai` : sans écrire en base, `--source` : une source précise, `--decouverte` : avec la découverte des agendas OpenAgenda, `--bilan-recherche` : seulement le bilan de la recherche, `--apprendre` : avec les propositions qui en découlent) |

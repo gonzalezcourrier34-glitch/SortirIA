@@ -13,7 +13,6 @@ from bs4.builder import ParserRejectedMarkup
 
 from src.cleaner import html_cleaner as module
 
-
 # Détection
 
 @pytest.mark.parametrize(

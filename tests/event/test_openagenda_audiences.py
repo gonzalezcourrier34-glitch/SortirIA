@@ -1,4 +1,7 @@
-"""Tests du statut, de l'âge, de l'accessibilité et des publics OpenAgenda."""
+"""Tests du statut, de l'âge, de l'accessibilité et des publics OpenAgenda.
+
+Les règles des publics elles-mêmes sont testées dans `test_event_audiences.py`.
+"""
 
 from __future__ import annotations
 
@@ -15,14 +18,12 @@ from src.event.openagenda_mapper import (
     get_age_range,
     get_attendance,
     get_status,
-    infer_audiences,
     map_openagenda_event,
 )
 
 from .conftest import make_openagenda_item
 
 FUTURE_EVENING = "2030-10-24T18:30:00.000Z"   # 20 h 30, heure de Paris
-FUTURE_NIGHT = "2030-10-24T21:30:00.000Z"     # 23 h 30, heure de Paris
 
 
 @pytest.mark.parametrize(
@@ -49,26 +50,6 @@ def test_accessibility_list_or_dict() -> None:
     assert get_accessibility({"accessibility": ["mi", "vi", "xx"]}) == ["moteur", "visuel"]
     assert get_accessibility({"accessibility": {"hi": True, "mi": False}}) == ["auditif"]
     assert get_accessibility({}) == []
-
-
-@pytest.mark.parametrize(
-    ("texts", "start", "age_min", "age_max", "expected"),
-    [
-        (["Spectacle jeune public"], FUTURE_EVENING, None, None, ["famille"]),
-        (["Atelier peinture"], FUTURE_EVENING, 4, 10, ["famille"]),
-        (["Soirée DJ électro"], FUTURE_EVENING, None, None, ["soiree"]),
-        (["Concert"], FUTURE_NIGHT, None, None, ["soiree"]),
-        (["Balade contée en famille"], FUTURE_EVENING, None, None, ["famille"]),  # « balade » n'est pas « bal »
-        (["Soirée enfants interdite"], FUTURE_EVENING, 18, None, ["soiree"]),     # 18 ans et plus : jamais famille
-        (["Exposition"], FUTURE_EVENING, None, None, []),
-    ],
-)
-def test_infer_audiences(texts, start, age_min, age_max, expected) -> None:
-    assert infer_audiences(texts, start, True, age_min, age_max) == expected
-
-
-def test_day_only_event_is_not_a_night_out() -> None:
-    assert infer_audiences(["Marché"], "2030-10-24T00:00:00+02:00", False, None, None) == []
 
 
 def test_mapper_fills_new_fields() -> None:

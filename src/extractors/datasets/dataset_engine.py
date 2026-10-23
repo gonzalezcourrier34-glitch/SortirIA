@@ -19,6 +19,7 @@ from typing import Any
 
 from config.constants import SOURCE_TYPE_DATASET
 from config.paths import SOURCES_FILE
+from config.settings import MAX_ARTICLES_PER_SOURCE
 from config.source_config import load_validated_source
 from src.article.processing.article_deduplicator import (
     is_duplicate_article,
@@ -39,24 +40,17 @@ from src.extractors.datasets.dataset_adapter import (
     validate_adapter_item,
 )
 from src.extractors.datasets.dataset_file_utils import (
+    get_dataset_files,
     resolve_dataset_directory,
-    validate_dataset_files,
 )
 from src.logger import get_logger
-
-from src.utils.value_utils import normalize_value
-from src.utils.parsing_utils import (
-    parse_boolean,
-    parse_non_negative_integer
-)
-from config.settings import MAX_ARTICLES_PER_SOURCE
-
-from src.utils.filter_utils import get_filter_configuration
-
 from src.utils.extractor_utils import (
     log_extraction_summary,
     validate_article,
 )
+from src.utils.filter_utils import get_filter_configuration
+from src.utils.parsing_utils import parse_boolean, parse_non_negative_integer
+from src.utils.value_utils import normalize_value
 
 logger = get_logger(__name__)
 
@@ -338,59 +332,6 @@ def get_dataset_filters(source: Mapping[str, Any]) -> dict[str, Any]:
     return dict(filters) if isinstance(filters, Mapping) else {}
 
 
-def get_dataset_files(
-    adapter: DatasetAdapter,
-    dataset_directory: Path,
-    source: Mapping[str, Any],
-    source_name: str,
-) -> list[Path]:
-    """Recherche puis valide les fichiers fournis par un adaptateur.
-
-    Parameters
-    ----------
-    adapter : DatasetAdapter
-        L'adaptateur, qui fournit la recherche et les extensions acceptées.
-    dataset_directory : Path
-        Dossier du dataset.
-    source : Mapping[str, Any]
-        Configuration de la source.
-    source_name : str
-        Nom lisible de la source, pour les messages.
-
-    Returns
-    -------
-    list[Path]
-        Les fichiers exploitables.
-
-    Raises
-    ------
-    TypeError
-        Si la recherche ne renvoie pas une liste.
-    FileNotFoundError
-        Si aucun fichier exploitable n'est trouvé.
-    """
-
-    discovered_files = adapter.find_files(dataset_directory, source)
-
-    if not isinstance(discovered_files, list):
-        raise TypeError(
-            f"La recherche de fichiers de {source_name} doit retourner une liste."
-        )
-
-    dataset_files = validate_dataset_files(
-        discovered_files,
-        dataset_directory,
-        adapter.supported_extensions,
-        source_name,
-    )
-    if not dataset_files:
-        raise FileNotFoundError(
-            f"Aucun fichier exploitable trouvé pour {source_name}."
-        )
-
-    return dataset_files
-
-
 # Traitement
 
 def process_dataset_item(
@@ -561,7 +502,8 @@ def extract_dataset_from_source(
     ----------
     source : Mapping[str, Any]
         Configuration de la source (activation, plafond, dossier, filtres...).
-        Une source sans `enabled` explicite est traitée comme désactivée.
+        Une source sans `enabled` explicite est active, comme dans
+        l'exécuteur générique.
     adapter : DatasetAdapter
         Fonctions propres au dataset.
 
@@ -613,7 +555,7 @@ def extract_dataset_from_source(
         )
 
     # Arrête proprement l'extracteur lorsque la source est désactivée
-    if not parse_boolean(source.get("enabled"), default=False):
+    if not parse_boolean(source.get("enabled"), default=True):
         logger.info("Dataset désactivé : %s.", source_name)
 
         return build_disabled_result(

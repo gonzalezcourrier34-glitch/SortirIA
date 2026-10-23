@@ -12,7 +12,6 @@ import pytest
 
 from src.extractors.scrapers import scraper_url_utils as module
 
-
 # Fabriques
 
 def build_source(

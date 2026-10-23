@@ -14,7 +14,8 @@ Le package est découpé comme `src/article/` de CheckIt.AI :
 
 S'y sont ajoutés les convertisseurs des autres sources (`datatourisme_mapper`,
 `document_mapper`, `ical_mapper`, `rss_event_mapper`, `html_agenda_mapper`,
-`partner_mapper`), la préparation des événements de la nuit (`event_pipeline`),
+`partner_mapper`), les publics déduits par règles et communs à toutes les sources
+(`event_audiences`), la préparation des événements de la nuit (`event_pipeline`),
 le texte des embeddings (`event_embedding`), l'enrichissement et le juge Mistral
 (`event_enrichment`, `quality_judge`) et les notes des clients (`event_ratings`).
 """

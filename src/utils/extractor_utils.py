@@ -10,21 +10,14 @@ from collections import Counter
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from src.article.processing.article_cleaner import (
-    normalize_value
-)
-from src.article.processing.article_transformer import (
-    normalize_dataset_role
-)
+from src.article.processing.article_cleaner import normalize_value
+from src.article.processing.article_transformer import normalize_dataset_role
 from src.article.schema.article_schema_normalizer import normalize_article_schema
 from src.article.validation.article_validator import validate_article_with_reason
 from src.logger import get_logger
-from src.utils.value_utils import normalize_whitespace
 from src.utils.date_utils import convert_date_to_iso, get_extraction_date
-from src.utils.parsing_utils import (
-    parse_non_negative_integer,
-    parse_optional_float
-)
+from src.utils.parsing_utils import parse_non_negative_integer, parse_optional_float
+from src.utils.value_utils import normalize_whitespace
 
 logger = get_logger(__name__)
 

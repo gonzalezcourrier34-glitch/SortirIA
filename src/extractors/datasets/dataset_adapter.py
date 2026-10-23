@@ -44,6 +44,7 @@ ValidateItemCallable = Callable[
 
 from dataclasses import dataclass
 
+
 @dataclass(frozen=True, slots=True)
 class DatasetAdapter:
     """Regroupe les fonctions propres à un dataset.

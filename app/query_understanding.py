@@ -102,7 +102,7 @@ PRECISE_SUBJECTS = frozenset({
 SHORT_SUBJECTS = frozenset({"dj", "bd", "vr"})   # sujets de 2 lettres (« soirée DJ »)
 # Verbes de pratique (17/10/2026) : « je veux chanter », c'est chanter soi-même
 # (karaoké, cours ou stage de chant), pas écouter un concert. Le verbe devient
-# le sujet ; app/search_service.py (PRACTICES) dit ce qui y répond. Types qui
+# le sujet ; app/search_query.py (PRACTICES) dit ce qui y répond. Types qui
 # vont avec (« jouer aux jeux ») ; un autre type nommé (« jouer au théâtre »,
 # « danser à un concert ») garde la recherche habituelle.
 PRACTICE_VERBS: dict[str, frozenset[str]] = {
@@ -128,7 +128,7 @@ PRACTICE_LABELS = {"theatre": "pour faire du théâtre", "chanter": "pour chante
 # Regarder (17/10/2026), l'inverse de la pratique : « un spectacle de danse »
 # proposait un bal folk et une soirée salsa, rangés comme lui en « danse ».
 # Avec ces mots, ce qui se pratique (bal, cours, stage, atelier) n'est plus du
-# type demandé (app/search_service.py, PARTICIPATION).
+# type demandé (app/search_query.py, PARTICIPATION).
 WATCH_WORDS = ("spectacle", "spectacles", "voir", "regarder", "assister", "representation", "representations",
                "show", "ballet", "ballets", "piece", "pieces", "voire")      # « voire » : « voir » mal écrit
 
@@ -158,6 +158,8 @@ def find_practice(padded: str, categories: tuple[str, ...]) -> str | None:
         if f" {verb} " in padded and set(categories) <= allowed:
             return verb
     return None
+
+
 CATEGORY_LABELS = {"theatre": "théâtre", "cinema": "cinéma", "conference": "conférence",
                    "marche": "marché", "soiree": "soirée", "fete": "fête"}
 
@@ -554,6 +556,8 @@ def find_moment(padded: str) -> str | None:
         if any(f" {phrase} " in padded for phrase in phrases):
             return moment
     return None
+
+
 FREE_WORDS = ("gratuit", "gratuite", "gratuits", "gratuites", "gratos", "sans payer", "entree libre")
 
 # Mots qui n'aident pas la recherche par mots-clés (le reste est gardé).
@@ -840,9 +844,11 @@ class QueryPlan:
     def relaxed(self) -> QueryPlan:
         """Le même plan sans les contraintes lues dans la question (sauf la date).
 
-        Utilisé quand elles ne laissent aucun résultat. Le type de sortie, les
-        mots-clés et la pratique sont gardés ; le moment, les communes, le budget,
-        le cadre et le rayon sont retirés.
+        Utilisé quand elles ne laissent aucun résultat. La date est gardée, avec
+        son origine (`period_from_question`) : l'interface coche encore la date
+        lue dans la question. Le type de sortie, les mots-clés et la pratique sont
+        gardés aussi ; le moment de la journée (soir, matin…), les communes, le
+        budget, le cadre et le rayon sont retirés.
 
         Returns
         -------
@@ -855,7 +861,8 @@ class QueryPlan:
             public=None if "public" in self.from_question else self.public,
             zone=None if "zone" in self.from_question else self.zone,
             cities=(), free_only=False if "free" in self.from_question else self.free_only,
-            evening=False, categories=self.categories, keywords=self.keywords, from_question=set(),
+            evening=False, moment=None, period_from_question=self.period_from_question,
+            categories=self.categories, keywords=self.keywords, from_question=set(),
             max_price=None, setting=None, near=None, practice=self.practice, watch=self.watch,
         )
 
@@ -910,20 +917,6 @@ class Understanding:
     near: tuple[str, float] | None = None
     practice: str | None = None
     watch: bool = False
-
-    def is_empty(self) -> bool:
-        """Vrai si la question ne contient aucune contrainte utile.
-
-        Le soir, le moment, la pratique et `watch` ne sont pas pris en compte.
-
-        Returns
-        -------
-        bool
-            Vrai si rien de ce qui a été lu ne restreint la recherche.
-        """
-        return not (self.period or self.public or self.zone or self.cities or self.free_only
-                    or self.categories or self.keywords or self.max_price is not None or self.setting
-                    or self.near)
 
 
 # ----------------------------------------------------------------------------

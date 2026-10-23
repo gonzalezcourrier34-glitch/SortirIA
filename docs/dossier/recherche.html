@@ -93,7 +93,7 @@
 <div class="container">
 <p class="section-number">02</p>
 <h2>La pipeline en 4 étapes</h2>
-<p class="section-intro">Le cœur est la fonction <code>run_search</code> de <code>app/search_service.py</code> : un générateur qui produit les étapes une à une, puis le résultat. Chaque étape a son repli quand les choses tournent mal.</p>
+<p class="section-intro">Le cœur est la fonction <code>run_search</code> de <code>app/search_service.py</code> : un générateur qui produit les étapes une à une, puis le résultat. Depuis le 23/10/2026, ce fichier ne garde que l'enchaînement ; chaque usage a son module (requête SQL, cartes, rédaction, cache, journal). Chaque étape a son repli quand les choses tournent mal.</p>
 
 <figure class="story-figure"><svg class="story-svg" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 690" role="img" aria-label="Schéma de la recherche. Une question et les cases cochées passent par 4 étapes : comprendre par des règles en 1 milliseconde, rechercher en hybride sous filtres SQL (sens par pgvector, mots par plein texte, fusion des rangs), filtrer pour garder ce qui répond exactement (8 cartes au plus, 2 par lieu, partenaires en tête s'ils répondent), rédiger avec Mistral qui cite les cartes. Sous chaque étape, un repli : réponse déjà en cache, contraintes de la question relâchées sauf la date, sujet cherché en relâchant les contraintes une à une, réponse simple sans Mistral. En sortie : la réponse sourcée, les cartes, les relances et le journal rag_requests.">
 <rect width="1080" height="690" rx="18" fill="#111a22"/>
@@ -333,7 +333,7 @@
 <text x="44" y="688" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">LE LUNDI</text>
 <text x="120" y="688" fill="#edf4f4" font-size="13">l'agent lit 7 jours de rag_requests → propositions (synonyme, correction, agenda) → appliquées après validation</text>
 </g>
-</svg><figcaption>Une recherche servie sans cache. Avec le cache, l'API envoie aussitôt les étapes 2 à 4 « faites » et la réponse gardée, sans appeler Mistral. Code : <code>app/interface_api.py</code>, <code>app/search_service.py</code>.</figcaption></figure>
+</svg><figcaption>Une recherche servie sans cache. Avec le cache, l'API envoie aussitôt les étapes 2 à 4 « faites » et la réponse gardée, sans appeler Mistral. Code : <code>app/interface_api.py</code>, <code>app/search_service.py</code> et ses modules <code>app/search_*.py</code>.</figcaption></figure>
 
 <div class="timeline">
 <div class="timeline-item"><span>01 • Arrivée</span><h3>Une route, un corps validé</h3><p>Le navigateur envoie <code>POST /api/v1/recherche/stream</code> avec la question (500 caractères au plus), les cases cochées (public, zone, période, gratuit) et le <code>context</code>, la demande comprise précédente (1 000 caractères au plus). Pydantic refuse toute valeur hors des listes connues. La connexion à la base est ouverte <em>dans</em> le flux, pour qu'elle ne se referme pas avant la fin de la réponse.</p></div>
@@ -374,7 +374,7 @@
 </table>
 <p class="table-note">Source : <code>docs/fiabilite.md</code> (16/10/2026) et le code cité. La modération porte sur les commentaires publiés ; le code ne modère pas les questions, qui ne sont montrées à personne d'autre.</p>
 <div class="code-panel">
-<div class="code-panel-header"><span>WRITE_PROMPT (extrait)</span><small>app/search_service.py</small></div>
+<div class="code-panel-header"><span>WRITE_PROMPT (extrait)</span><small>app/search_answer.py</small></div>
 <pre><code>- ne parle QUE des événements de la liste ; n'invente ni lieu, ni date, ni prix ;
 - cite chaque événement mentionné par son numéro entre crochets : [1], [2] ;
 - si aucun événement ne correspond vraiment, dis-le franchement ;
@@ -409,9 +409,9 @@ Réponds uniquement en JSON : {"reponse": "...", "suggestions": ["...", "...", "
 <tr><td><code>LIMITE_LECTURES_MINUTE</code></td><td>120</td><td>Détail, sources, partenaires, sorties à noter, par visiteur.</td></tr>
 </tbody>
 </table>
-<p class="table-note">Noms de variables : <code>.env.example</code> ; défauts : <code>app/rate_limit.py</code>, <code>app/search_service.py</code>, <code>agent/services.py</code>. Pour une limite, 0 la désactive.</p>
+<p class="table-note">Noms de variables : <code>.env.example</code> ; défauts : <code>app/rate_limit.py</code>, <code>app/search_answer.py</code>, <code>app/search_query.py</code>, <code>agent/services.py</code>. Pour une limite, 0 la désactive.</p>
 <div class="config-grid">
-<div class="config-card"><span>PROMPT_VERSION</span><strong>2026-10-16.2</strong><p>Version de la recherche : dans la clé du cache et dans chaque ligne du journal.</p></div>
+<div class="config-card"><span>PROMPT_VERSION</span><strong>2026-10-19.1</strong><p>Version de la recherche : dans la clé du cache et dans chaque ligne du journal.</p></div>
 <div class="config-card"><span>CANDIDATES · PARTNER_CANDIDATES</span><strong>80 + 20</strong><p>Séances comparées à la question, plus les meilleures séances partenaires qui passent les filtres.</p></div>
 <div class="config-card"><span>MAX_PROPOSALS</span><strong>8</strong><p>Cartes montrées et données à Mistral : 2 rangées de 4.</p></div>
 <div class="config-card"><span>MAX_PER_VENUE</span><strong>2</strong><p>Cartes au plus pour un même lieu, tant qu'il y en a d'autres.</p></div>
@@ -421,7 +421,7 @@ Réponds uniquement en JSON : {"reponse": "...", "suggestions": ["...", "...", "
 <div class="config-card"><span>CACHE_HOURS</span><strong>6 h</strong><p>Durée de vie d'une réponse en cache, jamais au-delà de minuit.</p></div>
 <div class="config-card"><span>FEEDBACK_WINDOW</span><strong>1 jour</strong><p>Délai pour lever ou baisser le pouce sur une réponse.</p></div>
 </div>
-<p class="table-note">Constantes de <code>app/search_service.py</code> au 16/10/2026.</p>
+<p class="table-note">Constantes au 23/10/2026 : <code>app/search_query.py</code> (candidats, fusion, partenaires, élargissement), <code>app/search_cards.py</code> (cartes, lieux), <code>app/search_answer.py</code> (version), <code>app/search_cache.py</code> (cache), <code>app/search_log.py</code> (pouces).</p>
 <div class="about-grid">
 <div class="large-text">Les synonymes ne s'écrivent pas à la main : ils se valident.</div>
 <div><p><code>config/synonymes.yaml</code> associe un mot tapé à un mot connu de la base (« zumba » : « fitness »). Le mot tapé est gardé, le mot connu est cherché en plus, et un synonyme compte comme une alternative, pas comme un mot de plus à exiger.</p><p>Le fichier ne se remplit que par les propositions du lundi, acceptées une à une. À ce jour, il est vide : SortirIA n'a pas encore assez de vraies questions pour en tirer des synonymes.</p></div>
@@ -458,7 +458,11 @@ Réponds uniquement en JSON : {"reponse": "...", "suggestions": ["...", "...", "
 <tbody>
 <tr><td><code>app/main.py</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/rag-openagenda">Assistant RAG OpenAgenda (projet 6)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Routes héritées (<code>/ask</code>, <code>/ask/debug</code>, <code>/rebuild</code>) et index FAISS construit au démarrage retirés ; il sert <code>/api/v1</code>, les notes et <code>/health</code>.</td></tr>
 <tr><td><code>app/interface_api.py</code></td><td>Écrit pour SortirIA, sur le modèle de l'API de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Chess Agent (projet 13)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Préfixe <code>/api/v1</code>, recherche diffusée en Server-Sent Events (<code>event: progress</code>, puis <code>event: completed</code>).</td></tr>
-<tr><td><code>app/search_service.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Recherche en 4 étapes sur PostgreSQL et pgvector, rédaction Mistral avec citations vérifiées, repli sans Mistral, cache, trace dans <code>rag_requests</code>.</td></tr>
+<tr><td><code>app/search_service.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>L'enchaînement de la recherche en 4 étapes (<code>plan_search</code>, <code>run_search</code>), diffusée étape par étape.</td></tr>
+<tr><td><code>app/search_filters.py</code>, <code>app/search_query.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Les cases cochées ; la requête SQL sur PostgreSQL et pgvector (filtres stricts, classement par le sens et par les mots, élargissement au sujet, partenaires en tête).</td></tr>
+<tr><td><code>app/search_cards.py</code>, <code>app/search_detail.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Les cartes, « À ne pas manquer », les sources ; la fiche d'un événement et « Vos sorties à noter ».</td></tr>
+<tr><td><code>app/search_answer.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Rédaction Mistral avec citations vérifiées, repli sans Mistral.</td></tr>
+<tr><td><code>app/search_cache.py</code>, <code>app/search_log.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Cache des réponses ; trace dans <code>rag_requests</code>, coût, pouces, santé de la base.</td></tr>
 <tr><td><code>app/query_understanding.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Contraintes lues par des règles et des synonymes validés, sans appel à un modèle : la première version ne comparait qu'un seul vecteur.</td></tr>
 <tr><td><code>app/rate_limit.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Limite par visiteur et plafond global de la recherche, réponse 429 avec <code>Retry-After</code>, pour borner le coût Mistral.</td></tr>
 <tr><td><code>src/event/event_embedding.py</code></td><td>Écrit pour SortirIA, idée reprise de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/rag-openagenda">Assistant RAG OpenAgenda (projet 6)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Texte indexé sur le modèle du « texte enrichi » du RAG : titre, catégorie, lieu et description dans un seul texte.</td></tr>

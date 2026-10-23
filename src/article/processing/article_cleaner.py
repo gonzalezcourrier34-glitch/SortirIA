@@ -15,10 +15,7 @@ from typing import Any
 from src.article.schema.article_schema import TEXT_FIELDS_TO_CLEAN
 from src.cleaner.html_cleaner import remove_html
 from src.logger import get_logger
-from src.utils.value_utils import (
-    collapse_whitespace,
-    normalize_value
-)
+from src.utils.value_utils import collapse_whitespace, normalize_value
 
 logger = get_logger(__name__)
 

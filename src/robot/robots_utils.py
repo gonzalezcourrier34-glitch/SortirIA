@@ -18,7 +18,7 @@ from config.constants import (
     ROBOTS_REASON_CHECK_ERROR,
     ROBOTS_REASON_DENIED,
     ROBOTS_REASON_INVALID_URL,
-    ROBOTS_REASON_UNAVAILABLE
+    ROBOTS_REASON_UNAVAILABLE,
 )
 from config.settings import HTTP_HEADERS, REQUEST_TIMEOUT, USER_AGENT
 from src.logger import get_logger
@@ -703,76 +703,75 @@ def fetch_robots_policy(url: str) -> RobotsPolicy:
             headers=get_robots_headers(),
             timeout=REQUEST_TIMEOUT,
             follow_redirects=True
-        ) as client:
-            with client.stream("GET", robots_url) as response:
-                final_url = str(response.url)
+        ) as client, client.stream("GET", robots_url) as response:
+            final_url = str(response.url)
 
-                # Refuser une redirection vers un autre site
-                if not is_allowed_robots_redirect(
-                    robots_url,
-                    final_url
-                ):
-                    return build_policy(
-                        robots_url=robots_url,
-                        allow=False,
-                        available=False,
-                        ttl_seconds=ROBOTS_FAILURE_TTL_SECONDS,
-                        reason=ROBOTS_REASON_UNAVAILABLE,
-                        error=(
-                            "Redirection robots.txt vers une autre origine : "
-                            f"{final_url}"
-                        )
+            # Refuser une redirection vers un autre site
+            if not is_allowed_robots_redirect(
+                robots_url,
+                final_url
+            ):
+                return build_policy(
+                    robots_url=robots_url,
+                    allow=False,
+                    available=False,
+                    ttl_seconds=ROBOTS_FAILURE_TTL_SECONDS,
+                    reason=ROBOTS_REASON_UNAVAILABLE,
+                    error=(
+                        "Redirection robots.txt vers une autre origine : "
+                        f"{final_url}"
                     )
+                )
 
-                # Interpréter le statut : absent, refusé, en erreur ou lisible
-                if response.status_code in {404, 410}:
-                    logger.debug(
-                        "Aucun robots.txt publié pour %s.",
-                        origin
-                    )
-                    return build_policy(
-                        robots_url=robots_url,
-                        allow=True,
-                        available=False,
-                        allow_without_file=True
-                    )
+            # Interpréter le statut : absent, refusé, en erreur ou lisible
+            if response.status_code in {404, 410}:
+                logger.debug(
+                    "Aucun robots.txt publié pour %s.",
+                    origin
+                )
+                return build_policy(
+                    robots_url=robots_url,
+                    allow=True,
+                    available=False,
+                    allow_without_file=True
+                )
 
-                if response.status_code in {401, 403}:
-                    logger.debug(
-                        "Accès au robots.txt refusé pour %s (HTTP %s).",
-                        origin,
-                        response.status_code
-                    )
-                    return build_policy(
-                        robots_url=robots_url,
-                        allow=False,
-                        available=True,
-                        reason=ROBOTS_REASON_DENIED,
-                        error=f"HTTP {response.status_code}"
-                    )
+            if response.status_code in {401, 403}:
+                logger.debug(
+                    "Accès au robots.txt refusé pour %s (HTTP %s).",
+                    origin,
+                    response.status_code
+                )
+                return build_policy(
+                    robots_url=robots_url,
+                    allow=False,
+                    available=True,
+                    reason=ROBOTS_REASON_DENIED,
+                    error=f"HTTP {response.status_code}"
+                )
 
-                if response.status_code >= 400:
+            if response.status_code >= 400:
+                error_message = (
+                    f"Erreur HTTP {response.status_code}."
+                )
+            else:
+                try:
+                    content = read_limited_content(response)
+
+                    return build_loaded_policy(
+                        response,
+                        robots_url,
+                        content
+                    )
+                except (
+                    TypeError,
+                    ValueError,
+                    UnicodeError,
+                    OverflowError
+                ) as error:
                     error_message = (
-                        f"Erreur HTTP {response.status_code}."
+                        f"robots.txt invalide : {error}"
                     )
-                else:
-                    try:
-                        content = read_limited_content(response)
-
-                        return build_loaded_policy(
-                            response,
-                            robots_url,
-                            content
-                        )
-                    except (
-                        TypeError,
-                        ValueError,
-                        UnicodeError,
-                        OverflowError
-                    ) as error:
-                        error_message = (
-                            f"robots.txt invalide : {error}"
-                        )
 
     except httpx.TimeoutException:
         error_message = "Délai de connexion dépassé."
@@ -991,13 +990,15 @@ def normalize_delay(value: float) -> float:
 
 def wait_for_crawl_delay(
     url: str,
-    minimum_delay: float = 0.0
+    minimum_delay: float = 0.0,
+    use_robots: bool = True
 ) -> None:
     """Attend avant la prochaine requête vers la même origine.
 
     Le délai retenu est le plus grand entre le crawl-delay du robots.txt et
     `minimum_delay` ; l'attente est mesurée depuis la dernière requête vers
-    cette origine.
+    cette origine. Si `use_robots` est faux, robots.txt n'est pas lu et seul
+    `minimum_delay` compte.
 
     Parameters
     ----------
@@ -1005,6 +1006,9 @@ def wait_for_crawl_delay(
         URL qui va être téléchargée.
     minimum_delay : float
         Délai minimal voulu par la source, en secondes. Par défaut 0.
+    use_robots : bool
+        Tient compte du crawl-delay de robots.txt (et donc télécharge ce
+        fichier si besoin). Par défaut True.
     """
 
     origin = get_origin(url)
@@ -1012,10 +1016,14 @@ def wait_for_crawl_delay(
     if not origin:
         return
 
-    # Calculer le délai à respecter
-    policy = get_robots_policy(url)
+    # Calculer le délai à respecter (robots.txt lu seulement s'il est respecté)
+    robots_delay = (
+        normalize_delay(get_robots_policy(url).crawl_delay)
+        if use_robots
+        else 0.0
+    )
     delay = max(
-        normalize_delay(policy.crawl_delay),
+        robots_delay,
         normalize_delay(minimum_delay)
     )
 

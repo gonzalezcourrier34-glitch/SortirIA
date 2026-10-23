@@ -179,6 +179,29 @@ def snapshot_time(path: Path = DATASET) -> datetime:
     return datetime.fromisoformat(read_dataset(path)["maintenant"])
 
 
+def freeze_clock(connection: Any, instant: datetime) -> None:
+    """Règle l'horloge de la base sur `instant` pour toute la session (23/10/2026).
+
+    Les vues et la recherche lisent « maintenant » dans `sortiria.reference_now()`
+    (sql/sortiria/05_views.sql) : le réglage `sortiria.maintenant` remplace
+    alors `now()`. Sans lui, `v_upcoming_events` retirait chaque jour des
+    sorties de la base figée, et les scores de l'évaluation baissaient. Le
+    réglage est validé aussitôt : une annulation ultérieure ne l'efface pas.
+
+    Parameters
+    ----------
+    connection : Any
+        Connexion psycopg2 de l'évaluation.
+    instant : datetime
+        L'instant de référence (en général `snapshot_time()`), avec fuseau.
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT set_config('sortiria.maintenant', %(instant)s, false)",
+                       {"instant": instant.isoformat()})
+    connection.commit()
+
+
 def is_test_database(url: str) -> bool:
     """Garde-fou : le chargement efface le schéma ; seulement une base « test ».
 
@@ -215,7 +238,8 @@ def load_dataset(connection: Any, path: Path = DATASET) -> dict[str, int]:
     Returns
     -------
     dict[str, int]
-        Le nombre de lignes lues dans l'export, par table.
+        Le nombre de lignes réellement insérées, par table : une ligne déjà
+        présente (une source déclarée par le schéma) n'est pas comptée.
     """
 
     from psycopg2.extras import Json
@@ -241,10 +265,12 @@ def load_dataset(connection: Any, path: Path = DATASET) -> dict[str, int]:
             # Les sources déclarées par le schéma existent déjà : gardées telles quelles.
             sql = (f"INSERT INTO sortiria.{name} ({', '.join(columns)}) VALUES ({placeholders}) "
                    "ON CONFLICT DO NOTHING")
+            inserted = 0
             for row in table["lignes"]:
                 cursor.execute(sql, [Json(value) if column in json_columns and value is not None else value
                                      for column, value in zip(columns, row, strict=True)])
-            counts[name] = len(table["lignes"])
+                inserted += max(cursor.rowcount, 0)       # 0 quand ON CONFLICT a écarté la ligne
+            counts[name] = inserted
         # Recalculer le vocabulaire des titres à partir des événements chargés
         cursor.execute("SELECT sortiria.refresh_title_vocabulary()")
     return counts

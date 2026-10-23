@@ -6,10 +6,9 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import datetime, timedelta, timezone
-from typing import Any
+from datetime import UTC, datetime, timedelta
+from typing import Any, Self
 
-import feedparser
 import httpx
 import pytest
 
@@ -21,9 +20,8 @@ from src.extractors.rss.rss_engine import (
     RssNetworkError,
     RssParsingError,
     RssRequestError,
-    RssTimeoutError
+    RssTimeoutError,
 )
-
 
 # Fabriques
 
@@ -355,11 +353,11 @@ def test_extract_image_from_html_uses_lazy_attributes(
 
 def test_extract_image_from_html_uses_first_srcset_candidate() -> None:
     result = module.extract_image_from_html(
-        (
+        
             '<img srcset="'
             'https://example.com/small.jpg 400w, '
             'https://example.com/large.jpg 1200w">'
-        )
+        
     )
 
     assert result == "https://example.com/small.jpg"
@@ -779,7 +777,7 @@ def test_validate_article_age_rejects_future_date(
         28,
         12,
         0,
-        tzinfo=timezone.utc
+        tzinfo=UTC
     )
 
     monkeypatch.setattr(
@@ -812,7 +810,7 @@ def test_validate_article_age_accepts_small_clock_difference(
         28,
         12,
         0,
-        tzinfo=timezone.utc
+        tzinfo=UTC
     )
 
     monkeypatch.setattr(
@@ -845,7 +843,7 @@ def test_validate_article_age_rejects_old_article(
         28,
         12,
         0,
-        tzinfo=timezone.utc
+        tzinfo=UTC
     )
 
     monkeypatch.setattr(
@@ -878,7 +876,7 @@ def test_validate_article_age_accepts_old_article_when_limit_disabled(
         28,
         12,
         0,
-        tzinfo=timezone.utc
+        tzinfo=UTC
     )
 
     monkeypatch.setattr(
@@ -976,14 +974,14 @@ def test_download_feed_request_builds_expected_request(
         def __init__(self, **kwargs: Any) -> None:
             received["client_kwargs"] = kwargs
 
-        def __enter__(self) -> FakeClient:
+        def __enter__(self) -> Self:
             return self
 
         def __exit__(
             self,
-            exception_type: Any,
-            exception: Any,
-            traceback: Any
+            exception_type: object,
+            exception: object,
+            traceback: object
         ) -> None:
             return None
 
@@ -1769,18 +1767,6 @@ def test_iter_rss_items_rejects_invalid_source_url() -> None:
         module.iter_rss_items(
             build_source(url="")
         )
-
-
-def test_iter_rss_items_returns_empty_when_feed_is_none(
-    monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(
-        module,
-        "parse_feed",
-        lambda source_url, source_name: None
-    )
-
-    assert module.iter_rss_items(build_source()) == []
 
 
 def test_iter_rss_items_rejects_invalid_entries_collection(

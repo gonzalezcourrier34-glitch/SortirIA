@@ -8,11 +8,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from config.settings import (
-    MIN_TEXT_LENGTH,
-    MIN_TITLE_LENGTH,
-    MIN_TOTAL_TEXT_LENGTH
-)
+from config.settings import MIN_TEXT_LENGTH, MIN_TITLE_LENGTH, MIN_TOTAL_TEXT_LENGTH
 from src.utils.parsing_utils import parse_boolean, parse_non_negative_integer
 
 # Politique par défaut

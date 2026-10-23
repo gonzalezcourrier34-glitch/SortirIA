@@ -245,6 +245,42 @@ réexporte quand la base a beaucoup changé :
 cible**. Il ne dit pas si les propositions sont **les meilleures** : c'est la
 pertinence, mesurée à part.
 
+### L'horloge de la base de test (23/10/2026)
+
+La CI « place l'horloge à l'instant de l'export » : c'était vrai pour la
+recherche, pas pour la base. La vue `sortiria.v_upcoming_events` filtrait avec
+`now()`, l'heure réelle. Chaque jour, des sorties de la base figée
+« passaient » et disparaissaient. Les scores baissaient sans changement de
+code ; la CI aurait fini par échouer.
+
+Vu le 23/10/2026 en rejouant les 4 jeux : « faire soi-même » à 90 % (98 % le
+19/10) ; « où danser samedi soir » comprend « sam. 17 oct. » mais ne trouve
+rien.
+
+Correction : la vue et le classement de « À ne pas manquer » lisent
+« maintenant » dans `sortiria.reference_now()` (le réglage de session
+`sortiria.maintenant` s'il existe, sinon `now()`, voir [Base de
+données](base_de_donnees.md)). En mode `--jeu-test`, `freeze_clock()`
+(`scripts/jeu_test_recherche.py`) règle `sortiria.maintenant` sur l'instant
+de l'export. En production, rien ne change. Test :
+`test_upcoming_view_follows_the_frozen_clock`.
+
+Mesures sur la base figée :
+
+| Jeu | Avant | Après |
+| --- | --- | --- |
+| Faire soi-même | 89,9 % | **98,3 %** |
+| 125 recherches courtes | 98,3 % | 98,6 % |
+| Moments de la journée | 98,9 % | 98,9 % |
+| 50 questions | 99,3 % | 98,7 % |
+| Compréhension (tous les jeux) | 100 % | 100 % |
+| « Où danser samedi soir » | 0/1 (idées voisines) | **4/4 exact** |
+| « Un concert ce week-end » | 0/8 | **8/8 exact** |
+
+Les 50 questions perdent 0,6 point : des sorties sont revenues dans la vue, et
+certaines ne respectent pas toutes les contraintes. Ce sont des écarts de
+données, pas de code.
+
 ## 2. Pertinence des propositions (jugement humain, puis juge calibré)
 
 « Pertinent » veut dire : *est-ce que je proposerais cette sortie à la

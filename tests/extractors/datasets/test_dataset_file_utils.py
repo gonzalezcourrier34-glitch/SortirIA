@@ -6,12 +6,11 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 import pytest
 
 import src.extractors.datasets.dataset_file_utils as module
-
 
 # Doubles de test
 
@@ -158,7 +157,7 @@ def test_normalize_dataframe_columns_rejects_object_without_columns() -> None:
 
 def test_normalize_dataframe_columns_rejects_object_without_copy() -> None:
     class ColumnsOnly:
-        columns = [
+        columns: ClassVar[list[str]] = [
             "Title"
         ]
 

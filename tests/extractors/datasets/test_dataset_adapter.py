@@ -14,7 +14,6 @@ import pytest
 
 import src.extractors.datasets.dataset_adapter as module
 
-
 # Doubles de test
 
 def fake_find_files(

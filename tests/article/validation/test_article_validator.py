@@ -13,7 +13,6 @@ import pytest
 
 from src.article.validation import article_validator as module
 
-
 # Fabriques
 
 def build_article(**overrides: Any) -> dict[str, Any]:

@@ -7,12 +7,12 @@ from __future__ import annotations
 
 import html
 import re
-import xml.etree.ElementTree as ElementTree
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 from urllib.parse import urljoin
+from xml.etree import ElementTree
 
 import feedparser
 import httpx
@@ -25,18 +25,11 @@ from config.settings import (
     MAX_ARTICLE_AGE_DAYS,
     MAX_RETRIES,
     REQUEST_TIMEOUT,
-    RETRY_DELAY_SECONDS
+    RETRY_DELAY_SECONDS,
 )
 from src.article.processing.article_cleaner import clean_text
 from src.extractors.core.extractor_results import ExtractorResult
 from src.extractors.rss.rss_adapter import RssAdapter
-
-from src.logger import get_logger
-from src.utils.date_utils import (
-    convert_date_to_iso,
-    get_current_datetime,
-    parse_datetime
-)
 from src.extractors.rss.rss_engine import (
     RssExtractor,
     RssInvalidContentTypeError,
@@ -46,12 +39,14 @@ from src.extractors.rss.rss_engine import (
     RssRequestError,
     RssTimeoutError,
     increment_rss_request_count,
-    raise_if_fatal_rss_error
+    raise_if_fatal_rss_error,
 )
-from src.utils.value_utils import normalize_value
+from src.logger import get_logger
+from src.utils.date_utils import convert_date_to_iso, get_current_datetime, parse_datetime
 from src.utils.extractor_utils import build_standard_article
 from src.utils.parsing_utils import parse_non_negative_integer
 from src.utils.url_utils import canonicalize_url, is_valid_http_url
+from src.utils.value_utils import normalize_value
 
 logger = get_logger(__name__)
 
@@ -1191,8 +1186,6 @@ def iter_rss_items(source: Mapping[str, Any]) -> Sequence[Mapping[str, Any]]:
         )
 
     feed = parse_feed(source_url, source_name)
-    if feed is None:
-        return []
 
     # Garder les entrées exploitables et signaler les autres
     raw_entries = getattr(feed, "entries", [])

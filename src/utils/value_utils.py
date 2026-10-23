@@ -18,18 +18,18 @@ from __future__ import annotations
 
 import math
 import re
-from collections.abc import Mapping, Sequence, Set
+from collections.abc import Mapping, Sequence
+from collections.abc import Set as AbstractSet
 from typing import Any
 
 from config.constants import MISSING_TEXT_VALUES
-
 
 # Types non convertibles directement en texte
 
 UNSUPPORTED_TEXT_COLLECTIONS = (
     Mapping,
     Sequence,
-    Set
+    AbstractSet
 )
 
 BYTE_TYPES = (
@@ -128,7 +128,8 @@ def _is_self_unequal(value: Any) -> bool:
     """
 
     try:
-        comparison_result = value != value
+        # Pas de math.isnan : il refuse pd.NaT et les objets non numériques
+        comparison_result = value != value  # noqa: PLR0124  test de NaN générique
     except (TypeError, ValueError, RuntimeError):
         return False
 

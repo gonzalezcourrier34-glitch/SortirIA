@@ -12,7 +12,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from app.search_service import PARIS, SearchFilters, plan_search
+from app.search_filters import PARIS, SearchFilters
+from app.search_service import plan_search
 from scripts.eval_recherche import card_errors, understanding_errors
 
 MOMENTS_FILE = Path(__file__).resolve().parents[2] / "config" / "eval_moments.yaml"

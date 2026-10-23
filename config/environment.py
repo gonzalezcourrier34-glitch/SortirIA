@@ -18,7 +18,6 @@ from dotenv import load_dotenv
 
 from config.paths import BASE_DIR, DOCKER_SECRETS_DIR, LOCAL_SECRETS_DIR
 
-
 # Configuration
 ENV_FILE = BASE_DIR / ".env"
 SECRET_NAME_PATTERN = re.compile(r"^[a-z0-9]+(?:_[a-z0-9]+)*$")

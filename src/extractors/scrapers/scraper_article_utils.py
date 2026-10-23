@@ -11,22 +11,18 @@ from typing import Any
 
 from bs4 import BeautifulSoup, Tag
 
-from src.extractors.scrapers.scraper_metadata_utils import (
-    get_article_json_ld,
-    get_open_graph
-)
+from src.extractors.scrapers.scraper_metadata_utils import get_article_json_ld, get_open_graph
 from src.extractors.scrapers.scraper_selector_utils import (
     clean_text,
     get_source_selector,
     select_attribute,
     select_element,
-    select_text
+    select_text,
 )
 from src.extractors.scrapers.scraper_url_utils import make_absolute_url
 from src.utils.date_utils import convert_date_to_iso
 from src.utils.extractor_utils import build_standard_article
 from src.utils.value_utils import normalize_value
-
 
 # Extraction des valeurs structurées
 
@@ -393,8 +389,7 @@ def extract_text(
 
 def extract_label(
     soup: BeautifulSoup,
-    source: Mapping[str, Any],
-    article_json_ld: Mapping[str, Any]
+    source: Mapping[str, Any]
 ) -> str:
     """Extrait l'étiquette déclarée par la source (par exemple la catégorie).
 
@@ -411,9 +406,6 @@ def extract_label(
         Page HTML analysée.
     source : Mapping[str, Any]
         Configuration de la source (sélecteurs `label` ou `category`).
-    article_json_ld : Mapping[str, Any]
-        Objet JSON-LD de l'article ; gardé pour la signature commune, il
-        n'est plus lu depuis le retrait de la logique de verdict.
 
     Returns
     -------
@@ -795,8 +787,7 @@ def build_scraped_article(
         ),
         label=extract_label(
             soup,
-            source,
-            article_json_ld
+            source
         ),
         image_url=extract_image_url(
             soup,

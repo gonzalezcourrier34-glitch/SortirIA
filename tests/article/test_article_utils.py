@@ -13,7 +13,6 @@ import pytest
 
 from src.article import article_utils as module
 
-
 # Première valeur disponible
 
 @pytest.mark.parametrize(

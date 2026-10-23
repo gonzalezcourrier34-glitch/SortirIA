@@ -12,15 +12,13 @@ from typing import Any
 import httpx
 from bs4 import BeautifulSoup
 
-from config.settings import (
-    MAX_ARTICLE_AGE_DAYS,
-    MAX_ARTICLES_PER_SOURCE
-)
+from config.settings import MAX_ARTICLE_AGE_DAYS, MAX_ARTICLES_PER_SOURCE
 from src.extractors.scrapers.scraper_adapter import ScraperAdapter
 from src.extractors.scrapers.scraper_article_utils import build_scraped_article
 from src.extractors.scrapers.scraper_http_utils import (
     create_http_client,
-    get_html
+    get_html,
+    get_scraper_http_options,
 )
 from src.extractors.scrapers.scraper_metadata_utils import extract_metadata
 from src.extractors.scrapers.scraper_url_utils import discover_article_links
@@ -107,9 +105,8 @@ def parse_iso_datetime(value: Any) -> datetime | None:
         return None
 
     try:
-        parsed = datetime.fromisoformat(
-            normalized.replace("Z", "+00:00")
-        )
+        # Python 3.11+ lit directement le suffixe « Z » (UTC).
+        parsed = datetime.fromisoformat(normalized)
     except (TypeError, ValueError):
         return None
 
@@ -205,8 +202,10 @@ def build_standard_scraper_article(
 ) -> dict[str, Any]:
     """Télécharge et construit un article depuis une URL HTML.
 
-    Les erreurs de téléchargement (`ScraperPageError` levée par `get_html`)
-    remontent au moteur, qui les compte comme rejet.
+    Le téléchargement suit les options HTTP de la source
+    (`respect_robots_txt`, `request_delay_seconds`). Les erreurs de
+    téléchargement (`ScraperPageError` levée par `get_html`) remontent au
+    moteur, qui les compte comme rejet.
 
     Parameters
     ----------
@@ -227,11 +226,14 @@ def build_standard_scraper_article(
     if not article_url:
         return {}
 
-    # Télécharge la page avec la session HTTP déjà ouverte.
+    # Télécharge la page avec la session HTTP déjà ouverte et les options
+    # de la source (robots.txt, délai de politesse).
+    respect_robots, request_delay = get_scraper_http_options(source)
     raw_html, final_url = get_html(
         client,
         article_url,
-        source
+        respect_robots,
+        request_delay
     )
 
     page_url = canonicalize_url(final_url) or article_url

@@ -21,16 +21,14 @@ from src.extractors.core.extractor_results import (
     build_empty_result,
     build_failed_result,
     build_partial_result,
-    build_success_result
+    build_success_result,
 )
 from src.extractors.scrapers.scraper_adapter import ScraperAdapter, ScraperItem
-
 from src.extractors.scrapers.scraper_http_utils import (
     ScraperPageError,
     get_scraper_requests_count,
-    reset_scraper_requests_count
+    reset_scraper_requests_count,
 )
-
 from src.logger import get_logger
 from src.utils.extractor_utils import log_extraction_summary, validate_article
 from src.utils.filter_utils import get_filter_configuration
@@ -456,11 +454,11 @@ def process_scraper_item(
         context.reject(error.reason)
         return
 
-    except Exception as error:
+    except Exception:
+        # L'erreur et sa trace sont jointes par logger.exception.
         logger.exception(
-            "Impossible de construire un article HTML pour %s : %s",
-            context.source_name,
-            error
+            "Impossible de construire un article HTML pour %s",
+            context.source_name
         )
         context.reject("construction_invalide")
         return
@@ -667,9 +665,8 @@ def extract_scraper_source(
     except Exception as error:
         # Erreur technique inattendue
         logger.exception(
-            "Erreur pendant l'extraction HTML de %s : %s",
-            context.source_name,
-            error
+            "Erreur pendant l'extraction HTML de %s",
+            context.source_name
         )
         context.add_error(error)
 
@@ -742,9 +739,7 @@ def extract_articles_from_source(
         raise TypeError("source doit être une structure de type Mapping.")
 
     # Construction de l'adaptateur standard
-    from src.extractors.scrapers.scraper_extractor import (
-        create_standard_scraper_adapter
-    )
+    from src.extractors.scrapers.scraper_extractor import create_standard_scraper_adapter
 
     adapter = create_standard_scraper_adapter(
         source_id=normalize_value(source.get("source_id")) or "scraper",

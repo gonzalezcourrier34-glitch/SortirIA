@@ -308,7 +308,7 @@ def build() -> dict[str, Any]:
     layout.add(table("Modèles utilisés sur la période", "Une ligne par modèle et par usage.", MODELS_TABLE), 24, 7)
 
     layout.row("03 / Versions et fiabilité des modèles")
-    layout.add(table("Versions de la consigne de rédaction en service", "PROMPT_VERSION de app/search_service.py "
+    layout.add(table("Versions de la consigne de rédaction en service", "PROMPT_VERSION de app/search_answer.py "
                      ": comparer deux versions sur la latence, le mode dégradé et la satisfaction.",
                      PROMPT_VERSIONS), 24, 7)
     layout.add(series("Réponses sans Mistral et erreurs (part par jour)", "Mode dégradé : Mistral indisponible, "

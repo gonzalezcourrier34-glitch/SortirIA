@@ -12,7 +12,6 @@ import pytest
 
 from src.article.processing import article_transformer as module
 
-
 # Données de test
 
 @pytest.fixture

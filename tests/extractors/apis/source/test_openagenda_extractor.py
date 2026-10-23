@@ -204,3 +204,37 @@ def test_a_deleted_agenda_does_not_stop_the_following_ones(fake_api, monkeypatch
     events = [event_from_article(article) for article in result.articles]
     assert sorted(event.source_event_id for event in events) == ["3", "4"]       # l'agenda B en entier
     assert result.status == "partial_success"                                   # l'agent gardera les événements de A
+
+
+def test_agenda_error_is_reported_when_the_maximum_is_reached(
+    fake_api, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """L'agenda A échoue et B atteint le plafond : la réussite reste « partielle »."""
+
+    from src.extractors.apis.api_extractor import ApiInvalidParametersError
+
+    real_fetch = module.fetch_agenda_page
+
+    def fetch(source, uid, key, offset, size):
+        if uid == "A":
+            raise ApiInvalidParametersError("OpenAgenda", "agenda introuvable", status_code=404)
+        return real_fetch(source, uid, key, offset, size)
+
+    monkeypatch.setattr(module, "fetch_agenda_page", fetch)
+    result = module.extract_articles_from_source({**SOURCE, "max_articles": 2})
+    assert len(result.articles) == 2
+    assert result.status == "partial_success"
+    assert result.errors == ["agenda introuvable"]
+
+
+def test_every_agenda_failing_raises_the_first_error(
+    fake_api, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from src.extractors.apis.api_extractor import ApiInvalidParametersError
+
+    def fetch(source, uid, key, offset, size):
+        raise ApiInvalidParametersError("OpenAgenda", f"agenda {uid} introuvable", status_code=404)
+
+    monkeypatch.setattr(module, "fetch_agenda_page", fetch)
+    with pytest.raises(ApiInvalidParametersError, match="agenda A introuvable"):
+        list(module.iter_openagenda_items(SOURCE, 50))

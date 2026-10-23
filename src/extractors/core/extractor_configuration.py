@@ -98,6 +98,9 @@ def normalize_source_configuration(
 def is_configuration_item(source: Any) -> bool:
     """Indique si une valeur représente une configuration exploitable.
 
+    Même règle que `normalize_source_configuration` : une configuration vide
+    n'est pas exploitable.
+
     Parameters
     ----------
     source : Any
@@ -106,10 +109,11 @@ def is_configuration_item(source: Any) -> bool:
     Returns
     -------
     bool
-        Vrai si `configuration_to_dict` sait la convertir (même vide).
+        Vrai si `configuration_to_dict` sait la convertir en un dictionnaire
+        non vide.
     """
 
-    return configuration_to_dict(source) is not None
+    return bool(configuration_to_dict(source))
 
 
 def build_source_metadata(
@@ -215,11 +219,12 @@ def validate_loaded_configuration(configuration: Any) -> ConfigurationObject:
     ValueError
         Si la configuration, le registre ou la collection sont vides.
     TypeError
-        Si la collection contient des éléments invalides ou si le type est inattendu.
+        Si la collection contient des éléments invalides (configurations vides
+        comprises) ou si le type est inattendu.
     """
 
-    # Cas vide, puis registre de sources
-    if configuration is None:
+    # Cas vide (absente, ou convertie en dictionnaire vide), puis registre
+    if configuration is None or configuration_to_dict(configuration) == {}:
         raise ValueError("Le chargeur a retourné une configuration vide.")
 
     if isinstance(configuration, SourceRegistry):

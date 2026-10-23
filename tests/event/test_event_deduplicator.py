@@ -44,6 +44,17 @@ def test_merge_fills_only_empty_fields(openagenda_item) -> None:
     assert completeness(merged) > completeness(main)
 
 
+def test_merge_treats_an_empty_dict_as_empty_like_completeness(openagenda_item) -> None:
+    # `partner_info` vide ({}) ne compte pas dans completeness : la fusion doit le compléter.
+    main = replace(map_openagenda_event(openagenda_item), partner_info={})
+    other = replace(main, partner_info={"offre": "-10 % sur présentation"})
+
+    merged = merge_events(main, other)
+
+    assert merged.partner_info == {"offre": "-10 % sur présentation"}
+    assert completeness(merged) == completeness(main) + 1
+
+
 # --- Même événement venu de deux sources (15/10/2026) -----------------------
 
 def test_same_event_from_two_sources_is_merged(openagenda_item) -> None:

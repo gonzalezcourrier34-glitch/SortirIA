@@ -14,9 +14,8 @@ from __future__ import annotations
 from config.environment import (
     get_environment_variable,
     get_float_environment_variable,
-    get_integer_environment_variable
+    get_integer_environment_variable,
 )
-
 
 # HTTP
 REQUEST_TIMEOUT = max(get_integer_environment_variable("REQUEST_TIMEOUT", 20), 1)

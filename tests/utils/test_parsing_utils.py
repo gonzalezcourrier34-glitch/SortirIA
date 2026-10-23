@@ -17,9 +17,8 @@ from src.utils.parsing_utils import (
     parse_optional_float,
     parse_optional_integer,
     parse_positive_float,
-    parse_positive_integer
+    parse_positive_integer,
 )
-
 
 # Conversion en booléen
 

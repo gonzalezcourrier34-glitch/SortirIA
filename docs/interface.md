@@ -48,9 +48,9 @@ Server-Sent Events, comme l'analyse d'une position dans Chess Agent.
 | Étape | Ce qui se passe | Code |
 |---|---|---|
 | Comprendre | la question est lue comme un humain la lirait : **quand** (ce soir, samedi, ce week-end, le 24/10, en novembre), **où** (une commune, « l'étang », « près de Sète » ; « à Montpellier » = la ville, « Montpellier » seul ou « près de Montpellier » = la métropole et 20 km autour), **pour qui** (enfants, ados, seniors, soirée), **gratuit** ou **budget**, **intérieur / plein air**, le **type** (théâtre, concert…) et les **mots-clés** qui restent ; le tout précise les cases cochées. Par règles, sans appel à un modèle | `app/query_understanding.py` |
-| Rechercher | **recherche hybride** : par le sens (vecteur mistral-embed, pgvector) et par les mots (plein texte français, sans accents, par préfixe) ; les deux classements sont fusionnés (RRF) ; ce qui a les mots précis et le type demandé passe devant | `build_search_query` |
-| Filtrer | ce qui répond exactement, sinon élargissement au sujet (voir plus bas) ; séances regroupées par événement ; 2 cartes au plus par lieu ; 8 cartes ; offres partenaires qui répondent en tête | `keep_exact_matches`, `widen_for_subject`, `group_occurrences`, `partners_first` |
-| Rédiger | Mistral écrit 2 à 4 phrases qui citent les événements [n], en respectant les contraintes comprises, et propose 3 relances ; les cartes suivent ensuite l'ordre de la réponse | `write_with_mistral`, `parse_answer`, `order_cards` |
+| Rechercher | **recherche hybride** : par le sens (vecteur mistral-embed, pgvector) et par les mots (plein texte français, sans accents, par préfixe) ; les deux classements sont fusionnés (RRF) ; ce qui a les mots précis et le type demandé passe devant | `build_search_query` (`app/search_query.py`) |
+| Filtrer | ce qui répond exactement, sinon élargissement au sujet (voir plus bas) ; séances regroupées par événement ; 2 cartes au plus par lieu ; 8 cartes ; offres partenaires qui répondent en tête | `keep_exact_matches`, `widen_for_subject`, `partners_first` (`app/search_query.py`), `group_occurrences` (`app/search_cards.py`) |
+| Rédiger | Mistral écrit 2 à 4 phrases qui citent les événements [n], en respectant les contraintes comprises, et propose 3 relances ; les cartes suivent ensuite l'ordre de la réponse | `write_with_mistral`, `parse_answer`, `order_cards` (`app/search_answer.py`) |
 
 ## Comment la recherche décide
 
@@ -117,7 +117,7 @@ Server-Sent Events, comme l'analyse d'une position dans Chess Agent.
   bal. Un concert reste une réponse si son
   titre dit qu'on y participe (« Stage de chant »). Rien de tel trouvé : des
   idées voisines, annoncées comme telles. Règles dans `PRACTICE_VERBS`
-  (`app/query_understanding.py`) et `PRACTICES` (`app/search_service.py`).
+  (`app/query_understanding.py`) et `PRACTICES` (`app/search_query.py`).
 - **Regarder**, l'inverse (17/10/2026) : avec « spectacle », « voir »,
   « regarder », « assister à », un bal, un cours, un stage ou une soirée
   dansante ne compte plus comme du type demandé ; et « spectacle » s'efface

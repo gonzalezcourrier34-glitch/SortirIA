@@ -12,7 +12,6 @@ import pytest
 
 from src.article.validation import article_validation_policy as module
 
-
 # Politique par défaut
 
 def test_default_validation_policy_has_expected_values() -> None:

@@ -23,6 +23,7 @@ from collections.abc import Mapping
 from datetime import date, datetime, time
 from typing import Any
 
+from src.event.event_audiences import infer_audiences
 from src.event.event_normalizer import (
     PARIS,
     build_dedup_key,
@@ -35,7 +36,6 @@ from src.event.event_normalizer import (
     to_iso,
 )
 from src.event.event_schema import Event
-from src.event.openagenda_mapper import infer_audiences
 from src.utils.url_utils import is_valid_http_url
 
 # Colonnes du modèle, dans l'ordre, avec l'aide affichée dans l'onglet « Aide ».

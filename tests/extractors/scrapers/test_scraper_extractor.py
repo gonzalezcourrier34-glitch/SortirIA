@@ -16,7 +16,6 @@ from bs4 import BeautifulSoup
 from src.extractors.scrapers import scraper_extractor as module
 from src.extractors.scrapers.scraper_adapter import ScraperAdapter
 
-
 # Fabriques
 
 def build_source(
@@ -388,9 +387,9 @@ def test_iter_standard_scraper_items_reuses_http_client(
 
         def __exit__(
             self,
-            exception_type: Any,
-            exception: Any,
-            traceback: Any
+            exception_type: object,
+            exception: object,
+            traceback: object
         ) -> None:
             received["exited"] = True
 
@@ -476,7 +475,11 @@ def test_build_standard_scraper_article_builds_expected_article(
     monkeypatch: pytest.MonkeyPatch
 ) -> None:
     client = build_client()
-    source = build_source()
+    source = {
+        **build_source(),
+        "respect_robots_txt": False,
+        "request_delay_seconds": 4
+    }
     received: dict[str, Any] = {}
     expected_article = {
         "title": "Article HTML"
@@ -502,11 +505,13 @@ def test_build_standard_scraper_article_builds_expected_article(
     def fake_get_html(
         current_client: httpx.Client,
         article_url: str,
-        current_source: Mapping[str, Any]
+        respect_robots: bool,
+        request_delay_seconds: float
     ) -> tuple[str, str]:
         received["client"] = current_client
         received["article_url"] = article_url
-        received["source"] = current_source
+        received["respect_robots"] = respect_robots
+        received["request_delay_seconds"] = request_delay_seconds
         return (
             "<html><h1>Article HTML</h1></html>",
             "https://example.com/final"
@@ -557,7 +562,9 @@ def test_build_standard_scraper_article_builds_expected_article(
     assert result is expected_article
     assert received["client"] is client
     assert received["article_url"] == "https://example.com/article"
-    assert received["source"] is source
+    # Les options HTTP de la configuration sont transmises au téléchargement.
+    assert received["respect_robots"] is False
+    assert received["request_delay_seconds"] == 4.0
     assert received["metadata"] == {
         "page_url": "https://example.com/final"
     }
@@ -584,7 +591,7 @@ def test_build_standard_scraper_article_uses_original_url_when_final_invalid(
     monkeypatch.setattr(
         module,
         "get_html",
-        lambda client, article_url, source: (
+        lambda client, article_url, respect_robots, request_delay_seconds: (
             "<html></html>",
             "invalid"
         )

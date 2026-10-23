@@ -49,6 +49,6 @@ uv run mkdocs serve -a 127.0.0.1:8001   # documentation sur http://127.0.0.1:800
 | `dags/` | SortirIA | DAG Airflow nocturne qui lance l'agent de collecte |
 | `sql/sortiria/` | SortirIA | Schéma PostgreSQL + pgvector (voir `docs/base_de_donnees.md`) |
 | `agent/` | SortirIA (organisation de Chess Agent) | Agent de collecte nocturne et apprentissage des recherches ratées |
-| `app/` | SortirIA (départ : RAG OpenAgenda) | API FastAPI, compréhension des questions, recherche, rédaction, avis |
+| `app/` | SortirIA (départ : RAG OpenAgenda) | API FastAPI, compréhension des questions, recherche, rédaction, avis ; un fichier par usage (`search_query.py`, `search_cards.py`, `search_answer.py`…, voir `docs/architecture.md`) |
 | `frontend/` | Chess Agent (projet 13) | Interface Angular |
 | `tests/` | les deux | Tests de la collecte, de l'agent (`tests/test_agent_collecte/`) et de l'API (`tests/test_api/`) |

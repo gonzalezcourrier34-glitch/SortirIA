@@ -102,7 +102,7 @@ def test_documents_are_found_with_the_spreadsheets(tmp_path: Path) -> None:
 def test_agent_proposes_the_import_and_the_human_applies_it(tmp_path: Path, cache: Path,
                                                             monkeypatch: pytest.MonkeyPatch) -> None:
     from agent import nodes, proposals
-    from agent.report import describe_action
+    from agent.proposals import describe_action
     from agent.services import pending_partner_document
 
     path = make_docx(tmp_path / "bar.docx", ["Jeudi 6 novembre : soirée blind test, gratuit"])

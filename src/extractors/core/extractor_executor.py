@@ -58,11 +58,11 @@ def get_api_error_types() -> tuple[type[Exception], ...] :
 
     from src.extractors.apis.api_extractor import (
         ApiAuthenticationError,
-        ApiQuotaExceededError,
-        ApiRateLimitError,
+        ApiExtractionStoppedError,
         ApiInvalidParametersError,
         ApiMaintenanceError,
-        ApiExtractionStoppedError
+        ApiQuotaExceededError,
+        ApiRateLimitError,
     )
 
     return (
@@ -371,7 +371,7 @@ def execute_extractor_call(
             extractor_name,
             source_type,
         )
-    except Exception as error:
+    except Exception as error:  # noqa: BLE001  journalisée par build_extraction_error_result
         return build_extraction_error_result(
             extractor_name,
             source_type,

@@ -16,9 +16,8 @@ from src.utils.value_utils import (
     is_unsupported_text_collection,
     normalize_casefold,
     normalize_value,
-    normalize_whitespace
+    normalize_whitespace,
 )
-
 
 # Objets de test
 
@@ -32,7 +31,7 @@ class StringErrorValue:
 class ComparisonErrorValue:
     """Objet dont la comparaison avec lui-même échoue."""
 
-    def __ne__(self, other: Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         raise RuntimeError("Comparaison impossible")
 
     def __str__(self) -> str:
@@ -49,7 +48,7 @@ class NonBooleanComparison:
 class NonBooleanComparisonValue:
     """Objet retournant un résultat non booléen lors de la comparaison."""
 
-    def __ne__(self, other: Any) -> NonBooleanComparison:
+    def __ne__(self, other: object) -> NonBooleanComparison:
         return NonBooleanComparison()
 
     def __str__(self) -> str:
@@ -77,7 +76,7 @@ BoolExternalError = type(
 class ExternalBooleanValue:
     """Objet dont la comparaison retourne un booléen externe."""
 
-    def __ne__(self, other: Any) -> Any:
+    def __ne__(self, other: object) -> Any:
         return BoolExternalError()
 
     def __str__(self) -> str:

@@ -23,6 +23,8 @@ l'eau (du plus récent au plus ancien). Version illustrée :
 
 | Date | Domaine | Incident | Vu par |
 | --- | --- | --- | --- |
+| 23/10/2026 | Évaluation | L'horloge de la base de test n'était pas figée | Rejeu des 4 jeux d'évaluation sur la base figée, en préparant les corrections de la relecture : « faire soi-même » à 90 % (98 % le 19/10) sans changement de code |
+| 23/10/2026 | Code | Relecture du code : défauts corrigés | Relecture complète du code pendant l'écriture des docstrings |
 | 19/10/2026 | Monitoring | La dérive ajoutée : un test et une colonne en base | Test `test_full_night_success` rouge sur le poste, avant le push |
 | 19/10/2026 | Recherche | Des mots de la phrase pris pour des sujets | Mail de bilan du lundi 19/10 : 64 % des questions sans réponse exacte ; l'agent propose « bonjour » → « salut » et « voire » → « ou-encore » |
 | 18/10/2026 | Agent | Deux propositions de l'agent en conflit | GitHub : « This branch has conflicts » sur la pull request de la proposition 2 |
@@ -68,6 +70,26 @@ l'agent.
 | 18/10/2026 | Moi | Offres fictives prises pour de vraies | Étiquette « Démonstration », sans faux lien |
 
 ## Le détail
+
+### 23/10/2026 · L'horloge de la base de test n'était pas figée
+
+- **Domaine** : Évaluation
+- **Détection** : Rejeu des 4 jeux d'évaluation sur la base figée, en préparant les corrections de la relecture : « faire soi-même » à 90 % (98 % le 19/10) sans changement de code
+- **Symptôme** : « Où danser samedi soir » comprend « sam. 17 oct. » mais ne trouve rien ; « un concert ce week-end » ne donne aucune réponse exacte. Les scores baissent d'un jour à l'autre sans changement de code.
+- **Cause** : La vue `sortiria.v_upcoming_events` filtrait avec `now()`, l'heure réelle. Le mode `--jeu-test` règle l'horloge de la recherche sur l'instant de l'export (16/10/2026), mais pas celle de la base. Chaque jour, des sorties disparaissaient de la base de test. La CI aurait fini par échouer sans aucun changement de code.
+- **Résolution** : Fonction SQL `sortiria.reference_now()` : le réglage de session `sortiria.maintenant` s'il existe, sinon `now()`. Elle sert à la vue et au classement de « À ne pas manquer ». En mode `--jeu-test`, `freeze_clock()` règle `sortiria.maintenant` sur l'instant de l'export. En production rien ne change. À appliquer en production par `uv run python -m scripts.init_db` avant le déploiement. Base figée, avant → après : faire soi-même 89,9 % → 98,3 % ; 125 recherches courtes 98,3 % → 98,6 % ; moments 98,9 % → 98,9 % ; 50 questions 99,3 % → 98,7 % (des sorties revenues dans la vue : écarts de données, pas de code) ; compréhension 100 % partout. « Où danser samedi soir » : 0/1 → 4/4 exact ; « un concert ce week-end » : 0/8 → 8/8 exact.
+- **Pour que ça ne revienne pas** : Test `test_upcoming_view_follows_the_frozen_clock` : la vue suit l'horloge figée. Détail : [Évaluation](evaluation.md).
+- **Trace** : `sql/sortiria/05_views.sql`, `scripts/jeu_test_recherche.py`
+
+### 23/10/2026 · Relecture du code : défauts corrigés
+
+- **Domaine** : Code
+- **Détection** : Relecture complète du code pendant l'écriture des docstrings
+- **Symptôme** : Rien de visible pour la plupart : défauts trouvés avant qu'ils ne gênent.
+- **Cause** : Recherche : `QueryPlan.relaxed` effaçait `period_from_question`, la case « date » n'était plus cochée après relâchement ; `Understanding.is_empty`, jamais appelée. Scraper : `respect_robots_txt` et `request_delay_seconds` ignorés au téléchargement des articles (mauvais argument) ; robots.txt téléchargé même quand on ne le respecte pas. OpenAgenda : au plafond d'événements, les erreurs d'agenda étaient perdues (« réussite » au lieu de « réussite partielle »). Agent : points de sauvegarde des pull requests jamais libérés sur certains chemins ; l'arrêt des embeddings sur « 3 lots en échec de suite » comptait les échecs de toute la nuit ; un synonyme accepté ne pouvait pas être écrit hors du fichier par défaut ; erreur d'agenda pendant la découverte avalée sans trace. DATAtourisme : catégorie vide quand le premier type précis n'avait pas de libellé ; doublons : `{}` traité différemment par la fusion et par le calcul de complétude. RSS : erreur d'une source ajoutée aux erreurs courantes hors de sa portée ; chaque entrée d'agenda convertie deux fois. Sources : une source sans `enabled` était désactivée par le moteur et active pour l'exécuteur ; une configuration vide `{}` acceptée puis refusée. Code mort et doublons : `get_dataset_files`, `file_sha256`, `ApiExtractionResult`, `_to_float`, `PRICE_BANDS`, `REQUIRED_EVENT_FIELDS`, `ARTICLE_CATEGORIES` ; `JUDGE_VERSION` jamais écrite. Évaluation : la version de la consigne du juge de pertinence absente de l'historique ; `load_dataset` ne comptait pas les lignes réellement insérées.
+- **Résolution** : Chaque défaut corrigé ; `Understanding.is_empty` et le code mort retirés (`to_float` de `src/utils/geo_utils.py` remplace `_to_float`) ; erreur d'agenda de la découverte journalisée ; `JUDGE_VERSION` écrite dans le bilan du juge (`collect_runs.quality`, champ `version`) ; colonne `juge_consigne` dans l'historique de la pertinence. Dans le même temps : docstrings numpy partout, une page de référence par fichier, `app/search_service.py` découpé en 7 modules.
+- **Pour que ça ne revienne pas** : Chaque correction a son test ; suite complète : 3 719 tests réussis. Les 4 jeux d'évaluation donnent les mêmes cartes qu'avant les corrections (hors effet de l'horloge).
+- **Trace** : `app/query_understanding.py`, `src/extractors/`, `agent/`, `src/event/quality_judge.py`, `scripts/eval_pertinence.py`, `scripts/jeu_test_recherche.py`
 
 ### 19/10/2026 · La dérive ajoutée : un test et une colonne en base
 

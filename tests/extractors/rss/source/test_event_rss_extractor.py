@@ -44,7 +44,7 @@ def fake_feed(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(module, "datetime", FixedDatetime)
     monkeypatch.setattr(module, "iter_event_entries", lambda source: ENTRIES)
     adapter = module.RssAdapter(
-        iter_items=module.iter_event_entries, build_article=module.build_event_rss_article,
+        iter_items=module.iter_mapped_entries, build_article=module.build_event_rss_article,
         validate_item=module.validate_event_entry, default_name="Flux RSS d'agenda",
     )
     monkeypatch.setattr(module, "EVENT_RSS_ADAPTER", adapter)
@@ -59,6 +59,27 @@ def test_feed_through_the_checkit_engine() -> None:
         ("Bal folk", "2026-11-15T21:00:00+01:00", "Sète", "rss"),
     ]
     assert result.rejection_reasons == {"doublon": 1, "hors_fenetre": 1, "date_evenement_absente": 1}
+
+
+def test_each_entry_is_mapped_once(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[str] = []
+    original_map_entry = module.map_entry
+
+    def counting_map_entry(entry, source, now=None):
+        calls.append(entry["id"])
+        return original_map_entry(entry, source, now)
+
+    monkeypatch.setattr(module, "map_entry", counting_map_entry)
+    result = extract_rss_source(SOURCE, module.EVENT_RSS_ADAPTER)
+    assert len(result.articles) == 2
+    # Une seule conversion par entrée, validation et construction comprises.
+    assert calls == [entry["id"] for entry in ENTRIES]
+
+
+def test_non_mapping_entry_is_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(module, "iter_event_entries", lambda source: ["pas une entrée"])
+    result = extract_rss_source(SOURCE, module.EVENT_RSS_ADAPTER)
+    assert result.rejection_reasons == {"entree_invalide": 1}
 
 
 def test_no_feed_configured_by_default() -> None:

@@ -12,10 +12,9 @@ from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 from typing import Any
 
+from src.extractors.core.extractor_results import ExtractorResult
 from src.logger import get_logger
 from src.utils.extractor_utils import normalize_value
-
-from src.extractors.core.extractor_results import ExtractorResult
 
 logger = get_logger(__name__)
 

@@ -23,6 +23,7 @@ def test_scores_and_problems() -> None:
     assert sorted(verdicts) == ["0", "1", "2", "3"] and verdicts["2"].score == 0.75
     summary = judge.summarize(verdicts, ROWS)
     assert summary["checked"] == 4 and summary["score"] == 0.875
+    assert summary["version"] == judge.JUDGE_VERSION    # consigne du juge tracée dans le bilan
     assert summary["categorie_correcte"] == 0.75 and summary["est_une_sortie"] == 0.75
     assert summary["problems"] == ["Événement 2 : catégorie : atelier, pas concert", "Événement 3 : offre d'emploi"]
 

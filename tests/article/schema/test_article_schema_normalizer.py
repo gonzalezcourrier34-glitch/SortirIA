@@ -13,7 +13,6 @@ import pytest
 
 from src.article.schema import article_schema_normalizer as module
 
-
 # Normalisation des valeurs
 
 @pytest.mark.parametrize(

@@ -8,6 +8,19 @@
 
 BEGIN;
 
+-- ----------------------------------------------------------------------------
+-- Horloge de référence (23/10/2026)
+-- ----------------------------------------------------------------------------
+-- « Maintenant » pour les vues et la recherche : now(), sauf si la session a
+-- réglé `sortiria.maintenant` (SET sortiria.maintenant = '2026-10-16 10:00+02').
+-- En production le réglage est absent : rien ne change. L'évaluation sur la
+-- base de test figée (scripts/eval_recherche.py --jeu-test) le règle sur
+-- l'instant de l'export : sans lui, les sorties de cette base « passaient »
+-- avec les jours et les scores baissaient sans changement de code.
+CREATE OR REPLACE FUNCTION sortiria.reference_now() RETURNS TIMESTAMPTZ
+LANGUAGE sql STABLE PARALLEL SAFE
+RETURN COALESCE(NULLIF(current_setting('sortiria.maintenant', true), '')::TIMESTAMPTZ, now());
+
 -- Les vues sont recréées à chaque exécution : `CREATE VIEW`
 -- refuserait une colonne ajoutée à events (elle décalerait celles de la vue).
 DROP VIEW IF EXISTS sortiria.v_coverage, sortiria.v_upcoming_events,
@@ -79,14 +92,17 @@ WHERE s.active
   AND e.attendance <> 'en_ligne'
   -- Même règle que DELETE_PAST_EVENTS_SQL (event_repository.py) : un
   -- événement « jour seulement » reste visible jusqu'à la fin de son jour.
+  -- « Maintenant » : sortiria.reference_now() (horloge figée de la base de test).
   AND (
-        (e.time_known AND COALESCE(e.end_at, e.start_at) >= now())
+        (e.time_known AND COALESCE(e.end_at, e.start_at) >= sortiria.reference_now())
      OR (NOT e.time_known
-         AND COALESCE(e.end_at, e.start_at) >= date_trunc('day', now() AT TIME ZONE 'Europe/Paris') AT TIME ZONE 'Europe/Paris')
+         AND COALESCE(e.end_at, e.start_at)
+             >= date_trunc('day', sortiria.reference_now() AT TIME ZONE 'Europe/Paris')
+                AT TIME ZONE 'Europe/Paris')
   )
   -- On ne propose que ce qui commence dans les 3 prochains mois (14/10/2026) ;
   -- une exposition déjà commencée reste proposable jusqu'à sa fin.
-  AND e.start_at < now() + interval '3 months';
+  AND e.start_at < sortiria.reference_now() + interval '3 months';
 
 
 -- ----------------------------------------------------------------------------

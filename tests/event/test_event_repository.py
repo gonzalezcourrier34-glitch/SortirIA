@@ -6,7 +6,7 @@ Aucune vraie base n'est nécessaire : `FakeConnection` enregistre les requêtes.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Self
 
 from src.event import event_repository as repo
 from src.event.openagenda_mapper import map_openagenda_event
@@ -18,7 +18,7 @@ class FakeCursor:
         self.rowcount = connection.rowcount
         self.description = [("event_id",), ("title",)]
 
-    def __enter__(self) -> FakeCursor:
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, *args: object) -> None:

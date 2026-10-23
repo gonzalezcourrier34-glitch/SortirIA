@@ -13,7 +13,6 @@ import pytest
 import src.extractors.core.extractor_configuration as module
 from config.source_config import SourceConfigurationError
 
-
 # Objets de test
 
 @dataclass
@@ -237,7 +236,11 @@ def test_normalize_source_configuration_logs_invalid_value(
         ),
         (
             {},
-            True
+            False
+        ),
+        (
+            ToDictConfiguration({}),
+            False
         ),
         (
             ToDictConfiguration({
@@ -442,6 +445,31 @@ def test_build_configuration_failure_delegates_to_failed_result(
 
 
 # Validation du chargement
+
+@pytest.mark.parametrize(
+    "configuration",
+    [
+        {},
+        ToDictConfiguration({})
+    ]
+)
+def test_validate_loaded_configuration_rejects_empty_configuration(
+    configuration: Any
+) -> None:
+    with pytest.raises(
+        ValueError,
+        match="configuration vide"
+    ):
+        module.validate_loaded_configuration(configuration)
+
+
+def test_validate_loaded_configuration_rejects_empty_item_in_collection() -> None:
+    with pytest.raises(
+        TypeError,
+        match="configurations invalides : dict"
+    ):
+        module.validate_loaded_configuration([{"source_id": "gnews"}, {}])
+
 
 def test_validate_loaded_configuration_accepts_mapping() -> None:
     source = {
@@ -862,7 +890,7 @@ def test_load_extractor_configuration_handles_invalid_loader_result(
     configuration, failure = module.load_extractor_configuration(
         extractor_name="NewsAPI",
         source_type="api",
-        configuration_loader=lambda: []
+        configuration_loader=list
     )
 
     assert configuration is None

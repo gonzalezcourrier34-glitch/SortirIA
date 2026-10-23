@@ -13,7 +13,6 @@ import pytest
 
 from src.extractors.scrapers import scraper_http_utils as module
 
-
 # Fabriques
 
 def build_source(
@@ -392,11 +391,12 @@ def test_fetch_html_downloads_valid_page(
     monkeypatch.setattr(
         module,
         "wait_for_crawl_delay",
-        lambda url, minimum_delay: events.append(
+        lambda url, minimum_delay, use_robots: events.append(
             (
                 "wait",
                 url,
-                minimum_delay
+                minimum_delay,
+                use_robots
             )
         )
     )
@@ -437,7 +437,8 @@ def test_fetch_html_downloads_valid_page(
         (
             "wait",
             "https://example.com/article",
-            0.5
+            0.5,
+            True
         ),
         (
             "register",
@@ -485,6 +486,55 @@ def test_fetch_html_skips_robots_check_when_disabled(
     )
 
     assert result[0]
+
+
+def test_fetch_html_keeps_delay_without_reading_robots_when_disabled(
+    monkeypatch: pytest.MonkeyPatch
+) -> None:
+    waits: list[dict[str, Any]] = []
+    response = build_response(
+        headers={
+            "Content-Type": "text/html"
+        }
+    )
+
+    monkeypatch.setattr(
+        module,
+        "is_url_allowed_by_robots",
+        lambda url: pytest.fail(
+            "robots.txt ne doit pas être consulté."
+        )
+    )
+    monkeypatch.setattr(
+        module,
+        "wait_for_crawl_delay",
+        lambda url, **kwargs: waits.append(kwargs)
+    )
+    monkeypatch.setattr(
+        module,
+        "register_request",
+        lambda url: None
+    )
+    monkeypatch.setattr(
+        module,
+        "is_antibot_page",
+        lambda raw_html: False
+    )
+
+    module.fetch_html(
+        FakeClient(response=response),  # type: ignore[arg-type]
+        "https://example.com/article",
+        respect_robots=False,
+        request_delay_seconds=3.0
+    )
+
+    # Le délai de politesse reste appliqué, sans lecture de robots.txt.
+    assert waits == [
+        {
+            "minimum_delay": 3.0,
+            "use_robots": False
+        }
+    ]
 
 
 def test_fetch_html_registers_request_when_client_fails(

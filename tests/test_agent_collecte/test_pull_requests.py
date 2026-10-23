@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import base64
 import json
-from typing import Any
+from typing import Any, Self
 
 import httpx
 import pytest
@@ -178,6 +178,49 @@ def test_errors_and_limits_never_stop_the_night(store: dict) -> None:
     assert [item["proposal_id"] for item in report.opened] == [2]
     assert [item["proposal_id"] for item in report.manual] == [3]
     assert store[4]["pr_number"] is None   # au-delà du plafond de la nuit : la nuit suivante
+
+
+class RecordingConnection:
+    """Connexion factice : enregistre les instructions envoyées à la base."""
+
+    def __init__(self) -> None:
+        self.statements: list[str] = []
+
+    def cursor(self) -> Self:
+        return self
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(self, *args: object) -> None:
+        return None
+
+    def execute(self, statement: str) -> None:
+        self.statements.append(statement)
+
+
+PILATES = {**SYNONYM, "word": "pilates", "target": "yoga", "new": "pilates -> yoga"}
+
+
+def test_every_savepoint_is_released_whatever_the_path(store: dict) -> None:
+    store[1] = proposal(1, SYNONYM, pr_number=100, pr_url="u1")   # PR déjà ouverte
+    store[2] = proposal(2, {"type": "autre"})                     # à décider à la main
+    store[3] = proposal(3, SYNONYM)                               # PR ouverte cette nuit
+    store[4] = proposal(4, AGENDA)                                # au-delà du plafond
+    store[5] = proposal(5, PILATES)
+    github = FakeGitHub({100: {"number": 100, "state": "open", "html_url": "u1"}}, fail_on=5)
+    connection = RecordingConnection()
+    report = prs.sync_pull_requests(connection, github, max_new=1)
+    assert report.errors == []   # le plafond est atteint avant la proposition n° 5
+    opened = connection.statements.count("SAVEPOINT agent_pr")
+    assert opened == 5 and connection.statements.count("RELEASE SAVEPOINT agent_pr") == opened
+    # En cas d'erreur aussi : retour au point de sauvegarde, puis libération.
+    connection = RecordingConnection()
+    store.clear()
+    store[5] = proposal(5, PILATES)
+    prs.sync_pull_requests(connection, github)
+    assert connection.statements == ["SAVEPOINT agent_pr", "ROLLBACK TO SAVEPOINT agent_pr",
+                                     "RELEASE SAVEPOINT agent_pr"]
 
 
 # --- Le client GitHub (API simulée) ------------------------------------------

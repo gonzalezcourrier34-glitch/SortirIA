@@ -103,3 +103,25 @@ recherche : [Interface](interface.md) ; la nuit : [Agent de collecte](agent.md).
 | Évaluation et mesures | `scripts/eval_recherche.py`, `scripts/eval_pertinence.py`, `scripts/mesure_cout_latence.py`, `config/eval_*.yaml`, `benchmarks/` |
 | Déploiement | `docker/Dockerfile.api`, `.github/workflows/`, `frontend/public/staticwebapp.config.json` |
 | Monitoring | `monitoring/` (Grafana), `agent/tracking.py` (MLflow), `agent/drift.py` (dérive) |
+
+### Le dossier `app/`, un fichier par usage
+
+Depuis le 23/10/2026, la recherche est découpée en modules ;
+`search_service.py` ne garde que l'enchaînement.
+
+| Fichier | Usage |
+| --- | --- |
+| `main.py`, `interface_api.py`, `ratings_api.py` | l'application FastAPI et ses routes (`/api/v1`, notes des clients) |
+| `security.py`, `config.py`, `rate_limit.py` | clé API, réglages, limite de débit |
+| `query_understanding.py` | la compréhension de la question, par règles |
+| `search_service.py` | l'enchaînement des 4 étapes : `plan_search`, `run_search`, `SearchServices`, `SearchResult`, flux SSE |
+| `search_filters.py` | les cases cochées (`SearchFilters`, valeurs permises, libellés, `period_bounds`) |
+| `search_query.py` | la requête SQL : filtres, classement par le sens et par les mots, élargissement au sujet, partenaires en tête, vecteur de la question |
+| `search_cards.py` | les cartes (dates, prix, lieux, séances regroupées), offres partenaires, « À ne pas manquer », sources |
+| `search_detail.py` | la fiche d'un événement, les avis sur son lieu, « Vos sorties à noter » |
+| `search_answer.py` | la rédaction par Mistral (`WRITE_PROMPT`, `PROMPT_VERSION`) et la réponse de repli |
+| `search_cache.py` | le cache des réponses (`cache_key`, lecture, écriture, `index_version`) |
+| `search_log.py` | le journal `rag_requests`, le coût, les pouces, la santé de la base et de la collecte |
+
+Chaque fonction a une docstring numpy ; la [Référence du code](reference/index.md)
+a une page par fichier Python.

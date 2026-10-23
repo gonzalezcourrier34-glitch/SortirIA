@@ -11,7 +11,6 @@ import pytest
 
 from src.utils.yaml_utils import load_yaml_file
 
-
 # Chargement valide
 
 def test_load_yaml_file_returns_dictionary(tmp_path: Path) -> None:

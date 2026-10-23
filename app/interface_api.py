@@ -3,7 +3,9 @@
 **Provenance** : nouveau module écrit pour SortirIA (14/10/2026), sur le
 modèle de l'API de Chess Agent (projet 13) : préfixe `/api/v1`, recherche
 diffusée en Server-Sent Events (`event: progress`, puis `event: completed`).
-La logique est dans `app/search_service.py`.
+La logique est dans `app/search_service.py` (recherche), `app/search_detail.py`
+(détail, avis), `app/search_cards.py` (offres, sources) et `app/search_log.py`
+(pouces, santé).
 
     POST /api/v1/recherche/stream          question + filtres -> étapes, puis réponse
     GET  /api/v1/evenements/{event_id}     détail d'un événement et avis sur son lieu
@@ -30,8 +32,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from app import rate_limit, search_service
-from app.search_service import SearchFilters
+from app import rate_limit, search_cards, search_detail, search_log, search_service
+from app.search_filters import SearchFilters
 
 router = APIRouter(prefix="/api/v1", tags=["interface"])
 
@@ -190,7 +192,7 @@ def event_detail(event_id: str, visiteur: str | None = Query(default=None, min_l
 
     from src.event.event_ratings import user_key
 
-    detail = search_service.event_detail(connection, event_id,
+    detail = search_detail.event_detail(connection, event_id,
                                          visitor_key=user_key(visiteur) if visiteur else None)
     if detail is None:
         raise HTTPException(status_code=404, detail="Événement introuvable ou passé.")
@@ -287,7 +289,7 @@ def to_rate(payload: ToRateRequest, connection: Any = Depends(get_connection)) -
         Les événements que le visiteur peut noter maintenant.
     """
 
-    return search_service.events_to_rate(connection, payload.event_ids, payload.session_id)
+    return search_detail.events_to_rate(connection, payload.event_ids, payload.session_id)
 
 
 class AnswerFeedback(BaseModel):
@@ -331,7 +333,7 @@ def answer_feedback(request_id: int, payload: AnswerFeedback,
         Code 404 si la réponse est introuvable ou trop ancienne.
     """
 
-    if not search_service.record_feedback(connection, request_id, payload.rating, payload.comment):
+    if not search_log.record_feedback(connection, request_id, payload.rating, payload.comment):
         raise HTTPException(status_code=404, detail="Réponse introuvable ou trop ancienne.")
     return {"status": "enregistre"}
 
@@ -354,7 +356,7 @@ def highlights(limit: int = Query(default=3, ge=1, le=10),
         Les événements « à ne pas manquer ».
     """
 
-    return search_service.partner_highlights(connection, limit)
+    return search_cards.partner_highlights(connection, limit)
 
 
 @router.get("/sources", dependencies=[Depends(rate_limit.limit_reads)])
@@ -372,7 +374,7 @@ def sources(connection: Any = Depends(get_connection)) -> list[dict[str, Any]]: 
         Pour chaque source : son nom et son nombre d'événements proposables.
     """
 
-    return search_service.active_sources(connection)
+    return search_cards.active_sources(connection)
 
 
 @router.get("/sante", dependencies=[Depends(rate_limit.limit_reads)])
@@ -386,13 +388,14 @@ def health(connection: Any = Depends(get_connection)) -> dict[str, Any]:  # noqa
     Parameters
     ----------
     connection : Any
-        Connexion PostgreSQL fournie par `get_connection` (son ouverture prouve que
-        la base répond).
+        Connexion PostgreSQL fournie par `get_connection`.
 
     Returns
     -------
     dict[str, Any]
-        `api` et `base` à « ok », et l'état de la dernière collecte.
+        `api` à « ok », `base` d'après un vrai `SELECT 1` (« ok » ou « erreur »),
+        et l'état de la dernière collecte.
     """
 
-    return {"api": "ok", "base": "ok", "collecte": search_service.collect_health(connection)}
+    return {"api": "ok", "base": search_log.database_status(connection),
+            "collecte": search_log.collect_health(connection)}

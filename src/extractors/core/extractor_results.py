@@ -15,13 +15,13 @@ from dataclasses import asdict, dataclass, field
 from typing import Any
 
 from config.constants import (
-    EXTRACTOR_STATUSES,
     EXTRACTOR_STATUS_DISABLED,
     EXTRACTOR_STATUS_EMPTY,
     EXTRACTOR_STATUS_FAILED,
     EXTRACTOR_STATUS_PARTIAL_SUCCESS,
     EXTRACTOR_STATUS_ROBOTS_DENIED,
     EXTRACTOR_STATUS_SUCCESS,
+    EXTRACTOR_STATUSES,
     SOURCE_TYPES,
 )
 from src.logger import get_logger

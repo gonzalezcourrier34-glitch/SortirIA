@@ -30,6 +30,7 @@ from typing import Any
 from config.paths import SOURCES_FILE
 from src.event.event_normalizer import PARIS
 from src.event.event_pipeline import occurrence_article_url
+from src.event.event_schema import Event
 from src.event.rss_event_mapper import map_rss_event
 from src.extractors.core.extractor_results import ExtractorResult
 from src.extractors.rss.rss_adapter import RssAdapter
@@ -38,6 +39,9 @@ from src.utils.extractor_utils import build_standard_article
 from src.utils.parsing_utils import parse_non_negative_integer
 
 DEFAULT_DAYS_FORWARD = 60
+
+# Entrée du flux, événement tiré de l'entrée (ou None) et motif du rejet.
+MappedEntry = tuple[Any, Event | None, str]
 
 
 def iter_event_entries(source: Mapping[str, Any]) -> Sequence[Mapping[str, Any]]:
@@ -62,7 +66,11 @@ def iter_event_entries(source: Mapping[str, Any]) -> Sequence[Mapping[str, Any]]
     return iter_rss_items(source)
 
 
-def map_entry(entry: Mapping[str, Any], source: Mapping[str, Any]):
+def map_entry(
+    entry: Mapping[str, Any],
+    source: Mapping[str, Any],
+    now: datetime | None = None
+) -> tuple[Event | None, str]:
     """Entrée -> (Event | None, motif), dans la fenêtre de collecte de la source.
 
     Parameters
@@ -72,6 +80,9 @@ def map_entry(entry: Mapping[str, Any], source: Mapping[str, Any]):
     source : Mapping[str, Any]
         Entrée de `rss_sources` ; `days_forward` fixe la fenêtre (60 jours par
         défaut).
+    now : datetime | None
+        Instant de référence de la fenêtre (heure de Paris). Par défaut
+        `None`, qui prend l'instant présent.
 
     Returns
     -------
@@ -80,12 +91,45 @@ def map_entry(entry: Mapping[str, Any], source: Mapping[str, Any]):
         `map_rss_event`).
     """
 
-    now = datetime.now(PARIS)
+    now = now or datetime.now(PARIS)
     horizon = now.date() + timedelta(days=parse_non_negative_integer(source.get("days_forward"), DEFAULT_DAYS_FORWARD))
     return map_rss_event(entry, source, today=now.date(), horizon=horizon, extracted_at=now.isoformat())
 
 
-def validate_event_entry(entry: Any, source: Mapping[str, Any]) -> tuple[bool, str]:
+def iter_mapped_entries(source: Mapping[str, Any]) -> list[MappedEntry]:
+    """Lit le flux et tire une seule fois l'événement de chaque entrée.
+
+    La validation puis la construction de l'article (appelées l'une après
+    l'autre par le moteur RSS) réutilisent ce résultat au lieu de refaire
+    la conversion.
+
+    Parameters
+    ----------
+    source : Mapping[str, Any]
+        Entrée de `rss_sources` (nom, url, fenêtre...).
+
+    Returns
+    -------
+    list[MappedEntry]
+        Pour chaque entrée : l'entrée, l'événement (ou None) et le motif du
+        rejet (« entree_invalide » si l'entrée n'est pas un dictionnaire).
+    """
+
+    # Même instant de référence pour toutes les entrées du flux
+    now = datetime.now(PARIS)
+    mapped_entries: list[MappedEntry] = []
+
+    for entry in iter_event_entries(source):
+        if isinstance(entry, Mapping):
+            event, reason = map_entry(entry, source, now)
+        else:
+            event, reason = None, "entree_invalide"
+        mapped_entries.append((entry, event, reason))
+
+    return mapped_entries
+
+
+def validate_event_entry(item: Any, source: Mapping[str, Any]) -> tuple[bool, str]:
     """Rejette les entrées sans date d'événement, sans titre... (motif compté).
 
     Une entrée hors fenêtre (passée, trop lointaine) est écartée sous le motif
@@ -93,8 +137,8 @@ def validate_event_entry(entry: Any, source: Mapping[str, Any]) -> tuple[bool, s
 
     Parameters
     ----------
-    entry : Any
-        Entrée du flux.
+    item : Any
+        Entrée convertie par `iter_mapped_entries` (entrée, événement, motif).
     source : Mapping[str, Any]
         Entrée de `rss_sources`.
 
@@ -104,21 +148,21 @@ def validate_event_entry(entry: Any, source: Mapping[str, Any]) -> tuple[bool, s
         Vrai et motif vide si l'entrée donne un événement, sinon faux et le motif.
     """
 
-    if not isinstance(entry, Mapping):
+    if not isinstance(item, tuple) or len(item) != 3:
         return False, "entree_invalide"
-    event, reason = map_entry(entry, source)
+    _, event, reason = item
     if event is None:
         return False, reason or "hors_fenetre"
     return True, ""
 
 
-def build_event_rss_article(entry: Mapping[str, Any], source: Mapping[str, Any]) -> dict[str, Any]:
+def build_event_rss_article(item: MappedEntry, source: Mapping[str, Any]) -> dict[str, Any]:
     """Transforme une entrée validée en « article » du moteur, événement inclus.
 
     Parameters
     ----------
-    entry : Mapping[str, Any]
-        Entrée du flux, déjà validée.
+    item : MappedEntry
+        Entrée convertie par `iter_mapped_entries`, déjà validée.
     source : Mapping[str, Any]
         Entrée de `rss_sources` (nom, identifiant, rôle...).
 
@@ -126,10 +170,10 @@ def build_event_rss_article(entry: Mapping[str, Any], source: Mapping[str, Any])
     -------
     dict[str, Any]
         Article standard, l'événement dans `metadata["event"]` ; dictionnaire
-        vide si l'entrée ne donne plus d'événement.
+        vide si l'entrée ne donne pas d'événement.
     """
 
-    event, _ = map_entry(entry, source)
+    _, event, _ = item
     if event is None:
         return {}
     return build_standard_article(
@@ -148,7 +192,7 @@ def build_event_rss_article(entry: Mapping[str, Any], source: Mapping[str, Any])
 
 
 EVENT_RSS_ADAPTER = RssAdapter(
-    iter_items=iter_event_entries,
+    iter_items=iter_mapped_entries,
     build_article=build_event_rss_article,
     validate_item=validate_event_entry,
     default_name="Flux RSS d'agenda",

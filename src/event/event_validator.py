@@ -77,6 +77,7 @@ def conform_to_schema(event: Event) -> Event:
         event.attendance = "sur_place"
     return event
 
+
 # Mots qui, dans la catégorie ou les mots-clés, signalent autre chose qu'une
 # sortie. Audit du 14/10/2026 : 6 « Opportunité d'emploi » sur 82 événements.
 NOT_AN_OUTING_WORDS = ("emploi", "recrutement", "job dating", "offre d emploi")

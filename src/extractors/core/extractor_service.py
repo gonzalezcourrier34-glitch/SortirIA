@@ -11,13 +11,13 @@ from __future__ import annotations
 from src.extractors.core.extractor_configuration import (
     build_source_metadata,
     load_extractor_configuration,
-    normalize_source_configuration
+    normalize_source_configuration,
 )
 from src.extractors.core.extractor_executor import (
     execute_configured_extractor,
     execute_configured_sources_extractor,
     execute_extractor_call,
-    execute_loaded_extractor
+    execute_loaded_extractor,
 )
 from src.extractors.core.extractor_models import (
     ConfigurationType,
@@ -26,7 +26,7 @@ from src.extractors.core.extractor_models import (
     SourceCollection,
     SourceCollectionLoader,
     SourceConfiguration,
-    SourceLoader
+    SourceLoader,
 )
 from src.extractors.core.extractor_results import (
     ArticleExtractor,
@@ -41,7 +41,7 @@ from src.extractors.core.extractor_results import (
     build_robots_denied_result,
     build_success_result,
     normalize_extracted_articles,
-    normalize_extractor_result
+    normalize_extractor_result,
 )
 from src.extractors.core.extractor_runner import run_extractor
 

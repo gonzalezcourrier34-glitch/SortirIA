@@ -43,6 +43,7 @@ from src.extractors.apis.api_extractor import (
     extract_api_from_source,
     fetch_json_object,
     filter_mapping_items,
+    record_api_request_error,
 )
 from src.extractors.core.extractor_results import ExtractorResult
 from src.logger import get_logger
@@ -286,8 +287,8 @@ def iter_openagenda_items(
     ApiAuthenticationError
         Si la clé OpenAgenda manque (voir `get_api_key`).
     ApiExtractionStoppedError
-        La première erreur d'agenda rencontrée, relevée une fois tous les
-        agendas lus (le moteur en fait une réussite partielle).
+        La première erreur d'agenda, relevée une fois tous les agendas lus
+        si aucun événement n'a été donné (le moteur en fait un échec).
     """
 
     maximum = parse_non_negative_integer(maximum_articles, 0)
@@ -304,9 +305,10 @@ def iter_openagenda_items(
     outside_area = 0
     kept_by_agenda: Counter[str] = Counter()
     # Un agenda supprimé, privé ou en quota (404, 403, 429) ne doit pas priver la
-    # nuit des agendas suivants (15/10/2026) : l'erreur est gardée et relevée à
-    # la fin, pour que l'extracteur soit noté « réussite partielle » et que
-    # l'agent garde les événements non relus.
+    # nuit des agendas suivants (15/10/2026) : l'erreur est enregistrée tout de
+    # suite comme erreur de requête, pour que l'extracteur soit noté « réussite
+    # partielle » (même si le plafond d'articles arrête la lecture avant la fin)
+    # et que l'agent garde les événements non relus.
     agenda_errors: list[Exception] = []
     # Parcourir agenda par agenda, page par page, en filtrant par zone
     try:
@@ -318,6 +320,7 @@ def iter_openagenda_items(
                 except ApiExtractionStoppedError as error:
                     logger.warning("Agenda %s : lecture interrompue (%s) ; on passe au suivant.", agenda_uid, error)
                     agenda_errors.append(error)
+                    record_api_request_error(error.reason)
                     break
                 for index, item in enumerate(events):
                     # Un même événement peut être partagé par plusieurs agendas.
@@ -342,8 +345,8 @@ def iter_openagenda_items(
                 "Agenda %s : %s événement(s) lu(s), %s dans la zone.",
                 agenda_uid, len(seen_uids) - read_before, kept_by_agenda[agenda_uid] - kept_before,
             )
-        # Relever la première erreur d'agenda pour signaler la réussite partielle
-        if agenda_errors:
+        # Sans aucun événement, relever la première erreur d'agenda (échec)
+        if agenda_errors and not yielded:
             raise agenda_errors[0]
     finally:
         # Journaliser le bilan même si l'itération est interrompue

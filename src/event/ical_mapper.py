@@ -31,6 +31,7 @@ from datetime import UTC, date, datetime, time, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from src.event.event_audiences import infer_audiences
 from src.event.event_normalizer import (
     PARIS,
     build_dedup_key,
@@ -41,7 +42,7 @@ from src.event.event_normalizer import (
     to_iso,
 )
 from src.event.event_schema import Event
-from src.event.openagenda_mapper import infer_audiences
+from src.utils.geo_utils import to_float
 from src.utils.url_utils import is_valid_http_url
 
 WEEKDAYS = {"MO": 0, "TU": 1, "WE": 2, "TH": 3, "FR": 4, "SA": 5, "SU": 6}
@@ -400,25 +401,6 @@ def get_occurrences(
 # Conversion
 # ---------------------------------------------------------------------------
 
-def _to_float(value: Any) -> float | None:
-    """Convertir une valeur en nombre décimal, ou None si vide ou illisible.
-
-    Parameters
-    ----------
-    value : Any
-        Valeur à convertir (texte, nombre, None).
-
-    Returns
-    -------
-    float or None
-        Le nombre, ou None.
-    """
-    try:
-        return float(value) if value not in (None, "") else None
-    except (TypeError, ValueError):
-        return None
-
-
 def map_ical_event(
     vevent: Mapping[str, Any],
     occurrence: Mapping[str, Any],
@@ -462,10 +444,10 @@ def map_ical_event(
         venue_name = clean_text(first_part) or venue_name
         address = clean_text(rest) or address
     city = normalize_city(source.get("city"))
-    latitude, longitude = _to_float(source.get("latitude")), _to_float(source.get("longitude"))
+    latitude, longitude = to_float(source.get("latitude")), to_float(source.get("longitude"))
     if vevent.get("GEO"):
         lat_text, _, lon_text = vevent["GEO"][1].partition(";")
-        latitude, longitude = _to_float(lat_text) or latitude, _to_float(lon_text) or longitude
+        latitude, longitude = to_float(lat_text) or latitude, to_float(lon_text) or longitude
 
     # Lien (sinon le site de la source), statut, catégorie et prix
     url = _value(vevent, "URL")

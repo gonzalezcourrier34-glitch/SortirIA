@@ -13,7 +13,6 @@ import pytest
 
 import src.article.processing.article_deduplicator as module
 
-
 # Fixtures
 
 

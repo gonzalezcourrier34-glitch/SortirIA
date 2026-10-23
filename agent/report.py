@@ -16,11 +16,12 @@ alertes, comme la ligne écrite dans `collect_runs`.
 
 from __future__ import annotations
 
-import json
 import os
 from collections.abc import Mapping
 from typing import Any
 
+from agent.proposals import describe_action
+from agent.search_learning import subject_words
 from agent.state import STATUS_FAILED, STATUS_PARTIAL, STATUS_SUCCESS
 from src.logger import get_logger
 from src.utils.mail_utils import EmailSettings, send_email
@@ -204,8 +205,6 @@ def search_report_lines(gaps: Mapping[str, Any]) -> list[str]:
              f"- questions posées : {total}",
              f"- sans réponse exacte : {not_exact} ({not_exact / total:.0%})",
              f"- sans aucune proposition sur le sujet : {gaps.get('no_answer', 0)}"]
-    from agent.search_learning import subject_words
-
     # Mots inconnus de la base (sans les mots vides), puis questions sans réponse exacte
     words = subject_words(gaps.get("unknown_words") or [])
     if words:
@@ -340,35 +339,3 @@ def feedback_lines(report: Mapping[str, Any]) -> list[str]:
                          f"« {comment} » (signalé : {flagged})")
         lines.append("  Refusé à tort ? uv run python -m agent.commentaires --publier N")
     return lines
-
-
-def describe_action(proposal: Mapping[str, Any]) -> str:
-    """Une proposition en une ligne (mail de bilan et `agent.proposals`).
-
-    Parameters
-    ----------
-    proposal : Mapping[str, Any]
-        La proposition (`source_id`, `action` en dictionnaire ou en JSON).
-
-    Returns
-    -------
-    str
-        La description selon le type d'action ; par défaut, un remplacement d'adresse.
-    """
-
-    action = proposal.get("action") or {}
-    if isinstance(action, str):
-        action = json.loads(action)
-    source = proposal.get("source_id") or "?"
-    if action.get("type") == "ajouter_synonyme":
-        return (f"recherche : « {action.get('word')} » cherchera aussi « {action.get('target')} » "
-                f"({action.get('nature', 'synonyme')}, cherché {action.get('times', '?')} fois sans réponse)")
-    if action.get("type") == "ajouter_agenda":
-        wanted = f" ; cherché : « {action['word']} »" if action.get("word") else ""
-        return (f"{source} : ajouter l'agenda {action.get('new')} ({action.get('events')} événement(s) "
-                f"dans la zone{wanted}) - {action.get('url')}")
-    if action.get("type") == "valider_document_partenaire":
-        preview = "".join(f"\n      - {line}" for line in action.get("preview") or [])
-        return (f"partenaire {action.get('partner')} : importer {action.get('file')} "
-                f"({action.get('events')} séance(s) lue(s) par Mistral){preview}")
-    return f"{source} : remplacer {action.get('old')} par {action.get('new')}"

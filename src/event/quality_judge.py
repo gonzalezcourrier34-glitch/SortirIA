@@ -31,6 +31,8 @@ from pydantic import BaseModel, ValidationError
 
 from src.event.event_enrichment import CATEGORIES
 
+# Version de la consigne du juge, écrite dans le bilan (`summarize`) : un score
+# ne se compare qu'entre nuits jugées avec la même consigne.
 JUDGE_VERSION = "2026-10-16.1"   # 16/10 : le juge connaît la liste fermée des catégories
 DEFAULT_JUDGE_MODEL = "mistral-medium-latest"
 SAMPLE_SIZE = 20
@@ -177,8 +179,9 @@ def summarize(verdicts: Mapping[str, Verdict], rows: Sequence[Mapping[str, Any]]
     -------
     dict[str, Any]
         `checked`, `score` (moyenne arrondie au millième, None sans verdict),
-        le taux de réussite de chaque question de `CHECKS`, et au plus cinq
-        problèmes « titre : explication ».
+        et, s'il y a des verdicts : `version` (`JUDGE_VERSION`), le taux de
+        réussite de chaque question de `CHECKS`, et au plus cinq problèmes
+        « titre : explication ».
     """
 
     if not verdicts:
@@ -189,6 +192,7 @@ def summarize(verdicts: Mapping[str, Verdict], rows: Sequence[Mapping[str, Any]]
     result: dict[str, Any] = {
         "checked": len(values),
         "score": round(sum(verdict.score for verdict in values) / len(values), 3),
+        "version": JUDGE_VERSION,
     }
     for check in CHECKS:
         result[check] = round(sum(bool(getattr(verdict, check)) for verdict in values) / len(values), 3)

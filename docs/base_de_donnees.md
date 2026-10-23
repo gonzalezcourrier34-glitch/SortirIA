@@ -10,7 +10,7 @@ Tout est rangé dans **un seul schéma, `sortiria`** : **13 tables** et
 - l'**agent de collecte**, qui l'écrit chaque nuit (`agent/`, avec
   `src/event/event_repository.py`) ;
 - la **recherche de l'interface**, qui lit les événements proposables et trace
-  chaque question (`app/search_service.py`) ;
+  chaque question (`app/search_service.py` et ses modules `app/search_*.py`) ;
 - **Grafana**, qui lit les tables de suivi (`monitoring/grafana/`).
 
 Cette page est la référence du schéma : chaque table, chaque colonne utile,
@@ -209,7 +209,8 @@ Les sources déclarées au départ :
 
 - **Écrite par** : `01_sources.sql` seulement.
 - **Lue par** : la vue `v_upcoming_events` (nom et attribution), la fiche
-  détaillée et la liste des sources de l'interface (`app/search_service.py`).
+  détaillée et la liste des sources de l'interface (`app/search_detail.py`,
+  `app/search_cards.py`).
 - **Conservation** : permanente.
 
 ### `partners`
@@ -235,7 +236,7 @@ base (RGPD).
   par l'agent avant l'upsert des événements, dans la même transaction.
 - **Lue par** : la vue `v_partner_ratings`, la rubrique « À ne pas manquer » et
   l'ordre des offres partenaires (`partner_rank` : 2 premium, 1 mis en avant,
-  0 sinon, dans `app/search_service.py`), Grafana.
+  0 sinon, dans `app/search_query.py` et `app/search_cards.py`), Grafana.
 - **Conservation** : permanente.
 
 ### `partner_imports`
@@ -274,7 +275,7 @@ d'ordre de grandeur, la base comptait **≈ 2 450 événements** au 16/10/2026.
 - **Lue par** : la vue `v_upcoming_events` (la recherche et l'interface) ; la
   table directement seulement pour la fiche d'un événement passé encore notable,
   « Vos sorties à noter », la notation et le vocabulaire des titres
-  (`app/search_service.py`, `src/event/event_repository.py`).
+  (`app/search_detail.py`, `app/search_query.py`, `src/event/event_repository.py`).
 - **Conservation** : tant que la source le renvoie, dans la limite des 3 mois
   et du plafond ; 7 jours après sa fin.
 
@@ -352,7 +353,7 @@ pas enrichi, ou après une modification du titre ou de la description.
 | `embedding_model` | `TEXT` | le modèle qui l'a calculé : un changement de modèle oblige à tout recalculer |
 
 La recherche plein texte n'a pas de colonne ni d'index : le document
-(`LEXICAL_DOCUMENT` dans `app/search_service.py` : titre compté deux fois,
+(`LEXICAL_DOCUMENT` dans `app/search_query.py` : titre compté deux fois,
 résumé, catégories, lieu, commune et début de la description, sans accents,
 dictionnaire `french`) est calculé à la volée sur les candidats.
 
@@ -390,7 +391,7 @@ et la matière première de Grafana.
 | `events_embedded`, `cost_usd`, `llm_usage` | `INTEGER`, `NUMERIC(10, 4)`, `JSONB` | le travail Mistral de la nuit : vecteurs calculés, coût estimé, tokens par modèle (`{modèle: {input, output}}`) |
 | `coverage` | `JSONB` | sorties par zone et par public sur 7 jours, lues en base (`{zone: {famille, soiree, ados, seniors}}` ; l'alerte porte sur famille et soirée) : la promesse du service, nuit après nuit |
 | `node_durations` | `JSONB` | secondes par nœud du graphe : où passe le temps |
-| `quality_score`, `quality` | `NUMERIC(4, 3)`, `JSONB` | le juge Mistral : score de 0 à 1 (`NULL` sans contrôle) et problèmes relevés |
+| `quality_score`, `quality` | `NUMERIC(4, 3)`, `JSONB` | le juge Mistral : score de 0 à 1 (`NULL` sans contrôle) et problèmes relevés ; depuis le 23/10/2026, `quality` porte aussi la version de la consigne du juge (champ `version`, `JUDGE_VERSION` de `src/event/quality_judge.py`) |
 | `alerts`, `failed_sources`, `message` | `TEXT[]`, `TEXT[]`, `TEXT` | ce que le mail a dit |
 | `prompt_version`, `mlflow_run_id` | `TEXT` | la consigne de lecture des PDF et le lien vers l'exécution MLflow : on peut relier une baisse de qualité à un changement de consigne |
 | `drift` | `JSONB` | rapport de dérive de la nuit (19/10/2026, `agent/drift.py`) : 7 derniers jours contre les 28 précédents, statut, PSI et niveau de chaque indicateur (questions, réponses, collecte) ; lu par Grafana (« Modèles et coûts », partie 06) |
@@ -398,7 +399,7 @@ et la matière première de Grafana.
 Index : `collect_runs_started_at_idx` (`started_at`), pour Grafana.
 
 - **Lue par** : `v_collect_health` (Grafana), `index_version`
-  (`app/search_service.py`).
+  (`app/search_cache.py`).
 - **Conservation** : 1 an (`purge_old_data`).
 
 ### `collect_run_sources`
@@ -504,7 +505,8 @@ Grafana. Aucune donnée personnelle (RGPD) : pas de compte, pas d'adresse IP.
 
 Index : `rag_requests_asked_at_idx` (`asked_at`), pour Grafana et la purge.
 
-- **Écrite par** : `run_search` (`LOG_SQL`, `app/search_service.py`). Le script
+- **Écrite par** : `run_search` (`app/search_service.py`), avec `LOG_SQL`
+  (`app/search_log.py`). Le script
   d'évaluation (`scripts/eval_recherche.py`) n'y écrit rien.
 - **Lue par** : `v_daily_quality`, `fetch_search_gaps` (bilan hebdomadaire de
   l'agent : questions sans réponse exacte, mots inconnus), Grafana (tableau
@@ -531,7 +533,7 @@ et par événement.
 
 Depuis le 16/10/2026, l'interface envoie l'avis sur la réponse entière
 (`POST /api/v1/reponses/{request_id}/avis`, `record_feedback` dans
-`app/search_service.py`) : seulement pour une réponse de moins d'un jour, et un
+`app/search_log.py`) : seulement pour une réponse de moins d'un jour, et un
 second clic remplace le premier.
 
 - **Lue par** : `v_daily_quality`, Grafana (part des avis positifs).
@@ -544,7 +546,7 @@ Mistral. Utilisé par la recherche de l'interface depuis le 15/10/2026.
 
 | Colonne | Type | Rôle, contrainte |
 | --- | --- | --- |
-| `cache_key` | `TEXT`, clé primaire | empreinte SHA-256 de la version de la consigne, de `index_version`, du jour (heure de Paris), de la question et du contexte normalisés, des cases cochées et des synonymes appris (`cache_key` dans `app/search_service.py`) |
+| `cache_key` | `TEXT`, clé primaire | empreinte SHA-256 de la version de la consigne, de `index_version`, du jour (heure de Paris), de la question et du contexte normalisés, des cases cochées et des synonymes appris (`cache_key` dans `app/search_cache.py`) |
 | `question_normalized`, `constraints` | `TEXT`, `JSONB` | la demande comprise |
 | `response` | `JSONB`, obligatoire | la réponse complète et sourcée, rejouée telle quelle |
 | `event_ids` | `TEXT[]` | les événements proposés |
@@ -556,7 +558,7 @@ Index : `query_cache_expires_at_idx` (`expires_at`), pour la lecture et la
 purge.
 
 - **Écrite et lue par** : `read_cache` et `write_cache`
-  (`app/search_service.py`) ; une erreur de cache ne bloque jamais la recherche.
+  (`app/search_cache.py`) ; une erreur de cache ne bloque jamais la recherche.
 - **Conservation** : jusqu'à `expires_at`, puis supprimée par la purge de la
   nuit.
 
@@ -582,7 +584,7 @@ recherche par préfixe (« photo » trouve « photograph », racine de
 - **Écrite par** : `sortiria.refresh_title_vocabulary()`, appelée par l'agent
   après chaque collecte (`refresh_title_vocabulary` dans
   `src/event/event_repository.py`).
-- **Lue par** : `known_subjects` (`app/search_service.py`) ; tant que la table
+- **Lue par** : `known_subjects` (`app/search_query.py`) ; tant que la table
   est vide, les titres sont lus directement.
 - **Conservation** : recalculée entièrement chaque nuit.
 
@@ -647,7 +649,7 @@ annulés) sont écrites à un seul endroit.
 
 | Vue | Ce qu'elle rend | Lue par | Règles qu'elle porte |
 | --- | --- | --- | --- |
-| `v_upcoming_events` | les colonnes de `events`, plus `source_name`, `source_attribution` (« Source : DATAtourisme (ADT34), mise à jour le 06/10/2026 ») et la note du lieu (`venue_rating`, `venue_rating_count`) | la recherche et l'interface (`app/search_service.py`), la couverture de la semaine (`fetch_weekly_coverage`), `v_coverage`, Grafana | source active ; statut ni annulé, ni reporté, ni déplacé en ligne ; pas uniquement en ligne ; pas passé (journée entière si l'heure est inconnue) ; début dans les 3 mois (une exposition déjà commencée reste visible jusqu'à sa fin) |
+| `v_upcoming_events` | les colonnes de `events`, plus `source_name`, `source_attribution` (« Source : DATAtourisme (ADT34), mise à jour le 06/10/2026 ») et la note du lieu (`venue_rating`, `venue_rating_count`) | la recherche et l'interface (`app/search_query.py`, `app/search_cards.py`, `app/search_detail.py`), la couverture de la semaine (`fetch_weekly_coverage`), `v_coverage`, Grafana | source active ; statut ni annulé, ni reporté, ni déplacé en ligne ; pas uniquement en ligne ; pas passé (journée entière si l'heure est inconnue) ; début dans les 3 mois (une exposition déjà commencée reste visible jusqu'à sa fin) ; « maintenant » vient de `sortiria.reference_now()` |
 | `v_venue_ratings` | par lieu (`city_key` = `normalize_city(city)`, `venue_key` = nom en minuscules) : nombre de notes, moyenne arrondie à 0,1, commentaires publiés, dernière note | `v_upcoming_events`, la fiche de l'interface, Grafana (lieux les mieux notés) | 3 notes au moins (`HAVING count(*) >= 3`) : une note isolée ne dit rien d'un lieu ; lieu non vide |
 | `v_partner_ratings` | par partenaire : nombre de notes, moyenne, notes basses (2 étoiles ou moins), dernière note | l'agent (alerte partenaire mal noté, `ratings_summary`), Grafana | — |
 | `v_coverage` | par zone (`event_zone` : commune puis GPS) : événements proposables, gratuits, famille, soirée, sans embedding | Grafana (promesse du service) | lit `v_upcoming_events` ; les zones et leurs communes recopient `areas` de `config/sources.yaml` : à modifier aux deux endroits |
@@ -669,12 +671,15 @@ indisponible), elle classe par mots et par date.
 | `sortiria.distance_km(lat1, lon1, lat2, lon2)` | `00_extensions.sql` | distance à vol d'oiseau (haversine), même calcul qu'en Python : la base filtre « à moins de 10 km de Sète » sans passer par Python |
 | `sortiria.normalize_city(city)` | `00_extensions.sql` | minuscules, sans accents ni ponctuation : « SÈTE » et « Sete » sont la même commune ; même règle que `normalize_for_comparison` (`src/event/event_normalizer.py`) ; utilisée par les vues, la recherche et les notes par lieu |
 | `sortiria.event_zone(latitude, longitude, city)` | `00_extensions.sql` | `montpellier` (31 communes de la Métropole), `bassin_de_thau` (14 communes de Sète agglopôle), sinon par distance aux centres (20 km de Montpellier, 15 km du bassin de Thau), sinon `sans_gps` ou `hors_zone` ; même règle que `zone_of` (`agent/watch.py`) |
+| `sortiria.reference_now()` | `05_views.sql` | « maintenant » des vues et de la recherche (23/10/2026) : le réglage de session `sortiria.maintenant` s'il existe, sinon `now()` ; utilisée par `v_upcoming_events` et le classement de « À ne pas manquer ». En production le réglage est absent. L'évaluation sur la base de test figée le règle sur l'instant de l'export (`freeze_clock`, `scripts/jeu_test_recherche.py`) |
 | `sortiria.title_lexemes(title)` | `07_vocabulary.sql` | `tsvector` français d'un titre, minuscules et sans accents : même normalisation que la recherche plein texte |
 | `sortiria.refresh_title_vocabulary()` | `07_vocabulary.sql` | vide puis recalcule `title_vocabulary` d'après les titres des sorties (`is_outing`) ; renvoie le nombre de racines |
 | `sortiria.purge_old_data(requests_days = 90, runs_days = 365)` | `06_retention.sql` | supprime les questions de plus de 90 jours (et leurs avis, en cascade), les entrées de cache expirées et les collectes de plus d'un an (leur détail en cascade ; les imports partenaires et les propositions sont détachés) ; renvoie `requests_deleted`, `cache_deleted`, `runs_deleted` |
 
-Les quatre premières sont `IMMUTABLE` ; `distance_km`, `normalize_city` et
-`event_zone` sont aussi `PARALLEL SAFE`. Les deux autres modifient des tables.
+`distance_km`, `normalize_city`, `event_zone` et `title_lexemes` sont
+`IMMUTABLE` ; les trois premières sont aussi `PARALLEL SAFE`. `reference_now`
+est `STABLE` et `PARALLEL SAFE` : elle lit l'heure et un réglage de session.
+Les deux dernières modifient des tables.
 
 Les suppressions d'événements ne sont pas des fonctions SQL mais des requêtes
 de `src/event/event_repository.py` (`DELETE_WITH_STATS_SQL`, avec les

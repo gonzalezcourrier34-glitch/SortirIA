@@ -11,7 +11,7 @@ from typing import Any
 from src.article.schema.article_schema import (
     ARTICLE_FIELD_ALIASES,
     ARTICLE_TEXT_FIELDS,
-    STANDARD_ARTICLE_FIELDS
+    STANDARD_ARTICLE_FIELDS,
 )
 from src.logger import get_logger
 from src.utils.path_utils import normalize_source_name

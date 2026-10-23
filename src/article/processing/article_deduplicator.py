@@ -9,11 +9,7 @@ import hashlib
 from collections.abc import Mapping
 from typing import Any
 
-from src.article.article_utils import (
-    get_article_role,
-    get_article_source,
-    get_article_url
-)
+from src.article.article_utils import get_article_role, get_article_source, get_article_url
 from src.logger import get_logger
 from src.utils.url_utils import canonicalize_url
 from src.utils.value_utils import normalize_whitespace

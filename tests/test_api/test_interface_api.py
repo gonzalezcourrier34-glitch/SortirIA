@@ -10,7 +10,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from app import interface_api, search_service
+from app import interface_api, search_cards, search_detail, search_log, search_service
 
 
 @pytest.fixture
@@ -29,14 +29,15 @@ def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
         yield {"event": "completed", "result": {"answer": f"Pour : {question}", "events": []}}
 
     monkeypatch.setattr(search_service, "run_search", fake_search)
-    monkeypatch.setattr(search_service, "event_detail",
+    monkeypatch.setattr(search_detail, "event_detail",
                         lambda connection, event_id, visitor_key=None:
                         ({"event_id": event_id, "visitor": visitor_key} if event_id == "e1" else None))
-    monkeypatch.setattr(search_service, "partner_highlights", lambda connection, limit: [{"limit": limit}])
-    monkeypatch.setattr(search_service, "active_sources", lambda connection: [{"name": "OpenAgenda", "events": 3}])
-    monkeypatch.setattr(search_service, "collect_health",
+    monkeypatch.setattr(search_cards, "partner_highlights", lambda connection, limit: [{"limit": limit}])
+    monkeypatch.setattr(search_cards, "active_sources", lambda connection: [{"name": "OpenAgenda", "events": 3}])
+    monkeypatch.setattr(search_log, "database_status", lambda connection: "ok")
+    monkeypatch.setattr(search_log, "collect_health",
                         lambda connection: {"statut": "success", "heures_depuis_reussite": 14.2})
-    monkeypatch.setattr(search_service, "events_to_rate",
+    monkeypatch.setattr(search_detail, "events_to_rate",
                         lambda connection, ids, session: [{"event_id": i} for i in ids if i == "hier"])
 
     def fake_rating(connection, event_id, session, stars, comment, **kwargs):
@@ -45,7 +46,7 @@ def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
         return {"status": "enregistree", "event_id": event_id, "rating_id": 1,
                 "comment_status": "publie" if comment else "aucun"}
 
-    monkeypatch.setattr(search_service, "record_feedback",
+    monkeypatch.setattr(search_log, "record_feedback",
                         lambda connection, request_id, rating, comment="": request_id == 7)
 
     import src.event.event_ratings as ratings
@@ -144,3 +145,12 @@ def test_answer_feedback_route(client: TestClient) -> None:
 def test_health_route_reports_the_last_collect(client: TestClient) -> None:
     assert client.get("/api/v1/sante").json() == {
         "api": "ok", "base": "ok", "collecte": {"statut": "success", "heures_depuis_reussite": 14.2}}
+
+
+def test_health_route_asks_the_database(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    """23/10/2026 : « base » était écrit en dur ; il vient maintenant d'un vrai SELECT 1."""
+
+    asked: list[Any] = []
+    monkeypatch.setattr(search_log, "database_status", lambda connection: asked.append(connection) or "erreur")
+    assert client.get("/api/v1/sante").json()["base"] == "erreur"
+    assert len(asked) == 1

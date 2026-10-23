@@ -17,6 +17,13 @@ SortirIA. Dans le code, les fonctions longues sont découpées par des commentai
 | [`app.query_understanding`](app/query_understanding.md) | Comprendre la question de l'utilisateur avant de chercher. |
 | [`app.rate_limit`](app/rate_limit.md) | Limite de débit des routes publiques (16/10/2026). |
 | [`app.ratings_api`](app/ratings_api.md) | Routes de l'API pour les notes des clients sur les événements. |
+| [`app.search_answer`](app/search_answer.md) | Rédaction de la réponse par Mistral : consigne, appel, lecture, repli. |
+| [`app.search_cache`](app/search_cache.md) | Cache des réponses : une même demande, le même jour, sur la même base. |
+| [`app.search_cards`](app/search_cards.md) | Mise en forme des événements pour l'interface : cartes, dates, prix, lieux. |
+| [`app.search_detail`](app/search_detail.md) | Détail d'un événement et avis des visiteurs sur son lieu. |
+| [`app.search_filters`](app/search_filters.md) | Contraintes cochées dans l'interface : public, zone, période, gratuit. |
+| [`app.search_log`](app/search_log.md) | Suivi de la recherche : journal des demandes, pouces, santé de la collecte. |
+| [`app.search_query`](app/search_query.md) | Requête SQL de la recherche : candidats, filtres, classement, élargissement. |
 | [`app.search_service`](app/search_service.md) | Recherche d'événements pour l'interface : question, filtres, réponse sourcée. |
 | [`app.security`](app/security.md) | Gestion de la sécurité de l'API. |
 
@@ -49,6 +56,7 @@ SortirIA. Dans le code, les fonctions longues sont découpées par des commentai
 | [`src.event`](src/event/__init__.md) | Modèle événement de SortirIA. |
 | [`src.event.datatourisme_mapper`](src/event/datatourisme_mapper.md) | Conversion d'un événement de l'API DATAtourisme en `Event` SortirIA. |
 | [`src.event.document_mapper`](src/event/document_mapper.md) | Lecture d'un programme (PDF) par Mistral, puis conversion en `Event`. |
+| [`src.event.event_audiences`](src/event/event_audiences.md) | Publics d'un événement (« famille », « soiree ») déduits par des règles simples. |
 | [`src.event.event_deduplicator`](src/event/event_deduplicator.md) | Fusion d'un même événement annoncé par plusieurs sources. |
 | [`src.event.event_embedding`](src/event/event_embedding.md) | Préparation des embeddings des événements. |
 | [`src.event.event_enrichment`](src/event/event_enrichment.md) | Enrichissement des événements par Mistral : catégorie unifiée, publics, résumé. |

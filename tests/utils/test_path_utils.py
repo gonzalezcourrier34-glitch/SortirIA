@@ -19,9 +19,8 @@ from src.utils.path_utils import (
     normalize_unicode,
     protect_windows_reserved_name,
     truncate_filename,
-    truncate_name
+    truncate_name,
 )
-
 
 # Normalisation Unicode
 

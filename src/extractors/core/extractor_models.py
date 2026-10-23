@@ -15,9 +15,9 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, TypeVar
 
 from config.constants import (
-    EXTRACTOR_STATUSES,
     EXTRACTOR_STATUS_PARTIAL_SUCCESS,
     EXTRACTOR_STATUS_SUCCESS,
+    EXTRACTOR_STATUSES,
     SOURCE_TYPES,
 )
 

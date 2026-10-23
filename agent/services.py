@@ -337,7 +337,11 @@ def pending_partner_document(path: Path, partner: Mapping[str, Any]) -> dict[str
         rejets, aperçu des cinq premières séances ; None s'il n'y a rien à valider.
     """
 
-    from src.extractors.datasets.source.partner_documents import cached_rows, file_sha256, is_approved
+    from src.extractors.datasets.source.partner_documents import (
+        cached_rows,
+        file_sha256,
+        is_approved,
+    )
     from src.extractors.datasets.source.partner_extractor import read_partner_file
 
     if is_approved(path) or cached_rows(path) is None:
@@ -561,9 +565,11 @@ def find_agendas_for_words(words: Sequence[str]) -> dict[str, dict[str, dict[str
     found: dict[str, dict[str, dict[str, Any]]] = {}
     for word in words:
         for uid in agendas[:MAX_AGENDAS_PER_WORD]:
+            # Un agenda privé ou en erreur est journalisé et n'arrête pas la recherche
             try:
                 events = fetch_agenda_page({**source, "search_text": word}, uid, api_key, 0, 50)
-            except Exception:  # un agenda privé ou en erreur n'arrête pas la recherche
+            except Exception as error:  # noqa: BLE001  résilience, erreur journalisée
+                logger.warning("Agenda %s illisible pour « %s », passé (%s).", uid, word, error)
                 continue
             titles = [pick_localized(get_path(item, ("title",)), "fr") for item in events if is_in_area(item, source)]
             titles = [str(title) for title in titles if title]
@@ -586,7 +592,7 @@ def known_title_words(words: Sequence[str]) -> set[str]:
         Ceux qui apparaissent dans au moins un titre.
     """
 
-    from app.search_service import known_subjects
+    from app.search_query import known_subjects
 
     with connect_postgres() as connection:
         return known_subjects(connection, list(words))

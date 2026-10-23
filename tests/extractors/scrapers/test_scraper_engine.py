@@ -17,7 +17,6 @@ from src.extractors.scrapers import scraper_engine as module
 from src.extractors.scrapers.scraper_adapter import ScraperAdapter
 from src.extractors.scrapers.scraper_http_utils import ScraperPageError
 
-
 # Fabriques
 
 def iter_items(

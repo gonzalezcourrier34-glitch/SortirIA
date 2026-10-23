@@ -8,11 +8,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from config.constants import (
-    DEFAULT_DATASET_ROLE,
-    EMPTY_CATEGORY_VALUES,
-    LANGUAGE_MAPPING
-)
+from config.constants import DEFAULT_DATASET_ROLE, EMPTY_CATEGORY_VALUES, LANGUAGE_MAPPING
 from src.article.schema.article_schema import DATASET_ROLES, SUPPORTED_LANGUAGES
 from src.logger import get_logger
 from src.utils.value_utils import normalize_value

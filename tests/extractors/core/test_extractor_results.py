@@ -18,9 +18,8 @@ from config.constants import (
     EXTRACTOR_STATUS_FAILED,
     EXTRACTOR_STATUS_PARTIAL_SUCCESS,
     EXTRACTOR_STATUS_ROBOTS_DENIED,
-    EXTRACTOR_STATUS_SUCCESS
+    EXTRACTOR_STATUS_SUCCESS,
 )
-
 
 # Helpers
 
@@ -495,7 +494,7 @@ def test_extractor_result_rejects_invalid_duration(
     ]
 )
 def test_extractor_result_normalizes_duration(
-    value: int | float,
+    value: float,
     expected: float
 ) -> None:
     result = build_result(

@@ -26,6 +26,7 @@ from collections.abc import Mapping
 from datetime import date, datetime, time
 from typing import Any
 
+from src.event.event_audiences import infer_audiences
 from src.event.event_normalizer import (
     PARIS,
     build_dedup_key,
@@ -36,7 +37,7 @@ from src.event.event_normalizer import (
     to_iso,
 )
 from src.event.event_schema import Event
-from src.event.openagenda_mapper import infer_audiences
+from src.utils.geo_utils import to_float
 from src.utils.url_utils import is_valid_http_url
 
 # Types DATAtourisme trop généraux pour servir de catégorie.
@@ -152,28 +153,9 @@ def get_location(item: Mapping[str, Any]) -> dict[str, Any]:
         "address": clean_text(first(address.get("streetAddress"))),
         "city": normalize_city(city),
         "postal_code": clean_text(address.get("postalCode")),
-        "latitude": _to_float(geo.get("latitude")),
-        "longitude": _to_float(geo.get("longitude")),
+        "latitude": to_float(first(geo.get("latitude"))),
+        "longitude": to_float(first(geo.get("longitude"))),
     }
-
-
-def _to_float(value: Any) -> float | None:
-    """Convertit une valeur DATAtourisme (éventuellement en liste) en nombre.
-
-    Parameters
-    ----------
-    value : Any
-        Nombre, texte ou liste.
-
-    Returns
-    -------
-    float | None
-        Le nombre, ou None si la valeur est vide ou illisible.
-    """
-    try:
-        return float(first(value)) if first(value) not in (None, "") else None
-    except (TypeError, ValueError):
-        return None
 
 
 def get_price(item: Mapping[str, Any]) -> tuple[str, float | None, float | None, bool | None]:
@@ -196,7 +178,7 @@ def get_price(item: Mapping[str, Any]) -> tuple[str, float | None, float | None,
     maximums: list[float] = []
     for offer in item.get("offers") or []:
         for spec in (offer or {}).get("priceSpecification") or []:
-            low, high = _to_float(spec.get("minPrice")), _to_float(spec.get("maxPrice"))
+            low, high = to_float(first(spec.get("minPrice"))), to_float(first(spec.get("maxPrice")))
             if low is not None:
                 minimums.append(low)
             if high is not None:
@@ -233,8 +215,9 @@ def get_themes(item: Mapping[str, Any]) -> list[str]:
 def get_category(item: Mapping[str, Any]) -> str:
     """Catégorie : premier thème, sinon le type précis traduit (« Théâtre »).
 
-    Seul le premier type non générique est regardé : s'il n'a pas de libellé
-    dans `TYPE_LABELS`, la catégorie reste vide.
+    Les types non génériques sont essayés dans l'ordre : le premier qui a un
+    libellé dans `TYPE_LABELS` donne la catégorie (un type sans libellé est
+    sauté au lieu de laisser la catégorie vide).
 
     Parameters
     ----------
@@ -251,8 +234,8 @@ def get_category(item: Mapping[str, Any]) -> str:
     if themes:
         return themes[0]
     for kind in item.get("type") or []:
-        if kind not in GENERIC_TYPES:
-            return TYPE_LABELS.get(kind, "")
+        if kind not in GENERIC_TYPES and kind in TYPE_LABELS:
+            return TYPE_LABELS[kind]
     return ""
 
 

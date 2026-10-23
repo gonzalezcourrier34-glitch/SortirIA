@@ -22,12 +22,11 @@ from config.constants import (
     RSS_ERROR_MAINTENANCE,
     RSS_ERROR_RATE_LIMITED,
     RSS_ERROR_SERVER,
-    SOURCE_TYPE_RSS
+    SOURCE_TYPE_RSS,
 )
 from src.extractors.core.extractor_results import ExtractorResult
 from src.extractors.rss import rss_engine as module
 from src.extractors.rss.rss_adapter import RssAdapter
-
 
 # Fabriques
 
@@ -1359,6 +1358,21 @@ def test_build_failed_source_result_from_unexpected_error() -> None:
     }
 
 
+def test_build_failed_source_result_does_not_record_current_errors() -> None:
+    token = module.reset_rss_request_errors()
+
+    try:
+        module.build_failed_source_result(
+            source_name="Flux RSS",
+            error=ValueError("Configuration invalide")
+        )
+
+        # L'échec reste dans le résultat, hors des erreurs RSS courantes.
+        assert module.get_rss_request_errors() == []
+    finally:
+        module._RSS_REQUEST_ERRORS.reset(token)
+
+
 # Extraction d'un lot
 
 def test_extract_rss_sources_requires_adapter() -> None:
@@ -1399,7 +1413,7 @@ def test_extract_rss_sources_handles_invalid_source(
 ) -> None:
     monkeypatch.setattr(
         module,
-        "record_rss_request_error",
+        "get_rss_error_message",
         lambda error: "Configuration invalide"
     )
 

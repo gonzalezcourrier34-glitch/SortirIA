@@ -8,7 +8,6 @@ from __future__ import annotations
 import math
 from typing import Any
 
-
 # Valeurs booléennes reconnues
 
 TRUE_VALUES: frozenset[str] = frozenset({
@@ -58,7 +57,7 @@ def parse_boolean(value: Any, default: bool = False) -> bool:
         return default
 
     # Nombre : seuls 0 et 1 sont acceptés
-    if isinstance(value, (int, float)) and not isinstance(value, bool):
+    if isinstance(value, (int, float)):
         try:
             numeric_value = float(value)
         except (TypeError, ValueError, OverflowError):

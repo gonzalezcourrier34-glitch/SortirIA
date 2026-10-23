@@ -111,8 +111,9 @@ def test_text_stat_panels_name_their_column() -> None:
 def test_collect_health_on_postgresql(db: Any) -> None:
     """Route /api/v1/sante : âge de la dernière collecte réussie, statut de la dernière."""
 
-    from app.search_service import collect_health
+    from app.search_log import collect_health, database_status
 
+    assert database_status(db) == "ok"                       # vrai SELECT 1 (23/10/2026)
     assert collect_health(db) == {"statut": None, "heures_depuis_reussite": None}
     with db.cursor() as cursor:
         cursor.execute("INSERT INTO sortiria.collect_runs (status, started_at) VALUES "

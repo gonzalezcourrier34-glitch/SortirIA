@@ -12,7 +12,6 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-
 # Racine du projet
 BASE_DIR = Path(__file__).resolve().parent.parent
 

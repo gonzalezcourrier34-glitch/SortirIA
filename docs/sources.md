@@ -326,7 +326,7 @@ après l'ouverture du service : les notes des visiteurs sont attachées à
 l'identifiant.
 
 Les **publics** `famille` et `soiree` viennent d'abord de règles simples
-(`openagenda_mapper.infer_audiences`) : famille si l'âge maximal est de
+(`event_audiences.infer_audiences`, `src/event/event_audiences.py`) : famille si l'âge maximal est de
 12 ans ou moins, ou si un mot comme « jeune public », « enfants », « conte »
 apparaît, jamais si l'âge minimal est de 18 ans ; soirée si l'événement
 commence à 21 h ou plus tard, ou si un mot comme « soirée », « DJ », « club »

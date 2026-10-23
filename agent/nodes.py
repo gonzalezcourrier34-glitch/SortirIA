@@ -46,7 +46,7 @@ EMBEDDING_BATCH_SIZE = 64
 # seuls les nouveaux passent), par lots de 15 (une réponse JSON lisible).
 MAX_ENRICHMENTS_PER_RUN = 3000
 ENRICHMENT_BATCH_SIZE = 15
-MAX_EMBEDDING_FAILURES = 3      # lots d'embeddings en échec avant d'abandonner la nuit
+MAX_EMBEDDING_FAILURES = 3      # lots d'embeddings en échec de suite avant d'abandonner la nuit
 
 
 def get_services(config: RunnableConfig) -> CollectionServices:
@@ -518,8 +518,9 @@ def embed_missing(connection: Any, services: CollectionServices) -> tuple[int, i
     15/10/2026, l'exception remontait, annulait toute la transaction de la nuit
     (événements, enrichissements payés) et l'agent s'arrêtait sans bilan.
 
-    Après `MAX_EMBEDDING_FAILURES` lots en échec (au total sur la nuit), on
-    arrête pour cette nuit.
+    Après `MAX_EMBEDDING_FAILURES` lots en échec **consécutifs**, on arrête
+    pour cette nuit (Mistral est sans doute indisponible) ; un lot réussi remet
+    le compte à zéro.
 
     Parameters
     ----------
@@ -535,7 +536,7 @@ def embed_missing(connection: Any, services: CollectionServices) -> tuple[int, i
     """
 
     rows = repository.fetch_events_missing_embedding(connection, limit=MAX_EMBEDDINGS_PER_RUN)
-    total, tokens, failed = 0, 0, 0
+    total, tokens, failed = 0, 0, 0   # failed : lots en échec consécutifs
     for start in range(0, len(rows), EMBEDDING_BATCH_SIZE):
         # Calculer les vecteurs du lot ; abandonner après trop d'échecs
         batch = rows[start:start + EMBEDDING_BATCH_SIZE]
@@ -550,7 +551,8 @@ def embed_missing(connection: Any, services: CollectionServices) -> tuple[int, i
                 logger.error("Embeddings : %s lots en échec de suite, on arrête pour cette nuit.", failed)
                 break
             continue
-        # Compter les tokens et enregistrer les vecteurs
+        # Lot réussi : remettre le compte à zéro, compter les tokens, enregistrer
+        failed = 0
         tokens += watch.estimate_tokens(texts)
         total += repository.update_embeddings(
             connection,

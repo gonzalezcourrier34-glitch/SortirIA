@@ -80,7 +80,8 @@ def print_search_report(days: int = 7, learn: bool = False) -> None:
 
     from datetime import datetime
 
-    from agent.report import describe_action, search_report_lines
+    from agent.proposals import describe_action
+    from agent.report import search_report_lines
     from agent.services import connect_postgres, learn_from_week
     from src.event import event_repository as repository
     from src.event.event_normalizer import PARIS

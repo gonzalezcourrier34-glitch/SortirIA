@@ -14,14 +14,7 @@ from __future__ import annotations
 import ipaddress
 import re
 from typing import Any
-from urllib.parse import (
-    ParseResult,
-    parse_qsl,
-    urlencode,
-    urlparse,
-    urlunparse
-)
-
+from urllib.parse import ParseResult, parse_qsl, urlencode, urlparse, urlunparse
 
 # Schémas autorisés
 

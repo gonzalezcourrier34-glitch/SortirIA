@@ -12,12 +12,16 @@ from urllib.parse import urljoin, urlsplit
 
 import httpx
 
-from src.extractors.scrapers.scraper_http_utils import ScraperPageError, get_html, get_scraper_http_options
+from src.extractors.scrapers.scraper_http_utils import (
+    ScraperPageError,
+    get_html,
+    get_scraper_http_options,
+)
 from src.logger import get_logger
 from src.robot.robots_utils import is_url_allowed_by_robots
-from src.utils.value_utils import normalize_value 
 from src.utils.parsing_utils import parse_boolean
 from src.utils.url_utils import canonicalize_url, is_valid_http_url
+from src.utils.value_utils import normalize_value
 
 logger = get_logger(__name__)
 

@@ -119,6 +119,13 @@ def test_long_exhibition_without_time() -> None:
     assert get_category(item) == "Exposition"
 
 
+def test_category_skips_a_precise_type_without_label() -> None:
+    # « ArtsEvent » n'a pas de libellé : on passe au type suivant au lieu de rester vide.
+    item = make_item(hasTheme=[], type=["Event", "ArtsEvent", "Concert"])
+    assert get_category(item) == "Concert"
+    assert get_category(make_item(hasTheme=[], type=["Event", "ArtsEvent"])) == ""
+
+
 def test_family_word_in_description_does_not_make_a_family_event() -> None:
     item = make_item(hasDescription=[{"description": {"@fr": "Un drame familial."}, "shortDescription": {"@fr": "drame familial"}}])
     assert map_datatourisme_occurrences(item)[0].audiences == []

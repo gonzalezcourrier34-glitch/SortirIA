@@ -23,9 +23,6 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
-# Champs sans lesquels un événement ne sert à rien à l'utilisateur.
-REQUIRED_EVENT_FIELDS: tuple[str, ...] = ("title", "start_at", "url")
-
 
 @dataclass(slots=True)
 class Event:

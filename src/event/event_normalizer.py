@@ -187,7 +187,8 @@ def parse_event_datetime(value: Any) -> datetime | None:
         if not text:
             return None
         try:
-            parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+            # Python 3.12 lit directement le suffixe « Z » (UTC).
+            parsed = datetime.fromisoformat(text)
         except ValueError:
             return None
     if parsed.tzinfo is None:

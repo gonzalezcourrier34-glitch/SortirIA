@@ -78,25 +78,6 @@ ARTICLE_URL_FIELDS: tuple[str, ...] = (
 
 # Valeurs métier
 
-ARTICLE_CATEGORIES: frozenset[str] = frozenset({
-    "general",
-    "international",
-    "world",
-    "nation",
-    "politics",
-    "business",
-    "economy",
-    "technology",
-    "science",
-    "health",
-    "environment",
-    "education",
-    "crime",
-    "entertainment",
-    "sports",
-    "social"
-})
-
 SUPPORTED_LANGUAGES: frozenset[str] = frozenset({
     "fr",
     "en"

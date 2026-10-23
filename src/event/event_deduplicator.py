@@ -15,6 +15,7 @@ import re
 from collections import defaultdict
 from collections.abc import Iterable
 from datetime import datetime
+from typing import Any
 
 from src.event.event_normalizer import normalize_for_comparison, parse_event_datetime
 from src.event.event_schema import Event
@@ -35,6 +36,11 @@ exposition visite soiree conference festival
 TITLE_STOPWORDS = frozenset(TITLE_STOPWORD_TEXT.split())
 
 
+# Valeurs tenues pour vides, aussi bien pour mesurer un événement que pour le
+# compléter (`partner_info` vaut {} quand il n'y a pas de partenaire).
+EMPTY_VALUES: tuple[Any, ...] = (None, "", [], {})
+
+
 def completeness(event: Event) -> int:
     """Nombre de champs renseignés : sert à choisir la meilleure version.
 
@@ -52,7 +58,7 @@ def completeness(event: Event) -> int:
     return sum(
         1
         for value in event.to_dict().values()
-        if value not in (None, "", [], {})
+        if value not in EMPTY_VALUES
     )
 
 
@@ -74,7 +80,7 @@ def merge_events(main: Event, other: Event) -> Event:
 
     merged = main.to_dict()
     for name, value in other.to_dict().items():
-        if merged.get(name) in (None, "", []) and value not in (None, "", []):
+        if merged.get(name) in EMPTY_VALUES and value not in EMPTY_VALUES:
             merged[name] = value
     return Event.from_dict(merged)
 

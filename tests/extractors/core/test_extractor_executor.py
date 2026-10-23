@@ -625,7 +625,7 @@ def test_execute_configured_extractor_returns_loading_error(
     result = module.execute_configured_extractor(
         extractor_name="NewsAPI",
         source_type="api",
-        source_loader=lambda: {},
+        source_loader=dict,
         extraction_function=lambda source: []
     )
 
@@ -649,7 +649,7 @@ def test_execute_configured_extractor_handles_missing_source(
     module.execute_configured_extractor(
         extractor_name="NewsAPI",
         source_type="api",
-        source_loader=lambda: {},
+        source_loader=dict,
         extraction_function=lambda source: []
     )
 
@@ -681,7 +681,7 @@ def test_execute_configured_extractor_handles_invalid_source(
     module.execute_configured_extractor(
         extractor_name="NewsAPI",
         source_type="api",
-        source_loader=lambda: {},
+        source_loader=dict,
         extraction_function=lambda source: []
     )
 
@@ -1015,7 +1015,7 @@ def test_execute_configured_sources_returns_loading_error(
     result = module.execute_configured_sources_extractor(
         extractor_name="RSS",
         source_type="rss",
-        sources_loader=lambda: [],
+        sources_loader=list,
         extraction_function=lambda sources: []
     )
 
@@ -1039,7 +1039,7 @@ def test_execute_configured_sources_handles_missing_sources(
     module.execute_configured_sources_extractor(
         extractor_name="RSS",
         source_type="rss",
-        sources_loader=lambda: [],
+        sources_loader=list,
         extraction_function=lambda sources: []
     )
 

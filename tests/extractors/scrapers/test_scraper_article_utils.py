@@ -13,7 +13,6 @@ from bs4 import BeautifulSoup
 
 from src.extractors.scrapers import scraper_article_utils as module
 
-
 # Fabriques
 
 def build_soup(html: str = "<html></html>") -> BeautifulSoup:
@@ -555,7 +554,7 @@ def test_build_scraped_article_builds_expected_article(
     monkeypatch.setattr(
         module,
         "extract_label",
-        lambda soup, source, article_json_ld: "Concert"
+        lambda soup, source: "Concert"
     )
     monkeypatch.setattr(
         module,
@@ -717,7 +716,7 @@ def test_extract_label_reads_configured_selector(
 
     soup = build_soup('<span class="categorie">Concert</span>')
 
-    assert module.extract_label(soup, build_source(), {}) == "Concert"
+    assert module.extract_label(soup, build_source()) == "Concert"
 
 
 def test_extract_label_returns_empty_without_selector(
@@ -725,4 +724,4 @@ def test_extract_label_returns_empty_without_selector(
 ) -> None:
     monkeypatch.setattr(module, "get_source_selector", lambda source, key: "")
 
-    assert module.extract_label(build_soup(), build_source(), {}) == ""
+    assert module.extract_label(build_soup(), build_source()) == ""

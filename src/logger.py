@@ -11,10 +11,10 @@ from threading import Lock
 from typing import Any
 
 from config.constants import (
-    LOGGER_CONFIGURED_ATTRIBUTE,
     LOG_DATE_FORMAT,
     LOG_FORMAT,
-    PROJECT_LOGGER_NAME
+    LOGGER_CONFIGURED_ATTRIBUTE,
+    PROJECT_LOGGER_NAME,
 )
 from config.paths import LOG_FILE
 from config.settings import LOG_LEVEL
@@ -376,7 +376,3 @@ def get_logger(name: str | None = None) -> logging.Logger:
     close_logger_handlers(child_logger)
 
     return child_logger
-
-
-# Réinitialisation contrôlée
-

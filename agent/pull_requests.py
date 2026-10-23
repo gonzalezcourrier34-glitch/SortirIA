@@ -47,6 +47,8 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 
+from agent.proposals import describe_action
+
 logger = logging.getLogger(__name__)
 
 API = "https://api.github.com"
@@ -498,7 +500,6 @@ def pull_request_body(proposal: Mapping[str, Any], path: str) -> str:
     str
         Le texte de la PR.
     """
-    from agent.report import describe_action
 
     created = str(proposal.get("created_at") or "")[:16]
     run = proposal.get("run_id")
@@ -600,7 +601,6 @@ def sync_pull_requests(connection: Any, github: GitHub, max_new: int = MAX_NEW_P
         Les PR ouvertes, en attente, décidées, les propositions à la main et les erreurs.
     """
 
-    from agent.report import describe_action
     from src.event import event_repository as repository
 
     report = PullRequestReport()
@@ -652,7 +652,10 @@ def sync_pull_requests(connection: Any, github: GitHub, max_new: int = MAX_NEW_P
             savepoint(connection, "ROLLBACK TO SAVEPOINT agent_pr")
             logger.warning("Proposition n° %s : PR impossible (%s).", proposal["proposal_id"], error)
             report.errors.append(f"proposition n° {proposal['proposal_id']} : {type(error).__name__}")
-        else:
+        finally:
+            # Libéré sur tous les chemins (`continue` compris) : les points de
+            # sauvegarde ne s'empilent pas. Après un ROLLBACK TO, le point existe
+            # encore et se libère de même.
             savepoint(connection, "RELEASE SAVEPOINT agent_pr")
     return report
 

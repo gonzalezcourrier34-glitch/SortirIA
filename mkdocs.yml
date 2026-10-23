@@ -95,6 +95,13 @@ nav:
           - app.query_understanding: reference/app/query_understanding.md
           - app.rate_limit: reference/app/rate_limit.md
           - app.ratings_api: reference/app/ratings_api.md
+          - app.search_answer: reference/app/search_answer.md
+          - app.search_cache: reference/app/search_cache.md
+          - app.search_cards: reference/app/search_cards.md
+          - app.search_detail: reference/app/search_detail.md
+          - app.search_filters: reference/app/search_filters.md
+          - app.search_log: reference/app/search_log.md
+          - app.search_query: reference/app/search_query.md
           - app.search_service: reference/app/search_service.md
           - app.security: reference/app/security.md
       - Agent de collecte:
@@ -119,6 +126,7 @@ nav:
           - src.event: reference/src/event/__init__.md
           - event.datatourisme_mapper: reference/src/event/datatourisme_mapper.md
           - event.document_mapper: reference/src/event/document_mapper.md
+          - event.event_audiences: reference/src/event/event_audiences.md
           - event.event_deduplicator: reference/src/event/event_deduplicator.md
           - event.event_embedding: reference/src/event/event_embedding.md
           - event.event_enrichment: reference/src/event/event_enrichment.md

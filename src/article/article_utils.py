@@ -8,20 +8,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from config.constants import (
-    DEFAULT_ARTICLE_IDENTIFIER,
-    DELETED_ARTICLE_VALUES
-)
+from config.constants import DEFAULT_ARTICLE_IDENTIFIER, DELETED_ARTICLE_VALUES
 from src.article.schema.article_schema import (
     ARTICLE_IDENTIFIER_FIELDS,
     ARTICLE_TEXT_FIELDS,
-    ARTICLE_URL_FIELDS
+    ARTICLE_URL_FIELDS,
 )
-from src.utils.value_utils import (
-    is_missing_value,
-    normalize_whitespace
-)
-
+from src.utils.value_utils import is_missing_value, normalize_whitespace
 
 # Lecture des articles
 

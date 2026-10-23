@@ -11,7 +11,6 @@ import pytest
 
 from src.extractors.scrapers import scraper_metadata_utils as module
 
-
 # Métadonnées vides
 
 def test_empty_metadata_returns_expected_structure() -> None:

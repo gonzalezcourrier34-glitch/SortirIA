@@ -371,3 +371,34 @@ def test_a_database_error_still_ends_with_a_failed_report() -> None:
     assert state["status"] == "failed" and state["events_upserted"] == 0
     assert any("Écriture en base impossible" in alert and "events_price_order" in alert for alert in state["alerts"])
     assert sent and sent[0]["status"] == "failed"                  # le mail part quand même
+
+
+def test_embeddings_stop_only_after_consecutive_failed_batches(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    """Un lot réussi remet le compte à zéro ; trois échecs de suite arrêtent la nuit."""
+    from agent import nodes
+
+    rows = [{"event_id": str(number), "title": f"Événement {number}"} for number in range(10)]
+    saved: list[str] = []
+    monkeypatch.setattr(nodes, "EMBEDDING_BATCH_SIZE", 1)
+    monkeypatch.setattr(nodes, "build_embedding_text", lambda row: row["event_id"])
+    monkeypatch.setattr(nodes.repository, "fetch_events_missing_embedding",
+                        lambda connection, limit: rows)
+
+    def update(connection: Any, pairs: Any, model: Any) -> int:
+        keys = [key for key, _ in pairs]
+        saved.extend(keys)
+        return len(keys)
+
+    monkeypatch.setattr(nodes.repository, "update_embeddings", update)
+    # Lots 0 et 1 en échec, 2 réussi, 3 et 4 en échec, 5 réussi, puis 6, 7, 8 en échec.
+    failing = {"0", "1", "3", "4", "6", "7", "8"}
+
+    def embed(texts: list[str]) -> list[list[float]]:
+        if texts[0] in failing:
+            raise RuntimeError("503")
+        return [[0.1] for _ in texts]
+
+    services = CollectionServices(extract=None, connect=None, embed=embed)
+    total, _ = nodes.embed_missing(None, services)
+    assert saved == ["2", "5"] and total == 2   # le lot 9 n'est pas tenté

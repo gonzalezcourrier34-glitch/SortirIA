@@ -13,7 +13,6 @@ from bs4 import BeautifulSoup, Tag
 
 from src.extractors.scrapers import scraper_selector_utils as module
 
-
 # Fabriques
 
 def build_soup(

@@ -9,13 +9,13 @@ from collections import Counter
 from collections.abc import Mapping
 from typing import Any
 
-from src.article.schema.article_schema import STANDARD_ARTICLE_FIELDS
 from src.article.article_utils import (
     get_article_identifier,
     get_article_text,
     is_deleted_value,
-    is_empty_value
+    is_empty_value,
 )
+from src.article.schema.article_schema import STANDARD_ARTICLE_FIELDS
 from src.article.validation.article_validation_policy import build_validation_policy
 from src.logger import get_logger
 from src.utils.url_utils import is_valid_http_url

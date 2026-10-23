@@ -8,12 +8,13 @@ from __future__ import annotations
 import pytest
 
 import src.extractors.core.extractor_service as module
-from src.extractors.core import extractor_configuration
-from src.extractors.core import extractor_executor
-from src.extractors.core import extractor_models
-from src.extractors.core import extractor_results
-from src.extractors.core import extractor_runner
-
+from src.extractors.core import (
+    extractor_configuration,
+    extractor_executor,
+    extractor_models,
+    extractor_results,
+    extractor_runner,
+)
 
 # Exports publics
 
@@ -288,7 +289,7 @@ def test_historical_imports_are_supported() -> None:
         normalize_extracted_articles,
         normalize_extractor_result,
         normalize_source_configuration,
-        run_extractor
+        run_extractor,
     )
 
     assert ArticleExtractor is extractor_results.ArticleExtractor
@@ -351,7 +352,7 @@ def test_historical_imports_are_supported() -> None:
 def test_star_import_exposes_only_public_api() -> None:
     namespace: dict[str, object] = {}
 
-    exec(
+    exec(  # noqa: S102  chaîne constante : vérifie le comportement de « import * »
         "from src.extractors.core.extractor_service import *",
         {},
         namespace
@@ -363,7 +364,7 @@ def test_star_import_exposes_only_public_api() -> None:
 def test_star_import_values_match_module_exports() -> None:
     namespace: dict[str, object] = {}
 
-    exec(
+    exec(  # noqa: S102  chaîne constante : vérifie le comportement de « import * »
         "from src.extractors.core.extractor_service import *",
         {},
         namespace

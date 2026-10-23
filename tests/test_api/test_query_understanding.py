@@ -88,6 +88,21 @@ def test_relaxed_plan_keeps_ticked_filters_and_date() -> None:
     assert isinstance(relaxed, QueryPlan)
 
 
+def test_relaxed_plan_keeps_the_date_from_the_question_but_not_the_moment() -> None:
+    """23/10/2026 : « sauf la date » : la date lue dans la question reste cochée
+    (`period_from_question`) ; le moment de la journée, lui, est relâché."""
+
+    from app.search_filters import SearchFilters
+    from app.search_service import checked_by_question, plan_search
+
+    plan = plan_search("un concert gratuit à Sète samedi matin", SearchFilters(), NOW)[0]
+    assert plan.period_from_question and plan.moment == "matin"
+    relaxed = plan.relaxed()
+    assert relaxed.period_from_question and relaxed.moment is None
+    assert (relaxed.start, relaxed.end, relaxed.period_label) == (plan.start, plan.end, plan.period_label)
+    assert checked_by_question(relaxed) == {"date": plan.period_label}
+
+
 def test_follow_up_keeps_the_previous_request() -> None:
     assert is_follow_up("et pour les enfants ?") and is_follow_up("plutôt samedi")
     assert not is_follow_up("je cherche une exposition de photographie à Montpellier")
@@ -164,7 +179,8 @@ def test_a_montpellier_means_the_city_itself() -> None:
 
 
 def test_a_montpellier_keeps_the_metropolis_for_widening() -> None:
-    from app.search_service import SearchFilters, plan_search
+    from app.search_filters import SearchFilters
+    from app.search_service import plan_search
 
     plan = plan_search("des spectacles gratuits à Montpellier", SearchFilters(), NOW)[0]
     assert plan.cities == ("montpellier",) and plan.zone == "montpellier"
@@ -175,7 +191,8 @@ def test_a_montpellier_keeps_the_metropolis_for_widening() -> None:
 def test_a_clicked_follow_up_keeps_the_previous_request() -> None:
     """17/10/2026 : « Des spectacles en intérieur ? » cliqué après « un spectacle
     à Sète » perdait Sète (relance longue avec un sujet : nouvelle demande)."""
-    from app.search_service import SearchFilters, plan_search
+    from app.search_filters import SearchFilters
+    from app.search_service import plan_search
 
     typed = plan_search("Des spectacles en intérieur ?", SearchFilters(), NOW, "un spectacle à Sète")[0]
     assert typed.cities == ()
@@ -188,14 +205,16 @@ def test_a_clicked_follow_up_keeps_the_previous_request() -> None:
 
 
 def test_the_cache_tells_a_clicked_follow_up_apart() -> None:
-    from app.search_service import SearchFilters, cache_key
+    from app.search_cache import cache_key
+    from app.search_filters import SearchFilters
 
     assert cache_key("x ?", "y", SearchFilters(), NOW, "v") != cache_key("x ?", "y", SearchFilters(), NOW, "v", True)
 
 
 def test_the_question_changes_the_checked_boxes() -> None:
     """17/10/2026 : « avec les enfants » avec « Seniors » coché cherchait pour les seniors."""
-    from app.search_service import SearchFilters, checked_by_question, plan_search
+    from app.search_filters import SearchFilters
+    from app.search_service import checked_by_question, plan_search
 
     plan = plan_search("un truc avec les enfants samedi près de Sète", SearchFilters(public="seniors",
                                                                                    zone="montpellier"), NOW)[0]
@@ -213,7 +232,8 @@ def test_the_question_changes_the_checked_boxes() -> None:
 
 def test_in_the_evening_is_a_time_not_the_evening_public() -> None:
     """17/10/2026 : « Plutôt en soirée ? » cochait le public « Soirée » (bars, fêtes)."""
-    from app.search_service import SearchFilters, checked_by_question, plan_search
+    from app.search_filters import SearchFilters
+    from app.search_service import checked_by_question, plan_search
 
     understood = understand("un spectacle en soirée à Sète", NOW)
     assert understood.evening and understood.public is None
@@ -238,7 +258,8 @@ def test_the_moment_of_the_day_is_read_in_the_sentence(question: str, moment: st
 
 
 def test_a_daytime_follow_up_replaces_the_evening() -> None:
-    from app.search_service import SearchFilters, plan_search
+    from app.search_filters import SearchFilters
+    from app.search_service import plan_search
 
     plan = plan_search("Plutôt en matinée ?", SearchFilters(), NOW, "un concert le soir", follow_up=True)[0]
     assert not plan.evening and plan.moment == "matin"
@@ -268,7 +289,8 @@ def test_practice_verbs(question: str, practice: str | None) -> None:
 
 
 def test_a_follow_up_keeps_the_practice_until_a_new_subject() -> None:
-    from app.search_service import SearchFilters, plan_search
+    from app.search_filters import SearchFilters
+    from app.search_service import plan_search
 
     plan = plan_search("et à Sète ?", SearchFilters(), NOW, "je veux chanter")[0]
     assert plan.practice == "chanter" and "pour chanter soi-même" in plan.describe()

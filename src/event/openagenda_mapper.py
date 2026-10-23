@@ -16,20 +16,20 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from src.event.event_audiences import infer_audiences
 from src.event.event_normalizer import (
-    PARIS,
     build_dedup_key,
     build_event_id,
     clean_text,
     has_time,
     normalize_city,
-    normalize_for_comparison,
     parse_event_datetime,
     parse_price,
     pick_localized,
     to_iso,
 )
 from src.event.event_schema import Event
+from src.utils.geo_utils import to_float
 from src.utils.url_utils import is_valid_http_url
 
 
@@ -61,25 +61,6 @@ def get_path(data: Any, *paths: Sequence[str]) -> Any:
         if value not in (None, "", [], {}):
             return value
     return None
-
-
-def _to_float(value: Any) -> float | None:
-    """Convertir une valeur en nombre décimal, ou None si vide ou illisible.
-
-    Parameters
-    ----------
-    value : Any
-        Valeur à convertir (texte, nombre, None).
-
-    Returns
-    -------
-    float or None
-        Le nombre, ou None.
-    """
-    try:
-        return float(value) if value not in (None, "") else None
-    except (TypeError, ValueError):
-        return None
 
 
 def build_image_url(image: Any) -> str:
@@ -215,9 +196,8 @@ def get_start_and_end(item: Mapping[str, Any]) -> tuple[str, str, bool]:
     )
 
 
-
 # ---------------------------------------------------------------------------
-# Statut, participation, âge, accessibilité et publics (ajouté le 14/10/2026)
+# Statut, participation, âge et accessibilité (ajouté le 14/10/2026)
 # ---------------------------------------------------------------------------
 # Codes de l'API OpenAgenda, relevés sur les événements bruts de l'audit
 # (scripts/audit_openagenda.py --brut) : status, attendanceMode, age et
@@ -241,23 +221,6 @@ OPENAGENDA_ACCESSIBILITY: dict[str, str] = {
     "pi": "psychique",
     "vi": "visuel",
 }
-
-# Mots qui signalent un public. Comparés sans accents ni majuscules, mot
-# entier (« bal » ne doit pas reconnaître « balade »).
-FAMILY_WORDS: tuple[str, ...] = (
-    "jeune public", "enfant", "enfants", "famille", "familles", "familial",
-    "kids", "bebe", "bebes", "marionnette", "marionnettes", "conte", "contes",
-)
-NIGHT_WORDS: tuple[str, ...] = (
-    "soiree", "soirees", "clubbing", "club", "dj", "electro", "techno", "bal",
-)
-
-# Un événement qui commence à 21 h ou plus tard (ou avant 5 h) est une soirée.
-NIGHT_START_HOUR = 21
-NIGHT_END_HOUR = 5
-# Âge maximal en dessous duquel un événement est jugé « famille ».
-FAMILY_MAX_AGE = 12
-
 
 def _to_int(value: Any) -> int | None:
     """Convertir une valeur en entier, ou None si vide ou illisible.
@@ -357,81 +320,6 @@ def get_accessibility(item: Mapping[str, Any]) -> list[str]:
     return list(dict.fromkeys(labels))
 
 
-def _contains_word(text: str, words: Sequence[str]) -> bool:
-    """Dire si le texte contient l'un des mots (ou groupes de mots), en mot entier.
-
-    Parameters
-    ----------
-    text : str
-        Texte déjà normalisé (`normalize_for_comparison`).
-    words : Sequence[str]
-        Mots cherchés, normalisés eux aussi.
-
-    Returns
-    -------
-    bool
-        Vrai si au moins un mot est présent.
-    """
-    padded = f" {text} "
-    return any(f" {word} " in padded for word in words)
-
-
-def infer_audiences(
-    texts: Sequence[str],
-    start_at: str,
-    time_known: bool,
-    age_min: int | None,
-    age_max: int | None,
-) -> list[str]:
-    """Déduit les publics (« famille », « soiree ») d'un événement.
-
-    Règles simples et testables, plutôt qu'un modèle : OpenAgenda n'a pas de
-    champ « public ». Un partenaire peut, lui, fournir ses publics directement.
-
-    - famille : âge maximal <= 12 ans, ou un mot comme « jeune public » ;
-      jamais si l'âge minimal est 18 ans ou plus ;
-    - soiree : début à 21 h ou plus tard, ou un mot comme « soirée », « DJ ».
-
-    Parameters
-    ----------
-    texts : Sequence[str]
-        Textes où chercher les mots (titre, catégorie, mots-clés...).
-    start_at : str
-        Début de l'événement, en ISO 8601.
-    time_known : bool
-        Vrai si l'heure de début est connue (sinon elle n'est pas prise en compte).
-    age_min : int or None
-        Âge minimal, s'il est connu.
-    age_max : int or None
-        Âge maximal, s'il est connu.
-
-    Returns
-    -------
-    list[str]
-        Les publics déduits, parmi « famille » et « soiree ».
-    """
-
-    text = normalize_for_comparison(" ".join(texts))
-    audiences: list[str] = []
-
-    # Famille : âge maximal bas ou mot du jeune public, sauf événement réservé aux adultes
-    adults_only = age_min is not None and age_min >= 18
-    if not adults_only and (
-        (age_max is not None and age_max <= FAMILY_MAX_AGE) or _contains_word(text, FAMILY_WORDS)
-    ):
-        audiences.append("famille")
-
-    # Soirée : début tardif (heure de Paris) ou mot de la nuit
-    start = parse_event_datetime(start_at)
-    late_start = bool(
-        time_known and start
-        and (start.astimezone(PARIS).hour >= NIGHT_START_HOUR or start.astimezone(PARIS).hour < NIGHT_END_HOUR)
-    )
-    if late_start or _contains_word(text, NIGHT_WORDS):
-        audiences.append("soiree")
-    return audiences
-
-
 def map_openagenda_event(
     item: Mapping[str, Any],
     *,
@@ -509,8 +397,8 @@ def map_openagenda_event(
         address=address,
         city=city,
         postal_code=postal_code,
-        latitude=_to_float(get_path(item, ("location", "latitude"), ("latitude",))),
-        longitude=_to_float(get_path(item, ("location", "longitude"), ("longitude",))),
+        latitude=to_float(get_path(item, ("location", "latitude"), ("latitude",))),
+        longitude=to_float(get_path(item, ("location", "longitude"), ("longitude",))),
         price_text=price_text,
         price_min=price_min,
         price_max=price_max,

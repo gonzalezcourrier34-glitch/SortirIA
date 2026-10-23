@@ -20,9 +20,8 @@ from src.utils.url_utils import (
     normalize_hostname,
     normalize_url,
     parse_http_url,
-    sanitize_url_for_logging
+    sanitize_url_for_logging,
 )
-
 
 # Normalisation des noms d'hôte
 

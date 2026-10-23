@@ -63,15 +63,10 @@ from typing import Any
 
 import yaml
 
-from app.search_service import (
-    PARIS,
-    PROMPT_VERSION,
-    SearchFilters,
-    SearchServices,
-    embed_question,
-    run_search,
-    write_with_mistral,
-)
+from app.search_answer import PROMPT_VERSION, write_with_mistral
+from app.search_filters import PARIS, SearchFilters
+from app.search_query import embed_question
+from app.search_service import SearchServices, run_search
 
 ROOT = Path(__file__).resolve().parents[1]
 QUESTIONS_FILE = ROOT / "config" / "eval_recherche.yaml"
@@ -464,7 +459,7 @@ FILTER_LABELS = {"public": "public", "outdoor": "en extérieur", "indoor": "en i
 
 
 def describe_filters(raw: str) -> str:
-    """Cases cochées utiles au juge (zone, public…), en français plutôt qu'en JSON.
+    """Cases cochées utiles au juge (public, extérieur…), en français plutôt qu'en JSON.
 
     Depuis la consigne v7, seules les cases de `FILTER_LABELS` (public,
     extérieur, intérieur) sont gardées : la zone n'est plus transmise.
@@ -564,12 +559,43 @@ def judge_rows(rows: list[dict[str, str]], call: Any = None) -> list[dict[str, s
     return rows
 
 
+HISTORY_HEADER = ["date", "grille", "questions", "cartes_jugees", "pertinence_at_3",
+                  "questions_satisfaites", "juge_pertinence_at_3", "accord_juge", "kappa_juge",
+                  "prompt_version", "note", "juge_consigne"]
+
+
+def complete_history_header(history: Path) -> None:
+    """Complète l'en-tête d'un historique écrit avant l'ajout de colonnes en fin de ligne.
+
+    Les colonnes manquantes sont ajoutées à l'en-tête, et les anciennes lignes
+    reçoivent des valeurs vides : le fichier reste rectangulaire et lisible.
+    Un fichier absent, vide, déjà à jour ou d'en-tête inattendu n'est pas modifié.
+
+    Parameters
+    ----------
+    history : Path
+        Le fichier `historique.csv`.
+    """
+    if not history.exists():
+        return
+    with history.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.reader(handle))
+    if not rows or rows[0] == HISTORY_HEADER or rows[0] != HISTORY_HEADER[:len(rows[0])]:
+        return
+    width = len(HISTORY_HEADER)
+    with history.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(HISTORY_HEADER)
+        writer.writerows(row + [""] * (width - len(row)) for row in rows[1:])
+
+
 def save_history(report: Mapping[str, Any], grid: Path, note: str = "") -> Path:
     """Ajoute une ligne au fichier `historique.csv` des calculs de pertinence.
 
-    L'en-tête est écrit à la création du fichier. La colonne `prompt_version`
-    reçoit la version de la consigne de rédaction de la recherche
-    (`PROMPT_VERSION`), pas celle du juge.
+    L'en-tête est écrit à la création du fichier, et complété s'il date d'avant
+    la colonne `juge_consigne`. La colonne `prompt_version` reçoit la version de
+    la consigne de rédaction de la recherche (`PROMPT_VERSION`) ; la colonne
+    `juge_consigne`, en fin de ligne, celle du juge (`JUDGE_PROMPT_VERSION`).
 
     Parameters
     ----------
@@ -587,19 +613,18 @@ def save_history(report: Mapping[str, Any], grid: Path, note: str = "") -> Path:
     """
     BENCH_DIR.mkdir(parents=True, exist_ok=True)
     history = BENCH_DIR / "historique.csv"
+    complete_history_header(history)
     new = not history.exists()
     with history.open("a", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle)
         if new:
-            writer.writerow(["date", "grille", "questions", "cartes_jugees", "pertinence_at_3",
-                             "questions_satisfaites", "juge_pertinence_at_3", "accord_juge", "kappa_juge",
-                             "prompt_version", "note"])
+            writer.writerow(HISTORY_HEADER)
         judge = report.get("juge") or {}
         writer.writerow([datetime.now(PARIS).isoformat(timespec="seconds"), grid.name, report["questions"],
                          report["cartes_jugees"], report["pertinence_at_3"], report["questions_satisfaites"],
                          (judge.get("score") or {}).get("pertinence_at_3", ""),
                          (judge.get("accord") or {}).get("accord", ""), (judge.get("accord") or {}).get("kappa", ""),
-                         PROMPT_VERSION, note])
+                         PROMPT_VERSION, note, JUDGE_PROMPT_VERSION])
     return history
 
 

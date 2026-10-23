@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar, Self
 
 import httpx
 import pytest
@@ -53,9 +53,8 @@ from src.extractors.apis.api_extractor import (
     record_api_request_error,
     reset_api_request_count,
     reset_api_request_errors,
-    validate_api_secret
+    validate_api_secret,
 )
-
 
 # Construction des données
 
@@ -889,7 +888,7 @@ def test_get_queries_configuration_filters_invalid_items() -> None:
     [
         None,
         "actualité",
-        "actualité".encode("utf-8"),
+        "actualité".encode(),
         42,
         object()
     ]
@@ -1243,8 +1242,8 @@ class FakeClient:
     """Client HTTPX simulé."""
 
     response: httpx.Response
-    created_arguments: dict[str, Any] = {}
-    get_arguments: dict[str, Any] = {}
+    created_arguments: ClassVar[dict[str, Any]] = {}
+    get_arguments: ClassVar[dict[str, Any]] = {}
 
     def __init__(
         self,
@@ -1259,14 +1258,14 @@ class FakeClient:
             "follow_redirects": follow_redirects
         }
 
-    def __enter__(self) -> FakeClient:
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(
         self,
-        exc_type: Any,
-        exc_value: Any,
-        traceback: Any
+        exc_type: object,
+        exc_value: object,
+        traceback: object
     ) -> None:
         return None
 

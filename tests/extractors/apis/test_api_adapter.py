@@ -14,9 +14,8 @@ import src.extractors.apis.api_adapter as module
 from src.extractors.apis.api_adapter import (
     ApiAdapter,
     build_article_from_api_item,
-    validate_api_item
+    validate_api_item,
 )
-
 
 # Fonctions de test
 

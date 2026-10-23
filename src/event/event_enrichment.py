@@ -98,7 +98,6 @@ def plain(value: str) -> str:
     return " ".join("".join(char for char in decomposed if not unicodedata.combining(char)).split())
 
 
-PRICE_BANDS = ("gratuit", "moins_10", "10_25", "plus_25", "inconnu")
 MAX_TEXT_CHARS = 800
 
 
@@ -215,7 +214,8 @@ def price_band(is_free: Any, price_min: Any, price_max: Any) -> str:
     Returns
     -------
     str
-        Une valeur de `PRICE_BANDS` (« inconnu » si aucun prix n'est connu).
+        « gratuit », « moins_10 », « 10_25 », « plus_25 », ou « inconnu » si
+        aucun prix n'est connu.
     """
 
     if is_free is True:

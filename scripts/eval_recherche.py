@@ -10,8 +10,10 @@
 En CI (`.github/workflows/ci.yml`, job « Évaluation de la recherche ») : la
 base de test est chargée depuis `tests/data/jeu_recherche.json.gz`
 (`scripts/jeu_test_recherche.py`), l'horloge est placée à l'instant de
-l'export, la recherche se fait sans vecteur ni Mistral, rien n'est gardé dans
-`benchmarks/`, et le job échoue si la précision passe sous le seuil.
+l'export (celle de la recherche et celle de la base, `sortiria.maintenant`,
+lue par la vue `v_upcoming_events`), la recherche se fait sans vecteur ni
+Mistral, rien n'est gardé dans `benchmarks/`, et le job échoue si la précision
+ou la compréhension passe sous le seuil (`below_threshold`).
 
 Pour chaque question de `config/eval_recherche.yaml`, la vraie recherche est
 lancée sur la vraie base (sans être tracée dans `rag_requests`). Trois mesures :
@@ -53,18 +55,11 @@ from typing import Any
 
 import yaml
 
-from app.query_understanding import MOMENT_HOURS, QUESTION_CATEGORIES, plain
-from app.search_service import (
-    PARIS,
-    PROMPT_VERSION,
-    QueryPlan,
-    SearchFilters,
-    SearchServices,
-    embed_question,
-    plan_search,
-    run_search,
-    write_with_mistral,
-)
+from app.query_understanding import MOMENT_HOURS, QUESTION_CATEGORIES, QueryPlan, plain
+from app.search_answer import PROMPT_VERSION, write_with_mistral
+from app.search_filters import PARIS, SearchFilters
+from app.search_query import embed_question
+from app.search_service import SearchServices, plan_search, run_search
 from config.environment import load_environment
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -523,8 +518,12 @@ def main() -> None:
         frozen = snapshot_time().astimezone(PARIS)
         services = SearchServices(embed=None, write=None, now=lambda: frozen, log=False, cache=False)
         print(f"Base de test figée au {frozen:%d/%m/%Y %H:%M}, recherche sans vecteur ni Mistral.\n")
-    # Évaluer et afficher le rapport
+    # Évaluer et afficher le rapport (base figée : son horloge aussi, pour les vues)
     with connect_postgres() as connection:
+        if args.jeu_test:
+            from scripts.jeu_test_recherche import freeze_clock
+
+            freeze_clock(connection, frozen)
         report = evaluate(connection, questions, services)
     print_report(report)
     failed = below_threshold(report, args.seuil)

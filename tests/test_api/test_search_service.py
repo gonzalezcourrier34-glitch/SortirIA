@@ -8,8 +8,10 @@ from typing import Any, Self
 
 import pytest
 
-from app import search_service as service
-from app.search_service import PARIS, SearchFilters, SearchServices
+from app import search_answer, search_cards, search_filters, search_query, search_service
+from app.query_understanding import QueryPlan
+from app.search_filters import PARIS, SearchFilters
+from app.search_service import SearchServices
 
 # Mercredi 14 octobre 2026, 17 h.
 NOW = datetime(2026, 10, 14, 17, 0, tzinfo=PARIS)
@@ -70,14 +72,14 @@ class FakeConnection:
     ("7jours", datetime(2026, 10, 14, 17, tzinfo=PARIS), datetime(2026, 10, 21, 17, tzinfo=PARIS)),
 ])
 def test_period_bounds(period: str, start: datetime, end: datetime) -> None:
-    assert service.period_bounds(period, NOW) == (start, end)
+    assert search_filters.period_bounds(period, NOW) == (start, end)
 
 
 def test_weekend_seen_from_saturday_and_sunday() -> None:
     saturday = datetime(2026, 10, 17, 9, tzinfo=PARIS)
     sunday = datetime(2026, 10, 18, 9, tzinfo=PARIS)
-    assert service.period_bounds("weekend", saturday) == (saturday, datetime(2026, 10, 19, tzinfo=PARIS))
-    assert service.period_bounds("weekend", sunday) == (sunday, datetime(2026, 10, 19, tzinfo=PARIS))
+    assert search_filters.period_bounds("weekend", saturday) == (saturday, datetime(2026, 10, 19, tzinfo=PARIS))
+    assert search_filters.period_bounds("weekend", sunday) == (sunday, datetime(2026, 10, 19, tzinfo=PARIS))
 
 
 def test_unknown_filters_are_refused() -> None:
@@ -89,11 +91,11 @@ def test_unknown_filters_are_refused() -> None:
 
 def test_query_applies_every_filter() -> None:
     filters = SearchFilters(public="famille", zone="thau", period="weekend", free_only=True)
-    sql, params = service.build_search_query(filters, "[0.1,0.2]", NOW)
+    sql, params = search_query.build_search_query(filters, "[0.1,0.2]", NOW)
     assert "%(public)s = ANY (e.audiences)" in sql and params["public"] == "famille"
     assert "event_zone" in sql and params["zone"] == "bassin_de_thau"
     assert "e.is_free" in sql and "embedding <=> %(vector)s::vector" in sql
-    sql, params = service.build_search_query(SearchFilters(), None, NOW)
+    sql, params = search_query.build_search_query(SearchFilters(), None, NOW)
     assert "by_meaning" not in sql and "by_words" not in sql and "public" not in params
     assert "ORDER BY visible_hits DESC, keyword_hits DESC, category_match DESC, score DESC, e.start_at" in sql
 
@@ -103,29 +105,29 @@ def test_query_applies_every_filter() -> None:
 # ----------------------------------------------------------------------------
 
 def test_card_labels() -> None:
-    card = service.to_card(row(), ref=2)
+    card = search_cards.to_card(row(), ref=2)
     assert card["date"] == "Sam. 17 oct. · 14:30" and card["place"] == "Port · Bouzigues"
     assert card["price"] == "Gratuit" and card["audiences"] == ["famille"] and card["ref"] == 2
     assert card["partner"] is False and card["venue_rating"] is None
-    assert service.to_card(row(time_known=False))["date"] == "Sam. 17 oct."
-    assert service.price_label({"is_free": False, "price_text": "", "price_min": 6.5}) == "dès 6,50 €"
-    assert service.price_label({"is_free": False, "price_text": "", "price_min": 12.0}) == "dès 12 €"
-    assert service.price_label({"is_free": None}) == "Prix non communiqué"
+    assert search_cards.to_card(row(time_known=False))["date"] == "Sam. 17 oct."
+    assert search_cards.price_label({"is_free": False, "price_text": "", "price_min": 6.5}) == "dès 6,50 €"
+    assert search_cards.price_label({"is_free": False, "price_text": "", "price_min": 12.0}) == "dès 12 €"
+    assert search_cards.price_label({"is_free": None}) == "Prix non communiqué"
 
 
 def test_prices_and_places_read_the_french_way() -> None:
     """16/10/2026 : « À partir de 25.5 € » et « Montpellier · Montpellier » sur le site."""
 
-    assert service.french_prices("À partir de 25.5 €") == "À partir de 25,50 €"
-    assert service.french_prices("De 12.33 € à 20.55 €") == "De 12,33 € à 20,55 €"
-    assert service.french_prices("10 euros, 2 adultes, 1.5 h") == "10 euros, 2 adultes, 1.5 h"
-    assert service.french_prices("Tarif 7,5 €") == "Tarif 7,50 €"
-    assert service.french_prices("De 5.5 à 8.5 €") == "De 5,50 à 8,50 €"
-    assert service.french_prices("Durée 1.5 h") == "Durée 1.5 h"          # pas un prix
-    assert service.french_amount(1_000_000.0) == "1000000"
-    assert service.place_label({"venue_name": "Montpellier", "city": "Montpellier"}) == "Montpellier"
-    assert service.place_label({"venue_name": "Jam", "city": "Montpellier"}) == "Jam · Montpellier"
-    assert service.place_label({"venue_name": "", "city": "Sète"}) == "Sète"
+    assert search_cards.french_prices("À partir de 25.5 €") == "À partir de 25,50 €"
+    assert search_cards.french_prices("De 12.33 € à 20.55 €") == "De 12,33 € à 20,55 €"
+    assert search_cards.french_prices("10 euros, 2 adultes, 1.5 h") == "10 euros, 2 adultes, 1.5 h"
+    assert search_cards.french_prices("Tarif 7,5 €") == "Tarif 7,50 €"
+    assert search_cards.french_prices("De 5.5 à 8.5 €") == "De 5,50 à 8,50 €"
+    assert search_cards.french_prices("Durée 1.5 h") == "Durée 1.5 h"          # pas un prix
+    assert search_cards.french_amount(1_000_000.0) == "1000000"
+    assert search_cards.place_label({"venue_name": "Montpellier", "city": "Montpellier"}) == "Montpellier"
+    assert search_cards.place_label({"venue_name": "Jam", "city": "Montpellier"}) == "Jam · Montpellier"
+    assert search_cards.place_label({"venue_name": "", "city": "Sète"}) == "Sète"
 
 
 def test_suggestions_must_be_short_questions() -> None:
@@ -134,32 +136,32 @@ def test_suggestions_must_be_short_questions() -> None:
     raw = json.dumps({"reponse": "Voici des idées proches: [1].", "suggestions": [
         "Ce concert familial a lieu ce soir à 20h30 à Montpellier, mais il est payant [2].",
         "Et s'il pleut ?", "Plutôt en soirée?", "Veux-tu un concert en famille ?"]})
-    answer, suggestions = service.parse_answer(raw, count=2)
+    answer, suggestions = search_answer.parse_answer(raw, count=2)
     assert answer == "Voici des idées proches\u00a0: [1]."
     assert suggestions == ["Et s'il pleut\u00a0?", "Plutôt en soirée\u00a0?", "Veux-tu un concert en famille\u00a0?"]
     none = json.dumps({"reponse": "Ok.", "suggestions": ["Une phrase sans question.", "Voir la carte [1] ?"]})
-    assert service.parse_answer(none, 1)[1] == []          # aucune : relances par défaut
-    assert service.french_spacing("Rendez-vous à 20:30 : entrée libre !") == "Rendez-vous à 20:30\u00a0: entrée libre\u00a0!"
+    assert search_answer.parse_answer(none, 1)[1] == []          # aucune : relances par défaut
+    assert search_answer.french_spacing("Rendez-vous à 20:30 : entrée libre !") == "Rendez-vous à 20:30\u00a0: entrée libre\u00a0!"
     # Après un nombre aussi (« le 31: »), une fois les espaces retirées par parse_answer.
     raw = json.dumps({"reponse": "Rendez-vous le 31 : concert [1]. Libre le 25 ? Oui à 20:30 !",
                       "suggestions": ["Plutôt en soirée ?", "Plutôt en soirée?"]})
-    answer, suggestions = service.parse_answer(raw, 1)
+    answer, suggestions = search_answer.parse_answer(raw, 1)
     assert answer == "Rendez-vous le 31\u00a0: concert [1]. Libre le 25\u00a0? Oui à 20:30\u00a0!"
     assert suggestions == ["Plutôt en soirée\u00a0?"]                  # doublon retiré
 
 
 def test_summary_falls_back_to_description() -> None:
     long_text = "mot " * 200
-    summary = service.short_summary({"summary": "", "description": long_text})
-    assert summary.endswith("…") and len(summary) <= service.SUMMARY_CHARS + 1
+    summary = search_cards.short_summary({"summary": "", "description": long_text})
+    assert summary.endswith("…") and len(summary) <= search_cards.SUMMARY_CHARS + 1
 
 
 def test_answer_drops_citations_that_do_not_exist() -> None:
     raw = json.dumps({"reponse": "Allez à la balade [1] ou au concert [7] .", "suggestions": ["Et s'il pleut ?"]})
-    answer, suggestions = service.parse_answer(raw, count=2)
+    answer, suggestions = search_answer.parse_answer(raw, count=2)
     assert answer == "Allez à la balade [1] ou au concert." and suggestions == ["Et s'il pleut\u00a0?"]
     with pytest.raises(ValueError):
-        service.parse_answer('{"reponse": ""}', 2)
+        search_answer.parse_answer('{"reponse": ""}', 2)
 
 
 # ----------------------------------------------------------------------------
@@ -167,7 +169,7 @@ def test_answer_drops_citations_that_do_not_exist() -> None:
 # ----------------------------------------------------------------------------
 
 def run(connection: FakeConnection, services: SearchServices) -> list[dict[str, Any]]:
-    return list(service.run_search(connection, "  sortie   en famille ", SearchFilters(public="famille"), services))
+    return list(search_service.run_search(connection, "  sortie   en famille ", SearchFilters(public="famille"), services))
 
 
 def test_search_streams_the_four_steps_then_the_result() -> None:
@@ -187,7 +189,7 @@ def test_search_streams_the_four_steps_then_the_result() -> None:
     assert result["answer"] == "Essayez la balade [1]." and result["suggestions"] == ["Le matin\u00a0?"]
     # L'offre partenaire répond à la demande : elle passe en tête (15/10/2026).
     assert [card["ref"] for card in result["events"]] == [1, 2] and result["events"][0]["partner"] is True
-    assert "offre partenaire" in service.events_for_prompt(seen["cards"]).split("\n")[0]
+    assert "offre partenaire" in search_answer.events_for_prompt(seen["cards"]).split("\n")[0]
     assert result["request_id"] == 7 and result["degraded"] is False
     assert seen["question"] == "sortie en famille"
     search = next(params for sql, params in connection.queries if "vector" in params)
@@ -216,7 +218,7 @@ def test_search_without_result() -> None:
 
 
 def test_sse_format() -> None:
-    text = service.sse({"event": "progress", "step": "comprendre", "status": "running"})
+    text = search_service.sse({"event": "progress", "step": "comprendre", "status": "running"})
     assert text.startswith("event: progress\ndata: {") and text.endswith("\n\n")
 
 
@@ -225,7 +227,7 @@ def test_sse_format() -> None:
 # ----------------------------------------------------------------------------
 
 def test_wanted_categories_understands_theatre_without_accent():
-    from app.search_service import wanted_categories
+    from app.query_understanding import wanted_categories
 
     assert wanted_categories("j'aimerais aller au theatre") == ("theatre", "spectacle")
     assert wanted_categories("Des pièces de Théâtre ?") == ("theatre", "spectacle")
@@ -236,7 +238,8 @@ def test_wanted_categories_understands_theatre_without_accent():
 def test_search_query_puts_wanted_categories_first():
     from datetime import datetime
 
-    from app.search_service import PARIS, SearchFilters, build_search_query
+    from app.search_filters import PARIS, SearchFilters
+    from app.search_query import build_search_query
 
     sql, params = build_search_query(SearchFilters(), "[0.1]", datetime(2026, 10, 15, tzinfo=PARIS),
                                      categories=("spectacle", "theatre"))
@@ -247,7 +250,7 @@ def test_search_query_puts_wanted_categories_first():
 
 
 def test_writer_question_flags_a_missing_category():
-    from app.search_service import writer_question
+    from app.search_answer import writer_question
 
     assert "Aucun événement" in writer_question("du théâtre", ("theatre",), 0)
     assert writer_question("du théâtre", ("theatre",), 2) == "du théâtre"
@@ -257,7 +260,8 @@ def test_writer_question_flags_a_missing_category():
 def test_event_date_label_shows_ongoing_events():
     from datetime import datetime
 
-    from app.search_service import PARIS, event_date_label
+    from app.search_cards import event_date_label
+    from app.search_filters import PARIS
 
     now = datetime(2026, 10, 15, 11, 0, tzinfo=PARIS)
     ongoing = {"start_at": datetime(2026, 9, 3, 10, 0, tzinfo=PARIS),
@@ -271,7 +275,8 @@ def test_event_date_label_shows_ongoing_events():
 def test_group_occurrences_keeps_one_card_per_event():
     from datetime import datetime
 
-    from app.search_service import PARIS, group_occurrences, other_dates
+    from app.search_cards import group_occurrences, other_dates
+    from app.search_filters import PARIS
 
     now = datetime(2026, 10, 15, 11, 0, tzinfo=PARIS)
 
@@ -292,7 +297,7 @@ def test_group_occurrences_keeps_one_card_per_event():
 
 
 def test_keep_exact_matches_prefers_precise_words_then_type():
-    from app.search_service import distinctive_keywords, keep_exact_matches
+    from app.search_query import distinctive_keywords, keep_exact_matches
 
     rows = [{"id": 1, "keyword_match": False, "category_match": True},
             {"id": 2, "keyword_match": True, "category_match": False},
@@ -307,7 +312,8 @@ def test_keep_exact_matches_prefers_precise_words_then_type():
 def test_multi_day_events_show_their_span():
     from datetime import datetime
 
-    from app.search_service import PARIS, event_date_label
+    from app.search_cards import event_date_label
+    from app.search_filters import PARIS
 
     now = datetime(2026, 10, 15, 11, 0, tzinfo=PARIS)
     festival = {"start_at": datetime(2026, 10, 30, 10, 0, tzinfo=PARIS),
@@ -319,14 +325,14 @@ def test_multi_day_events_show_their_span():
 # Offres partenaires en tête des cartes (15/10/2026)
 # ----------------------------------------------------------------------------
 
-def plan_for(question: str) -> service.QueryPlan:
-    return service.plan_search(question, SearchFilters(), NOW)[0]
+def plan_for(question: str) -> QueryPlan:
+    return search_service.plan_search(question, SearchFilters(), NOW)[0]
 
 
 def test_matching_partner_offers_come_first_in_relevance_order() -> None:
     rows = [row("e1", score=0.03), row("p1", partner_id=1, score=0.02), row("e2", score=0.01),
             row("p2", partner_id=2, score=0.005)]
-    ordered = service.partners_first(rows, plan_for("un concert ce week-end"), exact=True)
+    ordered = search_query.partners_first(rows, plan_for("un concert ce week-end"), exact=True)
     assert [r["event_id"] for r in ordered] == ["p1", "p2", "e1", "e2"]
 
 
@@ -334,23 +340,23 @@ def test_premium_partner_offers_lead_among_those_that_answer() -> None:
     """17/10/2026 : la formule départage les offres qui répondent, pas les autres événements."""
     rows = [row("e1", score=0.04), row("p1", partner_id=1, score=0.03), row("p2", partner_id=2, score=0.02,
                                                                            partner_rank=2)]
-    ordered = service.partners_first(rows, plan_for("un concert ce week-end"), exact=True)
+    ordered = search_query.partners_first(rows, plan_for("un concert ce week-end"), exact=True)
     assert [r["event_id"] for r in ordered] == ["p2", "p1", "e1"]
 
 
 def test_partner_offer_far_from_a_vague_question_stays_in_its_place() -> None:
-    rows = [row(f"e{i}", score=1 / (60 + i)) for i in range(service.PARTNER_TOP_RANK)]
+    rows = [row(f"e{i}", score=1 / (60 + i)) for i in range(search_query.PARTNER_TOP_RANK)]
     rows.append(row("p1", partner_id=1, score=0.001))
-    ordered = service.partners_first(rows, plan_for("quelque chose de sympa"), exact=True)
+    ordered = search_query.partners_first(rows, plan_for("quelque chose de sympa"), exact=True)
     assert ordered[-1]["event_id"] == "p1"
-    near = service.partners_first([row("e1", score=0.03), row("p1", partner_id=1, score=0.02)],
+    near = search_query.partners_first([row("e1", score=0.03), row("p1", partner_id=1, score=0.02)],
                                   plan_for("quelque chose de sympa"), exact=True)
     assert near[0]["event_id"] == "p1"
 
 
 def test_partner_offers_leave_the_cards_when_nothing_answers_exactly() -> None:
     rows = [row("e1"), row("p1", partner_id=1)]
-    ordered = service.partners_first(rows, plan_for("du théâtre"), exact=False)
+    ordered = search_query.partners_first(rows, plan_for("du théâtre"), exact=False)
     assert [r["event_id"] for r in ordered] == ["e1"]
 
 
@@ -358,7 +364,7 @@ def test_cards_open_with_the_partner_offer_that_answers() -> None:
     connection = FakeConnection([row("e1", title="Concert de jazz", category_norm="concert", category_match=True),
                                  row("p1", title="Soirée jazz au bar", category_norm="concert", category_match=True,
                                      partner_id=4, partner_name="Le Bar", venue_name="Bar", city="Sète")])
-    events = list(service.run_search(connection, "un concert", SearchFilters(),
+    events = list(search_service.run_search(connection, "un concert", SearchFilters(),
                                      SearchServices(embed=None, write=None, now=lambda: NOW)))
     cards = events[-1]["result"]["events"]
     assert [card["event_id"] for card in cards] == ["p1", "e1"] and cards[0]["partner"] is True
@@ -372,21 +378,21 @@ def test_partner_offer_must_aim_at_the_precise_type_and_the_public() -> None:
     puppets = row("p1", title="Spectacle de marionnettes", category_norm="spectacle", category_match=True,
                   partner_id=1, score=0.03)
     play = row("e1", title="Une comédie", category_norm="theatre", category_match=True, score=0.02)
-    ordered = service.partners_first([play, puppets], plan_for("j'aimerais aller au théâtre"), exact=True,
+    ordered = search_query.partners_first([play, puppets], plan_for("j'aimerais aller au théâtre"), exact=True,
                                      question="j'aimerais aller au théâtre")
     assert [r["event_id"] for r in ordered] == ["e1", "p1"] and not ordered[1].get("partner_ahead")
-    ordered = service.partners_first([puppets], plan_for("un spectacle de danse"), exact=False,
+    ordered = search_query.partners_first([puppets], plan_for("un spectacle de danse"), exact=False,
                                      question="un spectacle de danse")
     assert ordered == []                                   # idées voisines : l'offre sort des cartes
     staged = row("p2", title="Pièce de théâtre au jardin", category_norm="spectacle", category_match=True,
                  partner_id=2, score=0.01)
-    ordered = service.partners_first([play, staged], plan_for("j'aimerais aller au théâtre"), exact=True,
+    ordered = search_query.partners_first([play, staged], plan_for("j'aimerais aller au théâtre"), exact=True,
                                      question="j'aimerais aller au théâtre")
     assert ordered[0]["event_id"] == "p2" and ordered[0]["partner_ahead"] is True
     climbing = row("p3", title="Initiation escalade enfants", category_norm="atelier", partner_id=3,
                    audiences=["ados", "famille"], score=0.02)
     ados = plan_for("un truc à faire avec des ados")
-    ordered = service.partners_first([row("e2", score=0.03), climbing], ados, exact=True,
+    ordered = search_query.partners_first([row("e2", score=0.03), climbing], ados, exact=True,
                                       question="un truc à faire avec des ados")
     assert [r["event_id"] for r in ordered] == ["e2", "p3"]
 
@@ -403,16 +409,16 @@ def test_main_type_is_the_precise_one() -> None:
 def test_partner_kept_in_place_is_not_moved_first_by_card_order() -> None:
     cards = [{"ref": 1, "event_id": "e1", "partner": False}, {"ref": 2, "event_id": "p1", "partner": True,
                                                               "partner_ahead": False}]
-    ordered, _ = service.order_cards(cards, "Voici [1].")
+    ordered, _ = search_answer.order_cards(cards, "Voici [1].")
     assert [card["event_id"] for card in ordered] == ["e1", "p1"]
-    assert "offre partenaire" not in service.events_for_prompt([{**cards[1], "ref": 2, "title": "T", "date": "",
+    assert "offre partenaire" not in search_answer.events_for_prompt([{**cards[1], "ref": 2, "title": "T", "date": "",
                                                                  "place": "", "category": "", "price": "",
                                                                  "audiences": [], "summary": ""}])
 
 
 def test_cards_order_partners_then_cited_then_the_rest() -> None:
     cards = [{"ref": i, "event_id": f"e{i}", "partner": i == 6} for i in range(1, 9)]
-    ordered, answer = service.order_cards(cards, "Idées : [5] FABRIQUE, [7] LUDI ou [8] BRIQUES, et [5].")
+    ordered, answer = search_answer.order_cards(cards, "Idées : [5] FABRIQUE, [7] LUDI ou [8] BRIQUES, et [5].")
     assert [card["event_id"] for card in ordered] == ["e6", "e5", "e7", "e8", "e1", "e2", "e3", "e4"]
     assert [card["ref"] for card in ordered] == list(range(1, 9))
     assert answer == "Idées : [2] FABRIQUE, [3] LUDI ou [4] BRIQUES, et [2]."
@@ -443,13 +449,13 @@ class SubjectConnection(FakeConnection):
 
 def search(connection: FakeConnection, question: str, write=None) -> dict[str, Any]:
     filters = SearchFilters(public="famille", period="7jours", free_only=True)
-    events = list(service.run_search(connection, question, filters,
+    events = list(search_service.run_search(connection, question, filters,
                                      SearchServices(embed=None, write=write, now=lambda: NOW)))
     return events[-1]["result"]
 
 
 def test_precise_subject_words_are_searched_in_the_text() -> None:
-    assert service.distinctive_keywords(["cirque", "spectacle", "jazz", "concert", "photo"]) == [
+    assert search_query.distinctive_keywords(["cirque", "spectacle", "jazz", "concert", "photo"]) == [
         "cirque", "jazz", "photo"]
 
 
@@ -536,7 +542,7 @@ def test_constraints_are_kept_when_widening_shows_the_subject_no_better() -> Non
 
 
 def test_words_are_searched_by_prefix() -> None:
-    assert service.lexical_query(["photo", "cine", "art"]) == "photo:* | cine:* | art"
+    assert search_query.lexical_query(["photo", "cine", "art"]) == "photo:* | cine:* | art"
 
 
 def test_partner_circus_course_answers_circus_even_if_filed_as_a_course() -> None:
@@ -557,37 +563,37 @@ def test_on_topic_partner_offer_stays_among_neighbour_ideas() -> None:
     rows = [row("e1", keyword_match=False, category_match=False),
             row("p1", partner_id=1, keyword_match=False, category_match=True),
             row("p2", partner_id=2, keyword_match=False, category_match=False)]
-    ordered = service.partners_first(rows, plan_for("du théâtre"), exact=False)
+    ordered = search_query.partners_first(rows, plan_for("du théâtre"), exact=False)
     assert [r["event_id"] for r in ordered] == ["p1", "e1"]
 
 
 def test_type_written_in_the_title_counts_as_the_type() -> None:
     """« jeux » : « Atelier jeux en famille », rangé en atelier, répond aussi (15/10/2026)."""
 
-    sql, params = service.build_search_query(plan_for("des jeux"), None)
+    sql, params = search_query.build_search_query(plan_for("des jeux"), None)
     assert params["type_words"] == "jeux" and "to_tsquery('french', %(type_words)s)" in sql
     assert "NULLIF(e.category_norm, '')" in sql
-    sql, params = service.build_search_query(plan_for("une sortie demain"), None)
+    sql, params = search_query.build_search_query(plan_for("une sortie demain"), None)
     assert "type_words" not in params
 
 
 def test_default_suggestions_offer_the_evening_as_a_time() -> None:
-    assert "Plutôt le soir ?" in service.default_suggestions(service.SearchFilters())
-    plan = service.plan_search("un concert ce soir", service.SearchFilters(), NOW)[0]
-    assert "Plutôt en journée ?" in service.default_suggestions(plan)
+    assert "Plutôt le soir ?" in search_answer.default_suggestions(SearchFilters())
+    plan = search_service.plan_search("un concert ce soir", SearchFilters(), NOW)[0]
+    assert "Plutôt en journée ?" in search_answer.default_suggestions(plan)
 
 
 def test_a_suggestion_is_a_single_choice() -> None:
     """17/10/2026 : une relance est un bouton, donc un seul choix."""
 
-    assert service.single_choices("En intérieur ou en extérieur ?") == ["En intérieur ?", "En extérieur ?"]
-    assert service.single_choices("Plutôt samedi ou dimanche ?") == ["Plutôt samedi ?", "Plutôt dimanche ?"]
-    assert service.single_choices("Et s'il pleut ou s'il vente ?") == ["Et s'il pleut ?", "Et s'il vente ?"]
-    assert service.single_choices("Plutôt samedi ou plutôt dimanche ?") == ["Plutôt samedi ?", "Plutôt dimanche ?"]
-    assert service.single_choices("Où manger après ?") == ["Où manger après ?"]          # « où » : un lieu
-    assert service.single_choices("Et s'il pleut ?") == ["Et s'il pleut ?"]
+    assert search_answer.single_choices("En intérieur ou en extérieur ?") == ["En intérieur ?", "En extérieur ?"]
+    assert search_answer.single_choices("Plutôt samedi ou dimanche ?") == ["Plutôt samedi ?", "Plutôt dimanche ?"]
+    assert search_answer.single_choices("Et s'il pleut ou s'il vente ?") == ["Et s'il pleut ?", "Et s'il vente ?"]
+    assert search_answer.single_choices("Plutôt samedi ou plutôt dimanche ?") == ["Plutôt samedi ?", "Plutôt dimanche ?"]
+    assert search_answer.single_choices("Où manger après ?") == ["Où manger après ?"]          # « où » : un lieu
+    assert search_answer.single_choices("Et s'il pleut ?") == ["Et s'il pleut ?"]
     raw = json.dumps({"reponse": "Ok.", "suggestions": ["En intérieur ou en extérieur ?", "Plutôt en soirée ?"]})
-    assert service.parse_answer(raw, 1)[1] == ["En intérieur\u00a0?", "En extérieur\u00a0?", "Plutôt en soirée\u00a0?"]
+    assert search_answer.parse_answer(raw, 1)[1] == ["En intérieur\u00a0?", "En extérieur\u00a0?", "Plutôt en soirée\u00a0?"]
 
 
 
@@ -595,7 +601,7 @@ def test_the_moment_of_the_day_filters_the_start_hour() -> None:
     """17/10/2026 : « le matin », « l'après-midi » écrits filtrent l'heure de début."""
 
     def sql_for(question: str) -> str:
-        return service.build_search_query(service.plan_search(question, SearchFilters(), NOW)[0], None)[0]
+        return search_query.build_search_query(search_service.plan_search(question, SearchFilters(), NOW)[0], None)[0]
 
     assert "BETWEEN 0 AND 11" in sql_for("un atelier samedi matin")
     assert "BETWEEN 12 AND 17" in sql_for("un spectacle l'après-midi")
@@ -605,14 +611,14 @@ def test_the_moment_of_the_day_filters_the_start_hour() -> None:
 
 def test_demo_offers_are_marked() -> None:
     """18/10/2026 : partenaires fictifs annoncés comme démonstration, sans faux lien."""
-    assert service.to_card(row(url="https://example.org/bar"))["demo"] is True
-    assert service.to_card(row(url="https://www.sete.fr/agenda"))["demo"] is False
-    assert service.is_demo_link("https://sub.example.com/x") and not service.is_demo_link("https://notexample.org")
+    assert search_cards.to_card(row(url="https://example.org/bar"))["demo"] is True
+    assert search_cards.to_card(row(url="https://www.sete.fr/agenda"))["demo"] is False
+    assert search_cards.is_demo_link("https://sub.example.com/x") and not search_cards.is_demo_link("https://notexample.org")
 
 
 def test_child_public_is_part_of_family() -> None:
     """18/10/2026 : « Enfant » = familial et pour l'enfant (âge ou texte), sans nouveau public en base."""
-    sql, params = service.build_search_query(SearchFilters(public="enfant"), None, NOW)
+    sql, params = search_query.build_search_query(SearchFilters(public="enfant"), None, NOW)
     assert "'famille' = ANY (e.audiences)" in sql and "e.age_max <= 14" in sql and "public" not in params
-    sql, params = service.build_search_query(SearchFilters(public="famille"), None, NOW)
+    sql, params = search_query.build_search_query(SearchFilters(public="famille"), None, NOW)
     assert params["public"] == "famille"

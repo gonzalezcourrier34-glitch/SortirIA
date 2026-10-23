@@ -13,7 +13,6 @@ import pytest
 
 from src.extractors.rss import rss_adapter as module
 
-
 # Doubles de test
 
 class FakeContext:

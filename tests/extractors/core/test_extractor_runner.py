@@ -13,11 +13,10 @@ import src.extractors.core.extractor_runner as module
 from config.constants import (
     EXTRACTOR_STATUS_FAILED,
     EXTRACTOR_STATUS_PARTIAL_SUCCESS,
-    EXTRACTOR_STATUS_SUCCESS
+    EXTRACTOR_STATUS_SUCCESS,
 )
 from src.extractors.core.extractor_models import ExtractorExecution
 from src.extractors.core.extractor_results import ExtractorResult
-
 
 # Helpers
 
@@ -267,7 +266,7 @@ def test_run_extractor_builds_execution_report(
     articles, execution = module.run_extractor(
         extractor_name="NewsAPI",
         source_type="api",
-        extractor=lambda: []
+        extractor=list
     )
 
     assert execution is expected_execution
@@ -300,7 +299,7 @@ def test_run_extractor_returns_copied_articles(
     articles, execution = module.run_extractor(
         extractor_name="NewsAPI",
         source_type="api",
-        extractor=lambda: []
+        extractor=list
     )
 
     assert articles == result.articles
@@ -333,7 +332,7 @@ def test_run_extractor_returns_empty_articles(
     articles, execution = module.run_extractor(
         extractor_name="NewsAPI",
         source_type="api",
-        extractor=lambda: []
+        extractor=list
     )
 
     assert articles == []
@@ -366,7 +365,7 @@ def test_run_extractor_returns_failed_execution(
     articles, execution = module.run_extractor(
         extractor_name="NewsAPI",
         source_type="api",
-        extractor=lambda: []
+        extractor=list
     )
 
     assert articles == []
@@ -399,7 +398,7 @@ def test_run_extractor_logs_start(
     module.run_extractor(
         extractor_name="NewsAPI",
         source_type="api",
-        extractor=lambda: []
+        extractor=list
     )
 
     assert messages[0] == (
@@ -430,7 +429,7 @@ def test_run_extractor_logs_execution_summary(
     module.run_extractor(
         extractor_name="NewsAPI",
         source_type="api",
-        extractor=lambda: []
+        extractor=list
     )
 
     summary = messages[1]
@@ -471,7 +470,7 @@ def test_run_extractor_logs_dash_without_main_reason(
     module.run_extractor(
         extractor_name="NewsAPI",
         source_type="api",
-        extractor=lambda: []
+        extractor=list
     )
 
     summary = messages[1]
@@ -502,7 +501,7 @@ def test_run_extractor_uses_result_name_in_summary(
     module.run_extractor(
         extractor_name="Nom demandé",
         source_type="api",
-        extractor=lambda: []
+        extractor=list
     )
 
     assert messages[0][1] == "Nom demandé"

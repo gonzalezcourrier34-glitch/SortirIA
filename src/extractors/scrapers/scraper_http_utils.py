@@ -11,26 +11,12 @@ from typing import Any
 
 import httpx
 from bs4 import BeautifulSoup
-from tenacity import (
-    retry,
-    retry_if_exception,
-    stop_after_attempt,
-    wait_exponential
-)
+from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
-from config.settings import (
-    HTTP_HEADERS,
-    MAX_RETRIES,
-    REQUEST_TIMEOUT,
-    RETRY_DELAY_SECONDS
-)
+from config.settings import HTTP_HEADERS, MAX_RETRIES, REQUEST_TIMEOUT, RETRY_DELAY_SECONDS
 from src.article.processing.article_cleaner import clean_text
 from src.logger import get_logger
-from src.robot.robots_utils import (
-    is_url_allowed_by_robots,
-    register_request,
-    wait_for_crawl_delay
-)
+from src.robot.robots_utils import is_url_allowed_by_robots, register_request, wait_for_crawl_delay
 from src.utils.parsing_utils import parse_boolean
 from src.utils.url_utils import canonicalize_url
 from src.utils.value_utils import normalize_value
@@ -277,9 +263,11 @@ def fetch_html(
     url : str
         URL déjà canonisée de la page.
     respect_robots : bool
-        Vérifie robots.txt avant la requête. Par défaut True.
+        Vérifie robots.txt (accès et crawl-delay) avant la requête. Si faux,
+        robots.txt n'est pas téléchargé. Par défaut True.
     request_delay_seconds : float
-        Délai minimal entre deux requêtes vers le même site. Par défaut 1 s.
+        Délai minimal entre deux requêtes vers le même site, appliqué même
+        si robots.txt n'est pas respecté. Par défaut 1 s.
 
     Returns
     -------
@@ -304,7 +292,8 @@ def fetch_html(
 
     wait_for_crawl_delay(
         url,
-        minimum_delay=request_delay_seconds
+        minimum_delay=request_delay_seconds,
+        use_robots=respect_robots
     )
 
     # Envoyer la requête, en la comptant et en la notant pour le crawl-delay

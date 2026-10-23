@@ -28,12 +28,12 @@ from config.constants import (
     RSS_ERROR_NETWORK,
     RSS_ERROR_PARSING,
     RSS_ERROR_RATE_LIMITED,
+    RSS_ERROR_SERVER,
     RSS_ERROR_TIMEOUT,
     RSS_MAINTENANCE_STATUS_CODES,
     RSS_RATE_LIMIT_STATUS_CODES,
-    RSS_ERROR_SERVER,
     RSS_SERVER_ERROR_STATUS_CODES,
-    SOURCE_TYPE_RSS
+    SOURCE_TYPE_RSS,
 )
 from config.paths import SOURCES_FILE
 from config.source_config import SourceRegistry, load_source_registry
@@ -45,7 +45,7 @@ from src.extractors.rss.rss_adapter import (
     RssItem,
     RssSource,
     validate_rss_article,
-    validate_rss_item
+    validate_rss_item,
 )
 from src.logger import get_logger
 from src.utils.extractor_utils import log_extraction_summary
@@ -256,6 +256,32 @@ def get_http_error_message(error: httpx.HTTPStatusError) -> str:
     )
 
 
+def get_rss_error_message(error: Any) -> str:
+    """Retourne le message normalisé et sûr pour les logs d'une erreur RSS.
+
+    Parameters
+    ----------
+    error : Any
+        Erreur RSS, erreur httpx ou toute autre valeur.
+
+    Returns
+    -------
+    str
+        Motif de l'erreur, adresses masquées, ou un message par défaut.
+    """
+
+    if isinstance(error, (RssExtractionStoppedError, RssRequestError)):
+        message = error.reason
+    elif isinstance(error, httpx.HTTPStatusError):
+        message = get_http_error_message(error)
+    elif isinstance(error, httpx.HTTPError):
+        message = type(error).__name__
+    else:
+        message = normalize_value(error)
+
+    return sanitize_url_for_logging(message or "Erreur RSS non communiquée")
+
+
 def record_rss_request_error(error: Any) -> str:
     """Enregistre une erreur RSS normalisée et sûre pour les logs.
 
@@ -270,16 +296,7 @@ def record_rss_request_error(error: Any) -> str:
         Message enregistré dans la liste des erreurs courantes.
     """
 
-    if isinstance(error, (RssExtractionStoppedError, RssRequestError)):
-        message = error.reason
-    elif isinstance(error, httpx.HTTPStatusError):
-        message = get_http_error_message(error)
-    elif isinstance(error, httpx.HTTPError):
-        message = type(error).__name__
-    else:
-        message = normalize_value(error)
-
-    message = sanitize_url_for_logging(message or "Erreur RSS non communiquée")
+    message = get_rss_error_message(error)
     _RSS_REQUEST_ERRORS.set((*_RSS_REQUEST_ERRORS.get(), message))
     return message
 
@@ -699,7 +716,9 @@ def create_context(source: Mapping[str, Any]) -> RssExtractionContext:
     filters = get_filter_configuration(normalized_source)
 
     if not isinstance(filters, Mapping):
-        raise ValueError("Configuration des filtres RSS invalide.")
+        raise ValueError(  # noqa: TRY004  ValueError attendu par les appelants
+            "Configuration des filtres RSS invalide."
+        )
 
     return RssExtractionContext(
         source=normalized_source,
@@ -764,7 +783,7 @@ def process_rss_item(
             "Erreur inattendue pendant la construction d'une entrée de %s : %s",
             context.source_name,
             sanitize_url_for_logging(
-                normalize_value(error) or type(error).__name__
+                normalize_value(error) or type(error).__name__  # noqa: TRY401  adresses masquées
             )
         )
         context.reject("construction_invalide")
@@ -1038,7 +1057,9 @@ def build_failed_source_result(
 ) -> ExtractorResult:
     """Construit un résultat d'échec homogène pour une source RSS.
 
-    Le message est aussi ajouté aux erreurs RSS courantes.
+    Le message n'est pas ajouté aux erreurs RSS courantes : celles-ci sont
+    propres à l'extraction d'une source (`extract_rss_source`), et l'échec
+    est déjà porté par le résultat retourné.
 
     Parameters
     ----------
@@ -1056,21 +1077,17 @@ def build_failed_source_result(
         Résultat au statut échec.
     """
 
+    message = get_rss_error_message(error)
+    metadata: dict[str, Any] = {
+        "source_id": source_id,
+        "failure_reason": RSS_ERROR_EXTRACTION_STOPPED,
+        "error_type": type(error).__name__
+    }
+
+    # Un arrêt RSS précise son motif et son code HTTP
     if isinstance(error, RssExtractionStoppedError):
-        message = record_rss_request_error(error)
-        metadata = {
-            "source_id": source_id,
-            "failure_reason": get_rss_failure_reason(error),
-            "error_type": type(error).__name__,
-            "error_status_code": error.status_code
-        }
-    else:
-        message = record_rss_request_error(error)
-        metadata = {
-            "source_id": source_id,
-            "failure_reason": RSS_ERROR_EXTRACTION_STOPPED,
-            "error_type": type(error).__name__
-        }
+        metadata["failure_reason"] = get_rss_failure_reason(error)
+        metadata["error_status_code"] = error.status_code
 
     return ExtractorResult(
         name=source_name,

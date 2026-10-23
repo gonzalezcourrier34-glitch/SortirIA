@@ -31,7 +31,7 @@ def test_to_pgvector() -> None:
 def test_update_embeddings() -> None:
     connection = FakeConnection()
     assert repo.update_embeddings(connection, [("e1", [0.1, 0.2])], "mistral-embed") == 1
-    kind, sql, rows = connection.calls[0]
+    _kind, sql, rows = connection.calls[0]
     assert "embedding = %(embedding)s::vector" in sql
     assert rows == [{"event_id": "e1", "embedding": "[0.1,0.2]", "model": "mistral-embed"}]
     assert repo.update_embeddings(connection, [], "mistral-embed") == 0

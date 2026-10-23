@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from threading import Lock
-from typing import Any
+from typing import Any, ClassVar, Self
 from urllib.robotparser import RobotFileParser
 
 import httpx
@@ -18,7 +18,7 @@ from config.constants import (
     ROBOTS_REASON_CHECK_ERROR,
     ROBOTS_REASON_DENIED,
     ROBOTS_REASON_INVALID_URL,
-    ROBOTS_REASON_UNAVAILABLE
+    ROBOTS_REASON_UNAVAILABLE,
 )
 from src.robot.robots_utils import (
     ROBOTS_CACHE_TTL_SECONDS,
@@ -50,9 +50,8 @@ from src.robot.robots_utils import (
     parse_content_length,
     read_limited_content,
     register_request,
-    wait_for_crawl_delay
+    wait_for_crawl_delay,
 )
-
 
 # Doubles HTTP
 
@@ -76,14 +75,14 @@ class FakeStreamResponse:
         self._content = content
         self._chunks = chunks
 
-    def __enter__(self) -> FakeStreamResponse:
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(
         self,
-        exception_type: type[BaseException] | None,
-        exception: BaseException | None,
-        traceback: Any
+        exception_type: object,
+        exception: object,
+        traceback: object
     ) -> None:
         return None
 
@@ -101,14 +100,14 @@ class FakeHttpClient:
 
     response: FakeStreamResponse | None = None
     raised_error: BaseException | None = None
-    received_arguments: dict[str, Any] = {}
+    received_arguments: ClassVar[dict[str, Any]] = {}
     requested_method: str | None = None
     requested_url: str | None = None
 
     def __init__(self, **kwargs: Any) -> None:
         type(self).received_arguments = kwargs
 
-    def __enter__(self) -> FakeHttpClient:
+    def __enter__(self) -> Self:
         if type(self).raised_error is not None:
             raise type(self).raised_error
 
@@ -116,9 +115,9 @@ class FakeHttpClient:
 
     def __exit__(
         self,
-        exception_type: type[BaseException] | None,
-        exception: BaseException | None,
-        traceback: Any
+        exception_type: object,
+        exception: object,
+        traceback: object
     ) -> None:
         return None
 
@@ -599,7 +598,7 @@ def test_decode_robots_content_falls_back_to_utf8() -> None:
 
     result = decode_robots_content(
         response,
-        "User-agent: *".encode()
+        b"User-agent: *"
     )
 
     assert result == "User-agent: *"
@@ -1354,6 +1353,42 @@ def test_wait_for_crawl_delay_uses_greatest_delay(
     wait_for_crawl_delay(
         "https://example.com/article",
         minimum_delay=5.0
+    )
+
+    assert sleeps == [1.0]
+    assert module._LAST_REQUEST_AT["https://example.com"] == 12.0
+
+
+def test_wait_for_crawl_delay_skips_robots_when_disabled(
+    monkeypatch: pytest.MonkeyPatch
+) -> None:
+    times = iter([10.0, 12.0])
+    sleeps: list[float] = []
+
+    module._LAST_REQUEST_AT["https://example.com"] = 9.0
+
+    monkeypatch.setattr(
+        module,
+        "get_robots_policy",
+        lambda url: pytest.fail(
+            "robots.txt ne doit pas être lu."
+        )
+    )
+    monkeypatch.setattr(
+        module,
+        "monotonic",
+        lambda: next(times)
+    )
+    monkeypatch.setattr(
+        module,
+        "sleep",
+        lambda delay: sleeps.append(delay)
+    )
+
+    wait_for_crawl_delay(
+        "https://example.com/article",
+        minimum_delay=2.0,
+        use_robots=False
     )
 
     assert sleeps == [1.0]

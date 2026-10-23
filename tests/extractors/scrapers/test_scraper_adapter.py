@@ -13,7 +13,6 @@ import pytest
 
 from src.extractors.scrapers import scraper_adapter as module
 
-
 # Fabriques
 
 def iter_items(
@@ -355,8 +354,4 @@ def test_scraper_adapter_rejects_dynamic_attribute() -> None:
             TypeError
         )
     ):
-        setattr(
-            adapter,
-            "unexpected_attribute",
-            "value"
-        )
+        adapter.unexpected_attribute = "value"

@@ -24,16 +24,15 @@ from src.utils.date_utils import (
     normalize_datetime,
     parse_datetime,
     parse_timestamp,
-    parse_year
+    parse_year,
 )
-
 
 # Normalisation
 
 def test_normalize_datetime_adds_utc_to_naive_datetime() -> None:
     """Une datetime sans fuseau doit être considérée comme UTC."""
 
-    value = datetime(2026, 7, 27, 12, 30, 45)
+    value = datetime(2026, 7, 27, 12, 30, 45)  # noqa: DTZ001  date naive voulue
 
     result = normalize_datetime(value)
 
@@ -283,7 +282,7 @@ def test_parse_datetime_returns_none_for_missing_value(
 def test_parse_datetime_accepts_naive_datetime() -> None:
     """Une datetime naïve doit être normalisée en UTC."""
 
-    value = datetime(2026, 7, 27, 12, 30)
+    value = datetime(2026, 7, 27, 12, 30)  # noqa: DTZ001  date naive voulue
 
     assert parse_datetime(value) == datetime(
         2026,
@@ -383,6 +382,10 @@ def test_parse_datetime_handles_struct_time_error(
         (
             "2026-07-27T12:30:45Z",
             datetime(2026, 7, 27, 12, 30, 45, tzinfo=UTC)
+        ),
+        (
+            "2026-07-27Z",
+            datetime(2026, 7, 27, tzinfo=UTC)
         ),
         (
             "2026-07-27T14:30:45+02:00",

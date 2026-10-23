@@ -375,7 +375,7 @@ class ApiAdapter:
             query=question,
             k=min(self.top_k_retrieval, len(candidate_docs)),
         )</code></pre></div>
-<div><span>APRÈS · SORTIRIA · app/search_service.py</span><pre><code>    if vector:
+<div><span>APRÈS · SORTIRIA · app/search_query.py</span><pre><code>    if vector:
         params["vector"] = vector
         ctes.append("""by_meaning AS (
     SELECT event_id, row_number() OVER (ORDER BY embedding &lt;=&gt; %(vector)s::vector) AS rank
@@ -394,12 +394,15 @@ class ApiAdapter:
     # Son rôle n'est plus de filtrer brutalement,
     # mais de réordonner intelligemment les candidats
     # avec un score hybride vectoriel + métier.</code></pre></div>
-<div><span>APRÈS · SORTIRIA · app/search_service.py</span><pre><code>    conditions = ["e.is_outing", "COALESCE(e.end_at, e.start_at) &gt;= %(start)s", "e.start_at &lt; %(end)s"]
+<div><span>APRÈS · SORTIRIA · app/search_query.py</span><pre><code>    conditions = ["e.is_outing", "COALESCE(e.end_at, e.start_at) &gt;= %(start)s",
+                  "e.start_at &lt; %(end)s"]
     if partners_only:
         conditions.append("e.partner_id IS NOT NULL")
     params: dict[str, Any] = {"start": plan.start, "end": plan.end, "limit": limit, "pool": POOL,
                               "categories": list(plan.categories)}
-    if plan.public:
+    if plan.public == "enfant":
+        conditions.append(CHILD_CONDITION)
+    elif plan.public:
         conditions.append("%(public)s = ANY (e.audiences)")
         params["public"] = plan.public
     if plan.cities:

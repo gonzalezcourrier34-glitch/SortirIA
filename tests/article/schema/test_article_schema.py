@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from src.article.schema import article_schema as module
 
-
 # Champs standards
 
 def test_standard_article_fields_contains_expected_fields() -> None:
@@ -127,25 +126,6 @@ def test_article_url_fields_are_unique() -> None:
 def test_article_url_fields_are_identifier_fields() -> None:
     assert set(module.ARTICLE_URL_FIELDS).issubset(
         module.ARTICLE_IDENTIFIER_FIELDS
-    )
-
-
-# Catégories
-
-def test_article_categories_is_not_empty() -> None:
-    assert module.ARTICLE_CATEGORIES
-
-
-def test_article_categories_are_lowercase() -> None:
-    assert all(
-        category == category.lower()
-        for category in module.ARTICLE_CATEGORIES
-    )
-
-
-def test_article_categories_are_unique() -> None:
-    assert len(module.ARTICLE_CATEGORIES) == len(
-        set(module.ARTICLE_CATEGORIES)
     )
 
 

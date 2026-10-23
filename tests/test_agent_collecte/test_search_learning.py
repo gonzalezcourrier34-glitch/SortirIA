@@ -13,8 +13,8 @@ from typing import Any
 import pytest
 
 from agent import nodes
-from agent.proposals import add_synonym_to_config, apply_proposal
-from agent.report import build_report_email, describe_action
+from agent.proposals import add_synonym_to_config, apply_proposal, describe_action
+from agent.report import build_report_email
 from agent.search_learning import (
     LearningResult,
     WordReading,
@@ -194,11 +194,24 @@ def test_learning_failure_never_stops_the_night() -> None:
 
 
 def test_a_new_synonym_renews_the_cached_answer(monkeypatch: pytest.MonkeyPatch) -> None:
-    from app import search_service
-    from app.search_service import SearchFilters
+    from app import search_cache
+    from app.search_filters import SearchFilters
 
     now = datetime(2026, 10, 19, 10, tzinfo=PARIS)
     monkeypatch.setattr(query_understanding, "learned_synonyms", lambda path=None: {})
-    before = search_service.cache_key("de la zumba", "", SearchFilters(), now, "12")
+    before = search_cache.cache_key("de la zumba", "", SearchFilters(), now, "12")
     monkeypatch.setattr(query_understanding, "learned_synonyms", lambda path=None: {"zumba": "fitness"})
-    assert search_service.cache_key("de la zumba", "", SearchFilters(), now, "12") != before
+    assert search_cache.cache_key("de la zumba", "", SearchFilters(), now, "12") != before
+
+
+def test_apply_synonym_proposal_writes_to_the_given_file(tmp_path: Path,
+                                                         monkeypatch: pytest.MonkeyPatch) -> None:
+    default, chosen = tmp_path / "par_defaut.yaml", tmp_path / "choisi.yaml"
+    default.write_text("synonymes:\n", encoding="utf-8")
+    chosen.write_text("synonymes:\n", encoding="utf-8")
+    monkeypatch.setattr(query_understanding, "SYNONYMS_FILE", default)
+    action = {"type": "ajouter_synonyme", "word": "slam", "target": "poesie", "times": 3}
+    proposal = {"action": action}
+    applied, _ = apply_proposal(proposal, synonyms_path=chosen)
+    assert applied and "slam" in chosen.read_text(encoding="utf-8")
+    assert default.read_text(encoding="utf-8") == "synonymes:\n"

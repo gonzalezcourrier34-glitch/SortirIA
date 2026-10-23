@@ -14,8 +14,8 @@ from unittest.mock import Mock
 import pytest
 
 import src.extractors.datasets.dataset_engine as module
+from config.constants import EXTRACTOR_STATUS_DISABLED
 from src.extractors.datasets.dataset_adapter import DatasetAdapter
-
 
 # Fabriques
 
@@ -942,121 +942,6 @@ def test_get_dataset_filters_returns_empty_dict_for_non_mapping(
     assert module.get_dataset_filters({}) == {}
 
 
-# get_dataset_files
-
-def test_get_dataset_files_returns_validated_files(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch
-) -> None:
-    adapter = make_adapter(
-        supported_extensions=frozenset({".csv"})
-    )
-    source = make_source()
-    discovered_files = [
-        tmp_path / "raw.csv"
-    ]
-    validated_files = [
-        tmp_path / "validated.csv"
-    ]
-    received: dict[str, Any] = {}
-
-    adapter.find_files.return_value = discovered_files
-
-    def fake_validate_dataset_files(
-        files: Any,
-        dataset_directory: Path,
-        supported_extensions: frozenset[str],
-        source_name: str
-    ) -> list[Path]:
-        received["files"] = files
-        received["dataset_directory"] = dataset_directory
-        received["supported_extensions"] = supported_extensions
-        received["source_name"] = source_name
-        return validated_files
-
-    monkeypatch.setattr(
-        module,
-        "validate_dataset_files",
-        fake_validate_dataset_files
-    )
-
-    result = module.get_dataset_files(
-        adapter,
-        tmp_path,
-        source,
-        "Fakeddit"
-    )
-
-    assert result is validated_files
-    adapter.find_files.assert_called_once_with(
-        tmp_path,
-        source
-    )
-    assert received == {
-        "files": discovered_files,
-        "dataset_directory": tmp_path,
-        "supported_extensions": frozenset({".csv"}),
-        "source_name": "Fakeddit"
-    }
-
-
-@pytest.mark.parametrize(
-    "invalid_result",
-    [
-        None,
-        (),
-        {},
-        "dataset.csv",
-        Path("dataset.csv")
-    ]
-)
-def test_get_dataset_files_rejects_non_list_discovery(
-    invalid_result: Any,
-    tmp_path: Path
-) -> None:
-    adapter = make_adapter()
-    adapter.find_files.return_value = invalid_result
-
-    with pytest.raises(
-        TypeError,
-        match=(
-            "La recherche de fichiers de Fakeddit "
-            "doit retourner une liste"
-        )
-    ):
-        module.get_dataset_files(
-            adapter,
-            tmp_path,
-            make_source(),
-            "Fakeddit"
-        )
-
-
-def test_get_dataset_files_rejects_empty_validated_list(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch
-) -> None:
-    adapter = make_adapter()
-    adapter.find_files.return_value = []
-
-    monkeypatch.setattr(
-        module,
-        "validate_dataset_files",
-        lambda *args: []
-    )
-
-    with pytest.raises(
-        FileNotFoundError,
-        match="Aucun fichier exploitable trouvé pour Fakeddit"
-    ):
-        module.get_dataset_files(
-            adapter,
-            tmp_path,
-            make_source(),
-            "Fakeddit"
-        )
-
-
 # process_dataset_item
 
 def test_process_dataset_item_uses_generated_identifier(
@@ -1926,6 +1811,23 @@ def test_extract_dataset_from_source_returns_disabled_result(
     }
 
 
+def test_extract_dataset_from_source_treats_missing_enabled_as_active() -> None:
+    adapter = make_adapter()
+    source = make_source(
+        max_articles=0
+    )
+    del source["enabled"]
+
+    result = module.extract_dataset_from_source(
+        source,
+        adapter
+    )
+
+    # Active par défaut, comme dans l'exécuteur : la source va jusqu'au plafond.
+    assert result.status != EXTRACTOR_STATUS_DISABLED
+    assert result.message == "Aucun article demandé."
+
+
 def test_extract_dataset_from_source_returns_empty_when_maximum_is_zero(
     monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -2716,7 +2618,7 @@ def test_extract_dataset_from_source_returns_empty_on_reading_error_without_arti
     )
 
     assert result is expected_result
-    assert received["articles"] if "articles" in received else [] == []
+    assert received.get("articles", []) == []
     assert received["analyzed_count"] == 0
     assert received["rejected_count"] == 0
     assert received["message"].startswith(

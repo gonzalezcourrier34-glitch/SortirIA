@@ -347,7 +347,7 @@ class FilterConfig:
     extra: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
-    def from_mapping(cls, data: Mapping[str, Any] | None) -> "FilterConfig":
+    def from_mapping(cls, data: Mapping[str, Any] | None) -> FilterConfig:
         """Construit les filtres depuis la section `filters` du YAML.
 
         Les clés absentes prennent leur valeur par défaut ; les clés inconnues vont
@@ -453,7 +453,7 @@ class PaginationConfig:
     page_size: int | None = None
 
     @classmethod
-    def from_mapping(cls, data: Mapping[str, Any] | None) -> "PaginationConfig":
+    def from_mapping(cls, data: Mapping[str, Any] | None) -> PaginationConfig:
         """Construit la pagination depuis la section `pagination` du YAML.
 
         Parameters
@@ -1311,7 +1311,6 @@ def load_source_registry(
 
     # Lire le YAML et vérifier sa structure
     document = load_yaml_file(file_path)
-    resolved_secrets_directory = secrets_directory
     defaults, errors = validate_document_structure(document)
     sources: list[SourceConfig] = []
 
@@ -1327,7 +1326,7 @@ def load_source_registry(
                 if isinstance(source, (ApiSourceConfig, SocialSourceConfig)):
                     errors.extend(source.validate(
                         expected_type, require_secrets=require_secrets,
-                        secrets_directory=resolved_secrets_directory
+                        secrets_directory=secrets_directory
                     ))
                 else:
                     errors.extend(source.validate(expected_type))

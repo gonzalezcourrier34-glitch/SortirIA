@@ -1,7 +1,9 @@
 """Service d'orchestration de l'exécution des extracteurs CheckIt.AI.
 
 **Provenance** : repris de CheckIt.AI (projet 12, moteur de collecte), fichier `src/extractor_execution_service.py` (commit 93632c5).
-Modifié pour SortirIA : registre réduit à RSS, OpenAgenda, DATAtourisme, iCal, programmes PDF et fichiers des partenaires (extracteurs de presse et de fake news retirés).
+Modifié pour SortirIA : registre réduit à RSS, OpenAgenda, DATAtourisme, iCal, scraper (pages
+d'agenda), programmes PDF et fichiers des partenaires (extracteurs de presse et de fake news
+retirés).
 """
 
 from __future__ import annotations

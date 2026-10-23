@@ -26,6 +26,11 @@ Appliquer « ajouter_agenda » (découverte du dimanche, 15/10/2026) ajoute
 l'agenda à la fin de la liste `agenda_uids` d'OpenAgenda, avec un commentaire
 (nombre d'événements, date de la découverte). Le fichier garde ses
 commentaires et ses fins de ligne.
+
+Appliquer « ajouter_synonyme » (apprentissage de la recherche, 19/10/2026)
+ajoute « mot tapé : mot connu » à la fin de `config/synonymes.yaml`, avec un
+commentaire (nombre de recherches, date de la proposition) ; la recherche relit
+ce fichier dès qu'il change.
 """
 
 from __future__ import annotations
@@ -37,7 +42,6 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-from agent.report import describe_action
 from config.environment import load_environment
 from config.paths import SOURCES_FILE
 
@@ -125,7 +129,8 @@ def add_agenda_to_config(uid: str, events: Any, found_on: str,
     return True, f"{path.name} mis à jour : agenda {uid} ajouté à agenda_uids."
 
 
-def apply_proposal(proposal: Mapping[str, Any], path: Path = SOURCES_FILE) -> tuple[bool, str]:
+def apply_proposal(proposal: Mapping[str, Any], path: Path = SOURCES_FILE,
+                   synonyms_path: Path | None = None) -> tuple[bool, str]:
     """Applique une proposition acceptée. Renvoie (appliquée ?, explication).
 
     Types reconnus : `remplacer_url`, `ajouter_agenda`,
@@ -137,9 +142,11 @@ def apply_proposal(proposal: Mapping[str, Any], path: Path = SOURCES_FILE) -> tu
     proposal : Mapping[str, Any]
         La proposition, dont `action` (dictionnaire ou JSON) décrit la modification.
     path : Path
-        Fichier de configuration des sources. Par défaut `SOURCES_FILE`.
-        Ne sert pas pour `ajouter_synonyme` (fichier des synonymes) ni pour
-        `valider_document_partenaire`.
+        Fichier de configuration des sources (`remplacer_url`, `ajouter_agenda`).
+        Par défaut `SOURCES_FILE`. Ne sert pas pour `valider_document_partenaire`.
+    synonyms_path : Path | None
+        Fichier des synonymes (`ajouter_synonyme`) ; `None` par défaut pour
+        `config/synonymes.yaml` (`SYNONYMS_FILE`).
 
     Returns
     -------
@@ -166,7 +173,7 @@ def apply_proposal(proposal: Mapping[str, Any], path: Path = SOURCES_FILE) -> tu
         return approve_document(directory, str(action["file"]), str(action["sha256"]))
     if action.get("type") == "ajouter_synonyme" and action.get("word") and action.get("target"):
         return add_synonym_to_config(str(action["word"]), str(action["target"]), action.get("times", "?"),
-                                     str(action.get("found_on") or "?"))
+                                     str(action.get("found_on") or "?"), synonyms_path)
     return False, f"action « {action.get('type')} » à faire à la main."
 
 
@@ -239,6 +246,40 @@ def partner_directory() -> Path | None:
             except (OSError, ValueError):
                 return None
     return None
+
+
+def describe_action(proposal: Mapping[str, Any]) -> str:
+    """Une proposition en une ligne (mail de bilan, pull request, ligne de commande).
+
+    Parameters
+    ----------
+    proposal : Mapping[str, Any]
+        La proposition (`source_id`, `action` en dictionnaire ou en JSON).
+
+    Returns
+    -------
+    str
+        La description selon le type d'action ; par défaut, un remplacement d'adresse.
+    """
+
+    action = proposal.get("action") or {}
+    if isinstance(action, str):
+        action = json.loads(action)
+    source = proposal.get("source_id") or "?"
+    if action.get("type") == "ajouter_synonyme":
+        return (f"recherche : « {action.get('word')} » cherchera aussi "
+                f"« {action.get('target')} » ({action.get('nature', 'synonyme')}, "
+                f"cherché {action.get('times', '?')} fois sans réponse)")
+    if action.get("type") == "ajouter_agenda":
+        wanted = f" ; cherché : « {action['word']} »" if action.get("word") else ""
+        return (f"{source} : ajouter l'agenda {action.get('new')} "
+                f"({action.get('events')} événement(s) dans la zone{wanted}) "
+                f"- {action.get('url')}")
+    if action.get("type") == "valider_document_partenaire":
+        preview = "".join(f"\n      - {line}" for line in action.get("preview") or [])
+        return (f"partenaire {action.get('partner')} : importer {action.get('file')} "
+                f"({action.get('events')} séance(s) lue(s) par Mistral){preview}")
+    return f"{source} : remplacer {action.get('old')} par {action.get('new')}"
 
 
 def describe(proposal: Mapping[str, Any]) -> str:

@@ -95,6 +95,9 @@ SELECT count(*) FROM deleted
 RATING_WINDOW_DAYS = 7
 PAST_CONDITION = """(time_known AND COALESCE(end_at, start_at) < %(now)s)
        OR (NOT time_known AND COALESCE(end_at, start_at) < %(today_start)s)"""
+# Un événement revu cette nuit a last_seen_at = now() (début de la
+# transaction, voir UPSERT_EVENT_SQL) : ceux qui ont une date plus ancienne
+# ont disparu de leur source (retirés, ou désormais refusés par la validation).
 # « Disparu » ne concerne que les événements à venir : un événement passé n'est
 # plus renvoyé par sa source, c'est normal ; il est gardé 7 jours pour la notation
 # puis retiré par PAST_CONDITION (correction du 15/10/2026 : avant, un événement
@@ -183,11 +186,6 @@ VALUES (
 )
 RETURNING run_id
 """
-
-# Un événement revu cette nuit a last_seen_at = now() (début de la
-# transaction, voir UPSERT_EVENT_SQL) : ceux qui ont une date plus ancienne
-# ont disparu de leur source (retirés, ou désormais refusés par la validation).
-
 
 INSERT_RUN_SOURCE_SQL = """
 INSERT INTO sortiria.collect_run_sources (

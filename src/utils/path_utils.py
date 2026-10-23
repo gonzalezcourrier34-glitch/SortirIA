@@ -18,7 +18,6 @@ from typing import Any
 
 from src.utils.parsing_utils import parse_positive_integer
 
-
 # Valeurs par défaut
 
 DEFAULT_SOURCE_NAME = "unknown"

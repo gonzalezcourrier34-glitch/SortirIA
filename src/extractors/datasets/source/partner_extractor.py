@@ -38,7 +38,6 @@ Vérifier un fichier reçu avant de le déposer (aucune écriture en base) :
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import re
 from collections import Counter
@@ -65,6 +64,7 @@ from src.extractors.datasets.dataset_file_utils import resolve_dataset_directory
 from src.extractors.datasets.source.partner_documents import (
     DOCUMENT_EXTENSIONS,
     REASON_TO_APPROVE,
+    file_sha256,
     is_approved,
     is_document,
     read_document_rows,
@@ -299,23 +299,6 @@ def read_table(path: Path) -> tuple[list[str], list[dict[str, Any]]]:
     headers = [normalize_header(column) for column in frame.columns]
     frame.columns = headers
     return headers, frame.to_dict(orient="records")
-
-
-def file_sha256(path: Path) -> str:
-    """Empreinte du fichier : un même fichier n'est compté qu'une fois en base.
-
-    Parameters
-    ----------
-    path : Path
-        Chemin du fichier.
-
-    Returns
-    -------
-    str
-        L'empreinte SHA-256 en hexadécimal.
-    """
-
-    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 # ---------------------------------------------------------------------------
@@ -610,7 +593,11 @@ def main() -> None:
     args = parser.parse_args()
     if args.verifier:
         if not args.verifier.is_file():
-            print(f"Fichier introuvable : {args.verifier}. Donner le chemin d'un fichier .xlsx ou .csv reçu.")
+            formats = ", ".join(sorted(SUPPORTED_EXTENSIONS))
+            print(
+                f"Fichier introuvable : {args.verifier}. "
+                f"Donner le chemin d'un fichier reçu ({formats})."
+            )
             return
         print(check_file(args.verifier))
         return

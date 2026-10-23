@@ -10,17 +10,10 @@ from pathlib import Path
 from typing import Any
 
 from config.paths import SOURCES_FILE
-from config.settings import (
-    MIN_TEXT_LENGTH,
-    MIN_TITLE_LENGTH,
-    MIN_TOTAL_TEXT_LENGTH
-)
+from config.settings import MIN_TEXT_LENGTH, MIN_TITLE_LENGTH, MIN_TOTAL_TEXT_LENGTH
 from src.article.processing.article_cleaner import normalize_value
 from src.logger import get_logger
-from src.utils.parsing_utils import (
-    parse_boolean,
-    parse_non_negative_integer
-)
+from src.utils.parsing_utils import parse_boolean, parse_non_negative_integer
 from src.utils.yaml_utils import load_yaml_file
 
 logger = get_logger(__name__)

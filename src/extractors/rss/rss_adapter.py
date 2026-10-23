@@ -12,7 +12,6 @@ from typing import Any, Protocol
 from src.utils.extractor_utils import validate_article
 from src.utils.value_utils import normalize_value
 
-
 # Types
 
 RssItem = Any

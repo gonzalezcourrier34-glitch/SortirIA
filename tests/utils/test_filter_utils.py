@@ -20,9 +20,8 @@ from src.utils.filter_utils import (
     get_fallback_filters,
     get_filter_configuration,
     load_default_filters,
-    normalize_filter_configuration
+    normalize_filter_configuration,
 )
-
 
 # Sélection du profil
 

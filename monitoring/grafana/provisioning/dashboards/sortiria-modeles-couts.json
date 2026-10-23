@@ -538,7 +538,7 @@
     {
       "type": "table",
       "title": "Versions de la consigne de rédaction en service",
-      "description": "PROMPT_VERSION de app/search_service.py : comparer deux versions sur la latence, le mode dégradé et la satisfaction.",
+      "description": "PROMPT_VERSION de app/search_answer.py : comparer deux versions sur la latence, le mode dégradé et la satisfaction.",
       "datasource": {
         "type": "grafana-postgresql-datasource",
         "uid": "${source}"

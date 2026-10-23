@@ -17,9 +17,8 @@ from src.utils.extractor_utils import (
     get_numeric_value,
     get_value,
     log_extraction_summary,
-    validate_article
+    validate_article,
 )
-
 
 # Construction des articles
 

@@ -492,10 +492,10 @@ def test_low_rated_partner_and_pending_comments(db: Any) -> None:
     assert scalar(db, "SELECT count(*) FROM sortiria.event_ratings WHERE comment_status = 'publie'") == 5
 
 
-# --- Interface : recherche, détail, partenaires (app/search_service.py) ----
+# --- Interface : recherche, détail, partenaires (app/search_*.py) ---------
 def test_interface_search_queries_run(db: Any) -> None:
-    from app import search_service as service
-    from app.search_service import SearchFilters
+    from app import search_cards, search_query
+    from app.search_filters import SearchFilters
 
     partner_id = scalar(db, "INSERT INTO sortiria.partners (name, sector) VALUES ('Ludo', 'enfants') RETURNING partner_id")
     insert_event(db, event_id="famille", city="Sète", audiences=["famille"], is_free=True,
@@ -503,48 +503,49 @@ def test_interface_search_queries_run(db: Any) -> None:
     insert_event(db, event_id="soiree", city="Montpellier", audiences=["soiree"], price_text="12 €")
     now = datetime.now(PARIS)
     for vector in (None, "[" + ",".join(["0.2"] * 1024) + "]"):
-        sql, params = service.build_search_query(SearchFilters(public="famille", zone="thau", free_only=True),
+        sql, params = search_query.build_search_query(SearchFilters(public="famille", zone="thau", free_only=True),
                                                  vector, now)
-        assert [row["event_id"] for row in service.fetch_rows(db, sql, params)] == ["famille"]
-    sql, params = service.build_search_query(SearchFilters(), "[" + ",".join(["0.2"] * 1024) + "]", now)
-    assert [row["event_id"] for row in service.fetch_rows(db, sql, params)] == ["famille", "soiree"]
-    highlights = service.partner_highlights(db)
+        assert [row["event_id"] for row in search_query.fetch_rows(db, sql, params)] == ["famille"]
+    sql, params = search_query.build_search_query(SearchFilters(), "[" + ",".join(["0.2"] * 1024) + "]", now)
+    assert [row["event_id"] for row in search_query.fetch_rows(db, sql, params)] == ["famille", "soiree"]
+    highlights = search_cards.partner_highlights(db)
     assert [card["event_id"] for card in highlights] == ["famille"] and highlights[0]["partner_name"] == "Ludo"
-    assert [source["events"] for source in service.active_sources(db)] == [2]
+    assert [source["events"] for source in search_cards.active_sources(db)] == [2]
 
 
 def test_interface_detail_shows_published_venue_comments(db: Any) -> None:
-    from app import search_service as service
+    from app import search_detail
     from src.event.event_ratings import submit_rating
 
     _rated_event(db, "hier", -1)
     submit_rating(db, "hier", "session-aaaa", 5, "Super lieu", moderate=lambda text: ("publie", {}))
     submit_rating(db, "hier", "session-bbbb", 1, "Insulte", moderate=lambda text: ("refuse", {}))
     insert_event(db, event_id="demain", venue_name="le jam", city="MONTPELLIER")
-    detail = service.event_detail(db, "demain")
+    detail = search_detail.event_detail(db, "demain")
     assert [(c["stars"], c["text"], c["event_title"]) for c in detail["comments"]] == [(5, "Super lieu", "T")]
     assert detail["comments"][0]["event_date"]        # date de l'événement noté, pas celle de l'avis
-    assert service.event_detail(db, "hier")["can_rate"]       # passé hier : encore affiché, pour être noté
+    assert search_detail.event_detail(db, "hier")["can_rate"]       # passé hier : encore affiché, pour être noté
 
 
 def test_interface_detail_lists_other_dates_of_the_same_event(db: Any) -> None:
-    from app import search_service as service
+    from app import search_detail
 
     soon = (datetime.now(PARIS) + timedelta(days=10)).replace(hour=10, minute=0, second=0, microsecond=0)
     for index, title in enumerate(("PAUSE JEUX", "Pause  jeux", "PAUSE JEUX")):
         insert_event(db, event_id=f"pause{index}", title=title, venue_name="La Fabrique", city="Marseillan",
                      start_at=(soon + timedelta(days=7 * index)).isoformat())
     insert_event(db, event_id="ailleurs", title="PAUSE JEUX", venue_name="Autre", city="Marseillan")
-    detail = service.event_detail(db, "pause0")
+    detail = search_detail.event_detail(db, "pause0")
     assert [d["event_id"] for d in detail["other_dates"]] == ["pause1", "pause2"]
 
 
 def test_interface_search_is_logged(db: Any) -> None:
-    from app import search_service as service
-    from app.search_service import SearchFilters, SearchServices
+    from app import search_service
+    from app.search_filters import SearchFilters
+    from app.search_service import SearchServices
 
     insert_event(db, event_id="e1", audiences=["famille"])
-    events = list(service.run_search(db, "sortie", SearchFilters(public="famille"),
+    events = list(search_service.run_search(db, "sortie", SearchFilters(public="famille"),
                                      SearchServices(embed=None, write=None)))
     result = events[-1]["result"]
     assert [card["event_id"] for card in result["events"]] == ["e1"] and result["request_id"] == 1
@@ -726,11 +727,12 @@ def test_a_full_night_touches_every_table(db: Any) -> None:
 def test_search_and_feedback_write_their_tables(db: Any) -> None:
     """La recherche de l'interface trace sa demande ; un avis s'y rattache ; la vue qualité les lit."""
 
-    from app import search_service as service
-    from app.search_service import SearchFilters, SearchServices
+    from app import search_service
+    from app.search_filters import SearchFilters
+    from app.search_service import SearchServices
 
     insert_event(db, event_id="e1", audiences=["famille"], embedding="[" + ",".join(["0.1"] * 1024) + "]")
-    events = list(service.run_search(
+    events = list(search_service.run_search(
         db, "sortie en famille", SearchFilters(public="famille"),
         SearchServices(embed=lambda q: "[" + ",".join(["0.1"] * 1024) + "]",
                        write=lambda q, f, c: ('{"reponse": "Allez voir T [1].", "suggestions": ["Et dimanche ?"]}',
@@ -748,7 +750,7 @@ def test_answer_feedback_is_recorded_replaced_and_limited_to_a_day(db: Any) -> N
     """Pouce haut / pouce bas (16/10/2026) : un avis par réponse, le second
     remplace le premier, rien pour une réponse inconnue ou de plus d'un jour."""
 
-    from app import search_service as service
+    from app import search_log
 
     with db.cursor() as cursor:
         cursor.execute("INSERT INTO sortiria.rag_requests (question, status) VALUES ('un concert', 'ok') "
@@ -757,14 +759,14 @@ def test_answer_feedback_is_recorded_replaced_and_limited_to_a_day(db: Any) -> N
         cursor.execute("INSERT INTO sortiria.rag_requests (question, status, asked_at) "
                        "VALUES ('vieille', 'ok', now() - interval '2 days') RETURNING request_id")
         old_id = cursor.fetchone()[0]
-    assert service.record_feedback(db, request_id, 1) is True
-    assert service.record_feedback(db, request_id, -1, "  Rien près de Sète.  ") is True
+    assert search_log.record_feedback(db, request_id, 1) is True
+    assert search_log.record_feedback(db, request_id, -1, "  Rien près de Sète.  ") is True
     assert scalar(db, "SELECT count(*) || ':' || min(rating) || ':' || min(comment) FROM sortiria.feedback") == \
         "1:-1:Rien près de Sète."
-    assert service.record_feedback(db, old_id, 1) is False
-    assert service.record_feedback(db, 999999, 1) is False
+    assert search_log.record_feedback(db, old_id, 1) is False
+    assert search_log.record_feedback(db, 999999, 1) is False
     with pytest.raises(ValueError):
-        service.record_feedback(db, request_id, 0)
+        search_log.record_feedback(db, request_id, 0)
 
 
 def test_refused_proposal_is_not_proposed_again(db: Any) -> None:
@@ -788,8 +790,9 @@ def test_hybrid_search_finds_names_dates_places_and_widens(db: Any) -> None:
     ce que le sens seul rate, les contraintes écrites filtrent, et une question
     trop stricte est élargie au lieu de ne rien rendre."""
 
-    from app import search_service as service
-    from app.search_service import SearchFilters, SearchServices
+    from app import search_service
+    from app.search_filters import SearchFilters
+    from app.search_service import SearchServices
 
     same = "[" + ",".join(["0.1"] * 1024) + "]"          # même vecteur pour tous : le sens ne départage pas
     soon = (datetime.now(PARIS) + timedelta(days=10)).replace(hour=15, minute=0, second=0, microsecond=0)
@@ -804,7 +807,7 @@ def test_hybrid_search_finds_names_dates_places_and_widens(db: Any) -> None:
     services = SearchServices(embed=lambda text: same, write=None, now=lambda: datetime.now(PARIS))
 
     def search(question: str, **filters: Any) -> tuple[list[str], list[dict]]:
-        events = list(service.run_search(db, question, SearchFilters(**filters), services))
+        events = list(search_service.run_search(db, question, SearchFilters(**filters), services))
         return [card["event_id"] for card in events[-1]["result"]["events"]], events
 
     assert search("un tournoi d'echecs")[0][0] == "echecs"          # mot-clé, sans accent
@@ -847,33 +850,33 @@ def test_rating_from_the_interface(db: Any) -> None:
     """Bouton « Donner mon avis » (15/10/2026) : fenêtre d'avis dans le détail,
     événement d'hier encore affichable pour être noté, « Vos sorties à noter »."""
 
-    from app import search_service as service
+    from app import search_detail
     from src.event.event_ratings import submit_rating
 
     _rated_event(db, "futur", 3)
     _rated_event(db, "hier", -1)
     _rated_event(db, "ancien", -10)
-    future = service.event_detail(db, "futur")
+    future = search_detail.event_detail(db, "futur")
     assert future["can_rate"] is False and future["rate_from"]          # « Vous pourrez noter à partir du … »
-    yesterday = service.event_detail(db, "hier")                        # plus proposé, mais notable
+    yesterday = search_detail.event_detail(db, "hier")                        # plus proposé, mais notable
     assert yesterday is not None and yesterday["can_rate"] is True
-    assert service.event_detail(db, "ancien") is None                   # plus de 7 jours : fini
+    assert search_detail.event_detail(db, "ancien") is None                   # plus de 7 jours : fini
 
     session = "session-de-test-0123456789"
     seen = ["futur", "hier", "ancien", "inconnu"]
-    assert [item["event_id"] for item in service.events_to_rate(db, seen, session)] == ["hier"]
+    assert [item["event_id"] for item in search_detail.events_to_rate(db, seen, session)] == ["hier"]
     assert yesterday["my_rating"] is None and yesterday["venue_ratings"] == 0
     submit_rating(db, "hier", session, 4, "Très bien", moderate=lambda text: ("en_attente", {}))
-    assert service.events_to_rate(db, seen, session) == []              # déjà noté : plus proposé
+    assert search_detail.events_to_rate(db, seen, session) == []              # déjà noté : plus proposé
     # Le visiteur revoit son avis et son état (15/10/2026), même avant la
     # moyenne du lieu (affichée à partir de 3 notes) et avant la modération.
     from src.event.event_ratings import user_key
 
-    mine = service.event_detail(db, "hier", visitor_key=user_key(session))
+    mine = search_detail.event_detail(db, "hier", visitor_key=user_key(session))
     assert mine["my_rating"]["stars"] == 4 and mine["my_rating"]["comment_status"] == "en_attente"
     assert mine["venue_ratings"] == 1 and mine["venue_rating"] is None and mine["comments"] == []
-    assert service.event_detail(db, "hier", visitor_key=user_key("autre-visiteur-0123456789"))["my_rating"] is None
-    assert [i["event_id"] for i in service.events_to_rate(db, seen, "autre-visiteur-0123456789")] == ["hier"]
+    assert search_detail.event_detail(db, "hier", visitor_key=user_key("autre-visiteur-0123456789"))["my_rating"] is None
+    assert [i["event_id"] for i in search_detail.events_to_rate(db, seen, "autre-visiteur-0123456789")] == ["hier"]
 
 
 def test_same_question_same_day_is_answered_from_the_cache(db: Any) -> None:
@@ -882,8 +885,9 @@ def test_same_question_same_day_is_answered_from_the_cache(db: Any) -> None:
 
     import json as json_module
 
-    from app import search_service as service
-    from app.search_service import SearchFilters, SearchServices
+    from app import search_service
+    from app.search_filters import SearchFilters
+    from app.search_service import SearchServices
 
     same = "[" + ",".join(["0.1"] * 1024) + "]"
     insert_event(db, event_id="jazz", title="Concert de jazz", city="Sète", category_norm="concert", embedding=same)
@@ -898,7 +902,7 @@ def test_same_question_same_day_is_answered_from_the_cache(db: Any) -> None:
     services = SearchServices(embed=lambda text: same, write=write, now=lambda: today)
 
     def ask(question: str = "un concert de jazz", **filters: Any) -> list[dict]:
-        return list(service.run_search(db, question, SearchFilters(**filters), services))
+        return list(search_service.run_search(db, question, SearchFilters(**filters), services))
 
     first = ask()
     second = ask("  Un CONCERT de jazz  ")                               # même demande, écrite autrement
@@ -918,7 +922,7 @@ def test_same_question_same_day_is_answered_from_the_cache(db: Any) -> None:
 
 
 def test_cache_expires_at_midnight_at_the_latest() -> None:
-    from app.search_service import cache_expiry
+    from app.search_cache import cache_expiry
 
     evening = datetime(2026, 10, 15, 22, 0, tzinfo=PARIS)
     assert cache_expiry(evening) == datetime(2026, 10, 16, 0, 0, tzinfo=PARIS)
@@ -929,8 +933,9 @@ def test_cache_expires_at_midnight_at_the_latest() -> None:
 def test_partner_offers_when_nothing_matches_exactly(db: Any) -> None:
     """Pas de réponse exacte : les offres partenaires les plus proches (15/10/2026)."""
 
-    from app import search_service as service
-    from app.search_service import SearchFilters, SearchServices
+    from app import search_service
+    from app.search_filters import SearchFilters
+    from app.search_service import SearchServices
 
     near = "[" + ",".join(["0.1"] * 1024) + "]"
     far = "[" + ",".join(["-0.1"] * 512 + ["0.1"] * 512) + "]"
@@ -944,7 +949,7 @@ def test_partner_offers_when_nothing_matches_exactly(db: Any) -> None:
     services = SearchServices(embed=lambda text: near, write=None, now=lambda: datetime.now(PARIS), cache=False)
 
     def result(question: str) -> dict:
-        return list(service.run_search(db, question, SearchFilters(), services))[-1]["result"]
+        return list(search_service.run_search(db, question, SearchFilters(), services))[-1]["result"]
 
     # Un sujet absent partout (théâtre) : ni carte ni offre sans rapport (15/10/2026).
     theatre = result("du théâtre à Sète")
@@ -968,8 +973,9 @@ def test_partner_offers_when_nothing_matches_exactly(db: Any) -> None:
 def test_budget_setting_distance_and_diversity_on_the_database(db: Any) -> None:
     """Budget, pluie, distance et diversité des lieux (15/10/2026), sur la vraie base."""
 
-    from app import search_service as service
-    from app.search_service import SearchFilters, SearchServices
+    from app import search_service
+    from app.search_filters import SearchFilters
+    from app.search_service import SearchServices
 
     same = "[" + ",".join(["0.1"] * 1024) + "]"
     sete, lunel = (43.40, 3.69), (43.68, 4.13)                         # Lunel : hors de la zone, ~40 km
@@ -984,7 +990,7 @@ def test_budget_setting_distance_and_diversity_on_the_database(db: Any) -> None:
     services = SearchServices(embed=lambda text: same, write=None, now=lambda: datetime.now(PARIS), cache=False)
 
     def ids(question: str) -> list[str]:
-        result = list(service.run_search(db, question, SearchFilters(), services))[-1]["result"]
+        result = list(search_service.run_search(db, question, SearchFilters(), services))[-1]["result"]
         return sorted(card["event_id"] for card in result["events"])
 
     assert ids("un concert près de Sète") == ["balaruc", "sete"]          # Balaruc à ~5 km, Lunel trop loin
@@ -1000,7 +1006,7 @@ def test_budget_setting_distance_and_diversity_on_the_database(db: Any) -> None:
                      city="Sète", category_norm="atelier", embedding=venue)
     insert_event(db, event_id="autre", title="Atelier au musée", venue_name="Musée", city="Sète",
                  category_norm="atelier", embedding=venue)
-    result = list(service.run_search(db, "un atelier à Sète", SearchFilters(), services))[-1]["result"]
+    result = list(search_service.run_search(db, "un atelier à Sète", SearchFilters(), services))[-1]["result"]
     ordered = [card["event_id"] for card in result["events"]]
     # Deux ateliers de la médiathèque, puis le musée, puis on complète avec la médiathèque.
     assert ordered.index("autre") == 2 and len(ordered) == 6
@@ -1010,7 +1016,7 @@ def test_highlights_show_every_partner_first(db: Any) -> None:
     """« À ne pas manquer » : une offre par partenaire d'abord, mises en avant en tête,
     et jusqu'à 3 mois (15/10/2026 : avant, 30 jours seulement)."""
 
-    from app import search_service as service
+    from app import search_cards
 
     bar = scalar(db, "INSERT INTO sortiria.partners (name, sector) VALUES ('Bar', 'soiree') RETURNING partner_id")
     ludo = scalar(db, "INSERT INTO sortiria.partners (name, sector) VALUES ('Ludo', 'enfants') RETURNING partner_id")
@@ -1022,14 +1028,14 @@ def test_highlights_show_every_partner_first(db: Any) -> None:
                  start_at=(soon + timedelta(days=50)).isoformat())                  # au-delà de 30 jours
     insert_event(db, event_id="vedette", title="Soirée mise en avant", partner_id=bar, is_sponsored=True,
                  start_at=(soon + timedelta(days=20)).isoformat())
-    assert [card["event_id"] for card in service.partner_highlights(db, 3)] == ["vedette", "ludo", "bar0"]
+    assert [card["event_id"] for card in search_cards.partner_highlights(db, 3)] == ["vedette", "ludo", "bar0"]
 
 
 def test_premium_partners_come_first_in_highlights(db: Any) -> None:
     """17/10/2026 : formule premium > mis en avant > gratuit ; une formule échue
     (is_sponsored faux) ne compte plus."""
 
-    from app import search_service as service
+    from app import search_cards
 
     ids = {name: scalar(db, "INSERT INTO sortiria.partners (name, sector, formula) VALUES (%s, 'autre', %s) "
                             "RETURNING partner_id", (name, formula))
@@ -1039,7 +1045,7 @@ def test_premium_partners_come_first_in_highlights(db: Any) -> None:
     for index, name in enumerate(("Gratuit", "Avant", "Premium", "Echu")):
         insert_event(db, event_id=name.lower(), title=f"Offre {name}", partner_id=ids[name],
                      is_sponsored=name in ("Avant", "Premium"), start_at=(soon + timedelta(days=index)).isoformat())
-    assert [card["event_id"] for card in service.partner_highlights(db, 4)] == ["premium", "avant", "gratuit", "echu"]
+    assert [card["event_id"] for card in search_cards.partner_highlights(db, 4)] == ["premium", "avant", "gratuit", "echu"]
     from psycopg2.errors import CheckViolation
 
     with pytest.raises(CheckViolation):
@@ -1051,8 +1057,9 @@ def test_card_counts_every_date_like_the_detail(db: Any) -> None:
     """Cas réels (15/10/2026) : « NOCTURNE » affichait « + 1 date » alors que le
     détail en listait 3 ; « LA CRYPTE » montrait le 12 déc. au lieu du 17 oct."""
 
-    from app import search_service as service
-    from app.search_service import SearchFilters, SearchServices
+    from app import search_detail, search_query, search_service
+    from app.search_filters import SearchFilters
+    from app.search_service import SearchServices
 
     near = "[" + ",".join(["0.1"] * 1024) + "]"
     far = "[" + ",".join(["-0.1"] * 1024) + "]"
@@ -1063,22 +1070,22 @@ def test_card_counts_every_date_like_the_detail(db: Any) -> None:
         insert_event(db, event_id=f"crypte{index}", title="LA CRYPTE", venue_name="", city="Montpellier",
                      category_norm="spectacle", start_at=(soon + timedelta(days=days)).isoformat(), embedding=vector)
     services = SearchServices(embed=lambda text: near, write=None, now=lambda: datetime.now(PARIS), cache=False)
-    service.POOL, saved = 1, service.POOL                                 # la recherche ne voit qu'une séance
+    search_query.POOL, saved = 1, search_query.POOL                       # la recherche ne voit qu'une séance
     try:
-        result = list(service.run_search(db, "un spectacle", SearchFilters(), services))[-1]["result"]
+        result = list(search_service.run_search(db, "un spectacle", SearchFilters(), services))[-1]["result"]
     finally:
-        service.POOL = saved
+        search_query.POOL = saved
     card = next(card for card in result["events"] if card["title"] == "LA CRYPTE")
     assert card["event_id"] == "crypte1"                                  # la prochaine séance, pas la lointaine
     assert [d["event_id"] for d in card["other_dates"]] == ["crypte2", "crypte0"]
-    detail = service.event_detail(db, card["event_id"])
+    detail = search_detail.event_detail(db, card["event_id"])
     assert len(detail["other_dates"]) == len(card["other_dates"])         # même compte que le détail
 
 
 def test_title_vocabulary_tells_subjects_from_moods(db: Any) -> None:
     """Sujets reconnus d'après les titres de la base, sans liste écrite à la main (15/10/2026)."""
 
-    from app import search_service as service
+    from app import search_query
     from src.event import event_repository as repository
 
     insert_event(db, event_id="expo", title="Exposition de photographies", city="Bouzigues")
@@ -1086,12 +1093,12 @@ def test_title_vocabulary_tells_subjects_from_moods(db: Any) -> None:
     insert_event(db, event_id="offre", title="Cirque d'emploi", is_outing=False)   # pas une sortie : ignoré
     words = ["photo", "poterie", "romantique", "cirque"]
     # Vocabulaire pas encore calculé : les titres sont lus directement.
-    assert service.known_subjects(db, words) == {"photo", "poterie"}
+    assert search_query.known_subjects(db, words) == {"photo", "poterie"}
     assert repository.refresh_title_vocabulary(db) >= 4
     assert scalar(db, "SELECT events FROM sortiria.title_vocabulary WHERE lexeme = 'poter'") == 1
-    assert service.known_subjects(db, words) == {"photo", "poterie"}
+    assert search_query.known_subjects(db, words) == {"photo", "poterie"}
     # « photo » trouve « photographies » (préfixe) ; « art » (court) ne trouve pas « atelier ».
-    assert service.known_subjects(db, ["art"]) == set()
+    assert search_query.known_subjects(db, ["art"]) == set()
 
 
 def test_search_gaps_report_what_users_did_not_find(db: Any) -> None:
@@ -1125,8 +1132,9 @@ def test_search_finds_a_known_subject_beyond_the_ticked_boxes(db: Any) -> None:
     est proposée plutôt que des ateliers sans rapport ; « romantique », écrit
     dans aucun titre, garde les idées proches par le sens (15/10/2026)."""
 
-    from app import search_service as service
-    from app.search_service import SearchFilters, SearchServices
+    from app import search_service
+    from app.search_filters import SearchFilters
+    from app.search_service import SearchServices
     from src.event import event_repository as repository
 
     near = "[" + ",".join(["0.1"] * 1024) + "]"
@@ -1139,7 +1147,7 @@ def test_search_finds_a_known_subject_beyond_the_ticked_boxes(db: Any) -> None:
 
     def result(question: str) -> dict:
         filters = SearchFilters(public="famille", period="3mois", free_only=True)
-        return list(service.run_search(db, question, filters, services))[-1]["result"]
+        return list(search_service.run_search(db, question, filters, services))[-1]["result"]
 
     photo = result("photo")
     assert [card["event_id"] for card in photo["events"]] == ["expo"] and photo["exact"] is False
@@ -1153,8 +1161,9 @@ def test_partner_workshop_named_after_the_type_comes_first(db: Any) -> None:
     """Capture du 15/10/2026 : « jeux » ; l'« Atelier jeux » du partenaire (rangé
     en atelier) était relégué en bas. Le type écrit dans le titre compte."""
 
-    from app import search_service as service
-    from app.search_service import SearchFilters, SearchServices
+    from app import search_service
+    from app.search_filters import SearchFilters
+    from app.search_service import SearchServices
 
     near = "[" + ",".join(["0.1"] * 1024) + "]"
     ludo = scalar(db, "INSERT INTO sortiria.partners (name, sector) VALUES ('Ludo', 'enfants') RETURNING partner_id")
@@ -1165,7 +1174,7 @@ def test_partner_workshop_named_after_the_type_comes_first(db: Any) -> None:
     insert_event(db, event_id="poterie", title="Atelier poterie", city="Sète", category_norm="atelier",
                  audiences=["famille"], embedding=near)
     services = SearchServices(embed=lambda text: near, write=None, now=lambda: datetime.now(PARIS), cache=False)
-    result = list(service.run_search(db, "jeux", SearchFilters(public="famille", period="3mois"), services))[-1]
+    result = list(search_service.run_search(db, "jeux", SearchFilters(public="famille", period="3mois"), services))[-1]
     cards = result["result"]["events"]
     assert [card["event_id"] for card in cards] == ["ludo", "pause"] and cards[0]["partner"]
     assert result["result"]["exact"] is True and result["result"]["partner_offers"] == []
@@ -1176,8 +1185,9 @@ def test_unclassified_events_keep_their_source_category(db: Any) -> None:
     category_norm vaut '' ; la catégorie de la source doit compter (« Lecture »
     d'un partenaire pour « lecture », « Soirée DJ » d'un bar pour « soirée »)."""
 
-    from app import search_service as service
-    from app.search_service import SearchFilters, SearchServices
+    from app import search_service
+    from app.search_filters import SearchFilters
+    from app.search_service import SearchServices
 
     insert_event(db, event_id="contes", title="Contes au jardin", category="Lecture", city="Balaruc-les-Bains")
     insert_event(db, event_id="dj", title="Nuit électro", category="Soirée DJ", city="Montpellier",
@@ -1186,7 +1196,7 @@ def test_unclassified_events_keep_their_source_category(db: Any) -> None:
     services = SearchServices(embed=None, write=None, now=lambda: datetime.now(PARIS), cache=False, log=False)
 
     def ids(question: str) -> list[str]:
-        result = list(service.run_search(db, question, SearchFilters(period="3mois"), services))[-1]["result"]
+        result = list(search_service.run_search(db, question, SearchFilters(period="3mois"), services))[-1]["result"]
         return [card["event_id"] for card in result["events"]] if result["exact"] else []
 
     assert ids("une lecture") == ["contes"]
@@ -1198,15 +1208,15 @@ def test_learned_synonym_answers_the_failed_search(db: Any, monkeypatch: pytest.
     """La boucle complète (15/10/2026) : « zumba » ne trouve rien ; une fois le
     synonyme accepté (« zumba » -> « fitness »), la même question trouve le cours."""
 
-    from app import query_understanding
-    from app import search_service as service
-    from app.search_service import SearchFilters, SearchServices
+    from app import query_understanding, search_service
+    from app.search_filters import SearchFilters
+    from app.search_service import SearchServices
 
     insert_event(db, event_id="fitness", title="Cours de fitness en plein air", city="Sète")
     services = SearchServices(embed=None, write=None, now=lambda: datetime.now(PARIS), cache=False, log=False)
 
     def ask() -> dict:
-        return list(service.run_search(db, "de la zumba", SearchFilters(period="3mois"), services))[-1]["result"]
+        return list(search_service.run_search(db, "de la zumba", SearchFilters(period="3mois"), services))[-1]["result"]
 
     monkeypatch.setattr(query_understanding, "learned_synonyms", lambda path=None: {})
     before = ask()
@@ -1222,18 +1232,19 @@ def test_partner_offer_beyond_the_first_candidates_still_comes_first(db: Any) ->
     par date) et n'apparaissait pas. Les séances partenaires sont toujours
     examinées ; le type s'affiche « soirée »."""
 
-    from app import search_service as service
-    from app.search_service import SearchFilters, SearchServices
+    from app import search_query, search_service
+    from app.search_filters import SearchFilters
+    from app.search_service import SearchServices
 
     bar = scalar(db, "INSERT INTO sortiria.partners (name, sector) VALUES ('Bar', 'soiree') RETURNING partner_id")
     soon = datetime.now(PARIS).replace(hour=21, minute=0, second=0, microsecond=0)
-    for index in range(service.CANDIDATES + 10):
+    for index in range(search_query.CANDIDATES + 10):
         insert_event(db, event_id=f"s{index}", title=f"Soirée {index}", city="Montpellier", audiences=["soiree"],
                      start_at=(soon + timedelta(days=1, minutes=index)).isoformat(), venue_name=f"Lieu {index}")
     insert_event(db, event_id="karaoke", title="Karaoké géant", city="Montpellier", audiences=["soiree"],
                  category_norm="soiree", partner_id=bar, start_at=(soon + timedelta(days=15)).isoformat())
     services = SearchServices(embed=None, write=None, now=lambda: datetime.now(PARIS), cache=False, log=False)
-    result = list(service.run_search(db, "", SearchFilters(public="soiree", period="3mois"), services))[-1]["result"]
+    result = list(search_service.run_search(db, "", SearchFilters(public="soiree", period="3mois"), services))[-1]["result"]
     first = result["events"][0]
     assert first["event_id"] == "karaoke" and first["partner"] is True
     # Le type s'affiche « soirée » ; le public reste dans les données (filtres,
@@ -1246,8 +1257,9 @@ def test_several_precise_words_keep_the_events_that_have_them_all(db: Any) -> No
     « tester » (une dictée, des dégustations). Seuls les événements qui ont le
     plus de mots précis de la question sont gardés."""
 
-    from app import search_service as service
-    from app.search_service import SearchFilters, SearchServices
+    from app import search_service
+    from app.search_filters import SearchFilters
+    from app.search_service import SearchServices
 
     insert_event(db, event_id="blind", title="Blind test géant", city="Montpellier", category_norm="jeux")
     insert_event(db, event_id="vin", title="Le blind test du vin", city="Montpellier", category_norm="jeux")
@@ -1258,7 +1270,7 @@ def test_several_precise_words_keep_the_events_that_have_them_all(db: Any) -> No
     services = SearchServices(embed=None, write=None, now=lambda: datetime.now(PARIS), cache=False, log=False)
 
     def ids(question: str) -> set[str]:
-        result = list(service.run_search(db, question, SearchFilters(period="3mois"), services))[-1]["result"]
+        result = list(search_service.run_search(db, question, SearchFilters(period="3mois"), services))[-1]["result"]
         return {card["event_id"] for card in result["events"]}
 
     assert ids("un blind test") == {"blind", "vin"}
@@ -1270,8 +1282,9 @@ def test_words_seen_on_the_card_come_before_words_hidden_in_the_description(db: 
     acoustique dont seule la longue description cite un karaoké. Quand des
     événements montrent le mot (titre, résumé, lieu), seuls eux sont gardés."""
 
-    from app import search_service as service
-    from app.search_service import SearchFilters, SearchServices
+    from app import search_service
+    from app.search_filters import SearchFilters
+    from app.search_service import SearchServices
 
     insert_event(db, event_id="karaoke", title="Karaoké géant", city="Montpellier")
     insert_event(db, event_id="concert", title="Concert acoustique", city="Montpellier",
@@ -1280,7 +1293,7 @@ def test_words_seen_on_the_card_come_before_words_hidden_in_the_description(db: 
     services = SearchServices(embed=None, write=None, now=lambda: datetime.now(PARIS), cache=False, log=False)
 
     def ids(question: str) -> list[str]:
-        result = list(service.run_search(db, question, SearchFilters(period="3mois"), services))[-1]["result"]
+        result = list(search_service.run_search(db, question, SearchFilters(period="3mois"), services))[-1]["result"]
         return [card["event_id"] for card in result["events"]]
 
     assert ids("karaoké") == ["karaoke"]
@@ -1294,8 +1307,9 @@ def test_the_card_shows_the_session_that_answers(db: Any) -> None:
     seule description donne une idée voisine ; « feu d'artifice » n'est pas
     trouvé avec « feu » seulement."""
 
-    from app import search_service as service
-    from app.search_service import SearchFilters, SearchServices
+    from app import search_service
+    from app.search_filters import SearchFilters
+    from app.search_service import SearchServices
 
     first = (datetime.now(PARIS) + timedelta(days=9)).replace(hour=14, minute=30, second=0, microsecond=0)
     insert_event(db, event_id="j24", title="Atelier jeux en famille", venue_name="Ludothèque", city="Sète",
@@ -1308,7 +1322,7 @@ def test_the_card_shows_the_session_that_answers(db: Any) -> None:
     services = SearchServices(embed=None, write=None, now=lambda: datetime.now(PARIS), cache=False, log=False)
 
     def search(question: str) -> dict:
-        return list(service.run_search(db, question, SearchFilters(period="3mois"), services))[-1]["result"]
+        return list(search_service.run_search(db, question, SearchFilters(period="3mois"), services))[-1]["result"]
 
     halloween = search("Halloween")
     assert [card["event_id"] for card in halloween["events"]] == ["j31"] and halloween["exact"] is True
@@ -1371,8 +1385,9 @@ def test_singing_finds_where_to_sing_not_concerts(db: Any) -> None:
     """17/10/2026 : « je veux chanter » proposait des concerts de chant ; c'est
     chanter soi-même : karaoké, cours ou stage de chant (même rangé en concert)."""
 
-    from app import search_service as service
-    from app.search_service import SearchFilters, SearchServices
+    from app import search_service
+    from app.search_filters import SearchFilters
+    from app.search_service import SearchServices
 
     for event_id, title, category in (
             ("concert", "Concert de chants corses", "concert"),
@@ -1382,18 +1397,18 @@ def test_singing_finds_where_to_sing_not_concerts(db: Any) -> None:
             ("jeudi", "Soirée du jeudi", "soiree")):
         insert_event(db, event_id=event_id, title=title, category_norm=category)
     services = SearchServices(embed=None, write=None, now=lambda: datetime.now(PARIS), cache=False)
-    result = list(service.run_search(db, "je veux chanter", SearchFilters(), services))[-1]["result"]
+    result = list(search_service.run_search(db, "je veux chanter", SearchFilters(), services))[-1]["result"]
     assert {card["event_id"] for card in result["events"]} == {"karaoke", "stage"}
     assert result["exact"] is True
-    games = list(service.run_search(db, "on aimerait jouer", SearchFilters(), services))[-1]["result"]
+    games = list(search_service.run_search(db, "on aimerait jouer", SearchFilters(), services))[-1]["result"]
     assert "jeudi" not in {card["event_id"] for card in games["events"] if games["exact"]}
 
 
 def test_child_filter_keeps_what_is_for_the_child(db: Any) -> None:
     """18/10/2026 : « Enfant » garde un stage 4-11 ans, pas un concert en famille."""
 
-    from app import search_service as service
-    from app.search_service import SearchFilters
+    from app import search_query
+    from app.search_filters import SearchFilters
 
     insert_event(db, event_id="stage", title="Stage cirque 4-11 ans", audiences=["famille"])
     insert_event(db, event_id="ateliers", title="Atelier créatif", audiences=["famille"], age_max=10)
@@ -1404,7 +1419,7 @@ def test_child_filter_keeps_what_is_for_the_child(db: Any) -> None:
                  category_norm="exposition")
     insert_event(db, event_id="expo_petits", title="Mille formes", summary="Jeux pour enfants de 0 à 6 ans",
                  audiences=["famille"], category_norm="exposition")
-    sql, params = service.build_search_query(SearchFilters(public="enfant"), None, datetime.now(PARIS))
+    sql, params = search_query.build_search_query(SearchFilters(public="enfant"), None, datetime.now(PARIS))
     with db.cursor() as cursor:
         cursor.execute(sql, params)
         found = {row[0] for row in cursor.fetchall()}
