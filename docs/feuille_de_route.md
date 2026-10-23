@@ -7,7 +7,7 @@ de chaque projet, est dans [Provenance du code](provenance.md).
 
 | Date | Jalon | État |
 | --- | --- | --- |
-| 13/10/2026 | Démarrage : reprise de CheckIt.AI, du RAG OpenAgenda, de Chess Agent, du triage médical | ✅ |
+| 13/10/2026 | Démarrage : reprise de CheckIt.AI, du RAG OpenAgenda, de Chess Agent, du triage médical et du scoring crédit (suivi de dérive) | ✅ |
 | 14/10/2026 | Première collecte complète, schéma définitif, interface | ✅ |
 | 15/10/2026 | Recherche évaluée (98,7 %), **mise en production sur Azure** | ✅ |
 | 16/10/2026 | Déploiement automatique, suivi de la recherche, limite de débit, mesure du coût | ✅ |
@@ -43,7 +43,7 @@ gantt
 ### Bloc 1 : collecte multi-sources (fait)
 
 Moteur multi-sources de CheckIt.AI adapté aux événements ; OpenAgenda (12
-agendas utiles, découverte des nouveaux le dimanche), DATAtourisme (API
+agendas utiles au départ, 17 depuis le 18/10, découverte des nouveaux le dimanche), DATAtourisme (API
 officielle), programme PDF de Sète agglopôle lu par Mistral, fichiers des
 partenaires ; moteurs iCal, RSS et agendas en ligne prêts. Validation,
 normalisation, déduplication, fusion entre sources. **≈ 2 450 événements**.
@@ -86,8 +86,9 @@ lieux ; fine-tuning quand il y aura des données réelles
 
 ## D'ici le gel du code (4/11)
 
-Priorité : **un moteur fiable, mesuré et démontrable**. Plus de nouvelle
-fonction ; seulement ce qui mesure, fiabilise ou explique.
+Priorité : **un moteur fiable, mesuré et démontrable**. Une nouvelle
+fonction seulement si un retour ou un incident la demande ; sinon, ce qui
+mesure, fiabilise ou explique.
 
 | Semaine | Tâches | Livrable |
 | --- | --- | --- |

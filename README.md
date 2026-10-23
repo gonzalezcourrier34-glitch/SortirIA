@@ -8,11 +8,14 @@ Assistant qui recommande des sorties à Montpellier, dans ses alentours et sur l
 (« un concert pas trop cher samedi soir, en extérieur »).
 
 Projet personnel de fin de formation Ingénieur IA (OpenClassrooms), livré le 6 novembre 2026.
-Il industrialise deux projets précédents :
+Il industrialise des projets précédents :
 
 - **CheckIt.AI** (projet 12) : moteur de collecte multi-sources réutilisable → `src/`, `config/`, `dags/`, `sql/`
   (seuls les moteurs génériques sont gardés : tout ce qui concernait les fake news a été retiré)
 - **Assistant RAG OpenAgenda** (projet 6) : point de départ de l'API (`app/`) ; son RAG FAISS et son interface Streamlit ont été remplacés (recherche hybride PostgreSQL + pgvector, interface Angular `frontend/`)
+- **Chess Agent** (projet 13) : structure de l'agent LangGraph (`agent/`), CI, interface Angular
+- **Agent IA de triage médical** (projet 14) : déploiement continu, suivi en production (Grafana)
+- **Scoring crédit** (projet 5) : suivi de la dérive, recodé avec le PSI (`agent/drift.py`)
 
 Le détail de ce qui a été repris, et de ce qui reste à adapter, est dans [PROVENANCE.md](PROVENANCE.md).
 

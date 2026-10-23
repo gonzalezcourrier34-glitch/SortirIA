@@ -167,8 +167,8 @@ Non-régression sur la base figée : 125 recherches courtes 98,2 % → 98,4 %,
 50 questions 98,0 % → 98,3 % (« un spectacle de danse » y passe aussi de
 7 / 8 à 8 / 8).
 
-Rejoué en CI à chaque push, avec un seuil de 90 % : le jeu est petit (97
-cartes), une carte fausse de plus fait perdre un point.
+Rejoué en CI à chaque push, avec un seuil de 90 % : le jeu est petit (25
+recherches, environ 120 cartes), une carte fausse de plus fait perdre un point.
 
 **Quatrième jeu : le moment de la journée** (`config/eval_moments.yaml`,
 18/10/2026). Le 17/10, le moment a quitté les cases pour être lu dans la

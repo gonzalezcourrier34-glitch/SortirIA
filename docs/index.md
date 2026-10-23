@@ -4,7 +4,7 @@
 par exemple : « un concert pas trop cher samedi soir, en extérieur ».
 
 C'est mon projet personnel de fin de formation Ingénieur IA (OpenClassrooms), à présenter
-le 6 novembre 2026. Plutôt que de repartir de zéro, il **industrialise deux projets précédents** :
+le 6 novembre 2026. Plutôt que de repartir de zéro, il **industrialise des projets précédents** :
 
 | Brique | Projet d'origine | Ce qu'elle apporte |
 | --- | --- | --- |

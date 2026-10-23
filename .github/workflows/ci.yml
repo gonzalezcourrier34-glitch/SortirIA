@@ -159,7 +159,7 @@ jobs:
       - name: Évaluation (échoue sous 95 %)
         run: uv run python -m scripts.eval_recherche --jeu-test --seuil 0.95 --json eval_recherche.json
       # Recherches « faire soi-même » (17/10/2026) : « je veux chanter » ne doit
-      # pas redevenir une liste de concerts. Seuil 90 % : petit jeu (89 cartes).
+      # pas redevenir une liste de concerts. Seuil 90 % : petit jeu (25 recherches, ~120 cartes).
       - name: Évaluation « faire soi-même » (échoue sous 90 %)
         run: uv run python -m scripts.eval_recherche --jeu-test --fichier config/eval_pratique.yaml --seuil 0.90 --json eval_pratique.json
       # Moment de la journée (18/10/2026) : « ce matin » ne doit pas proposer
