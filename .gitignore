@@ -22,5 +22,8 @@ site/
 # Dossier personnel (notes, images), comme dans tes autres projets
 /perso/
 
+# Livrables de soutenance (diaporama, notes d'orateur, préparation) : privés
+/livrables/
+
 # Résultats des audits (scripts/audit_openagenda.py)
 audit*.json
