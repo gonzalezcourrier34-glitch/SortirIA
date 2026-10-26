@@ -15,6 +15,8 @@
 .report-text p strong { color: var(--text); }
 .report-text ul { margin: 1rem 0 0 1.3rem; color: var(--muted); }
 .report-text li + li { margin-top: 0.4rem; }
+/* Un lien dans une phrase ou un tableau reste dans la ligne (sans la marge des boutons) */
+.report-text p .project-link, .report-text li .project-link, .story-table .project-link { display: inline; margin-top: 0; }
 .section h3.report-h3 { margin: 2.5rem 0 0.5rem; font-size: 1.25rem; }
 .toc { display: grid; gap: 0.6rem; max-width: 850px; margin-top: 1.5rem; counter-reset: toc; }
 .toc a { display: flex; gap: 1rem; padding: 0.9rem 1.2rem; border: 1px solid var(--border); border-radius: 12px; }
@@ -24,9 +26,15 @@
 @media print {
   :root { --background: #ffffff; --surface: #f4f7f7; --surface-light: #eef3f3; --text: #111a22; --muted: #3c4a50; --accent: #1b7f6e; --border: rgba(0, 0, 0, 0.15); }
   .header, .hero-actions, .contact, .toc { display: none !important; }
-  .section, .hero-content { padding-top: 1.2rem !important; padding-bottom: 1.2rem !important; }
+  .section, .hero-content { padding-top: 0.8rem !important; padding-bottom: 0.8rem !important; }
   .section { break-inside: auto; }
-  .story-table, .reflection-card, .callout { break-inside: avoid; }
+  .reflection-card, .callout { break-inside: avoid; }
+  .story-table { break-inside: auto; }
+  .story-table tr { break-inside: avoid; }
+  .story-table thead { display: table-header-group; }
+  .story-table th, .story-table td { padding: 0.5rem 0.6rem; }
+  footer { padding: 0.6rem 0 !important; margin: 0 !important; }
+  footer .project-link { margin-top: 0; }
   .container { width: 100% !important; }
   .section h2, .section h3, .competence, .section-number { break-after: avoid; }
   a { color: inherit; }
