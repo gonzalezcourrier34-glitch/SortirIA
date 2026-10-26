@@ -1,6 +1,6 @@
 # Architecture
 
-*Mise à jour le 23/10/2026.*
+*Mise à jour le 26/10/2026.*
 
 La collecte tourne chaque nuit ; la recherche répond en direct. Les deux
 partagent une même base PostgreSQL avec l'extension pgvector. Une boucle les
@@ -50,7 +50,7 @@ flowchart LR
 ```mermaid
 flowchart TB
     Dev[Poste de travail<br/>code, tests, PDF de Sète] -->|git push main| GH[GitHub]
-    GH --> CI[CI : Ruff, 3 863 tests,<br/>évaluation, documentation, image Docker]
+    GH --> CI[CI : Ruff, 3 877 tests,<br/>évaluation, documentation, image Docker]
     CI --> CD[CD : image sur GHCR,<br/>connexion Azure sans mot de passe]
     CD --> API[Container Apps<br/>sortiria-api]
     CD --> JOB[Container Apps Job<br/>sortiria-collecte, chaque nuit]
@@ -102,7 +102,7 @@ recherche : [Interface](interface.md) ; la nuit : [Agent de collecte](agent.md).
 | Interface | `frontend/` (Angular) |
 | Évaluation et mesures | `scripts/eval_recherche.py`, `scripts/eval_pertinence.py`, `scripts/mesure_cout_latence.py`, `config/eval_*.yaml`, `benchmarks/` |
 | Déploiement | `docker/Dockerfile.api`, `.github/workflows/`, `frontend/public/staticwebapp.config.json` |
-| Monitoring | `monitoring/` (Grafana), `agent/tracking.py` (MLflow), `agent/drift.py` (dérive) |
+| Monitoring | `monitoring/` (Grafana), `agent/tracking.py` (MLflow), `agent/drift.py` (dérive), `scripts/versionnage.py` (registres MLflow des consignes et de la chaîne) |
 
 ### Le dossier `app/`, un fichier par usage
 

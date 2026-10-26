@@ -192,9 +192,38 @@ compare des modèles ou des réglages :
 | `sortiria-collecte` | collecte lancée sur le poste | paramètres (modèles, seuils, consigne PDF), métriques par source, coût, tokens, trace LangGraph et appels Mistral |
 | `sortiria-evaluation-recherche` | `scripts.eval_recherche` | compréhension, précision, idées voisines, latences, version de la consigne |
 | `sortiria-evaluation-pertinence` | `scripts.eval_pertinence --calculer` | pertinence@3 humaine ; avec `--juge` : modèle du juge, version de sa consigne (v7), accord, kappa, AC1, rejets retrouvés ; grilles en pièces jointes |
+| `sortiria-versionnage` | nouvelle version de la chaîne (`scripts.versionnage`) | modèle externe `sortiria-chaine` : modèles Mistral, versions et liens des 8 consignes, jeux d'évaluation (empreinte, lien GitHub au commit), mesures rattachées |
 
 Les deux évaluations passent par `scripts/suivi_mlflow.py` : MLflow absent
 ou injoignable, l'évaluation continue (historique CSV dans `benchmarks/`).
+
+## Versionnage : consignes, chaîne et jeux de données (fait le 26/10/2026)
+
+SortirIA n'entraîne pas de modèle : ce qui change d'une version à l'autre,
+ce sont les **consignes** envoyées à Mistral, les **modèles** choisis et les
+**jeux de données** de mesure. `scripts/versionnage.py` les enregistre dans
+les registres de MLflow :
+
+| Registre | Contenu | Alias |
+| --- | --- | --- |
+| Prompt Registry | les 8 consignes (réponse, lecture du programme PDF, documents partenaires, enrichissement, juge de qualité, juge de pertinence v7, apprentissage des recherches et des avis) ; une version MLflow par texte différent, étiquetée avec la version du code, le modèle qui la lit et l'empreinte du texte | `production` |
+| Model Registry | `sortiria-chaine`, modèle externe : modèles Mistral (rédaction, secours, vecteurs, modération, juges), version et lien `prompts:/…` de chaque consigne, empreinte de chaque jeu ; nouvelle version seulement si l'un d'eux change | `production`, `precedente` |
+| Jeux de données | 10 jeux rattachés à chaque version de la chaîne : les 4 jeux de questions, la base figée de la CI, les 3 grilles de pertinence, `sources.yaml`, `synonymes.yaml` (empreinte SHA-256, lien GitHub au commit) | |
+
+**Garde-fou en CI** : `config/versions_consignes.json` garde la version et
+l'empreinte de chaque consigne ; `tests/test_api/test_versionnage.py` échoue
+si un texte change sans que sa version change. Chaque réponse enregistrée
+dans `rag_requests` garde aussi sa version de consigne et son modèle.
+
+Commandes : `--verifier` (sans MLflow), `--manifeste` (après un changement de
+consigne), sans option (enregistrer après un déploiement), `--evaluation
+rapport.json` (rattacher une mesure à la version en service). Procédure :
+dossier, procédures, 6.5.
+
+**Pourquoi pas DVC** : les jeux pèsent environ 1 Mo et sont dans Git ; MLflow
+garde leur empreinte et le lien vers le fichier au commit exact. DVC servira
+quand un jeu ne tiendra plus dans Git, par exemple les avis réels pour un
+fine-tuning.
 
 ## Ce qui vient des projets précédents
 
@@ -208,7 +237,7 @@ ou injoignable, l'évaluation continue (historique CSV dans `benchmarks/`).
 
 ## CI/CD
 
-- `.github/workflows/ci.yml` : Ruff, tests avec un vrai PostgreSQL (pgvector), image Docker, documentation MkDocs, et **évaluation de la recherche** sur une base figée (échec sous 95 %).
+- `.github/workflows/ci.yml` : Ruff, tests avec un vrai PostgreSQL (pgvector), dont le contrôle des versions de consignes et les registres MLflow, image Docker, documentation MkDocs, et **évaluation de la recherche** sur une base figée (échec sous 95 %).
 - `.github/workflows/surveillance.yml` : toutes les 3 h, le site, l'API, la base et la fraîcheur de la collecte, vus de l'extérieur (pas plus souvent : chaque appel réveille l'API en veille).
 - `.github/workflows/cd.yml` : image Docker publiée sur GHCR, puis déploiement sur Azure à chaque push sur `main` (API, collecte de la nuit, interface ; connexion OpenID Connect sans mot de passe), voir `docs/deploiement.md`.
 - `docker/Dockerfile.api` : point d'entrée `app.main:app` ; la même image sert à la collecte de la nuit (`python agent`).

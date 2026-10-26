@@ -1,0 +1,42 @@
+{
+  "sortiria-apprentissage-avis": {
+    "version": "v1",
+    "empreinte": "1d3dde77437fabc3",
+    "source": "agent.feedback_learning.FEEDBACK_PROMPT"
+  },
+  "sortiria-apprentissage-recherches": {
+    "version": "v1",
+    "empreinte": "257fc89b46d2305f",
+    "source": "agent.search_learning.LEARNING_PROMPT"
+  },
+  "sortiria-documents-partenaires": {
+    "version": "2026-10-16.1",
+    "empreinte": "a04da712096680d6",
+    "source": "src.extractors.datasets.source.partner_documents.EXTRACTION_PROMPT"
+  },
+  "sortiria-enrichissement": {
+    "version": "2026-10-15.1",
+    "empreinte": "a1a3f2980d4db9da",
+    "source": "src.event.event_enrichment.ENRICHMENT_PROMPT"
+  },
+  "sortiria-juge-pertinence": {
+    "version": "v7",
+    "empreinte": "37ec24701d1d1ef4",
+    "source": "scripts.eval_pertinence.JUDGE_PROMPT"
+  },
+  "sortiria-juge-qualite": {
+    "version": "2026-10-16.1",
+    "empreinte": "cbe6983b1c0e28ed",
+    "source": "src.event.quality_judge.JUDGE_PROMPT"
+  },
+  "sortiria-lecture-programme": {
+    "version": "2026-10-14.2",
+    "empreinte": "1adb595befd39683",
+    "source": "src.event.document_mapper.EXTRACTION_PROMPT"
+  },
+  "sortiria-reponse": {
+    "version": "2026-10-19.1",
+    "empreinte": "53e86c94c8a63781",
+    "source": "app.search_answer.WRITE_PROMPT"
+  }
+}

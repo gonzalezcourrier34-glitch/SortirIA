@@ -50,7 +50,7 @@
 <div class="report-meta">
 <span><strong>Auteur</strong> : Stéphane Gonzalez</span>
 <span><strong>Formation</strong> : Ingénieur IA, OpenClassrooms</span>
-<span><strong>Version</strong> : 23/10/2026</span>
+<span><strong>Version</strong> : 26/10/2026</span>
 <span><strong>Soutenance</strong> : 6/11/2026</span>
 <span><strong>Service</strong> : <a class="project-link" href="https://www.sortiria-montpellier.fr">www.sortiria-montpellier.fr</a></span>
 <span><strong>Code</strong> : <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/SortirIA">github.com/gonzalezcourrier34-glitch/SortirIA</a></span>
@@ -305,7 +305,7 @@
 <thead><tr><th>Livrable</th><th>Où</th></tr></thead>
 <tbody>
 <tr><td>Le service en ligne</td><td><a class="project-link" href="https://www.sortiria-montpellier.fr">www.sortiria-montpellier.fr</a></td></tr>
-<tr><td>Le code, avec environ 3 860 tests</td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/SortirIA">github.com/gonzalezcourrier34-glitch/SortirIA</a></td></tr>
+<tr><td>Le code, avec environ 3 880 tests</td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/SortirIA">github.com/gonzalezcourrier34-glitch/SortirIA</a></td></tr>
 <tr><td>La documentation technique</td><td><a class="project-link" href="https://gonzalezcourrier34-glitch.github.io/SortirIA/">gonzalezcourrier34-glitch.github.io/SortirIA</a></td></tr>
 <tr><td>Le dossier du projet (ce site)</td><td><a class="project-link" href="index.html">13 pages, dont les procédures et le suivi des incidents</a></td></tr>
 <tr><td>Les mesures, rejouables</td><td><code>benchmarks/</code>, MLflow, rapport de la CI</td></tr>
@@ -318,6 +318,7 @@
 <li><strong>Chaque nuit</strong> : un mail me donne le statut de la collecte, les chiffres, les alertes et le coût.</li>
 <li><strong>Toutes les 3 heures</strong> : GitHub vérifie que le site, l'API, la base et la collecte répondent.</li>
 <li><strong>Chaque lundi</strong> : les recherches ratées, les pouces bas, et le rapport de dérive. Je compare les 7 derniers jours aux 28 précédents : ce que les gens demandent, ce que SortirIA répond, ce que les sources apportent.</li>
+<li><strong>À chaque version</strong> : les 8 consignes et la chaîne (modèles Mistral, versions des consignes, jeux d'évaluation) sont enregistrées dans les registres de MLflow, et la CI refuse une consigne modifiée sans nouvelle version. Je sais quelle version a produit quelle réponse, et laquelle la précédait.</li>
 <li><strong>Dans Grafana</strong> : trois tableaux (collecte, recherche, modèles et coûts).</li>
 </ul>
 <p>Quand un incident arrive, je le note : ce que j'ai vu, la cause, la correction, et le test qui empêche qu'il revienne. Plus de vingt-cinq incidents sont tracés dans la page <a class="project-link" href="suivi.html">Suivi</a>.</p>

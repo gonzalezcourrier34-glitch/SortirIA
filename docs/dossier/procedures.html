@@ -72,7 +72,7 @@
 <tr><td>4. Services Docker</td><td><code>docker compose up -d</code> puis <code>docker compose ps</code></td><td><code>sortiria_db</code> (healthy), <code>sortiria_mlflow</code>, <code>sortiria_grafana</code>. Sans profil, l'API et l'interface ne démarrent pas.</td></tr>
 <tr><td>5. Schéma</td><td><code>uv run python -m scripts.init_db</code></td><td>« appliqué : 00_extensions.sql »… jusqu'à « 07_vocabulary.sql », la liste des tables et des vues, puis « Schéma complet. »</td></tr>
 <tr><td>6. Vérifier le schéma</td><td><code>uv run python -m scripts.init_db --verifier</code></td><td>13 tables, 6 vues, « Schéma complet. » ; rien n'est modifié.</td></tr>
-<tr><td>7. Tests</td><td><code>uv run pytest</code></td><td>Tous les tests passent (environ 3 860 ; ceux qui demandent un vrai PostgreSQL sont ignorés sans <code>SORTIRIA_TEST_DATABASE_URL</code>), sans aucune clé : <code>tests/conftest.py</code> crée des secrets factices et le réseau est simulé.</td></tr>
+<tr><td>7. Tests</td><td><code>uv run pytest</code></td><td>Tous les tests passent (environ 3 880 ; ceux qui demandent un vrai PostgreSQL sont ignorés sans <code>SORTIRIA_TEST_DATABASE_URL</code>), sans aucune clé : <code>tests/conftest.py</code> crée des secrets factices et le réseau est simulé.</td></tr>
 </tbody>
 </table>
 <div class="experiment-analysis">
@@ -533,7 +533,7 @@ uv run python -m agent.proposals    # rien en attente pour lui</code></pre>
 <div class="container">
 <p class="section-number">06</p>
 <h2>Mesurer</h2>
-<p class="section-intro">Quatre scripts, quatre questions : la recherche respecte-t-elle les contraintes ? la base de test de la CI est-elle à jour ? les propositions sont-elles pertinentes ? combien de temps et combien d'argent par question ? Chaque lancement est gardé dans <code>benchmarks/</code>.</p>
+<p class="section-intro">Cinq scripts, cinq questions : la recherche respecte-t-elle les contraintes ? la base de test de la CI est-elle à jour ? les propositions sont-elles pertinentes ? combien de temps et combien d'argent par question ? quelle version de la chaîne (consignes, modèles, jeux de données) tourne ? Chaque lancement est gardé dans <code>benchmarks/</code> ou dans MLflow.</p>
 
 <div class="experiment-metrics">
 <div><strong>98,7 %</strong><span>propositions qui respectent les contraintes (50 questions)</span></div>
@@ -651,7 +651,31 @@ git commit -m "Jeu de test de la recherche réexporté : &lt;raison&gt;"</code><
 <div><span>RÉFÉRENCES</span><p>Médiane 3,0 à 3,3 s, P95 6,0 à 6,4 s sans cache (seuil 8 s), 0,11 s avec cache ; 0,000118 $ par question.</p></div>
 </div>
 </div>
-<p class="table-note">Options relevées dans l'<code>argparse</code> de <code>scripts/eval_recherche.py</code>, <code>scripts/jeu_test_recherche.py</code>, <code>scripts/eval_pertinence.py</code> et <code>scripts/mesure_cout_latence.py</code> (<code>CONFIRM_ABOVE = 100</code>) ; coûts d'après leurs docstrings et <code>docs/couts.md</code>.</p>
+<div class="experiment-card">
+<div class="experiment-header">
+<div><span class="experiment-number">PROCÉDURE 6.5 · APRÈS UN CHANGEMENT DE CONSIGNE OU DE MODÈLE</span><h3>Versionner la chaîne dans MLflow</h3></div>
+<span class="experiment-status selected">Sans appel à Mistral</span>
+</div>
+<div class="experiment-analysis">
+<div><span>BUT</span><p>Garder une trace de ce qui tourne : les 8 consignes dans le Prompt Registry, la chaîne (modèles Mistral, versions des consignes, empreintes des jeux d'évaluation) dans le Model Registry, avec l'alias <code>production</code> sur la version en service et <code>precedente</code> sur celle d'avant.</p></div>
+<div><span>OÙ VONT LES RÉSULTATS</span><p>MLflow (<code>http://localhost:5000</code>, onglets Prompts et Models ; expérience <code>sortiria-versionnage</code>), ou la base locale <code>data/mlflow/mlflow.db</code> sans serveur.</p></div>
+</div>
+<table class="story-table params-table">
+<thead><tr><th>Étape</th><th>Commande</th><th>Ce qu'on doit voir</th></tr></thead>
+<tbody>
+<tr><td>1. Changer la consigne</td><td>Modifier le texte <strong>et</strong> sa constante de version (par exemple <code>PROMPT_VERSION</code> dans <code>app/search_answer.py</code>)</td><td>Sans nouvelle version, la CI échoue : « texte modifié sans changer sa version ».</td></tr>
+<tr><td>2. Mettre le manifeste à jour</td><td><code>uv run python -m scripts.versionnage --manifeste</code></td><td><code>config/versions_consignes.json</code> modifié, à commiter avec la consigne.</td></tr>
+<tr><td>3. Vérifier</td><td><code>uv run python -m scripts.versionnage --verifier</code></td><td>« 8 consignes conformes au manifeste ».</td></tr>
+<tr><td>4. Après le déploiement</td><td><code>uv run python -m scripts.versionnage</code></td><td>« nouvelle version » de <code>sortiria-chaine</code>, alias <code>production</code> ; relancé sans changement : « inchangée ».</td></tr>
+<tr><td>Avec une mesure</td><td><code>uv run python -m scripts.versionnage --evaluation eval_recherche.json</code></td><td>Précision, compréhension et latences rattachées à la version en service.</td></tr>
+</tbody>
+</table>
+<div class="experiment-analysis">
+<div><span>REVENIR EN ARRIÈRE</span><p>Les consignes vivent dans le code : on revient par <code>git revert</code> (procédure 7.3). Le registre dit quelle version tournait, et l'alias <code>precedente</code> donne ses consignes et ses modèles exacts.</p></div>
+<div><span>POURQUOI PAS DVC</span><p>Les jeux d'évaluation pèsent environ 1 Mo et sont dans Git ; MLflow garde leur empreinte et le lien vers le fichier au commit exact. DVC servira quand un jeu ne tiendra plus dans Git (avis réels pour un fine-tuning).</p></div>
+</div>
+</div>
+<p class="table-note">Options relevées dans l'<code>argparse</code> de <code>scripts/eval_recherche.py</code>, <code>scripts/jeu_test_recherche.py</code>, <code>scripts/eval_pertinence.py</code>, <code>scripts/mesure_cout_latence.py</code> (<code>CONFIRM_ABOVE = 100</code>) et <code>scripts/versionnage.py</code> ; coûts d'après leurs docstrings et <code>docs/couts.md</code>.</p>
 </div>
 </section>
 

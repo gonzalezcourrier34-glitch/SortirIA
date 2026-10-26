@@ -559,9 +559,11 @@
 <tr><td><code>PROMPT_VERSION</code> (recherche)</td><td>2026-10-19.1</td><td><code>app/search_answer.py</code></td><td>dans la clé du cache des réponses, dans <code>rag_requests.prompt_version</code> et dans l'historique des grilles de pertinence</td></tr>
 <tr><td><code>JUDGE_VERSION</code></td><td>2026-10-16.1</td><td><code>src/event/quality_judge.py</code></td><td>repère daté de la consigne du juge ; écrit dans le bilan du juge depuis le 23/10/2026 (<code>collect_runs.quality</code>, champ <code>version</code>)</td></tr>
 <tr><td>Juge de pertinence</td><td>v7, figé</td><td><code>scripts/eval_pertinence.py</code></td><td>les sept versions et leur accord sont gardés ; v7 n'est plus modifié, pour rester comparable</td></tr>
+<tr><td><code>LEARNING_PROMPT_VERSION</code>, <code>FEEDBACK_PROMPT_VERSION</code></td><td>v1</td><td><code>agent/search_learning.py</code>, <code>agent/feedback_learning.py</code></td><td>versions des deux consignes du lundi (recherches ratées, pouces bas), ajoutées le 26/10/2026</td></tr>
 </tbody>
 </table>
-<p class="table-note">Lu dans le code au 16/10/2026 ; colonnes dans <code>sql/sortiria/02_events.sql</code>, <code>03_collect.sql</code> et <code>04_rag.sql</code>.</p>
+<p class="table-note">Lu dans le code au 26/10/2026 ; colonnes dans <code>sql/sortiria/02_events.sql</code>, <code>03_collect.sql</code> et <code>04_rag.sql</code>.</p>
+<p><strong>Dans les registres de MLflow (26/10/2026).</strong> Les 8 consignes sont enregistrées dans le Prompt Registry, chacune avec sa version, son modèle et l'empreinte de son texte ; la chaîne <code>sortiria-chaine</code> (modèles, versions des consignes, empreintes des jeux d'évaluation) est dans le Model Registry, avec les alias <code>production</code> et <code>precedente</code> (<code>scripts/versionnage.py</code>, procédure 6.5). Le manifeste <code>config/versions_consignes.json</code> est contrôlé en CI : une consigne modifiée sans nouvelle version fait échouer les tests.</p>
 
 <h3>Les caches, clés par version</h3>
 <div class="reflection-grid">

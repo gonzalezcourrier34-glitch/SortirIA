@@ -46,6 +46,10 @@ CAUSE_LABELS = {
 }
 MAX_REVIEWS = 20
 
+# Version de la consigne (26/10/2026) : à changer quand le texte change ; le
+# manifeste config/versions_consignes.json et un test de la CI y veillent.
+FEEDBACK_PROMPT_VERSION = "v1"
+
 FEEDBACK_PROMPT = """Tu aides SortirIA, un assistant de sorties (Montpellier, bassin de Thau).
 Des visiteurs ont mis un pouce bas à une réponse. Pour chaque avis, on te donne la
 question, le commentaire du visiteur (« ce qui manquait », parfois vide), les titres

@@ -1,6 +1,6 @@
 # MVP et arbitrages
 
-*Mis à jour le 19/10/2026. Gel du code le 4/11/2026, soutenance le 6/11/2026.*
+*Mis à jour le 26/10/2026. Gel du code le 4/11/2026, soutenance le 6/11/2026.*
 
 ## La promesse
 
@@ -33,7 +33,7 @@ Trois conditions la rendent tenable, et ce sont elles que le MVP doit prouver :
 | Réponse rédigée qui cite ses événements, sans en inventer | **Fait** | citations vérifiées, repli sans Mistral ([Fiabilité](fiabilite.md)) |
 | Interface web | **Fait** | https://www.sortiria-montpellier.fr |
 | Source et lien de chaque événement affichés | **Fait** | carte et détail |
-| Tests automatiques et CI | **Fait** | 3 863 tests, CI GitHub Actions, évaluation de la recherche rejouée à chaque push |
+| Tests automatiques et CI | **Fait** | 3 877 tests, CI GitHub Actions, évaluation de la recherche rejouée à chaque push |
 | Déploiement | **Fait** | Azure, déployé à chaque push sur `main` ([Déploiement](deploiement.md)) |
 | Mesure de la qualité et des coûts | **Fait** | [Évaluation](evaluation.md), [Coûts](couts.md) |
 
@@ -50,6 +50,7 @@ Trois conditions la rendent tenable, et ce sont elles que le MVP doit prouver :
 | Cache des réponses, limite de débit | Fait | coût et latence bornés |
 | MLflow, trois tableaux Grafana | Fait | suivi de la collecte, de la recherche, des modèles et des coûts |
 | Surveillance de la dérive (questions, réponses, collecte) | Fait (19/10) | savoir quand ce qu'on demande, ce qu'on répond ou ce que les sources apportent change ([MLOps et monitoring](monitoring.md)) |
+| Versionnage des consignes, de la chaîne et des jeux d'évaluation (registres MLflow, contrôle en CI) | Fait (26/10) | savoir quelle version a produit quelle réponse, et revenir à la précédente ([MLOps et monitoring](monitoring.md)) |
 
 ### Abandonné ou reporté, sans dommage pour le MVP
 

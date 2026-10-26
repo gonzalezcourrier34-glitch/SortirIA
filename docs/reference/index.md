@@ -190,6 +190,7 @@ SortirIA. Dans le code, les fonctions longues sont découpées par des commentai
 | [`scripts.jeu_test_recherche`](scripts/jeu_test_recherche.md) | Base de test de la recherche, pour rejouer l'évaluation en CI. |
 | [`scripts.mesure_cout_latence`](scripts/mesure_cout_latence.md) | Mesure du coût et du temps de réponse de la recherche (16/10/2026). |
 | [`scripts.suivi_mlflow`](scripts/suivi_mlflow.md) | Envoi d'un lancement d'évaluation dans MLflow, sans jamais faire échouer l'évaluation. |
+| [`scripts.versionnage`](scripts/versionnage.md) | Versionnage des consignes, des modèles et des jeux de données dans MLflow (26/10/2026). |
 
 ## Orchestration Airflow
 

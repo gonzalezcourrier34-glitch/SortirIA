@@ -240,5 +240,6 @@ nav:
           - scripts.jeu_test_recherche: reference/scripts/jeu_test_recherche.md
           - scripts.mesure_cout_latence: reference/scripts/mesure_cout_latence.md
           - scripts.suivi_mlflow: reference/scripts/suivi_mlflow.md
+          - scripts.versionnage: reference/scripts/versionnage.md
       - Orchestration Airflow:
           - sortiria_nightly_dag: reference/dags/sortiria_nightly_dag.md

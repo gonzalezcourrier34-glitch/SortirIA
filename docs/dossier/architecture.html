@@ -27,7 +27,7 @@
 <div><strong>4</strong><span>sources branchées</span></div>
 <div><strong>3,0 à 3,3 s</strong><span>médiane d'une réponse</span></div>
 <div><strong>≈ 10 $</strong><span>par mois, 1re année</span></div>
-<div><strong>≈ 3 860</strong><span>tests automatisés</span></div>
+<div><strong>≈ 3 880</strong><span>tests automatisés</span></div>
 </div>
 <p class="table-note">Chiffres au 23/10/2026 : base Azure, <code>benchmarks/cout_latence/</code> (temps sans cache), <code>docs/couts.md</code>, suite pytest.</p>
 <div class="hero-tags"><span>LangGraph</span><span>PostgreSQL 16 + pgvector</span><span>FastAPI</span><span>Angular</span><span>Mistral</span><span>Azure</span></div>
@@ -477,7 +477,7 @@
 <h2>Qualité logicielle</h2>
 <p class="section-intro">Un projet qui tourne seul chaque nuit doit se vérifier seul. Chaque push passe par cinq contrôles, et la recherche elle-même est rejouée sur une base figée.</p>
 <div class="skills-grid">
-<div class="skill-group"><h3>Tests</h3><div class="constraint-value">≈ 3 860</div><p class="constraint-text">tests pytest, sans vraie clé d'API (secrets factices, appels réseau simulés), dont ceux du schéma sur un vrai PostgreSQL.</p></div>
+<div class="skill-group"><h3>Tests</h3><div class="constraint-value">≈ 3 880</div><p class="constraint-text">tests pytest, sans vraie clé d'API (secrets factices, appels réseau simulés), dont ceux du schéma sur un vrai PostgreSQL.</p></div>
 <div class="skill-group"><h3>Intégration continue</h3><div class="constraint-value">5 jobs</div><p class="constraint-text">à chaque push ou Pull Request sur <code>main</code> et <code>develop</code> ; une CI rouge bloque la publication.</p></div>
 <div class="skill-group"><h3>Recherche rejouée</h3><div class="constraint-value">≥ 95 %</div><p class="constraint-text">50 questions sur une base figée, sans vecteur ni Mistral : aucune clé, aucun coût ; le job échoue en dessous.</p></div>
 <div class="skill-group"><h3>Dépendances de l'interface</h3><div class="constraint-value">0</div><p class="constraint-text">alerte de sécurité npm.</p></div>

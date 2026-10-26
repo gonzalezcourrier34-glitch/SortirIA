@@ -43,6 +43,10 @@ MAX_WORDS = 5          # par semaine : le bilan reste lisible, la recherche Open
 MAX_CANDIDATES = 4     # mots équivalents proposés par Mistral pour un mot
 NATURES = ("faute", "synonyme", "sujet", "ambiance")
 
+# Version de la consigne (26/10/2026) : à changer quand le texte change ; le
+# manifeste config/versions_consignes.json et un test de la CI y veillent.
+LEARNING_PROMPT_VERSION = "v1"
+
 LEARNING_PROMPT = """Tu aides SortirIA, un assistant de sorties (Montpellier, bassin de Thau).
 Des utilisateurs ont cherché des mots qu'aucun titre d'événement de la base ne contient.
 Pour chaque mot, dis ce que c'est :

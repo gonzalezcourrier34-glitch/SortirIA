@@ -1,6 +1,6 @@
 # Feuille de route
 
-*Mise à jour le 23/10/2026.* Le détail, tâche par tâche, avec le code repris
+*Mise à jour le 26/10/2026.* Le détail, tâche par tâche, avec le code repris
 de chaque projet, est dans [Provenance du code](provenance.md).
 
 ## Jalons
@@ -15,6 +15,7 @@ de chaque projet, est dans [Provenance du code](provenance.md).
 | 17-18/10/2026 | Verbes de pratique et « regarder », retours des premiers testeurs, nuit en échec rattrapée, page Suivi des incidents | ✅ |
 | 19/10/2026 | Bilan du lundi lu et corrigé ; **surveillance de la dérive** (questions, réponses, collecte) | ✅ |
 | 23/10/2026 | Code relu et documenté (docstrings, référence par fichier, recherche découpée), défauts corrigés, horloge de la base de test réparée | ✅ |
+| 26/10/2026 | **Versionnage** des consignes, de la chaîne et des jeux de données dans les registres MLflow, contrôlé en CI | ✅ |
 | 4/11/2026 | **Gel du code** | ⏳ |
 | 6/11/2026 | **Soutenance** | ⏳ |
 
@@ -113,6 +114,7 @@ mesure, fiabilise ou explique.
 | 19/10 ✅ | Bilan du lundi lu : des mots de la phrase (« sont », « bonjour », « propositions », « voire ») pris pour des sujets ; mots vides complétés, « tableaux » = exposition ; l'agent ne propose plus de synonyme pour ces mots ; consigne `2026-10-19.1` | « quels sont les prochaines expositions de peinture » (9 fois) : réponse exacte ; 4 jeux d'évaluation sans régression |
 | 19/10 ✅ | **Surveillance de la dérive** (`agent/drift.py`) : chaque nuit, les 7 derniers jours comparés aux 28 précédents par le PSI (la méthode d'Evidently, recodée) sur les questions (zone, public, type, moment, gratuit), les réponses (exactes, élargies, introuvables ; latence, part sans Mistral, avis) et la collecte (sources, motifs de rejet, taux de rejet, juge) ; rapport dans `collect_runs.drift`, MLflow et Grafana (partie 06), section du mail du lundi, alerte si forte ; colonne ajoutée sur Azure | 19 tests ; pas de jugement sous 30 questions par semaine (pas de fausse alerte à faible trafic) |
 | 23/10 ✅ | Code relu et documenté : docstrings numpy et commentaires par étape partout ; une page de référence par fichier Python (146 pages) ; `app/search_service.py` découpé en 7 modules (un fichier, un usage) ; défauts de la relecture corrigés, chacun avec son test ; horloge de la base de test réparée (`sortiria.reference_now()`) | faire soi-même 90 % → 98 % (base figée) ; mêmes cartes sur les 4 jeux ; 3 863 tests verts |
+| 26/10 ✅ | **Versionnage** (`scripts/versionnage.py`) : les 8 consignes dans le Prompt Registry de MLflow (alias `production`), la chaîne `sortiria-chaine` dans le Model Registry (modèles Mistral, versions des consignes, empreintes des 10 jeux de données ; alias `production` et `precedente`) ; manifeste `config/versions_consignes.json` contrôlé en CI : une consigne ne peut plus changer sans changer de version | 14 tests, dont un sur le vrai MLflow ; 3 877 tests verts |
 | 17-26/10 | **Usage réel** : faire tester le site par 5 à 10 personnes ; lire les pouces bas et les recherches ratées (Grafana, bilan du lundi) ; corrections ciblées ; réponses de Frontignan et de l'Archipel de Thau (intégrer ou citer) | bilan d'usage chiffré, corrections testées |
 | 24-30/10 | Relecture du dossier et de la doc ; captures d'écran du site, de Grafana, du mail de bilan ; publication du dossier en ligne (facultatif) ; pitch et feuille de route PDF mis à jour (datés du 14/10) | dossier final |
 | 27/10-3/11 | Diapositives, scénario de démonstration, vidéo de secours, répétitions avec questions du jury ; décision sur les partenaires d'exemple (présentés comme fictifs) ; coûts Azure réels du mois relevés | support de soutenance |
