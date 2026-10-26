@@ -232,13 +232,21 @@ PURGE_OLD_DATA_SQL = "SELECT requests_deleted, cache_deleted, runs_deleted FROM 
 # sujets que la recherche reconnaît, recalculés après chaque collecte.
 REFRESH_TITLE_VOCABULARY_SQL = "SELECT sortiria.refresh_title_vocabulary()"
 
+# Questions de test (26/10/2026) : celles que je pose sur le site en production
+# commencent par « [t » (« [t] », « [test] »). Elles restent dans le journal,
+# mais le bilan du lundi, l'apprentissage et la dérive les ignorent : le 26/10,
+# 18 questions de test sur 30 avaient déclenché presque toutes les alertes de
+# dérive. Le « %% » est le « % » de LIKE, doublé pour psycopg.
+NOT_A_TEST_QUESTION = "btrim(question) NOT LIKE '[t%%'"
+
 # Bilan de la recherche (15/10/2026) : ce que les utilisateurs ont cherché sans
 # trouver, d'après le journal `rag_requests` (champ constraints->'recherche').
-RECENT_SEARCHES_CTE = """
+RECENT_SEARCHES_CTE = f"""
 WITH recent AS (
     SELECT lower(btrim(question)) AS question, status, constraints -> 'recherche' AS r
     FROM sortiria.rag_requests
     WHERE asked_at >= now() - make_interval(days => %(days)s) AND question <> '(filtres seuls)'
+      AND {NOT_A_TEST_QUESTION}
 )
 """
 SEARCH_GAPS_TOTALS_SQL = RECENT_SEARCHES_CTE + """

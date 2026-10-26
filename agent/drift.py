@@ -48,6 +48,8 @@ import os
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
 
+from src.event.event_repository import NOT_A_TEST_QUESTION
+
 REFERENCE_DAYS = 28
 CURRENT_DAYS = 7
 
@@ -608,17 +610,18 @@ def mlflow_metrics(report: Mapping[str, Any]) -> dict[str, float]:
 # Lecture en base
 # ---------------------------------------------------------------------------
 
-QUESTIONS_CTE = """
+# Les questions de test (« [t… ») ne comptent pas : voir NOT_A_TEST_QUESTION.
+QUESTIONS_CTE = f"""
 WITH q AS (
     SELECT CASE WHEN asked_at >= now() - make_interval(days => %(current_days)s)
                 THEN 'courant' ELSE 'reference' END AS fenetre,
            status, latency_ms, from_cache, degraded,
            constraints AS c,
-           COALESCE(constraints -> 'compris', '{}'::jsonb) AS p,
-           COALESCE(constraints -> 'recherche', '{}'::jsonb) AS r
+           COALESCE(constraints -> 'compris', '{{}}'::jsonb) AS p,
+           COALESCE(constraints -> 'recherche', '{{}}'::jsonb) AS r
     FROM sortiria.rag_requests
     WHERE asked_at >= now() - make_interval(days => %(current_days)s + %(reference_days)s)
-      AND status <> 'refuse'
+      AND status <> 'refuse' AND {NOT_A_TEST_QUESTION}
 )
 """
 

@@ -1118,6 +1118,8 @@ def test_search_gaps_report_what_users_did_not_find(db: Any) -> None:
     ask("De la zumba ", exact=False, mots_inconnus=["zumba"])
     ask("du cirque", status="aucun_resultat", exact=False, sujet_introuvable=True)
     ask("(filtres seuls)", exact=False)                                   # pas une question
+    ask("[test] de la zumba", exact=False, mots_inconnus=["zumba"])       # mes tests (26/10)
+    ask(" [t] theatre kawa", exact=False, mots_inconnus=["kawa"])
     with db.cursor() as cursor:                                           # trop ancienne
         cursor.execute("INSERT INTO sortiria.rag_requests (question, asked_at, constraints) "
                        "VALUES ('vieux', now() - interval '10 days', '{\"recherche\": {\"exact\": false}}')")

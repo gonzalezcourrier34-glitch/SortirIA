@@ -143,6 +143,13 @@ aux **28 précédents** :
 | Réponses (*prediction drift*) | type de réponse : exacte, élargie, idées voisines, introuvable, erreur | la base répond moins bien aux demandes |
 | Réponses (performance) | latence P95 hors cache, part sans Mistral, part des pouces haut | service plus lent, Mistral moins disponible, visiteurs moins satisfaits |
 | Collecte (données) | part de chaque source, motifs de rejet | une source change de format ou de volume |
+
+**Questions de test (26/10/2026)** : les questions que je pose moi-même sur le
+site commencent par « [t » (« [t] », « [test] »). Elles restent dans
+`rag_requests`, mais la dérive, le bilan du lundi et l'apprentissage des
+recherches ratées les ignorent (`NOT_A_TEST_QUESTION`,
+`src/event/event_repository.py`). Le 26/10, 18 questions de test sur 30
+avaient déclenché presque toutes les alertes de dérive du mail.
 | Collecte (qualité) | taux de rejet, score du juge de qualité | l'enrichissement par Mistral se dégrade (*concept drift*) |
 
 **Méthode** : PSI (Population Stability Index) pour les distributions, la

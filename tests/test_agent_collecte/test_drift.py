@@ -263,6 +263,11 @@ def test_fetch_drift_on_postgresql(db: Any) -> None:
             cursor.execute("""INSERT INTO sortiria.rag_requests (asked_at, question, constraints, status, latency_ms)
                               VALUES (now() - make_interval(days => %s), 'q', %s, %s, %s)""",
                            (days_ago, constraints, status, latency))
+        # Mes questions de test (26/10/2026) : ignorées, sinon Thau passerait en tête
+        for days_ago, constraints, status, latency in [question(1, "bassin_de_thau")] * 30:
+            cursor.execute("""INSERT INTO sortiria.rag_requests (asked_at, question, constraints, status, latency_ms)
+                              VALUES (now() - make_interval(days => %s), '[test] un concert', %s, %s, %s)""",
+                           (days_ago, constraints, status, latency))
         cursor.execute("""INSERT INTO sortiria.sources (source_id, name, kind, licence, attribution)
                           VALUES ('openagenda', 'OpenAgenda', 'api', 'test', 'test') ON CONFLICT DO NOTHING""")
         for days_ago in range(1, 30):
