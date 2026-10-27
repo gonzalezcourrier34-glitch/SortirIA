@@ -73,12 +73,6 @@
                                 [attr.aria-pressed]="selectedPeriod() === choice.value"
                                 (click)="selectPeriod(choice.value)">{{ choice.label }}</button>
                         }
-                        @if (questionDate(); as date) {
-                            <!-- Date précise lue dans la question : affichée, pas cochable. -->
-                            <span class="chip chip-read" title="Date lue dans votre question">
-                                <span aria-hidden="true">📅</span> {{ date }}
-                            </span>
-                        }
                     </div>
 
                     <div class="filter-group">
@@ -92,11 +86,22 @@
 
                 <div class="ask">
                     <label for="question" class="visually-hidden">Votre envie de sortie</label>
-                    <textarea id="question" rows="2" maxlength="500"
-                        placeholder="Décrivez votre envie de sortie…"
-                        [value]="question()"
-                        (input)="onQuestionInput($event)"
-                        (keydown)="onQuestionKeydown($event)"></textarea>
+                    <!-- 27/10/2026 : la date lue dans la question s'affiche dans le cadre
+                         de saisie, plus dans la barre de filtres (elle la faisait passer à la ligne). -->
+                    <div class="ask-field">
+                        <textarea id="question" rows="2" maxlength="500"
+                            placeholder="Décrivez votre envie de sortie…"
+                            [class.with-date]="!!questionDate()"
+                            [value]="question()"
+                            (input)="onQuestionInput($event)"
+                            (keydown)="onQuestionKeydown($event)"></textarea>
+                        @if (questionDate(); as date) {
+                            <!-- Date précise lue dans la question : affichée, pas cochable. -->
+                            <span class="date-read" title="Date lue dans votre question : elle remplace la période cochée">
+                                <span aria-hidden="true">📅</span> {{ date }}
+                            </span>
+                        }
+                    </div>
 
                     <div class="ask-actions">
                         <button type="button" class="button-secondary" (click)="newConversation()">
