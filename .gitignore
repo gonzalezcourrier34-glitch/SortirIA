@@ -27,3 +27,7 @@ site/
 
 # Résultats des audits (scripts/audit_openagenda.py)
 audit*.json
+
+# Rapport Evidently mensuel (scripts/rapport_evidently.py)
+rapports_evidently/
+.venv-evidently/

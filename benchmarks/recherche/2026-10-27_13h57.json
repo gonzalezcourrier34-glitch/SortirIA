@@ -1,0 +1,4375 @@
+{
+  "date": "2026-10-27T13:57:39+01:00",
+  "questions": 50,
+  "comprehension": 1.0,
+  "precision": 0.987,
+  "sans_resultat": 0,
+  "idees_voisines": 3,
+  "latence_mediane_s": 1.37,
+  "latence_p95_s": 3.47,
+  "detail": [
+    {
+      "question": "j'aimerais aller au théâtre",
+      "compris": "les 3 prochains mois · théâtre ou spectacle",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "OSONS LE THÉÂTRE THÉÂTRE AMATEUR AVEC LA FNCTA 34",
+        "LES PAS PERDUS — THÉÂTRE AMATEUR PAR LA TROUPE DE L'UTL34",
+        "GOÛTER-JEU AU THEATRE",
+        "LES PAS PERDUS",
+        "ATELIER INITIATION THÉÂTRE ADOS",
+        "CYRANA",
+        "ATELIER DANSE-THÉÂTRE",
+        "LE CERCLE DES POÈTES DISPARUS - LES THÉÂTRALES"
+      ],
+      "cartes": [
+        {
+          "titre": "OSONS LE THÉÂTRE THÉÂTRE AMATEUR AVEC LA FNCTA 34",
+          "type": "theatre",
+          "publics": [],
+          "resume": "Festival de théâtre amateur avec six troupes locales proposant des pièces variées sur trois jours.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LES PAS PERDUS — THÉÂTRE AMATEUR PAR LA TROUPE DE L'UTL34",
+          "type": "theatre",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle de théâtre amateur dans une gare, avec des histoires de vie croisées.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "GOÛTER-JEU AU THEATRE",
+          "type": "theatre",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Goûter suivi de jeux de société pour enfants et adultes avant un spectacle.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LES PAS PERDUS",
+          "type": "theatre",
+          "publics": [],
+          "resume": "Pièce de théâtre amateur évoquant les récits et espoirs de voyageurs dans une gare.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER INITIATION THÉÂTRE ADOS",
+          "type": "atelier",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Initiation au théâtre d’improvisation pour les jeunes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CYRANA",
+          "type": "theatre",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Seule en scène drôle et touchante, mêlant fantaisie, poésie et énergie scénique.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER DANSE-THÉÂTRE",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier d'expression corporelle mêlant danse et jeu théâtral pour les petits.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LE CERCLE DES POÈTES DISPARUS - LES THÉÂTRALES",
+          "type": "theatre",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Pièce de théâtre inspirante sur l'émancipation et la transmission, adaptée d'un film culte.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un concert ce week-end",
+      "compris": "ce week-end · concert",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "VACANCES DE LA TOUSSAINT À L'OPÉRA COMÉDIE",
+        "CONCERT HALLOWEEN",
+        "CONCERT NES - BASED MTP",
+        "OPÉRA JUNIOR & BUSAN METROPOLITAN JUNIOR CHORUS",
+        "BASED MTP INVITE NES",
+        "SPECTACLE MUSICAL \"MON RENAUD PRÉFÉRÉ\"",
+        "NeS & Nobodylikesbirdie",
+        "Dernier Cri • Kendal & Lolita • Rockstore"
+      ],
+      "cartes": [
+        {
+          "titre": "VACANCES DE LA TOUSSAINT À L'OPÉRA COMÉDIE",
+          "type": "concert",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Événements musicaux familiaux incluant jeu de piste, concert et chœurs d'enfants.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT HALLOWEEN",
+          "type": "concert",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Concert familial mêlant musique classique et univers fantastique avec déguisements.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT NES - BASED MTP",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert de rap cathartique et exigeant, mêlant authenticité brute et exploration sonore.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "OPÉRA JUNIOR & BUSAN METROPOLITAN JUNIOR CHORUS",
+          "type": "concert",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Concert choral réunissant des jeunes artistes français et coréens.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "BASED MTP INVITE NES",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert de rap brut et authentique mêlant technique et exploration sonore.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SPECTACLE MUSICAL \"MON RENAUD PRÉFÉRÉ\"",
+          "type": "concert",
+          "publics": [],
+          "resume": "Spectacle musical rendant hommage à un artiste célèbre avec des reprises.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "NeS & Nobodylikesbirdie",
+          "type": "concert",
+          "publics": [],
+          "resume": "Rappeur interprétant une musique sincère et exigeante, accompagné d'un groupe en première partie.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Dernier Cri • Kendal & Lolita • Rockstore",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Concert de musique électronique énergique dans une salle de concert.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une exposition à voir en novembre",
+      "compris": "en novembre · exposition",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Exposition photo de l'étang (exemple)",
+        "LES AS DE LA PREMIÈRE GUERRE MONDIALE",
+        "EXPOSITION PHOTOGRAPHIQUE - MAISON DE LA NATURE",
+        "EXPOSITION «CLAIR OBSCUR: EXPEDITION 33 – LA TOILE AUX RÊVES »",
+        "EXPOSITION PHOTO : CHEMINS DE TRAVERSE - PAYSAGES CULTURELS DU PATRIMOINE MONDIAL",
+        "EXPOSITIONS \"MAISON-MAIN\" (COLLECTIVE) ET \"FOR KHEIRA,\" DE NESRINE SALEM",
+        "VERNISSAGE EXPOSITION \"FATBOBSTUDIO\"",
+        "EXPOSITION \"PREMIÈRES FOIS / PREMIÈRES PHOTOS\""
+      ],
+      "cartes": [
+        {
+          "titre": "Exposition photo de l'étang (exemple)",
+          "type": "exposition",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Exposition de photographies capturant un paysage naturel emblématique.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "LES AS DE LA PREMIÈRE GUERRE MONDIALE",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Exposition historique sur les pilotes de chasse de la Première Guerre mondiale et leurs exploits.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "EXPOSITION PHOTOGRAPHIQUE - MAISON DE LA NATURE",
+          "type": "exposition",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Exposition photographique accessible gratuitement en semaine et week-end.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "EXPOSITION «CLAIR OBSCUR: EXPEDITION 33 – LA TOILE AUX RÊVES »",
+          "type": "exposition",
+          "publics": [
+            "ados",
+            "famille",
+            "seniors"
+          ],
+          "resume": "Exposition artistique gratuite dans un lieu public, ouverte à tous les publics.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "EXPOSITION PHOTO : CHEMINS DE TRAVERSE - PAYSAGES CULTURELS DU PATRIMOINE MONDIAL",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Photographies grand format sur les paysages culturels reconnus par l'UNESCO.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "EXPOSITIONS \"MAISON-MAIN\" (COLLECTIVE) ET \"FOR KHEIRA,\" DE NESRINE SALEM",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Exposition collective explorant les gestes humains à travers des œuvres variées et une expérience sensorielle.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "VERNISSAGE EXPOSITION \"FATBOBSTUDIO\"",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Vernissage d'une exposition de peintures et dessins avec présence de l'artiste.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "EXPOSITION \"PREMIÈRES FOIS / PREMIÈRES PHOTOS\"",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Parcours ludique et historique sur les débuts de la photographie et ses innovations.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "du cinéma en plein air ou une projection",
+      "compris": "les 3 prochains mois · en plein air · cinéma",
+      "ecarts_comprehension": [],
+      "propositions": 5,
+      "correctes": 5,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "PROJECTION - ARRÊT SUR IMAGE",
+        "L'ILLUMINÉ FESTIVAL",
+        "FÊTE DU FILM D’ANIMATION",
+        "CINÉ/CONFÉRENCE \"CUBA HASTA SIEMPRE\"",
+        "FESTIVAL EX TENEBRIS LUX – ACTE VIII"
+      ],
+      "cartes": [
+        {
+          "titre": "PROJECTION - ARRÊT SUR IMAGE",
+          "type": "cinema",
+          "publics": [],
+          "resume": "Projection de documentaires sur l'histoire et les techniques de la photographie.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "L'ILLUMINÉ FESTIVAL",
+          "type": "festival",
+          "publics": [],
+          "resume": "Festival dédié au cinéma d'animation avec projections, rencontres et ateliers ouverts à tous.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "FÊTE DU FILM D’ANIMATION",
+          "type": "festival",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Festival dédié au cinéma d'animation avec projections, ateliers et rencontres pour tous les âges.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CINÉ/CONFÉRENCE \"CUBA HASTA SIEMPRE\"",
+          "type": "conference",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Projection et discussion sur le cinéma et la culture d’un pays étranger.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "FESTIVAL EX TENEBRIS LUX – ACTE VIII",
+          "type": "festival",
+          "publics": [],
+          "resume": "Festival mêlant cinéma, concerts et arts dans des lieux insolites de la ville.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un spectacle de danse",
+      "compris": "les 3 prochains mois · danse",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "DANS6T BOUZIANE BOUTELDJA",
+        "PINGOUIN",
+        "Conte dansé \"Pingouin\" par la Cie Virgule",
+        "BRAISES | MICHEL KELEMENIS - KELEMENIS&CIE",
+        "BALLET OF LIGHTS : LA BELLE AU BOIS DORMANT DANS UN SPECTACLE ÉTINCELANT",
+        "MATHILDE MONNIER ET LUCIE ANTUNES SILENCE",
+        "\"L’ÉPOPÉE\" PAR LA COMPAGNIE LES GENS DU QUAI",
+        "LA NUIT DES CAPUCINES"
+      ],
+      "cartes": [
+        {
+          "titre": "DANS6T BOUZIANE BOUTELDJA",
+          "type": "spectacle",
+          "publics": [],
+          "resume": "Spectacle mêlant danse et récits sur les liens entre mouvements corporels et luttes sociales ou identitaires.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "PINGOUIN",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Conte dansé poétique et humoristique pour les tout-petits dès 3 ans.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Conte dansé \"Pingouin\" par la Cie Virgule",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Conte dansé poétique et humoristique pour les jeunes enfants dès 3 ans.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "BRAISES | MICHEL KELEMENIS - KELEMENIS&CIE",
+          "type": "danse",
+          "publics": [],
+          "resume": "Spectacle de danse explorant l'énergie et la complicité d'un septuor de danseurs.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "BALLET OF LIGHTS : LA BELLE AU BOIS DORMANT DANS UN SPECTACLE ÉTINCELANT",
+          "type": "danse",
+          "publics": [],
+          "resume": "Spectacle de ballet classique revisité avec costumes lumineux et chorégraphie époustouflante.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MATHILDE MONNIER ET LUCIE ANTUNES SILENCE",
+          "type": "spectacle",
+          "publics": [],
+          "resume": "Concert chorégraphique où musique et danse s'entremêlent dans un dialogue rythmique.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "\"L’ÉPOPÉE\" PAR LA COMPAGNIE LES GENS DU QUAI",
+          "type": "danse",
+          "publics": [],
+          "resume": "Restitution d'une création chorégraphique co-construite avec les habitants sur le thème du vivre-ensemble.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LA NUIT DES CAPUCINES",
+          "type": "danse",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée festive mêlant cabaret et clubbing avec performances queer et spectacles déjantés.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un marché ou une brocante dimanche",
+      "compris": "dim. 1 nov. · marché",
+      "ecarts_comprehension": [],
+      "propositions": 3,
+      "correctes": 3,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "MARCHÉ AUX PUCES",
+        "MARCHÉ AUX PUCES & À LA BROCANTE",
+        "LES DIMANCHES DU PEYROU"
+      ],
+      "cartes": [
+        {
+          "titre": "MARCHÉ AUX PUCES",
+          "type": "marche",
+          "publics": [],
+          "resume": "Brocante hebdomadaire avec plus de cent exposants sur une place animée.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ AUX PUCES & À LA BROCANTE",
+          "type": "marche",
+          "publics": [],
+          "resume": "Découverte d'objets anciens, livres et artisanat lors d'un marché aux puces.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LES DIMANCHES DU PEYROU",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Brocante dominicale avec objets anciens et restauration légère.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un atelier créatif pour les enfants",
+      "compris": "les 3 prochains mois · famille · atelier",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "ATELIERS JEUNE PUBLIC - POUSSES D'ARCHI",
+        "ATELIER CRIC CRAC - POUR LES ENFANTS DE 7 À 12 ANS",
+        "ATELIER CRÉATIF DES PETITS ARTISTES",
+        "LES ATELIERS DE LA CABANE : SOUS LE PAPIER LA GRAINE !",
+        "LES ATELIERS DE LA CABANE : LES MAINS DANS LE PLASTIQUE",
+        "ATELIER CRÉATIF - MA GUIRLANDE ENCHANTÉE",
+        "ET SI ON CRÉAIT ?",
+        "HISTOIRES À BRICOLER : spécial Noël"
+      ],
+      "cartes": [
+        {
+          "titre": "ATELIERS JEUNE PUBLIC - POUSSES D'ARCHI",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Ateliers créatifs pour enfants sur l'architecture, l'urbanisme et la biodiversité.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER CRIC CRAC - POUR LES ENFANTS DE 7 À 12 ANS",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier créatif pour enfants de 7 à 12 ans autour de la transformation des matières après une visite d'expositions.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER CRÉATIF DES PETITS ARTISTES",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier créatif gratuit pour enfants dans un musée.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LES ATELIERS DE LA CABANE : SOUS LE PAPIER LA GRAINE !",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier créatif pour fabriquer des cartes de vœux à planter, sans plastique.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LES ATELIERS DE LA CABANE : LES MAINS DANS LE PLASTIQUE",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier créatif familial pour transformer des plastiques en œuvres d'art, avec immersion dans une exposition.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER CRÉATIF - MA GUIRLANDE ENCHANTÉE",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier créatif pour fabriquer une guirlande décorative aux couleurs des fêtes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ET SI ON CRÉAIT ?",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier créatif familial pour réaliser des projets manuels ensemble.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "HISTOIRES À BRICOLER : spécial Noël",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Écoute d'histoires suivies d'un atelier créatif pour enfants.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une visite guidée de Sète",
+      "compris": "les 3 prochains mois · Sète · visite",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "VISITE COMMENTÉE DE SÈTE AVEC DIVERS UNI VERS",
+        "LA VISITE GUIDÉE DE JEANNE",
+        "LES VISITES GUIDÉES - LES COLLECTIONS À LA CARTE !",
+        "VISITE DES TOUT-PETITS (6 - 36 MOIS)",
+        "LES VISITES EN FAMILLE - UNE HISTOIRE HAUTE EN COULEUR !",
+        "LES VISITES GUIDÉES - LES COULEURS DE JEAN VILAR",
+        "LES VISITES EN FAMILLE -À LA RECHERCHE DE LA CLEF PERDUE !",
+        "LES SENS DU REGARD - VISITE SENSORIELLE (PUBLIC AVEUGLE OU MALVOYANT)"
+      ],
+      "cartes": [
+        {
+          "titre": "VISITE COMMENTÉE DE SÈTE AVEC DIVERS UNI VERS",
+          "type": "visite",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Balade guidée explorant l'histoire, la nature et la culture d'une ville côtière.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LA VISITE GUIDÉE DE JEANNE",
+          "type": "visite",
+          "publics": [],
+          "resume": "Visite guidée intime et personnelle sur l'amitié entre deux artistes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LES VISITES GUIDÉES - LES COLLECTIONS À LA CARTE !",
+          "type": "visite",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Visite courte et originale des collections d'un musée tirée au sort.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "VISITE DES TOUT-PETITS (6 - 36 MOIS)",
+          "type": "visite",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Visite adaptée aux bébés pour découvrir l'art contemporain à travers des expériences sensorielles.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LES VISITES EN FAMILLE - UNE HISTOIRE HAUTE EN COULEUR !",
+          "type": "visite",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Visite sensorielle interactive pour les enfants dès 3 ans, avec déguisements et choix de décors.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LES VISITES GUIDÉES - LES COULEURS DE JEAN VILAR",
+          "type": "visite",
+          "publics": [],
+          "resume": "Visite guidée d'une exposition sur l'univers visuel d'un metteur en scène.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LES VISITES EN FAMILLE -À LA RECHERCHE DE LA CLEF PERDUE !",
+          "type": "visite",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Visite ludique en famille avec jeu de piste pour résoudre des énigmes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LES SENS DU REGARD - VISITE SENSORIELLE (PUBLIC AVEUGLE OU MALVOYANT)",
+          "type": "visite",
+          "publics": [],
+          "resume": "Visite sensorielle spécialement conçue pour les personnes aveugles ou malvoyantes dans des expositions.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une conférence sur l'histoire",
+      "compris": "les 3 prochains mois · conférence",
+      "ecarts_comprehension": [],
+      "propositions": 3,
+      "correctes": 3,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "FEMMES MÉDECINS",
+        "MERCREDI DU MUSÉE DE LA RÉSISTANCE ET DE LA DÉPORTATION",
+        "CONFÉRENCE - L’INDUSTRIE DU JAYET EN LANGUEDOC AU XVIIIE ET XIXE SIÈCLES"
+      ],
+      "cartes": [
+        {
+          "titre": "FEMMES MÉDECINS",
+          "type": "conference",
+          "publics": [],
+          "resume": "Conférence suivie d'une balade sur l'histoire des femmes médecins ayant marqué leur époque.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MERCREDI DU MUSÉE DE LA RÉSISTANCE ET DE LA DÉPORTATION",
+          "type": "conference",
+          "publics": [],
+          "resume": "Rencontre avec des enfants de résistants pour échanger sur l'histoire d'un maquis emblématique.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONFÉRENCE - L’INDUSTRIE DU JAYET EN LANGUEDOC AU XVIIIE ET XIXE SIÈCLES",
+          "type": "conference",
+          "publics": [],
+          "resume": "Découvrir l'histoire de l'industrie du jayet en Languedoc aux XVIIIe et XIXe siècles.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un festival en octobre",
+      "compris": "en octobre · festival",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "HALLOWEEN UKULÉLÉ FESTIVAL",
+        "FESTIVAL EX TENEBRIS LUX – ACTE VIII",
+        "FESTIVAL DE L'ÉVEIL DES TOUT-PETITS",
+        "RIDE & VIBE FESTIVAL",
+        "FESTIVAL BRASSENS : 22 V'LÀ GEORGES",
+        "LA PROGRAMMATION D'OCTOBRE À RESTANQUE",
+        "FÊTE DU FILM D’ANIMATION",
+        "Soirée Halloween 2026"
+      ],
+      "cartes": [
+        {
+          "titre": "HALLOWEEN UKULÉLÉ FESTIVAL",
+          "type": "festival",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Festival de musique autour de l'ukulélé sur plusieurs jours.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "FESTIVAL EX TENEBRIS LUX – ACTE VIII",
+          "type": "festival",
+          "publics": [],
+          "resume": "Festival mêlant cinéma, concerts et arts dans des lieux insolites de la ville.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "FESTIVAL DE L'ÉVEIL DES TOUT-PETITS",
+          "type": "festival",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Festival d'animations gratuites pour éveiller la créativité des tout-petits et leurs familles.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "RIDE & VIBE FESTIVAL",
+          "type": "festival",
+          "publics": [],
+          "resume": "Festival mêlant sports nautiques et musique avec village d'exposants et soirée festive.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "FESTIVAL BRASSENS : 22 V'LÀ GEORGES",
+          "type": "festival",
+          "publics": [],
+          "resume": "Festival dédié à l'œuvre d'un artiste avec concerts, spectacles et animations culturelles variées.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LA PROGRAMMATION D'OCTOBRE À RESTANQUE",
+          "type": "festival",
+          "publics": [
+            "ados",
+            "famille",
+            "soirée"
+          ],
+          "resume": "Programmation variée en octobre : théâtre, musique, expositions, Halloween et activités pour enfants.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "FÊTE DU FILM D’ANIMATION",
+          "type": "festival",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Festival dédié au cinéma d'animation avec projections, ateliers et rencontres pour tous les âges.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Soirée Halloween 2026",
+          "type": "festival",
+          "publics": [
+            "famille",
+            "soirée"
+          ],
+          "resume": "Soirée Halloween avec cirque, animations et parcours à frissons en deux ambiances.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "que faire ce soir ?",
+      "compris": "aujourd'hui (le soir)",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "SOIRÉE ASTRONOMIE",
+        "ASTRONOMIE : OBSERVEZ LA LUNE, JUPITER… AU TÉLESCOPE !",
+        "APÉRO LITTÉRAIRE !",
+        "FÊTE DU FILM D’ANIMATION",
+        "Visite guidée - Sur le sentier de Bebelle",
+        "FAIRE DE LA VOILE A SETE",
+        "ACCRO AUX ECRANS",
+        "MONTPELLIER ENQUÊTE SUR MEURTRE: RÉSOLVEZ LE CAS!"
+      ],
+      "cartes": [
+        {
+          "titre": "SOIRÉE ASTRONOMIE",
+          "type": "nature",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Observation du ciel nocturne et des constellations avec des télescopes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ASTRONOMIE : OBSERVEZ LA LUNE, JUPITER… AU TÉLESCOPE !",
+          "type": "nature",
+          "publics": [],
+          "resume": "Observations astronomiques avec télescope et animations ludiques sur l'espace.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "APÉRO LITTÉRAIRE !",
+          "type": "lecture",
+          "publics": [],
+          "resume": "Rencontre littéraire avec découverte de livres et animations musicales.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "FÊTE DU FILM D’ANIMATION",
+          "type": "festival",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Festival dédié au cinéma d'animation avec projections, ateliers et rencontres pour tous les âges.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Visite guidée - Sur le sentier de Bebelle",
+          "type": "visite",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Visite guidée avec balade, découverte d'un moulin et dégustation gourmande en famille.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "FAIRE DE LA VOILE A SETE",
+          "type": "sport",
+          "publics": [],
+          "resume": "Activité de navigation à voile pour tous niveaux sur un plan d'eau.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ACCRO AUX ECRANS",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle musical et humoristique invitant à lever les yeux des écrans pour rêver ensemble.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MONTPELLIER ENQUÊTE SUR MEURTRE: RÉSOLVEZ LE CAS!",
+          "type": "jeux",
+          "publics": [
+            "ados",
+            "seniors"
+          ],
+          "resume": "Jeu d'enquête immersif en plein air pour résoudre une énigme dans la ville.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une sortie demain",
+      "compris": "demain",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Spectacle de marionnettes (exemple)",
+        "APÉRO LITTÉRAIRE !",
+        "PAUSE JEUX : Les échecs",
+        "L’heure du film : Fais-moi peur !",
+        "LUDOTHÈQUE EN GOGUETTE",
+        "SPECTACLE JEUNE PUBLIC : POUR BIEN DORMIR",
+        "DÉCOUVERTE DU CASQUE RÉALITÉ VIRTUELLE : Spéciale horreur",
+        "MATINÉE DES BÉBÉS : Racontines frissons"
+      ],
+      "cartes": [
+        {
+          "titre": "Spectacle de marionnettes (exemple)",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle de marionnettes avec conte en musique pour les tout-petits.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "APÉRO LITTÉRAIRE !",
+          "type": "lecture",
+          "publics": [],
+          "resume": "Rencontre littéraire avec découverte de livres et animations musicales.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "PAUSE JEUX : Les échecs",
+          "type": "jeux",
+          "publics": [],
+          "resume": "Découverte des échecs avec une ludothécaire.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "L’heure du film : Fais-moi peur !",
+          "type": "cinema",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Projection de courts-métrages et histoires pour les jeunes enfants.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LUDOTHÈQUE EN GOGUETTE",
+          "type": "jeux",
+          "publics": [],
+          "resume": "Découverte et essai de jeux variés en ludothèque.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SPECTACLE JEUNE PUBLIC : POUR BIEN DORMIR",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle poétique et amusant pour enfants dès 5 ans, explorant les peurs nocturnes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "DÉCOUVERTE DU CASQUE RÉALITÉ VIRTUELLE : Spéciale horreur",
+          "type": "atelier",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Découvrir la réalité virtuelle avec une expérience immersive.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MATINÉE DES BÉBÉS : Racontines frissons",
+          "type": "lecture",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Lecture et jeux pour les tout-petits autour de récits effrayants.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "quoi faire samedi soir à Montpellier",
+      "compris": "sam. 31 oct. (le soir) · Montpellier",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Soirée DJ électro (exemple)",
+        "PROGRAMMATION OCTOBRE - LE RÉSERVOIR",
+        "LES SAMEDIS MERVEILLEUX",
+        "BALADE GUIDÉE INÉDITE ET TERRIFIANTE",
+        "À LA RENCONTRE DES CHAUVES-SOURIS URBAINES",
+        "MONTPELLIER ENQUÊTE SUR MEURTRE: RÉSOLVEZ LE CAS!",
+        "HALLOWEEN ALL DAY",
+        "DARK HALLOWEEN À l'OPÉRA COMÉDIE"
+      ],
+      "cartes": [
+        {
+          "titre": "Soirée DJ électro (exemple)",
+          "type": "soiree",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée électro avec deux DJ résidents et entrée réduite avant minuit.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "PROGRAMMATION OCTOBRE - LE RÉSERVOIR",
+          "type": "soiree",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Programmation variée de soirées : concerts, jeux, dégustations et tournois dans un lieu dédié aux rencontres culturelles.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LES SAMEDIS MERVEILLEUX",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Ateliers créatifs combinant peinture, sculpture et théâtre pour enfants de 4 à 11 ans.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "BALADE GUIDÉE INÉDITE ET TERRIFIANTE",
+          "type": "nature",
+          "publics": [],
+          "resume": "Balade nocturne en vélo électrique à travers des lieux insolites avec récits terrifiants.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "À LA RENCONTRE DES CHAUVES-SOURIS URBAINES",
+          "type": "nature",
+          "publics": [],
+          "resume": "Découverte nocturne des chauves-souris en ville avec un expert et appareils acoustiques.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MONTPELLIER ENQUÊTE SUR MEURTRE: RÉSOLVEZ LE CAS!",
+          "type": "jeux",
+          "publics": [
+            "ados",
+            "seniors"
+          ],
+          "resume": "Jeu d'enquête immersif en plein air pour résoudre une énigme dans la ville.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "HALLOWEEN ALL DAY",
+          "type": "fete",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Journée festive avec ateliers, gourmandises et musique pour célébrer Halloween en famille.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "DARK HALLOWEEN À l'OPÉRA COMÉDIE",
+          "type": "fete",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée festive à thème Halloween avec concerts et performances artistiques pour adultes.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "des idées pour la semaine prochaine",
+      "compris": "la semaine prochaine",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "REMUE-MÉNINGES",
+        "APÉRO LITTÉRAIRE !",
+        "DIMANCHE EN FAMILLE AVEC L’ASSOCIATION CARMA FAMILY",
+        "MATINÉE DES BÉBÉS : Racontine «C’est la rentrée»",
+        "MARCHÉ MIXTE DU VENDREDI",
+        "DES DRAPEAUX POUR MA VILLE",
+        "LES ÉTALS DE PROXIMITÉ DE LA PEYRADE",
+        "MARCHÉ TRADITIONNEL DE MÈZE"
+      ],
+      "cartes": [
+        {
+          "titre": "REMUE-MÉNINGES",
+          "type": "jeux",
+          "publics": [],
+          "resume": "Jeux de réflexion variés dans une ambiance conviviale.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "APÉRO LITTÉRAIRE !",
+          "type": "lecture",
+          "publics": [],
+          "resume": "Rencontre littéraire avec découverte de livres et animations musicales.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "DIMANCHE EN FAMILLE AVEC L’ASSOCIATION CARMA FAMILY",
+          "type": "jeux",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Rencontres intergénérationnelles avec jeux et espace convivial pour familles.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MATINÉE DES BÉBÉS : Racontine «C’est la rentrée»",
+          "type": "lecture",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Lecture et jeux pour les tout-petits autour d'un thème.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ MIXTE DU VENDREDI",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Marché varié proposant produits frais, textiles et articles de loisirs.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "DES DRAPEAUX POUR MA VILLE",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Exposition de drapeaux créés par des habitants pour représenter leur vision de la ville.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LES ÉTALS DE PROXIMITÉ DE LA PEYRADE",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Petit marché dominical convivial mettant en avant les producteurs locaux et leurs spécialités.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ TRADITIONNEL DE MÈZE",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Marché traditionnel proposant des produits du terroir chaque jeudi et dimanche matin.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "le 31 octobre pour Halloween",
+      "compris": "sam. 31 oct.",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Atelier jeux en famille (exemple)",
+        "HALLOWEEN À CASTELNAU-LE-LEZ",
+        "JOURNÉE HALLOWEEN EN FAMILLE",
+        "POLY'DAYS SPÉCIAL HALLOWEEN",
+        "HALLOWEEN S’INVITE AU GOOLFY MONTPELLIER",
+        "HALLOWEEN AU DOMAINE DU GRAND PUY",
+        "HALLOWEEN AU PETIT PARADIS",
+        "FRISSONS AU PARC - HALLOWEEN 2026"
+      ],
+      "cartes": [
+        {
+          "titre": "Atelier jeux en famille (exemple)",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier familial autour de jeux d'enquête et déguisements pour Halloween.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "HALLOWEEN À CASTELNAU-LE-LEZ",
+          "type": "fete",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Déambulation aux lampions et DJ pour une soirée festive et ludique en extérieur.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "JOURNÉE HALLOWEEN EN FAMILLE",
+          "type": "fete",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Journée Halloween avec jeux, ateliers créatifs, spectacle magique et goûter pour enfants et parents.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "POLY'DAYS SPÉCIAL HALLOWEEN",
+          "type": "fete",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Événement Halloween avec jeux, spectacles et animations dans un centre commercial.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "HALLOWEEN S’INVITE AU GOOLFY MONTPELLIER",
+          "type": "soiree",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Journée Halloween avec déguisements, défis photo et projections cinématographiques en soirée.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "HALLOWEEN AU DOMAINE DU GRAND PUY",
+          "type": "fete",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Soirée gourmande et effrayante avec menu spécial Halloween et animations pour petits et grands.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "HALLOWEEN AU PETIT PARADIS",
+          "type": "fete",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Journée Halloween avec chasse au trésor, animations et défilé pour petits et grands.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "FRISSONS AU PARC - HALLOWEEN 2026",
+          "type": "fete",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Soirée Halloween avec parcours à frissons, ateliers et animations pour petits et grands.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "que faire à Sète ce week-end ?",
+      "compris": "ce week-end · Sète",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Atelier jeux en famille (exemple)",
+        "FAIRE DE LA VOILE A SETE",
+        "VISITE COMMENTÉE DE SÈTE AVEC DIVERS UNI VERS",
+        "MARCHÉ DES HALLES DE SÈTE",
+        "MARCHÉ AUX PUCES",
+        "SOIRÉE ASTRONOMIE",
+        "ATELIER JARDINAGE",
+        "TAILLÉS SUR MESURE, UN SIÈCLE DE COSTUMES DE JOUTEURS À SÈTE"
+      ],
+      "cartes": [
+        {
+          "titre": "Atelier jeux en famille (exemple)",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier familial autour de jeux d'enquête et déguisements pour Halloween.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "FAIRE DE LA VOILE A SETE",
+          "type": "sport",
+          "publics": [],
+          "resume": "Activité de navigation à voile pour tous niveaux sur un plan d'eau.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "VISITE COMMENTÉE DE SÈTE AVEC DIVERS UNI VERS",
+          "type": "visite",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Balade guidée explorant l'histoire, la nature et la culture d'une ville côtière.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ DES HALLES DE SÈTE",
+          "type": "marche",
+          "publics": [],
+          "resume": "Marché couvert proposant des produits frais, locaux et spécialités méditerranéennes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ AUX PUCES",
+          "type": "marche",
+          "publics": [],
+          "resume": "Brocante hebdomadaire avec plus de cent exposants sur une place animée.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SOIRÉE ASTRONOMIE",
+          "type": "nature",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Observation du ciel nocturne et des constellations avec des télescopes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER JARDINAGE",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Activités ludiques pour découvrir le jardinage avec les enfants.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "TAILLÉS SUR MESURE, UN SIÈCLE DE COSTUMES DE JOUTEURS À SÈTE",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Histoire des costumes traditionnels de jouteurs à travers un siècle de pièces retrouvées.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une balade nature autour de l'étang de Thau",
+      "compris": "les 3 prochains mois · bassin de Thau · nature",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 6,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "type"
+      ],
+      "titres": [
+        "SORTIE NATURE - DÉCOUVERTE DES OISEAUX DU BAGNAS",
+        "Balades littéraires : L’Histoire de la littérature",
+        "JARDIN ANTIQUE MÉDITERRANÉEN : Visites Natur’flash",
+        "BALADE ARTISTIQUE EN MÉDITERRANÉE — ÈVE LAROCHE-JOUBERT",
+        "VISITE DU GRAND CLAVELET",
+        "FESTIVAL JEU & ECOLOGIE",
+        "Jonglage et illusion \"Eclipse\" par Le Cirque des Petites Natures",
+        "SOIRÉE ASTRONOMIE"
+      ],
+      "cartes": [
+        {
+          "titre": "SORTIE NATURE - DÉCOUVERTE DES OISEAUX DU BAGNAS",
+          "type": "nature",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Balade pour observer la faune aviaire d’une réserve naturelle avec jumelles.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Balades littéraires : L’Histoire de la littérature",
+          "type": "nature",
+          "publics": [],
+          "resume": "Balade littéraire autour de l'histoire de la littérature.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "JARDIN ANTIQUE MÉDITERRANÉEN : Visites Natur’flash",
+          "type": "visite",
+          "publics": [],
+          "resume": "Visites courtes d’un jardin méditerranéen avec un médiateur.",
+          "partenaire": false,
+          "ecarts": [
+            "type"
+          ]
+        },
+        {
+          "titre": "BALADE ARTISTIQUE EN MÉDITERRANÉE — ÈVE LAROCHE-JOUBERT",
+          "type": "atelier",
+          "publics": [
+            "ados",
+            "famille",
+            "seniors"
+          ],
+          "resume": "Ateliers pratiques pour découvrir la création sculpturale avec une artiste locale.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "VISITE DU GRAND CLAVELET",
+          "type": "nature",
+          "publics": [],
+          "resume": "Visite guidée d'un domaine pour découvrir paysages et histoire.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "FESTIVAL JEU & ECOLOGIE",
+          "type": "festival",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Festival mêlant jeux et écologie avec ateliers et animations pour tous.",
+          "partenaire": false,
+          "ecarts": [
+            "type"
+          ]
+        },
+        {
+          "titre": "Jonglage et illusion \"Eclipse\" par Le Cirque des Petites Natures",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle de jonglage et d'illusions mêlant ombre, lumière et objets du quotidien.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SOIRÉE ASTRONOMIE",
+          "type": "nature",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Observation du ciel nocturne et des constellations avec des télescopes.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "sortir à Frontignan",
+      "compris": "les 3 prochains mois · Frontignan",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Initiation escalade enfants (exemple)",
+        "MARCHÉ TRADITIONNEL DE FRONTIGNAN",
+        "VISITE COMMENTÉE DE FRONTIGNAN-PLAGE AVEC DIVERS UNI VERS",
+        "FÊTE DE LA CHÂTAIGNE",
+        "VISITE — FRONTIGNAN AU FIL DE L’HISTOIRE",
+        "MARCHÉ DES HALLES DE FRONTIGNAN",
+        "HALLOWEEN EN COEUR DE VILLE",
+        "Balèti pour tous"
+      ],
+      "cartes": [
+        {
+          "titre": "Initiation escalade enfants (exemple)",
+          "type": "atelier",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Initiation à l'escalade pour enfants avec encadrement et matériel fourni.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ TRADITIONNEL DE FRONTIGNAN",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Marché traditionnel avec producteurs locaux et produits frais.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "VISITE COMMENTÉE DE FRONTIGNAN-PLAGE AVEC DIVERS UNI VERS",
+          "type": "visite",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Balade guidée entre mer et espaces salés pour découvrir la biodiversité locale.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "FÊTE DE LA CHÂTAIGNE",
+          "type": "fete",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Soirée conviviale autour de spécialités culinaires et animations musicales.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "VISITE — FRONTIGNAN AU FIL DE L’HISTOIRE",
+          "type": "visite",
+          "publics": [],
+          "resume": "Balade guidée dans le centre historique pour découvrir l'évolution architecturale et culturelle d'une ville.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ DES HALLES DE FRONTIGNAN",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Marché couvert historique proposant une offre gastronomique variée.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "HALLOWEEN EN COEUR DE VILLE",
+          "type": "fete",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Défilé, maquillage, concours et spectacle pyrotechnique pour Halloween en centre-ville.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Balèti pour tous",
+          "type": "danse",
+          "publics": [
+            "famille",
+            "soirée"
+          ],
+          "resume": "Bal traditionnel avec initiation et danse pour tous les âges.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "des activités à Lattes ou à Pérols",
+      "compris": "les 3 prochains mois · Lattes, Pérols",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "ATELIER CRÉATION DE PARFUM PARENT / ENFANT",
+        "3E ÉDITION DU JAL (JEUX À LATTES)",
+        "GRAND DÉFILÉ AUTOMNE-HIVER 2026",
+        "EXPOSITION PHOTOGRAPHIQUE - MAISON DE LA NATURE",
+        "EXPOSITION \"BANQUETS MÉDITERRANÉENS ENTRE GRECS, ÉTRUSQUES ET GAULOIS\"",
+        "PEU IMPORTE",
+        "RÉTRO MOTORS MONTPELLIER",
+        "BLMA VS LANDERNEAU"
+      ],
+      "cartes": [
+        {
+          "titre": "ATELIER CRÉATION DE PARFUM PARENT / ENFANT",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Créer un parfum parent-enfant avec des essences naturelles en atelier ludique.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "3E ÉDITION DU JAL (JEUX À LATTES)",
+          "type": "jeux",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Festival dédié aux avant-premières de jeux de société avec des créateurs présents pour des essais.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "GRAND DÉFILÉ AUTOMNE-HIVER 2026",
+          "type": "fete",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée conviviale de dégustation de vins avec des producteurs locaux et animations gourmandes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "EXPOSITION PHOTOGRAPHIQUE - MAISON DE LA NATURE",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Exposition photographique sur l'émerveillement avec rencontre de l'artiste.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "EXPOSITION \"BANQUETS MÉDITERRANÉENS ENTRE GRECS, ÉTRUSQUES ET GAULOIS\"",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Découverte des rites de repas antiques à travers des vestiges archéologiques et des objets céramiques.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "PEU IMPORTE",
+          "type": "theatre",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Pièce de théâtre interrogeant les relations humaines à travers des paquets cadeaux mystérieux.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "RÉTRO MOTORS MONTPELLIER",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Salon dédié aux véhicules de collection et d'exception avec animations et expositions.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "BLMA VS LANDERNEAU",
+          "type": "sport",
+          "publics": [],
+          "resume": "Match de basket féminin opposant deux équipes locales dans une salle dédiée.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un concert à Mèze",
+      "compris": "les 3 prochains mois · Mèze · concert",
+      "ecarts_comprehension": [],
+      "propositions": 1,
+      "correctes": 1,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "ERWAN NAOUR & LÉNA VASSILIU DUO — LES ITINÉRANCES D'AUTOMNE DU FESTIVAL DE THAU"
+      ],
+      "cartes": [
+        {
+          "titre": "ERWAN NAOUR & LÉNA VASSILIU DUO — LES ITINÉRANCES D'AUTOMNE DU FESTIVAL DE THAU",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée musicale intimiste avec deux artistes proposant des univers complémentaires.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une sortie gratuite avec les enfants",
+      "compris": "les 3 prochains mois · famille · gratuit",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Contes au jardin (exemple)",
+        "LES VISITES EN FAMILLE - UNE HISTOIRE HAUTE EN COULEUR !",
+        "ÉVEIL MUSICAL : Spécial Noël",
+        "MATINÉE DES BÉBÉS : Racontines",
+        "CINÉ-MINOT",
+        "HISTOIRES À BRICOLER : spécial Noël",
+        "LES VISITES EN FAMILLE -À LA RECHERCHE DE LA CLEF PERDUE !",
+        "LECTURE-GOÛTER"
+      ],
+      "cartes": [
+        {
+          "titre": "Contes au jardin (exemple)",
+          "type": "lecture",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Contes de saison racontés en plein air pour les jeunes enfants.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "LES VISITES EN FAMILLE - UNE HISTOIRE HAUTE EN COULEUR !",
+          "type": "visite",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Visite sensorielle interactive pour les enfants dès 3 ans, avec déguisements et choix de décors.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ÉVEIL MUSICAL : Spécial Noël",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Moment musical partagé avec un enfant autour des sons.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MATINÉE DES BÉBÉS : Racontines",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Exploration et découvertes pour les tout-petits avec leurs parents.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CINÉ-MINOT",
+          "type": "cinema",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Lecture d'albums et projection de films pour enfants accompagnés.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "HISTOIRES À BRICOLER : spécial Noël",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Écoute d'histoires suivies d'un atelier créatif pour enfants.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LES VISITES EN FAMILLE -À LA RECHERCHE DE LA CLEF PERDUE !",
+          "type": "visite",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Visite ludique en famille avec jeu de piste pour résoudre des énigmes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LECTURE-GOÛTER",
+          "type": "lecture",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle d'ombres chinoises sur les saisons pour les jeunes enfants.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un truc à faire avec des ados",
+      "compris": "les 3 prochains mois · ados",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "DES JEUX POUR LES GRANDS",
+        "LES ADOLESCHIANTS",
+        "CINÉ-ADOS",
+        "VIENS T'AMÉLIORER SUR L'ORDI !",
+        "CINÉ JEU(NES)",
+        "20 000 RÔLES SOUS LES EAUX",
+        "DÉFI RÉCIF – JEU COLLABORATIF",
+        "ET SI ON JOUAIT ? → FANTASTIQUE"
+      ],
+      "cartes": [
+        {
+          "titre": "DES JEUX POUR LES GRANDS",
+          "type": "jeux",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Temps dédié aux jeux de société pour ados et adultes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LES ADOLESCHIANTS",
+          "type": "theatre",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Comédie familiale sur les conflits de générations entre un adolescent et son grand-père.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CINÉ-ADOS",
+          "type": "cinema",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Projection de films choisis par les participants pour ados et adultes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "VIENS T'AMÉLIORER SUR L'ORDI !",
+          "type": "atelier",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Ateliers pour apprendre à utiliser un ordinateur et ses outils de base.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CINÉ JEU(NES)",
+          "type": "cinema",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Séances de films avec quizz et jeux pour ados et adultes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "20 000 RÔLES SOUS LES EAUX",
+          "type": "jeux",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Soirée jeu de rôle pour explorer l'histoire locale à travers des épaves.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "DÉFI RÉCIF – JEU COLLABORATIF",
+          "type": "jeux",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Jeu collaboratif sur la protection des océans avec un plateau et une mission à accomplir.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ET SI ON JOUAIT ? → FANTASTIQUE",
+          "type": "jeux",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Atelier de jeux autour d'une thématique pour enfants à partir de 6 ans.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une activité pour seniors",
+      "compris": "les 3 prochains mois · seniors",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "ATELIER IMPRO ADULTE",
+        "BALADE ARTISTIQUE EN MÉDITERRANÉE — ÈVE LAROCHE-JOUBERT",
+        "ATELIER D'ECRITURE : PLUME SAUVAGE, QUAND LA NATURE INSPIRE VOS MOTS.",
+        "VISITE GUIDÉE POUR PUBLICS AVEUGLES ET MALVOYANTS — EXPOSITION \"LES COULEURS DE JEAN VILAR\"",
+        "NUIT ORANGE- MUSÉE FABRE",
+        "FAIRE LA PAIX AVEC SES ÉMOTIONS",
+        "DE LA TOUR DE LA BABOTE AU NOUVEAU SAINT-ROCH",
+        "LES DIMANCHES DU PEYROU"
+      ],
+      "cartes": [
+        {
+          "titre": "ATELIER IMPRO ADULTE",
+          "type": "atelier",
+          "publics": [
+            "ados",
+            "seniors"
+          ],
+          "resume": "Atelier d'improvisation théâtrale pour adultes, débutants ou confirmés.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "BALADE ARTISTIQUE EN MÉDITERRANÉE — ÈVE LAROCHE-JOUBERT",
+          "type": "atelier",
+          "publics": [
+            "ados",
+            "famille",
+            "seniors"
+          ],
+          "resume": "Ateliers pratiques pour découvrir la création sculpturale avec une artiste locale.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER D'ECRITURE : PLUME SAUVAGE, QUAND LA NATURE INSPIRE VOS MOTS.",
+          "type": "atelier",
+          "publics": [
+            "ados",
+            "seniors"
+          ],
+          "resume": "Atelier d'écriture en pleine nature pour libérer sa créativité et partager ses textes face au paysage.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "VISITE GUIDÉE POUR PUBLICS AVEUGLES ET MALVOYANTS — EXPOSITION \"LES COULEURS DE JEAN VILAR\"",
+          "type": "visite",
+          "publics": [
+            "seniors"
+          ],
+          "resume": "Visite guidée sensorielle et participative dédiée à l'univers artistique d'un peintre et décorateur de théâtre.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "NUIT ORANGE- MUSÉE FABRE",
+          "type": "soiree",
+          "publics": [
+            "ados",
+            "famille",
+            "seniors"
+          ],
+          "resume": "Soirée dansante et poétique inspirée des années 60-70 avec performances et déambulation en langue des signes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "FAIRE LA PAIX AVEC SES ÉMOTIONS",
+          "type": "conference",
+          "publics": [
+            "seniors"
+          ],
+          "resume": "Conférence immersive explorant le fonctionnement de l’inconscient et l’hypnose.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "DE LA TOUR DE LA BABOTE AU NOUVEAU SAINT-ROCH",
+          "type": "visite",
+          "publics": [
+            "famille",
+            "seniors"
+          ],
+          "resume": "Visite guidée de quartiers emblématiques pour découvrir l'évolution urbaine.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LES DIMANCHES DU PEYROU",
+          "type": "marche",
+          "publics": [
+            "ados",
+            "famille",
+            "seniors"
+          ],
+          "resume": "Rendez-vous dominical de brocante et objets anciens sur une place royale animée.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un bar à concerts pour une soirée entre amis",
+      "compris": "les 3 prochains mois · soirée · concert ou soirée",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 7,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "type"
+      ],
+      "titres": [
+        "Concert rock (exemple)",
+        "Soirée DJ électro (exemple)",
+        "CONCERT BRAHMS",
+        "CONCERT DU NOUVEL AN MADE IN USA",
+        "CONCERT GEORGES HOSTEL - LES DEUX ONCLES CHANTENT BRASSENS",
+        "CONCERT SYMPHONIQUE",
+        "PASS 3 SOIRS - EX TENEBRIS LUX",
+        "AU CŒUR DU 7ÈME ART EN MUSIQUE"
+      ],
+      "cartes": [
+        {
+          "titre": "Concert rock (exemple)",
+          "type": "concert",
+          "publics": [
+            "famille",
+            "soirée"
+          ],
+          "resume": "Soirée musicale avec plusieurs groupes locaux dans un bar.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Soirée DJ électro (exemple)",
+          "type": "soiree",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée électro avec deux DJ résidents et entrée réduite avant minuit.",
+          "partenaire": true,
+          "ecarts": [
+            "type"
+          ]
+        },
+        {
+          "titre": "CONCERT BRAHMS",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Concert de musique classique avec des œuvres contrastées, du drame à la grâce.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT DU NOUVEL AN MADE IN USA",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Concert symphonique célébrant la musique américaine avec solistes et chœur.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT GEORGES HOSTEL - LES DEUX ONCLES CHANTENT BRASSENS",
+          "type": "concert",
+          "publics": [
+            "famille",
+            "soirée"
+          ],
+          "resume": "Soirée musicale dédiée aux chansons d'un artiste, avec bar ouvert.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT SYMPHONIQUE",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Concert d'un orchestre et d'un ensemble à cordes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "PASS 3 SOIRS - EX TENEBRIS LUX",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Pass pour trois soirées de concerts en église avec plusieurs artistes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "AU CŒUR DU 7ÈME ART EN MUSIQUE",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Concert intimiste revisitant les thèmes musicaux du cinéma avec deux guitaristes.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "des spectacles gratuits à Montpellier",
+      "compris": "les 3 prochains mois · Montpellier · gratuit · spectacle ou théâtre",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 0,
+      "elargie": false,
+      "exact": false,
+      "erreurs": [
+        "gratuit"
+      ],
+      "titres": [
+        "FESTIVAL MONDIAL DE LA MAGIE",
+        "STAND UP AU MELICE",
+        "BALLET OF LIGHTS : LA BELLE AU BOIS DORMANT DANS UN SPECTACLE ÉTINCELANT",
+        "FESTIVAL DESAXÉ : DRAG SHOW",
+        "ARLETTE TON CATCH !",
+        "MEURTRE EN COULISSE",
+        "FLOTTANTE",
+        "DRÔLE D’ÉPOQUE"
+      ],
+      "cartes": [
+        {
+          "titre": "FESTIVAL MONDIAL DE LA MAGIE",
+          "type": "spectacle",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Grand spectacle de magie réunissant les plus grands artistes européens.",
+          "partenaire": false,
+          "ecarts": [
+            "gratuit"
+          ]
+        },
+        {
+          "titre": "STAND UP AU MELICE",
+          "type": "spectacle",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée humoristique avec cinq artistes locaux proposant des styles variés dans un cadre atypique.",
+          "partenaire": false,
+          "ecarts": [
+            "gratuit"
+          ]
+        },
+        {
+          "titre": "BALLET OF LIGHTS : LA BELLE AU BOIS DORMANT DANS UN SPECTACLE ÉTINCELANT",
+          "type": "danse",
+          "publics": [],
+          "resume": "Spectacle de ballet classique revisité avec costumes lumineux et chorégraphie époustouflante.",
+          "partenaire": false,
+          "ecarts": [
+            "gratuit"
+          ]
+        },
+        {
+          "titre": "FESTIVAL DESAXÉ : DRAG SHOW",
+          "type": "spectacle",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Spectacle drag décalé et gore animé par des artistes créatifs et surprenants.",
+          "partenaire": false,
+          "ecarts": [
+            "gratuit"
+          ]
+        },
+        {
+          "titre": "ARLETTE TON CATCH !",
+          "type": "spectacle",
+          "publics": [
+            "ados",
+            "soirée"
+          ],
+          "resume": "Spectacle de catch burlesque mêlant cirque, théâtre et cascades.",
+          "partenaire": false,
+          "ecarts": [
+            "gratuit"
+          ]
+        },
+        {
+          "titre": "MEURTRE EN COULISSE",
+          "type": "theatre",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Spectacle immersif mêlant enquête policière et univers cabaret.",
+          "partenaire": false,
+          "ecarts": [
+            "gratuit"
+          ]
+        },
+        {
+          "titre": "FLOTTANTE",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Installation sensorielle pour bébés et jeunes enfants mêlant marionnettes suspendues et musique originale.",
+          "partenaire": false,
+          "ecarts": [
+            "gratuit"
+          ]
+        },
+        {
+          "titre": "DRÔLE D’ÉPOQUE",
+          "type": "theatre",
+          "publics": [],
+          "resume": "Spectacle de stand-up musical et absurde mêlant humour, cabaret et chaos scénique.",
+          "partenaire": false,
+          "ecarts": [
+            "gratuit"
+          ]
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "des jeux d'échecs",
+      "compris": "les 3 prochains mois · jeux",
+      "ecarts_comprehension": [],
+      "propositions": 2,
+      "correctes": 2,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "PAUSE JEUX : Les échecs",
+        "REMUE-MÉNINGES"
+      ],
+      "cartes": [
+        {
+          "titre": "PAUSE JEUX : Les échecs",
+          "type": "jeux",
+          "publics": [],
+          "resume": "Découverte des échecs avec une ludothécaire.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "REMUE-MÉNINGES",
+          "type": "jeux",
+          "publics": [],
+          "resume": "Jeux de réflexion (échecs, scrabble, dames) en ambiance conviviale.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "du jazz",
+      "compris": "les 3 prochains mois · concert",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Concert jazz au port (exemple)",
+        "CONCERT : QUATUOR ESPRIT JAZZ",
+        "DUO TWOFER",
+        "¡YA VOY ! KOA JAZZ FESTIVAL",
+        "MARTA JAZZ-CLUB BRAD LEALI TRIO",
+        "KOA JAZZ FESTIVAL",
+        "Dernier Cri x Beyond Jazz • Elf Traps & Goldie B • Le Jam",
+        "DUO TWOFER"
+      ],
+      "cartes": [
+        {
+          "titre": "Concert jazz au port (exemple)",
+          "type": "concert",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Concert de jazz manouche en ouverture d'un festival.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT : QUATUOR ESPRIT JAZZ",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert mêlant classique et jazz avec des arrangements et improvisations variés.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "DUO TWOFER",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Concert de jazz progressif interprété par un duo de musiciens locaux.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "¡YA VOY ! KOA JAZZ FESTIVAL",
+          "type": "concert",
+          "publics": [],
+          "resume": "Spectacle mêlant rythmes colombiens et jazz européen avec des artistes locaux et internationaux.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARTA JAZZ-CLUB BRAD LEALI TRIO",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée jazz intimiste avec un saxophoniste et son trio dans un club.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "KOA JAZZ FESTIVAL",
+          "type": "festival",
+          "publics": [],
+          "resume": "Festival de jazz avec programmation variée et artistes internationaux.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Dernier Cri x Beyond Jazz • Elf Traps & Goldie B • Le Jam",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée musicale mêlant électro rythmée, jazz et sonorités psychédéliques avec des performances improvisées et des percussions robotiques.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "DUO TWOFER",
+          "type": "concert",
+          "publics": [],
+          "resume": "Rencontre jazz entre piano et batterie avec un jeu mélodique innovant.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une expo au musée Fabre",
+      "compris": "les 3 prochains mois · exposition ou visite",
+      "ecarts_comprehension": [],
+      "propositions": 2,
+      "correctes": 2,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "LES MYSTÈRES D'HÉRODIADE. ENQUÊTE AU MUSÉE FABRE",
+        "NUIT ORANGE- MUSÉE FABRE"
+      ],
+      "cartes": [
+        {
+          "titre": "LES MYSTÈRES D'HÉRODIADE. ENQUÊTE AU MUSÉE FABRE",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Exposition enquêtant sur l’attribution d’une peinture ancienne et ses mystères.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "NUIT ORANGE- MUSÉE FABRE",
+          "type": "soiree",
+          "publics": [
+            "ados",
+            "famille",
+            "seniors"
+          ],
+          "resume": "Soirée dansante et poétique inspirée des années 60-70 avec performances et déambulation en langue des signes.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une lecture de contes",
+      "compris": "les 3 prochains mois · lecture ou spectacle",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Contes au jardin (exemple)",
+        "Spectacle de marionnettes (exemple)",
+        "L’heure du conte : 18 décembre",
+        "CONTES D’HIVER ET DE SOLSTICE",
+        "L’heure du conte : 6 novembre",
+        "CINÉ-CONTES",
+        "CINÉ-CONTES: CHIEN BLEU, ET AUTRES BELLES HISTOIRES",
+        "VISITE CONTÉE : DANS LA VALISE DE SETH"
+      ],
+      "cartes": [
+        {
+          "titre": "Contes au jardin (exemple)",
+          "type": "lecture",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Contes de saison racontés en plein air pour les jeunes enfants.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Spectacle de marionnettes (exemple)",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle de marionnettes avec conte en musique pour les tout-petits.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "L’heure du conte : 18 décembre",
+          "type": "lecture",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Contes et histoires pour enfants accompagnés de musique ou courts-métrages.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONTES D’HIVER ET DE SOLSTICE",
+          "type": "lecture",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Contes d'hiver autour d'un feu pour partager des histoires en famille.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "L’heure du conte : 6 novembre",
+          "type": "lecture",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Heure du conte avec histoires, musique et courts-métrages pour enfants.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CINÉ-CONTES",
+          "type": "cinema",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Lectures et projection pour initier les jeunes enfants aux histoires.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CINÉ-CONTES: CHIEN BLEU, ET AUTRES BELLES HISTOIRES",
+          "type": "cinema",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Projection de contes animés pour enfants accompagnés de récits.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "VISITE CONTÉE : DANS LA VALISE DE SETH",
+          "type": "lecture",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Visite contée interactive pour enfants autour d'une exposition artistique.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une dégustation de vins ou d'huîtres",
+      "compris": "les 3 prochains mois",
+      "ecarts_comprehension": [],
+      "propositions": 2,
+      "correctes": 2,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "GRAND DÉFILÉ AUTOMNE-HIVER 2026",
+        "MARCHÉ DES HALLES DE MÈZE"
+      ],
+      "cartes": [
+        {
+          "titre": "GRAND DÉFILÉ AUTOMNE-HIVER 2026",
+          "type": "fete",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée conviviale de dégustation de vins avec des producteurs locaux et animations gourmandes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ DES HALLES DE MÈZE",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Marché couvert historique offrant produits locaux et dégustation d'huîtres.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "du théâtre",
+      "compris": "les 3 prochains mois · Montpellier et sa métropole · famille · gratuit · théâtre ou spectacle",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 0,
+      "elargie": false,
+      "exact": false,
+      "erreurs": [
+        "gratuit",
+        "public"
+      ],
+      "titres": [
+        "OSONS LE THÉÂTRE THÉÂTRE AMATEUR AVEC LA FNCTA 34",
+        "STAGES ET ATELIERS - THÉÂTRE BEAUX- ARTS TABARD",
+        "UNE HEURE A T’ATTENDRE",
+        "THÉÂTRE « MIRABEAU L’INSOLENT »",
+        "PEU IMPORTE",
+        "REPRENONS",
+        "PARADOXE",
+        "LE CERCLE DES POÈTES DISPARUS - LES THÉÂTRALES"
+      ],
+      "cartes": [
+        {
+          "titre": "OSONS LE THÉÂTRE THÉÂTRE AMATEUR AVEC LA FNCTA 34",
+          "type": "theatre",
+          "publics": [],
+          "resume": "Festival de théâtre amateur avec six troupes locales proposant des pièces variées sur trois jours.",
+          "partenaire": false,
+          "ecarts": [
+            "public",
+            "gratuit"
+          ]
+        },
+        {
+          "titre": "STAGES ET ATELIERS - THÉÂTRE BEAUX- ARTS TABARD",
+          "type": "atelier",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Stages ludiques de magie, théâtre et comédie musicale pour enfants et adolescents encadrés par des professionnels.",
+          "partenaire": false,
+          "ecarts": [
+            "public",
+            "gratuit"
+          ]
+        },
+        {
+          "titre": "UNE HEURE A T’ATTENDRE",
+          "type": "theatre",
+          "publics": [],
+          "resume": "Deux hommes en attente dans un appartement clos explorent leurs différences et leurs failles intimes.",
+          "partenaire": false,
+          "ecarts": [
+            "public",
+            "gratuit"
+          ]
+        },
+        {
+          "titre": "THÉÂTRE « MIRABEAU L’INSOLENT »",
+          "type": "theatre",
+          "publics": [
+            "ados",
+            "seniors"
+          ],
+          "resume": "Pièce de théâtre mettant en scène un personnage historique insolent.",
+          "partenaire": false,
+          "ecarts": [
+            "public",
+            "gratuit"
+          ]
+        },
+        {
+          "titre": "PEU IMPORTE",
+          "type": "theatre",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Pièce de théâtre interrogeant les relations humaines à travers des paquets cadeaux mystérieux.",
+          "partenaire": false,
+          "ecarts": [
+            "public",
+            "gratuit"
+          ]
+        },
+        {
+          "titre": "REPRENONS",
+          "type": "theatre",
+          "publics": [],
+          "resume": "Pièce de théâtre explorant la notion de répétition et de temps à travers l'improvisation.",
+          "partenaire": false,
+          "ecarts": [
+            "public",
+            "gratuit"
+          ]
+        },
+        {
+          "titre": "PARADOXE",
+          "type": "theatre",
+          "publics": [],
+          "resume": "Pièce mêlant humour et émotion autour du deuil et de la mémoire familiale.",
+          "partenaire": false,
+          "ecarts": [
+            "public",
+            "gratuit"
+          ]
+        },
+        {
+          "titre": "LE CERCLE DES POÈTES DISPARUS - LES THÉÂTRALES",
+          "type": "theatre",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Pièce de théâtre inspirante sur l'émancipation et la transmission, adaptée d'un film culte.",
+          "partenaire": false,
+          "ecarts": [
+            "public",
+            "gratuit"
+          ]
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un concert",
+      "compris": "ce week-end · bassin de Thau · concert",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 0,
+      "elargie": false,
+      "exact": false,
+      "erreurs": [
+        "date"
+      ],
+      "titres": [
+        "Concert jazz au port (exemple)",
+        "CONCERT HARMONIE",
+        "CONCERT SYMPHONIQUE",
+        "CONCERT HARMONIE",
+        "CONCERTI POUR PIANOS",
+        "SALON DE MUSIQUE",
+        "CONCERT SYMPHONIQUE",
+        "LE MINI CONCERT DE NOEL"
+      ],
+      "cartes": [
+        {
+          "titre": "Concert jazz au port (exemple)",
+          "type": "concert",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Concert de jazz manouche en ouverture d'un festival.",
+          "partenaire": true,
+          "ecarts": [
+            "date"
+          ]
+        },
+        {
+          "titre": "CONCERT HARMONIE",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert de fin d'année d'élèves d'un orchestre harmonie jouant un répertoire varié.",
+          "partenaire": false,
+          "ecarts": [
+            "date"
+          ]
+        },
+        {
+          "titre": "CONCERT SYMPHONIQUE",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Concert d'un orchestre et d'un ensemble à cordes.",
+          "partenaire": false,
+          "ecarts": [
+            "date"
+          ]
+        },
+        {
+          "titre": "CONCERT HARMONIE",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert d'un orchestre d'élèves en formation musicale.",
+          "partenaire": false,
+          "ecarts": [
+            "date"
+          ]
+        },
+        {
+          "titre": "CONCERTI POUR PIANOS",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert de concertos pour piano et orchestre réduits pour deux pianos.",
+          "partenaire": false,
+          "ecarts": [
+            "date"
+          ]
+        },
+        {
+          "titre": "SALON DE MUSIQUE",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert pour piano et violon inspiré des salons musicaux privés du XIXe siècle.",
+          "partenaire": false,
+          "ecarts": [
+            "date"
+          ]
+        },
+        {
+          "titre": "CONCERT SYMPHONIQUE",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert symphonique interprété par des élèves d'un conservatoire.",
+          "partenaire": false,
+          "ecarts": [
+            "date"
+          ]
+        },
+        {
+          "titre": "LE MINI CONCERT DE NOEL",
+          "type": "concert",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Mini-concert musical et ludique pour enfants avec chansons et histoires de Noël.",
+          "partenaire": false,
+          "ecarts": [
+            "date"
+          ]
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un concert à moins de 15 €",
+      "compris": "les 3 prochains mois · moins de 15 € · concert",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Concert jazz au port (exemple)",
+        "VACANCES DE LA TOUSSAINT À L'OPÉRA COMÉDIE",
+        "LE MINI CONCERT DE NOEL",
+        "CONCERT DE LA CHORALE LES TIMBRÉS",
+        "CONCERTI POUR PIANOS",
+        "CONCERT HARMONIE",
+        "SALON DE MUSIQUE",
+        "Chansons françaises par Philippe Lafon et François Fava"
+      ],
+      "cartes": [
+        {
+          "titre": "Concert jazz au port (exemple)",
+          "type": "concert",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Concert de jazz manouche en ouverture d'un festival.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "VACANCES DE LA TOUSSAINT À L'OPÉRA COMÉDIE",
+          "type": "concert",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Événements musicaux familiaux incluant jeu de piste, concert et chœurs d'enfants.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LE MINI CONCERT DE NOEL",
+          "type": "concert",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Mini-concert musical et ludique pour enfants avec chansons et histoires de Noël.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT DE LA CHORALE LES TIMBRÉS",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert donné par une chorale dans une salle de spectacles pour une cause caritative.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERTI POUR PIANOS",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert de concertos pour piano et orchestre réduits pour deux pianos.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT HARMONIE",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert d'un orchestre d'élèves en formation musicale.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SALON DE MUSIQUE",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert avec piano et violon accompagné de projections picturales.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Chansons françaises par Philippe Lafon et François Fava",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert de chansons françaises avec deux musiciens en duo.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une sortie pas chère avec les enfants",
+      "compris": "les 3 prochains mois · famille · moins de 15 €",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Initiation escalade enfants (exemple)",
+        "CHASSE AU TRÉSOR HALLOWEEN",
+        "LES VISITES EN FAMILLE - UNE HISTOIRE HAUTE EN COULEUR !",
+        "MES P'TITES VACANCES",
+        "MATINÉE DES BÉBÉS : Racontines",
+        "GRAND RODÉO CAMARGUAIS & JEUX DE GARDIANS",
+        "LES VISITES EN FAMILLE -À LA RECHERCHE DE LA CLEF PERDUE !",
+        "LA PETITE FILLE AUX ALLUMETTES"
+      ],
+      "cartes": [
+        {
+          "titre": "Initiation escalade enfants (exemple)",
+          "type": "atelier",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Initiation à l'escalade pour enfants avec encadrement et matériel fourni.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "CHASSE AU TRÉSOR HALLOWEEN",
+          "type": "jeux",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Chasse au trésor ludique dans un château pour enfants de 6 à 12 ans, avec énigmes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LES VISITES EN FAMILLE - UNE HISTOIRE HAUTE EN COULEUR !",
+          "type": "visite",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Visite sensorielle interactive pour les enfants dès 3 ans, avec déguisements et choix de décors.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MES P'TITES VACANCES",
+          "type": "fete",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Festival d'animations pour enfants autour des contes, mythes et légendes avec ateliers et spectacles.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MATINÉE DES BÉBÉS : Racontines",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Exploration et découvertes pour les tout-petits avec leurs parents.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "GRAND RODÉO CAMARGUAIS & JEUX DE GARDIANS",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Spectacle équestre traditionnel avec jeux de gardians et rodéo camarguais, tarifs adaptés aux enfants.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LES VISITES EN FAMILLE -À LA RECHERCHE DE LA CLEF PERDUE !",
+          "type": "visite",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Visite ludique en famille avec jeu de piste pour résoudre des énigmes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LA PETITE FILLE AUX ALLUMETTES",
+          "type": "spectacle",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Comédie musicale adaptant un conte célèbre en une aventure fantastique pour enfants et familles.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "que faire s'il pleut ce week-end ?",
+      "compris": "ce week-end · en intérieur",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Atelier jeux en famille (exemple)",
+        "Soirée DJ électro (exemple)",
+        "APÉRO LITTÉRAIRE !",
+        "EN ATTENDANT LE DIVORCE, MARIONS-NOUS !",
+        "Cours d'aquarelle avec Valfantasy",
+        "OSONS LE THÉÂTRE THÉÂTRE AMATEUR AVEC LA FNCTA 34",
+        "DES JEUX POUR LES GRANDS",
+        "CENTRE HISTORIQUE POUR LES ENFANTS AVEC PERETTE LA MOUETTE - SPÉCIAL HALLOWEEN"
+      ],
+      "cartes": [
+        {
+          "titre": "Atelier jeux en famille (exemple)",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier familial autour de jeux d'enquête et déguisements pour Halloween.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "Soirée DJ électro (exemple)",
+          "type": "soiree",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée électro avec deux DJ résidents et entrée réduite avant minuit.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "APÉRO LITTÉRAIRE !",
+          "type": "lecture",
+          "publics": [],
+          "resume": "Rencontre littéraire avec découverte de livres et animations musicales.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "EN ATTENDANT LE DIVORCE, MARIONS-NOUS !",
+          "type": "theatre",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Comédie sur un homme piégé dans les préparatifs d'un mariage qu'il ne veut pas, entre quiproquos et champagne.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Cours d'aquarelle avec Valfantasy",
+          "type": "atelier",
+          "publics": [],
+          "resume": "Cours d'aquarelle pour expérimenter librement les fusions et transparences des pigments.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "OSONS LE THÉÂTRE THÉÂTRE AMATEUR AVEC LA FNCTA 34",
+          "type": "theatre",
+          "publics": [],
+          "resume": "Festival de théâtre amateur avec six troupes locales proposant des pièces variées sur trois jours.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "DES JEUX POUR LES GRANDS",
+          "type": "jeux",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Temps dédié aux jeux de société pour ados et adultes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CENTRE HISTORIQUE POUR LES ENFANTS AVEC PERETTE LA MOUETTE - SPÉCIAL HALLOWEEN",
+          "type": "visite",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Visite ludique en famille avec livret d'activités et déguisements pour enfants.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une balade en plein air",
+      "compris": "les 3 prochains mois · en plein air · nature",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 7,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [
+        "type"
+      ],
+      "titres": [
+        "BALADE GUIDÉE INÉDITE ET TERRIFIANTE",
+        "Balades littéraires : L’Histoire de la littérature",
+        "VISITE GUIDÉE - LE CHARME DE LA NATURE",
+        "BALADE ARTISTIQUE EN MÉDITERRANÉE — ÈVE LAROCHE-JOUBERT",
+        "MYSTÈRES DE LA GARRIGUE",
+        "SORTIE NATURE - DÉCOUVERTE DES OISEAUX DU BAGNAS",
+        "ATELIER D'ECRITURE : PLUME SAUVAGE, QUAND LA NATURE INSPIRE VOS MOTS.",
+        "JARDIN ANTIQUE MÉDITERRANÉEN : Visites Natur’flash"
+      ],
+      "cartes": [
+        {
+          "titre": "BALADE GUIDÉE INÉDITE ET TERRIFIANTE",
+          "type": "nature",
+          "publics": [],
+          "resume": "Balade nocturne en vélo électrique à travers des lieux insolites avec récits terrifiants.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Balades littéraires : L’Histoire de la littérature",
+          "type": "nature",
+          "publics": [],
+          "resume": "Balade littéraire autour de l'histoire de la littérature.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "VISITE GUIDÉE - LE CHARME DE LA NATURE",
+          "type": "visite",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Balade facile autour des étangs pour découvrir la nature et ses paysages.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "BALADE ARTISTIQUE EN MÉDITERRANÉE — ÈVE LAROCHE-JOUBERT",
+          "type": "atelier",
+          "publics": [
+            "ados",
+            "famille",
+            "seniors"
+          ],
+          "resume": "Ateliers pratiques pour découvrir la création sculpturale avec une artiste locale.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MYSTÈRES DE LA GARRIGUE",
+          "type": "nature",
+          "publics": [],
+          "resume": "Balade ludique dans la garrigue pour découvrir plantes et animaux avec jeux d'observation.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SORTIE NATURE - DÉCOUVERTE DES OISEAUX DU BAGNAS",
+          "type": "nature",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Balade pour observer la faune aviaire d’une réserve naturelle avec jumelles.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER D'ECRITURE : PLUME SAUVAGE, QUAND LA NATURE INSPIRE VOS MOTS.",
+          "type": "atelier",
+          "publics": [
+            "ados",
+            "seniors"
+          ],
+          "resume": "Atelier d'écriture en pleine nature pour libérer sa créativité et partager ses textes face au paysage.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "JARDIN ANTIQUE MÉDITERRANÉEN : Visites Natur’flash",
+          "type": "visite",
+          "publics": [],
+          "resume": "Visites courtes d’un jardin méditerranéen avec un médiateur.",
+          "partenaire": false,
+          "ecarts": [
+            "type"
+          ]
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un atelier près de Sète",
+      "compris": "les 3 prochains mois · à moins de 10 km de Sète · atelier",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Atelier jeux en famille (exemple)",
+        "ATELIERS DU MIAM - VACANCES DE NOËL",
+        "ATELIER PHOTO : CLICHÉS D’ARTISTES",
+        "Résidence l’Epopée : Atelier «Transmission»",
+        "ATELIERS DU MIAM - SAMEDI EN FAMILLE",
+        "MES VACANCES AVEC LES ARTISTES MAÏA AMIEL ET CLAIRE SCHNEIDER - ATELIERS TEXTILE",
+        "ATELIERS DU MIAM - VACANCES D’AUTOMNE",
+        "ATELIER CRIC CRAC - POUR LES ENFANTS DE 7 À 12 ANS"
+      ],
+      "cartes": [
+        {
+          "titre": "Atelier jeux en famille (exemple)",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier familial autour de jeux d'enquête et déguisements pour Halloween.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIERS DU MIAM - VACANCES DE NOËL",
+          "type": "atelier",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Ateliers d’arts plastiques pour enfants pendant les vacances de Noël avec différentes techniques.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER PHOTO : CLICHÉS D’ARTISTES",
+          "type": "atelier",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Atelier photo-portrait en petit groupe pour créer des photos exposées.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Résidence l’Epopée : Atelier «Transmission»",
+          "type": "atelier",
+          "publics": [],
+          "resume": "Atelier artistique dans le cadre d'une résidence culturelle.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIERS DU MIAM - SAMEDI EN FAMILLE",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier d'arts plastiques en famille avec un·e artiste dans un musée, pour créer ensemble.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MES VACANCES AVEC LES ARTISTES MAÏA AMIEL ET CLAIRE SCHNEIDER - ATELIERS TEXTILE",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier textile pour enfants dès 7 ans et adultes, confectionnant un drapeau à exposer.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIERS DU MIAM - VACANCES D’AUTOMNE",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Ateliers d'arts plastiques pour enfants, inspirés par des artistes et des œuvres variées.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER CRIC CRAC - POUR LES ENFANTS DE 7 À 12 ANS",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier créatif pour enfants de 7 à 12 ans autour de la transformation des matières après une visite d'expositions.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "que faire à moins de 15 km de Frontignan ?",
+      "compris": "les 3 prochains mois · à moins de 15 km de Frontignan",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "VISITE COMMENTÉE DE FRONTIGNAN-PLAGE AVEC DIVERS UNI VERS",
+        "MARCHÉ TRADITIONNEL DE FRONTIGNAN",
+        "ATELIERS PHOTO : Que faire de vos photos ?",
+        "VISITE — FRONTIGNAN AU FIL DE L’HISTOIRE",
+        "RACONTE-MOI UNE HISTOIRE : 25 novembre",
+        "HALLOWEEN À LA HUNE",
+        "MARCHÉ DES HALLES DE FRONTIGNAN",
+        "HALLOWEEN EN COEUR DE VILLE"
+      ],
+      "cartes": [
+        {
+          "titre": "VISITE COMMENTÉE DE FRONTIGNAN-PLAGE AVEC DIVERS UNI VERS",
+          "type": "visite",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Balade guidée entre mer et espaces salés pour découvrir la biodiversité locale.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ TRADITIONNEL DE FRONTIGNAN",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Marché traditionnel avec producteurs locaux et produits frais.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIERS PHOTO : Que faire de vos photos ?",
+          "type": "atelier",
+          "publics": [],
+          "resume": "Atelier pour apprendre quoi faire de ses photos.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "VISITE — FRONTIGNAN AU FIL DE L’HISTOIRE",
+          "type": "visite",
+          "publics": [],
+          "resume": "Balade guidée dans le centre historique pour découvrir l'évolution architecturale et culturelle d'une ville.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "RACONTE-MOI UNE HISTOIRE : 25 novembre",
+          "type": "lecture",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Atelier de contes et histoires pour les jeunes enfants.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "HALLOWEEN À LA HUNE",
+          "type": "fete",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Après-midi et soirée Halloween avec magie, ateliers créatifs et karaoké pour toute la famille.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ DES HALLES DE FRONTIGNAN",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Marché couvert historique proposant une offre gastronomique variée.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "HALLOWEEN EN COEUR DE VILLE",
+          "type": "fete",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Défilé, maquillage, concours et spectacle pyrotechnique pour Halloween en centre-ville.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un spectacle pour les enfants dimanche",
+      "compris": "dim. 1 nov. · famille · spectacle ou théâtre",
+      "ecarts_comprehension": [],
+      "propositions": 2,
+      "correctes": 2,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "ARLETTE TON CATCH !",
+        "LA VÉRITABLE FAUSSE HISTOIRE DE JACK L'ÉVENTREUR"
+      ],
+      "cartes": [
+        {
+          "titre": "ARLETTE TON CATCH !",
+          "type": "spectacle",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Spectacle de catch mêlant cirque, théâtre burlesque et cascades sous chapiteau.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LA VÉRITABLE FAUSSE HISTOIRE DE JACK L'ÉVENTREUR",
+          "type": "spectacle",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Comédie absurde et musicale sur l'affaire de Jack l'Éventreur.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une sortie en amoureux samedi soir",
+      "compris": "sam. 31 oct. (le soir) · soirée",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Soirée DJ électro (exemple)",
+        "SOIRÉE ASTRONOMIE",
+        "PROGRAMMATION OCTOBRE - LE RÉSERVOIR",
+        "Soirée Halloween 2026",
+        "STAND UP AU MELICE",
+        "🩸 HALLOWEEN COXX 🩸",
+        "DARK HALLOWEEN À l'OPÉRA COMÉDIE",
+        "SOIRÉE HALLOWEEN"
+      ],
+      "cartes": [
+        {
+          "titre": "Soirée DJ électro (exemple)",
+          "type": "soiree",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée électro avec deux DJ résidents et entrée réduite avant minuit.",
+          "partenaire": true,
+          "ecarts": []
+        },
+        {
+          "titre": "SOIRÉE ASTRONOMIE",
+          "type": "nature",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Observation du ciel nocturne et des constellations avec des télescopes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "PROGRAMMATION OCTOBRE - LE RÉSERVOIR",
+          "type": "soiree",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Programmation variée de soirées : concerts, jeux, dégustations et tournois dans un lieu dédié aux rencontres culturelles.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Soirée Halloween 2026",
+          "type": "festival",
+          "publics": [
+            "famille",
+            "soirée"
+          ],
+          "resume": "Soirée Halloween avec cirque, animations et parcours à frissons en deux ambiances.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "STAND UP AU MELICE",
+          "type": "spectacle",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée humoristique avec cinq artistes locaux proposant des styles variés dans un cadre atypique.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "🩸 HALLOWEEN COXX 🩸",
+          "type": "soiree",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée à thème Halloween avec show et DJ set dans une ambiance sombre et inclusive.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "DARK HALLOWEEN À l'OPÉRA COMÉDIE",
+          "type": "fete",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Soirée festive à thème Halloween avec concerts et performances artistiques pour adultes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SOIRÉE HALLOWEEN",
+          "type": "fete",
+          "publics": [
+            "famille",
+            "soirée"
+          ],
+          "resume": "Après-midi et soirée d'animations avec foyer hanté, bal déguisé et concours de soupe.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un concert gratuit à Sète",
+      "compris": "les 3 prochains mois · Sète · gratuit · concert",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "CONCERT DE LA SAINTE CÉCILE",
+        "CONCERT SYMPHONIQUE",
+        "CONCERT HARMONIE",
+        "SALON DE MUSIQUE",
+        "SALON DE MUSIQUE : Les musiques du monde et les ports",
+        "CONCERTI POUR PIANOS",
+        "YANN GOLGEVIT, LA VOIX DANS TOUS SES ÉCLATS !",
+        "DUO TWOFER"
+      ],
+      "cartes": [
+        {
+          "titre": "CONCERT DE LA SAINTE CÉCILE",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert d'une harmonie célébrant son anniversaire.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT SYMPHONIQUE",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Concert d'un orchestre et d'un ensemble à cordes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERT HARMONIE",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert d'un orchestre d'élèves en formation musicale.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SALON DE MUSIQUE",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert avec piano et violon accompagné de projections picturales.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "SALON DE MUSIQUE : Les musiques du monde et les ports",
+          "type": "concert",
+          "publics": [],
+          "resume": "Musiques liées aux migrations portuaires à travers le monde.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONCERTI POUR PIANOS",
+          "type": "concert",
+          "publics": [],
+          "resume": "Concert de concertos pour piano et orchestre réduits pour deux pianos.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "YANN GOLGEVIT, LA VOIX DANS TOUS SES ÉCLATS !",
+          "type": "concert",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Création musicale mêlant voix, cultures et époques.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "DUO TWOFER",
+          "type": "concert",
+          "publics": [],
+          "resume": "Rencontre jazz entre piano et batterie avec un jeu mélodique innovant.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "que faire avec des ados ce week-end à Montpellier ?",
+      "compris": "ce week-end · Montpellier · ados",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "MONTPELLIER ENQUÊTE SUR MEURTRE: RÉSOLVEZ LE CAS!",
+        "LA PROGRAMMATION D'OCTOBRE À RESTANQUE",
+        "POLY'DAYS SPÉCIAL HALLOWEEN",
+        "Les ateliers du mercredi | Pousses d'Archi",
+        "FÊTE DU FILM D’ANIMATION",
+        "LES VACANCES D'AUTOMNE AU PLANET OCEAN MONTPELLIER",
+        "CINÉMA : JURASSIC PARK",
+        "ARLETTE TON CATCH !"
+      ],
+      "cartes": [
+        {
+          "titre": "MONTPELLIER ENQUÊTE SUR MEURTRE: RÉSOLVEZ LE CAS!",
+          "type": "jeux",
+          "publics": [
+            "ados",
+            "seniors"
+          ],
+          "resume": "Jeu d'enquête immersif en plein air pour résoudre une énigme dans la ville.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LA PROGRAMMATION D'OCTOBRE À RESTANQUE",
+          "type": "festival",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Programmation variée avec théâtre, musique, expositions et animations pour Halloween.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "POLY'DAYS SPÉCIAL HALLOWEEN",
+          "type": "fete",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Événement Halloween avec jeux, spectacles et animations dans un centre commercial.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Les ateliers du mercredi | Pousses d'Archi",
+          "type": "atelier",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Ateliers ludiques pour enfants de 6 à 11 ans sur l'architecture, l'urbanisme et l'écologie.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "FÊTE DU FILM D’ANIMATION",
+          "type": "festival",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Festival dédié au cinéma d'animation avec projections, ateliers et rencontres pour tous les âges.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LES VACANCES D'AUTOMNE AU PLANET OCEAN MONTPELLIER",
+          "type": "nature",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Découverte d'une forêt tropicale renouvelée avec expériences sensorielles et nouvelles scénographies.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CINÉMA : JURASSIC PARK",
+          "type": "cinema",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Projection d'un film avec entrée libre et gratuite, conseillé à partir de 12 ans.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ARLETTE TON CATCH !",
+          "type": "spectacle",
+          "publics": [
+            "ados",
+            "soirée"
+          ],
+          "resume": "Spectacle de catch mêlant cirque, théâtre burlesque et cascades dans une ambiance festive et décalée.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une conférence la semaine prochaine",
+      "compris": "la semaine prochaine · conférence",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "CONFÉRENCE C.E.R.M \"LA MÉDITERRANÉE DE LAMARTINE\"",
+        "LA RETIRADA : Témoignages et patrimonialisation",
+        "FUIR LE FRANQUISME : UNE FAMILLE POUSSÉE PAR LE SOUFFLE DE LA LIBERTÉ",
+        "CAFÉ PHILO",
+        "CONFÉRENCE - APPARITION ET DIFFUSION DU NOTARIAT MÉRIDIONAL AU MOYEN ÂGE",
+        "Café occitan à la Gazette café",
+        "Rencontres Vigneronnes",
+        "AUTOUR DE L’ART, PAPOTE ET POPOTE N°2"
+      ],
+      "cartes": [
+        {
+          "titre": "CONFÉRENCE C.E.R.M \"LA MÉDITERRANÉE DE LAMARTINE\"",
+          "type": "conference",
+          "publics": [],
+          "resume": "Conférence sur la Méditerranée à travers le regard d'un poète et écrivain du XIXe siècle.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LA RETIRADA : Témoignages et patrimonialisation",
+          "type": "conference",
+          "publics": [],
+          "resume": "Conférence sur l'art et la mémoire des camps d'exil historique.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "FUIR LE FRANQUISME : UNE FAMILLE POUSSÉE PAR LE SOUFFLE DE LA LIBERTÉ",
+          "type": "conference",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Conférence sur l'exil de familles espagnoles sous la dictature franquiste, à travers un récit personnel.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CAFÉ PHILO",
+          "type": "conference",
+          "publics": [],
+          "resume": "Café philosophique pour échanger et réfléchir ensemble sur des thèmes variés.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CONFÉRENCE - APPARITION ET DIFFUSION DU NOTARIAT MÉRIDIONAL AU MOYEN ÂGE",
+          "type": "conference",
+          "publics": [],
+          "resume": "Conférence sur l'émergence du notariat méridional au Moyen Âge et son impact historique et social.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Café occitan à la Gazette café",
+          "type": "conference",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Rencontre culturelle autour de la tradition occitane avec conférences et animations musicales.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Rencontres Vigneronnes",
+          "type": "conference",
+          "publics": [],
+          "resume": "Rencontres conviviales avec des vignerons pour déguster et échanger sur les vins locaux.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "AUTOUR DE L’ART, PAPOTE ET POPOTE N°2",
+          "type": "conference",
+          "publics": [],
+          "resume": "Rencontres et débats autour de l'art suivis d'un repas convivial.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un atelier pour les seniors",
+      "compris": "les 3 prochains mois · seniors · atelier",
+      "ecarts_comprehension": [],
+      "propositions": 4,
+      "correctes": 4,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "ATELIER IMPRO ADULTE",
+        "ATELIER D'ECRITURE : PLUME SAUVAGE, QUAND LA NATURE INSPIRE VOS MOTS.",
+        "BALADE ARTISTIQUE EN MÉDITERRANÉE — ÈVE LAROCHE-JOUBERT",
+        "LIGHT PAINTING – SPÉCIAL HALLOWEEN"
+      ],
+      "cartes": [
+        {
+          "titre": "ATELIER IMPRO ADULTE",
+          "type": "atelier",
+          "publics": [
+            "ados",
+            "seniors"
+          ],
+          "resume": "Atelier d'improvisation théâtrale pour adultes, débutants ou confirmés.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER D'ECRITURE : PLUME SAUVAGE, QUAND LA NATURE INSPIRE VOS MOTS.",
+          "type": "atelier",
+          "publics": [
+            "ados",
+            "seniors"
+          ],
+          "resume": "Atelier d'écriture en pleine nature pour libérer sa créativité et partager ses textes face au paysage.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "BALADE ARTISTIQUE EN MÉDITERRANÉE — ÈVE LAROCHE-JOUBERT",
+          "type": "atelier",
+          "publics": [
+            "ados",
+            "famille",
+            "seniors"
+          ],
+          "resume": "Ateliers pratiques pour découvrir la création sculpturale avec une artiste locale.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LIGHT PAINTING – SPÉCIAL HALLOWEEN",
+          "type": "atelier",
+          "publics": [
+            "ados",
+            "seniors"
+          ],
+          "resume": "Atelier créatif utilisant la lumière pour dessiner des motifs fantastiques et festifs.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "des jeux de société à Frontignan",
+      "compris": "les 3 prochains mois · Frontignan · jeux",
+      "ecarts_comprehension": [],
+      "propositions": 1,
+      "correctes": 1,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "DES JEUX POUR LES GRANDS"
+      ],
+      "cartes": [
+        {
+          "titre": "DES JEUX POUR LES GRANDS",
+          "type": "jeux",
+          "publics": [
+            "ados"
+          ],
+          "resume": "Temps dédié aux jeux de société pour ados et adultes.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une exposition gratuite à Montpellier",
+      "compris": "les 3 prochains mois · Montpellier · gratuit · exposition",
+      "ecarts_comprehension": [],
+      "propositions": 3,
+      "correctes": 3,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "Exposition A+Art \"La Part de l'Art #1\"",
+        "Exposition photos \"TOUT DOIT DISPARAITRE\"",
+        "Exposition : L'Atelier Nebout // Lieux et Liens"
+      ],
+      "cartes": [
+        {
+          "titre": "Exposition A+Art \"La Part de l'Art #1\"",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Exposition rétrospective sur l'intégration d'art dans l'architecture et les réalisations urbaines.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Exposition photos \"TOUT DOIT DISPARAITRE\"",
+          "type": "exposition",
+          "publics": [],
+          "resume": "Exposition interrogeant la sobriété foncière et l'adaptation au changement climatique à travers une fiction.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Exposition : L'Atelier Nebout // Lieux et Liens",
+          "type": "atelier",
+          "publics": [],
+          "resume": "Exposition présentant des créations architecturales issues de concours publics, mêlant savoir-faire et attention aux détails.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un festival près de Montpellier",
+      "compris": "les 3 prochains mois · Montpellier et sa métropole · festival",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "FESTIVAL FLAMENCO MONTPELLIER MÉTROPOLE",
+        "L'ILLUMINÉ FESTIVAL",
+        "HALLOWEEN UKULÉLÉ FESTIVAL",
+        "MÉDITERRANÉE BURLESQUE FESTIVAL",
+        "KOA JAZZ FESTIVAL",
+        "FESTIVAL DE L'ÉVEIL DES TOUT-PETITS",
+        "FESTIVAL EX TENEBRIS LUX – ACTE VIII",
+        "FESTIVAL MONDIAL DE LA MAGIE"
+      ],
+      "cartes": [
+        {
+          "titre": "FESTIVAL FLAMENCO MONTPELLIER MÉTROPOLE",
+          "type": "festival",
+          "publics": [],
+          "resume": "Festival dédié à la danse et à la culture flamenco sur plusieurs jours.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "L'ILLUMINÉ FESTIVAL",
+          "type": "festival",
+          "publics": [],
+          "resume": "Festival dédié au cinéma d'animation avec projections, rencontres et ateliers ouverts à tous.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "HALLOWEEN UKULÉLÉ FESTIVAL",
+          "type": "festival",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Festival de musique autour de l'ukulélé sur plusieurs jours.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MÉDITERRANÉE BURLESQUE FESTIVAL",
+          "type": "festival",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Festival de burlesque avec spectacles, ateliers et artistes internationaux.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "KOA JAZZ FESTIVAL",
+          "type": "festival",
+          "publics": [],
+          "resume": "Festival de jazz avec programmation variée et artistes internationaux.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "FESTIVAL DE L'ÉVEIL DES TOUT-PETITS",
+          "type": "festival",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Festival d'animations gratuites pour éveiller la créativité des tout-petits et leurs familles.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "FESTIVAL EX TENEBRIS LUX – ACTE VIII",
+          "type": "festival",
+          "publics": [],
+          "resume": "Festival mêlant cinéma, concerts et arts dans des lieux insolites de la ville.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "FESTIVAL MONDIAL DE LA MAGIE",
+          "type": "spectacle",
+          "publics": [
+            "soirée"
+          ],
+          "resume": "Grand spectacle de magie réunissant les plus grands artistes européens.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une visite guidée demain",
+      "compris": "demain · visite",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "MUSÉE DE L’ÉTANG DE THAU LOUIS HIGOUNET : Visites guidées",
+        "VISITES GUIDÉES AVEC UN MÉDIATEUR",
+        "VISITES GUIDÉES AVEC UN MÉDIATEUR",
+        "VISITE COMMENTÉE DE SÈTE AVEC DIVERS UNI VERS",
+        "LES VISITES GUIDÉES - LES COULEURS DE JEAN VILAR",
+        "VISITE COMMENTÉE DE BALARUC-LES-BAINS AVEC DIVERS UNI VERS",
+        "MONTPELLIER LE CENTRE HISTORIQUE - L'ESSENTIELLE",
+        "VISITES GUIDÉES AVEC UN MÉDIATEUR"
+      ],
+      "cartes": [
+        {
+          "titre": "MUSÉE DE L’ÉTANG DE THAU LOUIS HIGOUNET : Visites guidées",
+          "type": "visite",
+          "publics": [],
+          "resume": "Visite guidée d’un musée avec un médiateur pour découvrir son histoire.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "VISITES GUIDÉES AVEC UN MÉDIATEUR",
+          "type": "visite",
+          "publics": [],
+          "resume": "Visites guidées pour découvrir l'histoire et les paysages d'un musée local.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "VISITES GUIDÉES AVEC UN MÉDIATEUR",
+          "type": "visite",
+          "publics": [],
+          "resume": "Parcours commenté dans un jardin méditerranéen inspiré de l'Antiquité.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "VISITE COMMENTÉE DE SÈTE AVEC DIVERS UNI VERS",
+          "type": "visite",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Balade guidée explorant l'histoire, la nature et la culture d'une ville côtière.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "LES VISITES GUIDÉES - LES COULEURS DE JEAN VILAR",
+          "type": "visite",
+          "publics": [],
+          "resume": "Visite guidée d'une exposition sur l'univers visuel d'un metteur en scène.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "VISITE COMMENTÉE DE BALARUC-LES-BAINS AVEC DIVERS UNI VERS",
+          "type": "visite",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Visite guidée retraçant l'histoire thermale et mythologique d'une ville.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MONTPELLIER LE CENTRE HISTORIQUE - L'ESSENTIELLE",
+          "type": "visite",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Visite guidée du centre historique pour découvrir l'architecture et l'histoire d'une ville médiévale.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "VISITES GUIDÉES AVEC UN MÉDIATEUR",
+          "type": "visite",
+          "publics": [],
+          "resume": "Visite guidée d'un site archéologique gallo-romain avec mosaïques anciennes.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "un marché de Noël en décembre",
+      "compris": "en décembre · marché",
+      "ecarts_comprehension": [],
+      "propositions": 4,
+      "correctes": 4,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "MARCHÉ DE NOËL DE PIGNAN",
+        "MARCHÉ DE NOËL DE MONTPELLIER",
+        "Marché de Noël",
+        "Les Pépites de Noël"
+      ],
+      "cartes": [
+        {
+          "titre": "MARCHÉ DE NOËL DE PIGNAN",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Marché de Noël avec stands de créateurs, gourmandises et animations festives pour les fêtes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MARCHÉ DE NOËL DE MONTPELLIER",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Marché de Noël avec chalets artisanaux, saveurs de saison et animations festives.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Marché de Noël",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Flâner entre stands d'artisans et déguster des spécialités pour les fêtes.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "Les Pépites de Noël",
+          "type": "marche",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Soirée artisanale et locale proposant produits et créations pour les fêtes.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    },
+    {
+      "question": "une projection de film pour les enfants",
+      "compris": "les 3 prochains mois · famille · cinéma",
+      "ecarts_comprehension": [],
+      "propositions": 8,
+      "correctes": 8,
+      "elargie": false,
+      "exact": true,
+      "erreurs": [],
+      "titres": [
+        "PROJECTION D’UN FILM D’ANIMATION",
+        "CINÉ-MINOT",
+        "MINI-CINÉ-MINOT",
+        "L’heure du film : Fais-moi peur !",
+        "CINÉMA JEUNESSE : MARCEL, LE PÈRE NOËL ET LE PETIT LIVREUR DE PIZZAS",
+        "CINÉMA JEUNESSE : LE CHIEN JAUNE DE MONGOLIE",
+        "FÊTE DU FILM D’ANIMATION",
+        "ATELIER CINÉMA - ANIMATION SUR TABLE LUMINEUSE"
+      ],
+      "cartes": [
+        {
+          "titre": "PROJECTION D’UN FILM D’ANIMATION",
+          "type": "cinema",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Projection d'un film d'animation pour enfants sur un génie inventeur confronté à des monstres.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CINÉ-MINOT",
+          "type": "cinema",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Lecture d'albums et projection de films pour enfants accompagnés.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "MINI-CINÉ-MINOT",
+          "type": "cinema",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Projection de films adaptés aux tout-petits avec leurs parents.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "L’heure du film : Fais-moi peur !",
+          "type": "cinema",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Projection de courts-métrages et histoires pour les jeunes enfants.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CINÉMA JEUNESSE : MARCEL, LE PÈRE NOËL ET LE PETIT LIVREUR DE PIZZAS",
+          "type": "cinema",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Projection d'un film d'animation sur un jeune livreur de pizzas et le Père Noël.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "CINÉMA JEUNESSE : LE CHIEN JAUNE DE MONGOLIE",
+          "type": "cinema",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Film poétique mêlant documentaire et fiction sur une amitié entre une enfant et un chien en Mongolie.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "FÊTE DU FILM D’ANIMATION",
+          "type": "festival",
+          "publics": [
+            "ados",
+            "famille"
+          ],
+          "resume": "Festival dédié au cinéma d'animation avec projections, ateliers et rencontres pour tous les âges.",
+          "partenaire": false,
+          "ecarts": []
+        },
+        {
+          "titre": "ATELIER CINÉMA - ANIMATION SUR TABLE LUMINEUSE",
+          "type": "atelier",
+          "publics": [
+            "famille"
+          ],
+          "resume": "Création d'une séquence animée sur table lumineuse à partir d'un univers cinématographique.",
+          "partenaire": false,
+          "ecarts": []
+        }
+      ],
+      "reponse": ""
+    }
+  ],
+  "mode": "recherche",
+  "jeu": "dca60780",
+  "prompt_version": "2026-10-19.1",
+  "note": ""
+}

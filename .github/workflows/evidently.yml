@@ -1,0 +1,117 @@
+# Rapport Evidently mensuel (27/10/2026).
+#
+# Le 1er de chaque mois, compare le mois écoulé au mois précédent
+# (scripts/rapport_evidently.py) : questions des visiteurs et nuits de
+# collecte. Complète le PSI de chaque nuit (agent/drift.py).
+#
+# La base n'accepte que l'IP du poste et les services Azure : le workflow
+# ouvre le pare-feu à l'IP du runner le temps du rapport, puis le referme,
+# même en cas d'échec. Lecture seule (compte grafana_lecture).
+#
+# Evidently n'est ni dans l'image ni dans uv.lock : il s'installe ici, à part
+# (monitoring/requirements-evidently.txt).
+#
+# Secrets du dépôt :
+# - AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID : ceux de la CD
+#   (OpenID Connect, rôle Contributeur sur sortiria-rg) ;
+# - EVIDENTLY_DATABASE_URL : connexion du compte grafana_lecture,
+#   postgresql://grafana_lecture:<mot de passe>@<serveur>.postgres.database.azure.com:5432/<base>?sslmode=require
+#
+# En cas d'échec, GitHub envoie un mail (Settings > Notifications > Actions).
+name: Rapport Evidently
+
+on:
+  schedule:
+    - cron: "0 6 1 * *"          # le 1er du mois, 6 h UTC
+  workflow_dispatch:
+    inputs:
+      mois:
+        description: "Mois comparé, AAAA-MM (vide : le mois écoulé)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  id-token: write                 # jeton OpenID Connect pour azure/login
+
+concurrency:
+  group: rapport-evidently
+  cancel-in-progress: false
+
+env:
+  RESOURCE_GROUP: sortiria-rg
+  DB_SERVER: sortiria-db-gonza
+  RULE_NAME: github-evidently-${{ github.run_id }}
+  OUTPUT: rapports_evidently
+
+jobs:
+  rapport:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: monitoring/requirements-evidently.txt
+
+      - name: Install Evidently (à part du projet)
+        run: pip install -r monitoring/requirements-evidently.txt
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Pour les règles, le serveur se donne avec --server-name et --name
+      # désigne la règle (comme dans monitoring/README.md).
+      - name: Ouvrir le pare-feu à l'IP du runner
+        shell: bash
+        run: |
+          IP=$(curl --fail --silent --show-error --retry 3 https://api.ipify.org)
+          echo "IP du runner : $IP"
+          az postgres flexible-server firewall-rule create \
+            --resource-group "$RESOURCE_GROUP" --server-name "$DB_SERVER" \
+            --name "$RULE_NAME" --start-ip-address "$IP" --end-ip-address "$IP" \
+            --output none
+          sleep 20                 # le temps que la règle s'applique
+
+      - name: Rapport Evidently
+        env:
+          DATABASE_URL: ${{ secrets.EVIDENTLY_DATABASE_URL }}
+          MOIS: ${{ github.event.inputs.mois }}
+        shell: bash
+        run: |
+          if [ -n "$MOIS" ]; then
+            python -m scripts.rapport_evidently --sortie "$OUTPUT" --mois "$MOIS"
+          else
+            python -m scripts.rapport_evidently --sortie "$OUTPUT"
+          fi
+          cat "$OUTPUT/resume.md" >> "$GITHUB_STEP_SUMMARY"
+
+      # Toujours, même si le rapport a échoué : la base ne reste jamais ouverte.
+      - name: Refermer le pare-feu
+        if: always()
+        shell: bash
+        run: |
+          az postgres flexible-server firewall-rule delete \
+            --resource-group "$RESOURCE_GROUP" --server-name "$DB_SERVER" \
+            --name "$RULE_NAME" --yes --output none || \
+          echo "::warning::Règle $RULE_NAME introuvable ou déjà supprimée : vérifier le pare-feu dans Azure."
+
+      - name: Garder les rapports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-evidently
+          path: ${{ env.OUTPUT }}
+          if-no-files-found: ignore
+          retention-days: 90

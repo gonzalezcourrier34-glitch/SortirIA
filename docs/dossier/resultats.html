@@ -442,7 +442,7 @@ uv run python -m scripts.mesure_cout_latence --n 1000 --oui</code></pre></div>
 <tr><td><code>scripts/jeu_test_recherche.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Base de test figée pour rejouer l'évaluation des contraintes à chaque push dans la CI (échec sous 95 %).</td></tr>
 <tr><td><code>scripts/eval_pertinence.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Pertinence des 3 premières propositions : grille de jugement humain, puis juge Mistral Large calibré sur cette grille.</td></tr>
 <tr><td><code>scripts/mesure_cout_latence.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Temps de réponse et coût Mistral, avec ou sans cache, sans trace dans <code>rag_requests</code> ; résultats dans <code>benchmarks/cout_latence/</code>.</td></tr>
-<tr><td><code>src/event/quality_judge.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Méthode « LLM comme juge » : 20 fiches enrichies tirées au hasard chaque nuit, score suivi dans MLflow et Grafana.</td></tr>
+<tr><td><code>src/event/quality_judge.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Méthode « LLM comme juge » : 20 fiches enrichies tirées au hasard chaque nuit, score suivi dans Grafana (et dans MLflow pour une collecte lancée sur le poste).</td></tr>
 </tbody>
 </table>
 <p class="table-note">Sources : mentions « Provenance » des docstrings de <code>scripts/</code> et de <code>src/event/quality_judge.py</code> ; <code>benchmarks/README.md</code> ; <code>PROVENANCE.md</code> (section « Non repris »).</p>

@@ -1,0 +1,6 @@
+# Rapport Evidently mensuel (scripts/rapport_evidently.py, 27/10/2026).
+# Installé à part, jamais dans l'image ni dans uv.lock : voir le script.
+evidently==0.7.23
+pandas>=2.1,<3
+psycopg2-binary>=2.9.10
+python-dotenv>=1.0

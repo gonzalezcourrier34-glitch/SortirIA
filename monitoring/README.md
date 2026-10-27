@@ -11,7 +11,7 @@ Trois couches, de la plus simple à la plus détaillée :
 | **Mail de bilan** | Statut, chiffres, alertes, couverture de la semaine, coût de la nuit ; le lundi, recherches ratées de la semaine et propositions de l'agent (synonymes, agendas) | `agent/report.py` (`REPORT_EMAIL_TO`) |
 | **Historique en base** | Une ligne par nuit (`collect_runs` : coût, tokens, couverture, durée de chaque nœud, alertes, version de la consigne PDF, lien MLflow) et une par source (`collect_run_sources`) ; vue `v_collect_health` | `sql/sortiria/03_collect.sql`, `05_views.sql` |
 | **Tableau de bord Grafana** | « SortirIA - Collecte nocturne » : statut et fraîcheur, événements par source, échecs et réessais, taux de rejet, coût, durée des étapes, sorties famille / soirée par zone, journal et alertes | http://localhost:3001, `monitoring/grafana/provisioning/` |
-| **MLflow** | Une exécution par nuit : paramètres (modèles, seuils, version de consigne), métriques (par source et par extracteur, qualité de la lecture des PDF, coût, tokens, couverture, durées), bilan complet (`bilan.json`) et **trace** du graphe LangGraph et de chaque appel Mistral | http://localhost:5000, expérience `sortiria-collecte`, `agent/tracking.py` |
+| **MLflow** (sur le poste) | Une exécution par collecte **lancée sur le poste** (coupé sur Azure : la nuit de production se suit dans `collect_runs`, le mail et Grafana) : paramètres (modèles, seuils, version de consigne), métriques (par source et par extracteur, qualité de la lecture des PDF, coût, tokens, couverture, durées), bilan complet (`bilan.json`) et **trace** du graphe LangGraph et de chaque appel Mistral | http://localhost:5000, expérience `sortiria-collecte`, `agent/tracking.py` |
 
 Lancement : `docker compose up -d` démarre la base, MLflow et Grafana ; dans
 le `.env`, `MLFLOW_TRACKING_URI=http://localhost:5000` et
@@ -167,8 +167,9 @@ déclencher une fausse alerte. La collecte, elle, est jugée dès 3 nuits.
 
 **Où le voir** :
 
-- chaque nuit : `collect_runs.drift` (rapport complet en JSON) et métriques
-  MLflow `derive/<famille>/<indicateur>/psi` ;
+- chaque nuit : `collect_runs.drift` (rapport complet en JSON) ; pour une
+  collecte lancée sur le poste, aussi les métriques MLflow
+  `derive/<famille>/<indicateur>/psi` (MLflow est coupé sur Azure) ;
 - le lundi : section « Dérive » du mail de bilan ; une dérive **forte**
   devient une alerte ;
 - Grafana, « SortirIA - Modèles et coûts », partie 06 : état, PSI de chaque
@@ -185,8 +186,41 @@ propositions de l'agent) :
 | Plus de réponses élargies, voisines ou introuvables | lire les questions sans réponse exacte (mail du lundi, Grafana « Recherche ») ; ajouter les questions au jeu d'évaluation (`config/eval_*.yaml`) puis corriger la compréhension ou les synonymes ; la CI vérifie qu'on ne recule pas |
 | Latence ou part sans Mistral | état de Mistral, cache, taille de la base (`events_total`) |
 | Pouces haut en baisse | pouces bas rangés par cause (mail du lundi) ; comparer les versions de consigne (Grafana, partie 03) |
-| Part d'une source, motifs de rejet | lire le bilan de la source (mail de la nuit, MLflow `source/...`) : format changé, quota, document déplacé |
+| Part d'une source, motifs de rejet | lire le bilan de la source (mail de la nuit, `collect_run_sources` ; MLflow `source/...` pour une collecte sur le poste) : format changé, quota, document déplacé |
 | Juge de qualité, taux de rejet | comparer les versions de consigne (`document_prompt_version`) dans MLflow, relire des fiches |
+
+## Rapport Evidently mensuel (fait le 27/10/2026)
+
+Le PSI de chaque nuit (section « Dérive ») compare la semaine aux 28 jours
+précédents, sur des comptes. Le 1er de chaque mois, un rapport **Evidently**
+complet compare le **mois écoulé au mois précédent**, ligne à ligne :
+
+| Jeu | Une ligne par | Colonnes comparées |
+| --- | --- | --- |
+| Questions | question (sans mes questions de test « [t ») | zone, public, catégorie, moment, gratuit, type de réponse, sans Mistral (catégorielles) ; latence hors cache |
+| Collecte | nuit | événements extraits, taux de rejet, score du juge, coût, taille de la base |
+
+**Comment** : workflow GitHub `.github/workflows/evidently.yml` (le 1er du mois
+à 6 h UTC, ou à la main : Actions > Rapport Evidently > Run workflow, mois au
+choix). Il se connecte à Azure par OpenID Connect (comme la CD), **ouvre le
+pare-feu de la base à l'IP du runner**, lance `scripts/rapport_evidently.py`
+avec le compte `grafana_lecture` (lecture seule), puis **referme le pare-feu
+dans tous les cas**. Les rapports HTML sont gardés 90 jours (artefact
+« rapport-evidently ») ; le résumé s'affiche dans la page de l'exécution ; un
+échec envoie un mail de GitHub.
+
+**Garde-fou** : sous 100 questions (ou 14 nuits) dans l'un des deux mois, le
+jeu n'est pas comparé ; le rapport le dit au lieu d'annoncer une dérive sur
+des données trop maigres.
+
+**Pourquoi à part** : Evidently (plotly < 6, statsmodels…) n'est ni dans
+l'image de production ni dans `uv.lock` ; il s'installe dans le workflow
+d'après `monitoring/requirements-evidently.txt`, et le script n'importe rien
+du projet.
+
+Mise en place, une fois : secret de dépôt `EVIDENTLY_DATABASE_URL` =
+`postgresql://grafana_lecture:<mot de passe>@sortiria-db-gonza.postgres.database.azure.com:5432/<base>?sslmode=require`
+(les secrets `AZURE_*` de la CD servent tels quels).
 
 ## MLflow : expériences et évaluations
 
