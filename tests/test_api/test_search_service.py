@@ -200,6 +200,23 @@ def test_search_streams_the_four_steps_then_the_result() -> None:
     assert logged["event_ids"] == ["e2", "e1"] and logged["prompt_tokens"] == 100
 
 
+def test_search_logs_the_visitor_fingerprint() -> None:
+    # 27/10/2026 : l'empreinte du navigateur va dans le journal (visiteurs distincts).
+    connection = FakeConnection([row("e1")])
+    services = SearchServices(embed=None, write=None, now=lambda: NOW)
+    list(search_service.run_search(connection, "sortie en famille", SearchFilters(), services,
+                                   visitor_key="empreinte-abc"))
+    sql, logged = connection.queries[-1]
+    assert "visitor_key" in sql and logged["visitor_key"] == "empreinte-abc"
+
+
+def test_search_without_visitor_logs_none() -> None:
+    connection = FakeConnection([row("e1")])
+    list(search_service.run_search(connection, "sortie en famille", SearchFilters(),
+                                   SearchServices(embed=None, write=None, now=lambda: NOW)))
+    assert connection.queries[-1][1]["visitor_key"] is None
+
+
 def test_search_survives_mistral_outage() -> None:
     connection = FakeConnection([row("e1")])
 

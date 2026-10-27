@@ -19,8 +19,11 @@ def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
 
     for limiter in rate_limit.ALL_LIMITERS:        # chaque test part de zéro
         limiter.reset()
-    def fake_search(connection, question, filters, services=None, context="", follow_up=False):
+    def fake_search(connection, question, filters, services=None, context="", follow_up=False,
+                    visitor_key=None):
         yield search_service.progress("comprendre", "completed", filters.describe())
+        if visitor_key:
+            yield search_service.progress("comprendre", "completed", f"visiteur : {visitor_key}")
         if context:
             relance = " (relance cliquée)" if follow_up else ""
             yield search_service.progress("comprendre", "completed", f"suite de : {context}{relance}")
@@ -97,6 +100,25 @@ def test_search_stream_passes_a_clicked_follow_up(client: TestClient) -> None:
                                    json={"question": "Des spectacles en intérieur ?", "context": "un spectacle à Sète",
                                          "follow_up": True}).text)
     assert events[1][1]["message"] == "suite de : un spectacle à Sète (relance cliquée)"
+
+
+def test_search_stream_keeps_only_the_visitor_fingerprint(client: TestClient) -> None:
+    # 27/10/2026 : le journal ne recevait pas l'identifiant du navigateur, les
+    # visiteurs distincts ne se comptaient pas. Seule l'empreinte salée passe.
+    from src.event.event_ratings import user_key
+
+    session = "session-de-test-0123456789"
+    events = events_of(client.post("/api/v1/recherche/stream",
+                                   json={"question": "concert", "session_id": session}).text)
+    assert events[1][1]["message"] == f"visiteur : {user_key(session)}"
+    assert session not in events[1][1]["message"]
+
+
+def test_search_stream_without_session_has_no_visitor(client: TestClient) -> None:
+    events = events_of(client.post("/api/v1/recherche/stream", json={"question": "concert"}).text)
+    assert [name for name, _ in events] == ["progress", "completed"]
+    assert client.post("/api/v1/recherche/stream",
+                       json={"question": "concert", "session_id": "court"}).status_code == 422
 
 
 def test_search_error_is_sent_in_the_stream(client: TestClient) -> None:

@@ -135,7 +135,7 @@ def test_history_keeps_judge_version_in_last_column(tmp_path: Path, monkeypatch:
     old_header = pertinence.HISTORY_HEADER[:-1]
     (tmp_path / "historique.csv").write_text(
         ",".join(old_header) + "\r\n" + "2026-10-16T10:25:43+02:00,g.csv,50,139,0.986,1.0,,,,v1,\r\n",
-        encoding="utf-8")
+        encoding="utf-8", newline="")  # sinon Windows double les \r
     report = {"questions": 50, "cartes_jugees": 139, "pertinence_at_3": 0.9, "questions_satisfaites": 1.0}
     history = pertinence.save_history(report, Path("grille.csv"), note="essai")
     with history.open(newline="", encoding="utf-8") as handle:

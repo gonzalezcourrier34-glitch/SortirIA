@@ -441,7 +441,8 @@ export class AppComponent implements OnInit {
             period: this.selectedPeriod(),
             free_only: this.freeOnly(),
             context,
-            follow_up: isFollowUp
+            follow_up: isFollowUp,
+            session_id: this.sessionId
         }).subscribe({
             next: event => this.onStreamEvent(event),
             error: () => this.fail('Le serveur ne répond pas. Vérifiez que l’API SortirIA est lancée.'),

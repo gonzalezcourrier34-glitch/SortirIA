@@ -8,6 +8,9 @@
 --
 -- RGPD : aucune donnée personnelle. session_id est un identifiant tiré au
 -- hasard par l'interface, sans compte ni adresse IP.
+-- 27/10/2026 : session_id n'a jamais été rempli (le journal ne le recevait
+-- pas). visitor_key le remplace : empreinte salée du même identifiant que
+-- les avis (src/event/event_ratings.py, user_key), jamais l'identifiant en clair.
 -- ============================================================================
 
 BEGIN;
@@ -19,7 +22,8 @@ BEGIN;
 CREATE TABLE IF NOT EXISTS sortiria.rag_requests (
     request_id        BIGSERIAL PRIMARY KEY,
     asked_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
-    session_id        UUID,
+    session_id        UUID,       -- jamais rempli, remplacé par visitor_key (27/10/2026)
+    visitor_key       TEXT,       -- empreinte salée du navigateur (comme event_ratings.user_key)
     question          TEXT        NOT NULL,
     -- Cases cochées et contraintes comprises (app/query_understanding.py) ;
     -- clé « recherche » : réponse exacte ou non et ce qui a manqué (15/10/2026).
@@ -51,6 +55,7 @@ ALTER TABLE sortiria.rag_requests
     ADD COLUMN IF NOT EXISTS extraction_model TEXT,
     ADD COLUMN IF NOT EXISTS answer           TEXT NOT NULL DEFAULT '',
     ADD COLUMN IF NOT EXISTS degraded         BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN IF NOT EXISTS visitor_key      TEXT,
     DROP COLUMN IF EXISTS user_feedback;
 
 -- cost_eur -> cost_usd (15/10/2026) : même unité que collect_runs.cost_usd.

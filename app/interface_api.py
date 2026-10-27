@@ -57,6 +57,9 @@ class SearchRequest(BaseModel):
         Demande précédente de la conversation, renvoyée telle quelle par l'interface.
     follow_up : bool
         Vrai si la question vient d'une relance cliquée sous la réponse.
+    session_id : str | None
+        Identifiant aléatoire du navigateur (27/10/2026), le même que pour les
+        avis ; seule son empreinte salée est gardée dans le journal.
     """
 
     question: str = Field(default="", max_length=500)
@@ -70,6 +73,9 @@ class SearchRequest(BaseModel):
     # Vrai quand la question vient d'une relance cliquée sous la réponse :
     # c'est toujours une suite de la demande précédente.
     follow_up: bool = False
+    # Identifiant aléatoire du navigateur (27/10/2026) : jamais stocké en clair,
+    # seulement son empreinte (visitor_key), pour compter les visiteurs distincts.
+    session_id: str | None = Field(default=None, min_length=16, max_length=100)
 
 
 def get_connection() -> Iterator[Any]:
@@ -144,6 +150,8 @@ def search_stream(
 
     filters = SearchFilters(public=payload.public, zone=payload.zone,
                             period=payload.period, free_only=payload.free_only)
+    from src.event.event_ratings import user_key
+    visitor_key = user_key(payload.session_id) if (payload.session_id or "").strip() else None
 
     def stream() -> Iterator[str]:
         """Produit les événements SSE de la recherche, ou un événement d'erreur."""
@@ -151,7 +159,8 @@ def search_stream(
             with connect() as connection:
                 for event in search_service.run_search(connection, payload.question, filters, services,
                                                           context=payload.context,
-                                                          follow_up=payload.follow_up):
+                                                          follow_up=payload.follow_up,
+                                                          visitor_key=visitor_key):
                     yield search_service.sse(event)
         except Exception:  # noqa: BLE001 (le flux est déjà ouvert : l'erreur part dans le flux)
             yield search_service.sse({"event": "error",

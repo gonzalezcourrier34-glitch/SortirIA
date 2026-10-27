@@ -19,6 +19,8 @@ export interface SearchRequest {
     context: string;
     /** Relance cliquée sous la réponse : toujours une suite de la demande précédente. */
     follow_up?: boolean;
+    /** Identifiant anonyme du navigateur : le serveur n'en garde que l'empreinte. */
+    session_id?: string;
 }
 
 

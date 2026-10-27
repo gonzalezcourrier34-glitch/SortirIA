@@ -489,7 +489,8 @@ Grafana. Aucune donnée personnelle (RGPD) : pas de compte, pas d'adresse IP.
 | --- | --- | --- |
 | `request_id` | `BIGSERIAL`, clé primaire | référencé par `feedback` ; renvoyé à l'interface pour le pouce |
 | `asked_at` | `TIMESTAMPTZ` | moment de la question |
-| `session_id` | `UUID` | identifiant tiré au hasard par l'interface, facultatif (l'interface actuelle n'en envoie pas) |
+| `session_id` | `UUID` | identifiant tiré au hasard par l'interface, jamais rempli, remplacé par `visitor_key` (27/10/2026) |
+| `visitor_key` | `TEXT` | empreinte salée de l'identifiant anonyme du navigateur (`user_key`, comme les avis), pour compter les visiteurs distincts ; jamais l'identifiant en clair (27/10/2026) |
 | `question` | `TEXT`, obligatoire | la question |
 | `constraints` | `JSONB` | cases cochées et contraintes comprises (`app/query_understanding.py`) ; clé `recherche` (15/10/2026) : réponse exacte ou non, mots inconnus de la base, sujet introuvable |
 | `event_ids` | `TEXT[]` | les événements proposés : pour vérifier après coup que la réponse ne citait que des événements réels |

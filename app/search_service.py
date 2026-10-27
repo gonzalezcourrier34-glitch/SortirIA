@@ -300,7 +300,7 @@ def plan_search(question: str, filters: SearchFilters, now: datetime,
 
 def run_search(connection: Any, question: str, filters: SearchFilters,
                services: SearchServices | None = None, context: str = "",
-               follow_up: bool = False) -> Iterator[dict[str, Any]]:
+               follow_up: bool = False, visitor_key: str | None = None) -> Iterator[dict[str, Any]]:
     """Recherche complète. Produit les étapes une à une, puis le résultat.
 
     Dernier élément : {"event": "completed", "result": {...}}. Une panne de
@@ -320,6 +320,9 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
         La demande précédente de la conversation ; vide par défaut.
     follow_up : bool
         Vrai si la question est une relance cliquée. Par défaut faux.
+    visitor_key : str | None
+        Empreinte salée du navigateur, gardée dans le journal (27/10/2026) ;
+        None par défaut.
 
     Yields
     ------
@@ -355,7 +358,8 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
                                          for name in SearchResult.__dataclass_fields__
                                          if name in cached})
                 cached["request_id"] = log_request(connection, question, filters, result, "", int(
-                    (time.monotonic() - started) * 1000), plan=plan, from_cache=True)
+                    (time.monotonic() - started) * 1000), plan=plan, from_cache=True,
+                    visitor_key=visitor_key)
             yield {"event": "completed", "result": cached}
             return
 
@@ -531,7 +535,8 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
         write_cache(connection, key, question, plan, result, version, now)
     if services.log:
         result.request_id = log_request(connection, question, filters, result, model,
-                                        int((time.monotonic() - started) * 1000), plan=plan)
+                                        int((time.monotonic() - started) * 1000), plan=plan,
+                                        visitor_key=visitor_key)
     yield {"event": "completed", "result": asdict(result)}
 
 

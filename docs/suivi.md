@@ -23,6 +23,7 @@ l'eau (du plus récent au plus ancien). Version illustrée :
 
 | Date | Domaine | Incident | Vu par |
 | --- | --- | --- | --- |
+| 27/10/2026 | Monitoring | Les visiteurs distincts ne se comptaient pas | Bilan des testeurs (17-26/10) dans Grafana : 93 questions, 0 visiteur |
 | 23/10/2026 | Recherche | Mistral indisponible pour la rédaction | Vérification du site en ligne après le déploiement : toutes les réponses « simplifiées » depuis 11 h environ |
 | 23/10/2026 | Évaluation | L'horloge de la base de test n'était pas figée | Rejeu des 4 jeux d'évaluation sur la base figée, en préparant les corrections de la relecture : « faire soi-même » à 90 % (98 % le 19/10) sans changement de code |
 | 23/10/2026 | Code | Relecture du code : défauts corrigés | Relecture complète du code pendant l'écriture des docstrings |
@@ -71,6 +72,16 @@ l'agent.
 | 18/10/2026 | Moi | Offres fictives prises pour de vraies | Étiquette « Démonstration », sans faux lien |
 
 ## Le détail
+
+### 27/10/2026 · Les visiteurs distincts ne se comptaient pas
+
+- **Domaine** : Monitoring
+- **Détection** : Bilan des testeurs (17-26/10) dans Grafana : 93 questions, 0 visiteur distinct
+- **Symptôme** : `rag_requests.session_id` vide pour toutes les questions depuis la mise en ligne ; impossible de dire combien de personnes ont cherché.
+- **Cause** : L'interface gardait un identifiant anonyme du navigateur, mais ne l'envoyait qu'avec les avis (`event_ratings.user_key`), jamais avec la recherche ; le journal (`app/search_log.py`) n'avait pas la colonne dans son `INSERT`.
+- **Résolution** : L'interface envoie `session_id` avec chaque recherche ; l'API n'en garde que l'empreinte salée (`user_key`, comme les avis), dans la nouvelle colonne `rag_requests.visitor_key`. Aucune donnée passée ne peut être rattrapée : le bilan des testeurs compte les questions, pas les visiteurs.
+- **Pour que ça ne revienne pas** : Tests `test_search_stream_keeps_only_the_visitor_fingerprint` (l'identifiant en clair ne passe pas) et `test_search_logs_the_visitor_fingerprint`.
+- **Trace** : `sql/sortiria/04_rag.sql`, `app/interface_api.py`, `app/search_service.py`, `app/search_log.py`, `frontend/src/app/app.component.ts`
 
 ### 23/10/2026 · Mistral indisponible pour la rédaction
 

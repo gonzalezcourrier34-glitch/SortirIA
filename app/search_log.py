@@ -30,10 +30,10 @@ LOG_SQL = """
 INSERT INTO sortiria.rag_requests
     (question, constraints, event_ids, status, error, latency_ms,
      prompt_tokens, completion_tokens, cost_usd, llm_model, prompt_version, answer, degraded,
-     from_cache)
+     from_cache, visitor_key)
 VALUES (%(question)s, %(constraints)s, %(event_ids)s, %(status)s, %(error)s, %(latency_ms)s,
         %(prompt_tokens)s, %(completion_tokens)s, %(cost_usd)s, %(llm_model)s, %(prompt_version)s,
-        %(answer)s, %(degraded)s, %(from_cache)s)
+        %(answer)s, %(degraded)s, %(from_cache)s, %(visitor_key)s)
 RETURNING request_id"""
 
 
@@ -85,7 +85,7 @@ def plan_summary(plan: QueryPlan) -> dict[str, Any]:
 
 def log_request(connection: Any, question: str, filters: SearchFilters, result: SearchResult,
                 model: str, latency_ms: int, plan: QueryPlan | None = None,
-                from_cache: bool = False) -> int | None:
+                from_cache: bool = False, visitor_key: str | None = None) -> int | None:
     """Trace la demande dans `rag_requests` (suivi Grafana). Jamais bloquant.
 
     Parameters
@@ -106,6 +106,9 @@ def log_request(connection: Any, question: str, filters: SearchFilters, result: 
         Le plan appliqué, s'il est connu.
     from_cache : bool
         Vrai si la réponse vient du cache. Par défaut faux.
+    visitor_key : str | None
+        Empreinte salée du navigateur (27/10/2026), pour compter les visiteurs
+        distincts ; None si l'interface n'a pas envoyé d'identifiant.
 
     Returns
     -------
@@ -137,6 +140,7 @@ def log_request(connection: Any, question: str, filters: SearchFilters, result: 
             "answer": result.answer,
             "degraded": result.degraded,
             "from_cache": from_cache,
+            "visitor_key": visitor_key,
         })
         connection.commit()
         return int(rows[0]["request_id"]) if rows else None
