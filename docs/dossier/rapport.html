@@ -58,7 +58,7 @@
 <div class="report-meta">
 <span><strong>Auteur</strong> : Stéphane Gonzalez</span>
 <span><strong>Formation</strong> : Ingénieur IA, OpenClassrooms</span>
-<span><strong>Version</strong> : 26/10/2026</span>
+<span><strong>Version</strong> : 27/10/2026</span>
 <span><strong>Soutenance</strong> : 6/11/2026</span>
 <span><strong>Service</strong> : <a class="project-link" href="https://www.sortiria-montpellier.fr">www.sortiria-montpellier.fr</a></span>
 <span><strong>Code</strong> : <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/SortirIA">github.com/gonzalezcourrier34-glitch/SortirIA</a></span>
@@ -80,7 +80,8 @@
 <p><strong>Le problème.</strong> À Montpellier et sur le bassin de Thau, les sorties sont publiées dans dix endroits différents. Pour trouver un concert samedi soir, il faut ouvrir plusieurs sites et tout croiser à la main.</p>
 <p><strong>Ce que j'ai construit.</strong> SortirIA est un assistant. On écrit sa demande en français, par exemple « un concert pas cher samedi soir ». Il répond avec de vrais événements, à venir, et donne la source de chacun. Chaque nuit, un agent met la base à jour tout seul.</p>
 <p><strong>Où j'en suis.</strong> Le service est en ligne depuis le 15/10/2026. Tous les critères que j'avais fixés avant de mesurer sont atteints. Il coûte environ 10 $ par mois.</p>
-<p><strong>Ma recommandation.</strong> Continuer, avec de vrais utilisateurs. Le moteur est fiable et mesuré. Ce qui manque maintenant, ce sont des questions réelles en nombre, pour mesurer la satisfaction et décider d'un éventuel fine-tuning.</p>
+<p><strong>Ce que l'usage réel a montré.</strong> Du 17 au 26/10, des testeurs ont posé 93 questions. Le service a tenu : réponse en 6,2 s au P95, aucune question sans proposition, et une panne de Mistral absorbée sans erreur. Mais moins d'une question sur deux (47 %) a trouvé une réponse exacte : les gens demandent aussi des lieux ouverts toute l'année (cinéma, restaurants, marchés), que SortirIA ne collecte pas.</p>
+<p><strong>Ma recommandation.</strong> Continuer, en changeant de priorité. Le moteur est fiable et mesuré ; ce qui limite l'usage, c'est la couverture. Avant un fine-tuning ou des partenaires payants, il faut ajouter une base de lieux, puis mesurer la satisfaction avec des visiteurs qui n'ont pas été sollicités.</p>
 </div>
 <div class="result-grid" style="margin-top:2rem">
 <div class="result-card"><strong>98,7 %</strong><span>des propositions respectent date, lieu, public et budget (objectif : 95 %)</span></div>
@@ -262,16 +263,36 @@
 <thead><tr><th>Risque</th><th>Probabilité</th><th>Parade</th></tr></thead>
 <tbody>
 <tr><td>Une source change de format ou d'adresse</td><td>Forte</td><td>L'agent réessaie, garde la veille, diagnostique et propose une réparation.</td></tr>
-<tr><td>Mistral indisponible</td><td>Moyenne</td><td>Une réponse simple sans Mistral, signalée à l'écran.</td></tr>
+<tr><td>Mistral indisponible</td><td>Moyenne (arrivé le 23/10)</td><td>Une réponse simple sans Mistral, signalée à l'écran. Le 23/10 : 12 réponses servies ainsi, aucune erreur.</td></tr>
 <tr><td>Un coût qui dérape (robot)</td><td>Faible</td><td>1 000 recherches par heure au plus : au pire 85 à 145 $ de Mistral par mois.</td></tr>
 <tr><td>Les demandes ou les sources changent</td><td>Moyenne</td><td>Rapport de dérive chaque nuit, alerte le lundi s'il est fort.</td></tr>
 <tr><td>Peu de sorties le soir à Thau</td><td>Réelle</td><td>Alerte de couverture ; PDF, partenaires, agendas proposés par l'agent.</td></tr>
 </tbody>
 </table>
+<div class="report-text">
+<h3 class="report-h3">Le bilan de l'usage réel (17 au 26/10)</h3>
+<p>Mes jeux de test sont écrits par moi. J'avais donc prévu une phase avec des testeurs, et une décision sur trois chiffres : la part des pouces haut, la part des questions sans réponse exacte, et le nombre de partenaires intéressés. Les deux premiers se lisent dans le journal des questions, sans mes propres questions de test ; le troisième, dans mes échanges avec les villes :</p>
+</div>
+<table class="story-table">
+<thead><tr><th>Mesure</th><th>Résultat</th><th>Ce que j'en tire</th></tr></thead>
+<tbody>
+<tr><td>Questions posées</td><td>93</td><td>Surtout le 18/10, jour des tests avec des amis ; l'usage s'arrête ensuite.</td></tr>
+<tr><td>Réponse exacte</td><td>47 %</td><td>Les autres sont élargies. Les demandes ratées portent sur des lieux permanents : film au cinéma, horaires de restaurant, tapas, marché aux puces.</td></tr>
+<tr><td>Question sans aucune proposition</td><td>0 %</td><td>L'élargissement propose toujours quelque chose.</td></tr>
+<tr><td>Temps de réponse P95</td><td>6,2 s</td><td>Sous l'objectif de 8 s, comme sur mon banc de test.</td></tr>
+<tr><td>Coût Mistral</td><td>0,011 $ pour 93 questions</td><td>0,12 $ pour 1 000 questions, comme prévu.</td></tr>
+<tr><td>Avis (pouces)</td><td>1, positif</td><td>Trop peu pour mesurer la satisfaction : les testeurs ont donné leurs retours à l'oral.</td></tr>
+<tr><td>Partenaires intéressés</td><td>aucune réponse à ce jour</td><td>Sète et Frontignan démarchés ; pas de réponse pour l'instant. Le circuit partenaire est prêt (fichier déposé, importé la nuit), montré avec des exemples.</td></tr>
+<tr><td>Visiteurs distincts</td><td>non mesuré</td><td>Le journal ne recevait pas l'identifiant du navigateur. Corrigé le 27/10 (empreinte salée, comme pour les avis) : compté à partir de maintenant.</td></tr>
+</tbody>
+</table>
+<div class="report-text">
+<p>L'usage réel confirme, en plus marqué, la limite mesurée hors ligne : 97,8 % de pertinence sur mes questions, 83,7 % sur des recherches courtes tirées au hasard, 47 % de réponses exactes sur de vraies questions. L'écart a la même cause : SortirIA est un agenda d'événements, et les gens cherchent aussi des lieux.</p>
+</div>
 <div class="callout">
 <span class="eyebrow">MA RECOMMANDATION</span>
-<strong>Go pour une phase d'usage réel, pas encore pour un lancement payant.</strong>
-<p>Tous les critères techniques sont atteints. Mais mes jeux de test sont écrits par moi. Avant d'investir plus (partenaires payants, fine-tuning), il faut des questions réelles. Je propose 5 à 10 testeurs jusqu'au 26/10, puis une décision sur trois chiffres : la part des pouces haut, la part des questions sans réponse exacte, et le nombre de partenaires intéressés.</p>
+<strong>Go pour continuer, avec une priorité revue : la couverture avant le reste.</strong>
+<p>Le moteur tient ses engagements, même en production et même quand Mistral tombe. Ce qui limite l'usage, ce n'est pas la qualité des réponses, c'est ce que la base contient. Avant un fine-tuning ou des partenaires payants, je propose d'ajouter une base de lieux (piste 1 des évolutions), puis une nouvelle phase d'usage avec des visiteurs non sollicités, jugée sur trois chiffres : la part de réponses exactes, la part des pouces haut et le nombre de visiteurs qui reviennent.</p>
 </div>
 </div>
 </section>
@@ -293,7 +314,8 @@
 <tr><td>15/10/2026</td><td>Recherche évaluée, <strong>mise en ligne sur Azure</strong></td><td>✅</td></tr>
 <tr><td>16/10/2026</td><td>Déploiement automatique, pertinence mesurée, évaluation rejouée en CI</td><td>✅</td></tr>
 <tr><td>17-19/10/2026</td><td>Retours des testeurs, incidents corrigés, suivi de la dérive</td><td>✅</td></tr>
-<tr><td>17-26/10/2026</td><td>Usage réel avec des testeurs</td><td>en cours</td></tr>
+<tr><td>17-26/10/2026</td><td>Usage réel avec des testeurs : 93 questions, 47 % de réponses exactes, usage arrêté après les tests</td><td>✅</td></tr>
+<tr><td>27/10/2026</td><td>Bilan d'usage, recommandation revue ; visiteurs distincts comptés à partir de maintenant</td><td>✅</td></tr>
 <tr><td>4/11/2026</td><td>Gel du code</td><td>à venir</td></tr>
 <tr><td>6/11/2026</td><td>Soutenance</td><td>à venir</td></tr>
 </tbody>
@@ -335,6 +357,7 @@
 <li>Fixer mes jeux d'évaluation encore plus tôt.</li>
 <li>Mettre des testeurs devant le site dès le premier jour en ligne.</li>
 <li>Demander les autorisations de collecte plus tôt : les réponses prennent du temps.</li>
+<li>Vérifier dès la mise en ligne que le journal enregistre tout ce dont le bilan aura besoin : les visiteurs distincts manquaient.</li>
 </ul>
 </div>
 </div>
