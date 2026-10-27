@@ -1,6 +1,6 @@
 # Architecture
 
-*Mise à jour le 26/10/2026.*
+*Mise à jour le 27/10/2026.*
 
 La collecte tourne chaque nuit ; la recherche répond en direct. Les deux
 partagent une même base PostgreSQL avec l'extension pgvector. Une boucle les
@@ -74,7 +74,7 @@ flowchart TB
 | API | FastAPI, réponse diffusée (Server-Sent Events) | l'interface affiche les étapes de la recherche au fil de l'eau |
 | Interface | Angular (Chess Agent) | écran unique : filtres, question, réponse sourcée, cartes, détail |
 | Déploiement | Azure : Static Web Apps, Container Apps, PostgreSQL Flexible Server ; GHCR ; GitHub Actions | gratuit ou presque la première année, mise en veille sans visiteur ([Coûts](couts.md)) |
-| Suivi | `rag_requests`, `collect_runs`, Grafana, MLflow, mail, rapport de dérive (PSI) | chaque nuit et chaque question sont tracées ; la dérive des questions, des réponses et de la collecte est mesurée chaque nuit |
+| Suivi | `rag_requests`, `collect_runs`, Grafana, MLflow (poste), mail, rapport de dérive (PSI), rapport Evidently mensuel | chaque nuit et chaque question sont tracées ; la dérive des questions, des réponses et de la collecte est mesurée chaque nuit, et chaque mois par Evidently |
 
 ## Étapes d'une question
 

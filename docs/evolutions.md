@@ -87,7 +87,7 @@ d'exemples.
    Le service de fine-tuning de Mistral, ses modèles et ses prix sont à
    vérifier au moment de s'y mettre.
 
-**Pourquoi après :** SortirIA n'a pas encore d'utilisateurs ; les consignes
+**Pourquoi après :** SortirIA n'a eu que des testeurs (93 questions du 17 au 26/10, un seul avis) ; les consignes
 actuelles atteignent 93 à 99 % sur les jeux d'évaluation ; et un modèle affiné
 sans données réelles apprendrait surtout les jeux d'évaluation eux-mêmes.
 

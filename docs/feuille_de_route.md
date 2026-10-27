@@ -1,6 +1,6 @@
 # Feuille de route
 
-*Mise à jour le 26/10/2026.* Le détail, tâche par tâche, avec le code repris
+*Mise à jour le 27/10/2026.* Le détail, tâche par tâche, avec le code repris
 de chaque projet, est dans [Provenance du code](provenance.md).
 
 ## Jalons
@@ -16,6 +16,7 @@ de chaque projet, est dans [Provenance du code](provenance.md).
 | 19/10/2026 | Bilan du lundi lu et corrigé ; **surveillance de la dérive** (questions, réponses, collecte) | ✅ |
 | 23/10/2026 | Code relu et documenté (docstrings, référence par fichier, recherche découpée), défauts corrigés, horloge de la base de test réparée | ✅ |
 | 26/10/2026 | **Versionnage** des consignes, de la chaîne et des jeux de données dans les registres MLflow, contrôlé en CI | ✅ |
+| 27/10/2026 | **Bilan de l'usage réel** (93 questions, 47 % de réponses exactes), visiteurs distincts comptés, **rapport Evidently mensuel** | ✅ |
 | 4/11/2026 | **Gel du code** | ⏳ |
 | 6/11/2026 | **Soutenance** | ⏳ |
 
@@ -33,8 +34,8 @@ gantt
     Bloc 4 Production et suivi            :done, b4, 2026-10-15, 2d
     Mesures, pertinence, juge, CI         :done, m1, 2026-10-16, 1d
     Ménage, sécurité, dossier en site     :done, d1, 2026-10-16, 1d
+    Usage réel, testeurs, corrections     :done, f1, 2026-10-17, 10d
     section À faire
-    Usage réel, testeurs, corrections     :active, f1, 2026-10-17, 10d
     Relecture, captures, dossier en ligne :d2, 2026-10-24, 6d
     Diapositives et répétitions           :s1, 2026-10-27, 8d
     Gel du code                           :milestone, g1, 2026-11-04, 0d
@@ -116,7 +117,8 @@ mesure, fiabilise ou explique.
 | 23/10 ✅ | Code relu et documenté : docstrings numpy et commentaires par étape partout ; une page de référence par fichier Python (146 pages) ; `app/search_service.py` découpé en 7 modules (un fichier, un usage) ; défauts de la relecture corrigés, chacun avec son test ; horloge de la base de test réparée (`sortiria.reference_now()`) | faire soi-même 90 % → 98 % (base figée) ; mêmes cartes sur les 4 jeux ; 3 863 tests verts |
 | 26/10 ✅ | **Versionnage** (`scripts/versionnage.py`) : les 8 consignes dans le Prompt Registry de MLflow (alias `production`), la chaîne `sortiria-chaine` dans le Model Registry (modèles Mistral, versions des consignes, empreintes des 10 jeux de données ; alias `production` et `precedente`) ; manifeste `config/versions_consignes.json` contrôlé en CI : une consigne ne peut plus changer sans changer de version | 14 tests, dont un sur le vrai MLflow ; 3 877 tests verts |
 | 26/10 ✅ | Mail du 26/10 lu : 7 alertes de dérive, presque toutes causées par mes 18 questions de test sur 30 ; les questions « [t… » sont désormais ignorées par la dérive, le bilan du lundi et l'apprentissage. Synonyme proposé « kawa » → « café » refusé (le Kawa Théâtre est une salle) | 2 tests PostgreSQL |
-| 17-26/10 | **Usage réel** : faire tester le site par 5 à 10 personnes ; lire les pouces bas et les recherches ratées (Grafana, bilan du lundi) ; corrections ciblées ; réponses de Frontignan et de l'Archipel de Thau (intégrer ou citer) | bilan d'usage chiffré, corrections testées |
+| 17-26/10 ✅ | **Usage réel** : testé par des proches ; corrections ciblées (18/10) ; bilan du 27/10 : 93 questions hors tests, 47 % de réponses exactes (lieux permanents demandés : cinéma, restaurant, marché), un seul avis ; Sète et Frontignan démarchés, sans réponse | la couverture devient la priorité (base de lieux) |
+| 27/10 ✅ | Visiteurs distincts : l'empreinte du navigateur va dans `rag_requests.visitor_key` (jamais rempli avant) ; rapport Evidently mensuel par GitHub Actions (`scripts/rapport_evidently.py`, `.github/workflows/evidently.yml`) ; filtres de l'interface resserrés, date lue dans la question affichée dans le cadre de saisie | visiteurs comptés ; dérive suivie chaque nuit (PSI) et chaque mois (Evidently) |
 | 24-30/10 | Relecture du dossier et de la doc ; captures d'écran du site, de Grafana, du mail de bilan ; publication du dossier en ligne (facultatif) ; pitch et feuille de route PDF mis à jour (datés du 14/10) | dossier final |
 | 27/10-3/11 | Diapositives, scénario de démonstration, vidéo de secours, répétitions avec questions du jury ; décision sur les partenaires d'exemple (présentés comme fictifs) ; coûts Azure réels du mois relevés | support de soutenance |
 | 4/11 | Gel du code : dernier déploiement vert, étiquette git `v1.0` | version présentée |

@@ -40,7 +40,7 @@ le 6 novembre 2026. Plutôt que de repartir de zéro, il **industrialise des pro
       déployé à chaque push sur `main` ([Déploiement Azure](deploiement.md)).
     - **Suivi** : pouce haut / pouce bas sur chaque réponse, trois tableaux Grafana
       (collecte, recherche, modèles et coûts), limite de débit des routes publiques ;
-      dérive des questions, des réponses et de la collecte surveillée chaque nuit
+      dérive des questions, des réponses et de la collecte surveillée chaque nuit (PSI) et chaque mois (Evidently)
       ([MLOps et monitoring](monitoring.md)).
     - **Mesuré** : 0,12 $ de Mistral pour 1 000 questions, réponse en 3 s (médiane),
       0,1 s depuis le cache ([Coûts et projection](couts.md)).

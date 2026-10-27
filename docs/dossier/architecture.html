@@ -213,7 +213,7 @@
 <tr><td>API</td><td>FastAPI, réponse diffusée (Server-Sent Events)</td><td>L'interface affiche les étapes de la recherche au fil de l'eau.</td></tr>
 <tr><td>Interface</td><td>Angular (reprise de Chess Agent)</td><td>Un écran unique : filtres, question, réponse sourcée, cartes, détail.</td></tr>
 <tr><td>Déploiement</td><td>Azure : Static Web Apps, Container Apps, PostgreSQL Flexible Server ; GHCR ; GitHub Actions</td><td>Gratuit ou presque la première année, mise en veille sans visiteur.</td></tr>
-<tr><td>Suivi</td><td><code>rag_requests</code>, <code>collect_runs</code>, Grafana, MLflow, mail, rapport de dérive (PSI)</td><td>Chaque nuit et chaque question sont tracées ; la dérive des questions, des réponses et de la collecte est mesurée chaque nuit.</td></tr>
+<tr><td>Suivi</td><td><code>rag_requests</code>, <code>collect_runs</code>, Grafana, MLflow (poste), mail, rapport de dérive (PSI), rapport Evidently mensuel</td><td>Chaque nuit et chaque question sont tracées ; la dérive des questions, des réponses et de la collecte est mesurée chaque nuit.</td></tr>
 </tbody>
 </table>
 <p class="table-note">D'après le tableau des choix de <code>docs/architecture.md</code> (16/10/2026). Le détail des services Azure et de leur coût est sur la page <a class="project-link" href="deploiement.html">Déploiement →</a></p>

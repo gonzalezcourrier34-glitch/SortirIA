@@ -1,6 +1,6 @@
 # MVP et arbitrages
 
-*Mis à jour le 26/10/2026. Gel du code le 4/11/2026, soutenance le 6/11/2026.*
+*Mis à jour le 27/10/2026. Gel du code le 4/11/2026, soutenance le 6/11/2026.*
 
 ## La promesse
 
@@ -49,7 +49,7 @@ Trois conditions la rendent tenable, et ce sont elles que le MVP doit prouver :
 | Apprentissage des recherches ratées (synonymes, agendas proposés) | Fait | la base progresse avec l'usage |
 | Cache des réponses, limite de débit | Fait | coût et latence bornés |
 | MLflow, trois tableaux Grafana | Fait | suivi de la collecte, de la recherche, des modèles et des coûts |
-| Surveillance de la dérive (questions, réponses, collecte) | Fait (19/10) | savoir quand ce qu'on demande, ce qu'on répond ou ce que les sources apportent change ([MLOps et monitoring](monitoring.md)) |
+| Surveillance de la dérive (questions, réponses, collecte) | Fait (19/10 ; Evidently mensuel le 27/10) | savoir quand ce qu'on demande, ce qu'on répond ou ce que les sources apportent change ([MLOps et monitoring](monitoring.md)) |
 | Versionnage des consignes, de la chaîne et des jeux d'évaluation (registres MLflow, contrôle en CI) | Fait (26/10) | savoir quelle version a produit quelle réponse, et revenir à la précédente ([MLOps et monitoring](monitoring.md)) |
 
 ### Abandonné ou reporté, sans dommage pour le MVP
@@ -94,5 +94,5 @@ Comment chaque mesure est faite : [Évaluation](evaluation.md).
 | Hallucination dans la réponse ou un résumé | Moyenne | citations vérifiées, résumés contrôlés, juge de qualité ([Fiabilité](fiabilite.md)) |
 | Coût qui dérape (robot, abus) | Faible | limite de débit par visiteur et plafond global : au plus 1 000 recherches par heure |
 | Couverture faible (peu de sorties « soirée » à Thau) | Réelle | alerte de couverture chaque nuit ; PDF, partenaires, agendas proposés par l'agent |
-| Les demandes ou les sources changent avec le temps (saison, nouveau public, source modifiée) | Moyenne | rapport de dérive chaque nuit, dans le mail du lundi, alerte si elle est forte ; jugé seulement à partir de 30 questions par semaine |
+| Les demandes ou les sources changent avec le temps (saison, nouveau public, source modifiée) | Moyenne | rapport de dérive chaque nuit, dans le mail du lundi, alerte si elle est forte, et rapport Evidently chaque mois ; jugé seulement à partir de 30 questions par semaine |
 | Manque de temps avant le gel | Moyenne | MVP déjà en production le 15/10 ; jusqu'au 4/11 : mesure, fiabilisation, documentation |

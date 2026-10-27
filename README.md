@@ -26,7 +26,7 @@ Le détail de ce qui a été repris, et de ce qui reste à adapter, est dans [PR
 3. Question utilisateur → compréhension (date, lieu, public, budget, type, mots-clés) → filtres SQL stricts → recherche hybride (sens + mots, fusion RRF) → élargissement au sujet si rien ne répond.
 4. Réponse rédigée par Mistral, qui cite chaque événement ; offres partenaires qui répondent en tête.
 5. Journalisation de chaque requête et de ce qui a manqué ; chaque lundi, l'agent en tire des propositions (synonymes, agendas à lire).
-6. Surveillance de la dérive (questions, réponses, collecte) : chaque nuit, la semaine comparée aux 28 jours précédents (PSI) ; le lundi dans le mail, alerte si elle est forte (`agent/drift.py`, `monitoring/README.md`).
+6. Surveillance de la dérive (questions, réponses, collecte) : chaque nuit, la semaine comparée aux 28 jours précédents (PSI) ; le lundi dans le mail, alerte si elle est forte (`agent/drift.py`, `monitoring/README.md`). Chaque mois, un rapport Evidently complet, mois contre mois, par GitHub Actions (`scripts/rapport_evidently.py`).
 7. Versionnage dans MLflow : les 8 consignes (Prompt Registry) et la chaîne `sortiria-chaine` (Model Registry : modèles Mistral, versions des consignes, empreintes des jeux d'évaluation), alias `production` et `precedente` ; la CI refuse une consigne modifiée sans nouvelle version (`scripts/versionnage.py`, `config/versions_consignes.json`).
 
 En ligne : https://www.sortiria-montpellier.fr. Déploiement sur Azure : interface Angular sur Static Web Apps,
