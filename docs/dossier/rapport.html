@@ -198,7 +198,7 @@
 <tr><td>Chercher</td><td>PostgreSQL + pgvector</td><td>Filtres stricts et recherche par le sens dans la même requête.</td><td>FAISS (projet 6)</td></tr>
 <tr><td>Rédiger</td><td>mistral-small</td><td>Bon marché, hébergé en Europe.</td><td>ministral-8b : 17 % moins cher, mais plus lent</td></tr>
 <tr><td>Mettre en ligne</td><td>Azure, CI/CD GitHub Actions</td><td>Presque gratuit la première année ; l'API s'endort sans visiteur.</td><td>Un serveur allumé en permanence</td></tr>
-<tr><td>Surveiller</td><td>Mail chaque matin, Grafana, MLflow, suivi de la dérive</td><td>Je suis seul : le service doit me prévenir quand il a besoin de moi.</td><td>Prometheus (pas utile à ce trafic)</td></tr>
+<tr><td>Surveiller</td><td>Mail chaque matin, Grafana, MLflow, dérive chaque nuit (PSI) et chaque mois (Evidently)</td><td>Je suis seul : le service doit me prévenir quand il a besoin de moi.</td><td>Prometheus (pas utile à ce trafic)</td></tr>
 </tbody>
 </table>
 <div class="report-text">
@@ -265,7 +265,7 @@
 <tr><td>Une source change de format ou d'adresse</td><td>Forte</td><td>L'agent réessaie, garde la veille, diagnostique et propose une réparation.</td></tr>
 <tr><td>Mistral indisponible</td><td>Moyenne (arrivé le 23/10)</td><td>Une réponse simple sans Mistral, signalée à l'écran. Le 23/10 : 12 réponses servies ainsi, aucune erreur.</td></tr>
 <tr><td>Un coût qui dérape (robot)</td><td>Faible</td><td>1 000 recherches par heure au plus : au pire 85 à 145 $ de Mistral par mois.</td></tr>
-<tr><td>Les demandes ou les sources changent</td><td>Moyenne</td><td>Rapport de dérive chaque nuit, alerte le lundi s'il est fort.</td></tr>
+<tr><td>Les demandes ou les sources changent</td><td>Moyenne</td><td>Rapport de dérive chaque nuit, alerte le lundi s'il est fort ; rapport Evidently complet chaque mois.</td></tr>
 <tr><td>Peu de sorties le soir à Thau</td><td>Réelle</td><td>Alerte de couverture ; PDF, partenaires, agendas proposés par l'agent.</td></tr>
 </tbody>
 </table>
@@ -348,6 +348,7 @@
 <li><strong>Chaque nuit</strong> : un mail me donne le statut de la collecte, les chiffres, les alertes et le coût.</li>
 <li><strong>Toutes les 3 heures</strong> : GitHub vérifie que le site, l'API, la base et la collecte répondent.</li>
 <li><strong>Chaque lundi</strong> : les recherches ratées, les pouces bas, et le rapport de dérive. Je compare les 7 derniers jours aux 28 précédents : ce que les gens demandent, ce que SortirIA répond, ce que les sources apportent.</li>
+<li><strong>Chaque mois</strong> (le 1er) : un rapport Evidently complet compare le mois écoulé au précédent, sur les questions et sur les nuits de collecte. GitHub Actions ouvre le pare-feu de la base le temps du rapport, puis le referme ; Evidently reste hors de l'image de production. Comme le suivi de chaque nuit, il ne conclut pas sur trop peu de données.</li>
 <li><strong>À chaque version</strong> : les 8 consignes et la chaîne (modèles Mistral, versions des consignes, jeux d'évaluation) sont enregistrées dans les registres de MLflow, et la CI refuse une consigne modifiée sans nouvelle version. Je sais quelle version a produit quelle réponse, et laquelle la précédait.</li>
 <li><strong>Dans Grafana</strong> : trois tableaux (collecte, recherche, modèles et coûts).</li>
 </ul>
