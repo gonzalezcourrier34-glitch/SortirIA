@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Déploiement | SortirIA</title>
-<meta content="Où, pourquoi, avec quels services et comment SortirIA est déployé sur Azure : Static Web Apps, Container Apps, PostgreSQL Flexible Server et une chaîne CI/CD GitHub Actions sans mot de passe." name="description"/>
+<meta content="Où, pourquoi, avec quels services et comment SortirIA est déployé sur Azure : Static Web Apps, Container Apps, PostgreSQL Flexible Server et une chaîne CI/CD GitHub Actions connectée par jeton." name="description"/>
 <link href="css/style.css" rel="stylesheet"/>
 </head>
 <body>
@@ -20,8 +20,8 @@
 <section class="hero project-hero">
 <div class="container hero-content">
 <p class="eyebrow">SORTIRIA · DÉPLOIEMENT</p>
-<h1>En ligne,<span>sans y toucher</span></h1>
-<p class="hero-text">SortirIA est en ligne depuis le 15/10/2026 sur <strong>www.sortiria-montpellier.fr</strong>. J'ai choisi Azure et des services managés : la base et l'API sont en France, l'API se met en veille sans visiteur, et depuis le 16/10/2026 <strong>un push sur <code>main</code> suffit</strong> à tester, publier et déployer, sans aucun mot de passe stocké chez GitHub.</p>
+<h1>En ligne,<span>en pilote automatique</span></h1>
+<p class="hero-text">SortirIA est en ligne depuis le 15/10/2026 sur <strong>www.sortiria-montpellier.fr</strong>. J'ai choisi Azure et des services managés (gérés par l'hébergeur) : la base et l'API sont en France, l'API se met en veille en l'absence de visiteurs, et depuis le 16/10/2026 <strong>un push sur <code>main</code> suffit</strong> à tester, publier et déployer. GitHub se connecte à Azure par un jeton signé, à la place d'un mot de passe.</p>
 <div class="metrics">
 <div><strong>15/10/2026</strong><span>mise en ligne</span></div>
 <div><strong>≈ 10 $</strong><span>par mois, 1re année</span></div>
@@ -42,17 +42,17 @@
 <div class="container">
 <p class="section-number">01</p>
 <h2>Où et pourquoi Azure</h2>
-<p class="section-intro">Il me fallait un hébergeur qui garde les données en France, qui ne coûte presque rien sans visiteur et que je n'aie pas à administrer moi-même.</p>
+<p class="section-intro">Il me fallait un hébergeur qui garde les données en France, presque gratuit quand le site est au repos, et qui s'administre tout seul.</p>
 <div class="about-grid">
 <div class="large-text">Des services managés, en France Central, couverts la première année par les offres gratuites d'Azure.</div>
 <div>
-<p>Azure était prévu dès le départ dans la CD reprise du triage médical. Mistral, lui, vend ses modèles par API mais n'héberge pas d'application. J'ai donc créé un compte Azure le 15/10/2026 : 200 $ de crédit de bienvenue sur 30 jours, des services gratuits pendant 12 mois (dont la base PostgreSQL) et des services toujours gratuits (Container Apps jusqu'à un certain volume).</p>
+<p>Azure était prévu dès le départ dans la CD reprise du triage médical. Mistral, lui, vend ses modèles par API ; l'hébergement d'une application relève d'un autre service. J'ai donc créé un compte Azure le 15/10/2026 : 200 $ de crédit de bienvenue sur 30 jours, des services gratuits pendant 12 mois (dont la base PostgreSQL) et des services toujours gratuits (Container Apps jusqu'à un certain volume).</p>
 <p>Tout est rangé dans un seul groupe de ressources, <code>sortiria-rg</code>, en <strong>France Central</strong> : l'API, la collecte, la base et les journaux. Une seule commande suffirait à tout supprimer.</p>
 </div>
 </div>
 <div class="reflection-grid">
 <div class="reflection-card"><h3>Les données en France</h3><p>API, collecte de la nuit, base PostgreSQL et journaux sont en France Central. Mistral, le seul service externe, est hébergé en Europe.</p></div>
-<div class="reflection-card"><h3>L'interface en East US 2, par contrainte</h3><p>Pour Static Web Apps, j'ai d'abord demandé Europe de l'Ouest : Azure a refusé (<code>RequestDisallowedByAzure</code>, la région n'accepte plus de nouveaux comptes), et France Central n'est pas proposée pour ce service. J'ai pris East US 2 : la région ne sert qu'à ranger la fiche du site, les pages sont distribuées par des serveurs du monde entier.</p></div>
+<div class="reflection-card"><h3>L'interface en East US 2, par contrainte</h3><p>Pour Static Web Apps, j'ai d'abord demandé Europe de l'Ouest : Azure a refusé (<code>RequestDisallowedByAzure</code>, la région est fermée aux nouveaux comptes), et France Central est absente de la liste pour ce service. J'ai pris East US 2 : la région sert uniquement à ranger la fiche du site, les pages sont distribuées par des serveurs du monde entier.</p></div>
 <div class="reflection-card"><h3>Un nom de domaine français</h3><p><code>sortiria-montpellier.fr</code>, acheté chez OVHcloud (un <code>.fr</code> pour un service local). Un enregistrement CNAME fait pointer <code>www</code> vers Static Web Apps, qui fournit le certificat HTTPS ; le CNAME était visible en moins de 5 minutes.</p></div>
 </div>
 </div>
@@ -68,12 +68,12 @@
 <article class="project-card">
 <div class="project-top"><span class="project-type">9 $ / MOIS</span></div>
 <h3>Static Web Apps, offre Standard</h3>
-<p><strong>Rôle :</strong> sert l'interface Angular (<code>sortiria-web</code>) et transmet à l'API toute adresse qui commence par <code>/api</code> (« backend lié »). <strong>Pourquoi Standard :</strong> l'offre gratuite ne sait pas relier une Container App. Une adresse inconnue renvoie <code>index.html</code>, sauf <code>/api/*</code> (<code>staticwebapp.config.json</code>).</p>
+<p><strong>Rôle :</strong> sert l'interface Angular (<code>sortiria-web</code>) et transmet à l'API toute adresse qui commence par <code>/api</code> (« backend lié »). <strong>Pourquoi Standard :</strong> relier une Container App demande l'offre Standard. Une adresse inconnue renvoie <code>index.html</code>, sauf <code>/api/*</code> (<code>staticwebapp.config.json</code>).</p>
 </article>
 <article class="project-card">
 <div class="project-top"><span class="project-type">0 $ · DANS L'OFFERT</span></div>
 <h3>Container Apps : l'API</h3>
-<p><strong>Rôle :</strong> l'API FastAPI (<code>sortiria-api</code>). <strong>Réglages :</strong> 0,5 processeur, 1 Gio, de 0 à 1 réplique : elle se met en veille sans visiteur et se réveille en quelques secondes. Elle n'accepte que les appels passés par le site. Offert chaque mois : 180 000 s de processeur et 2 millions de requêtes.</p>
+<p><strong>Rôle :</strong> l'API FastAPI (<code>sortiria-api</code>). <strong>Réglages :</strong> 0,5 processeur, 1 Gio, de 0 à 1 réplique (copie en marche) : elle se met en veille en l'absence de visiteurs et se réveille en quelques secondes. Elle accepte uniquement les appels passés par le site. Offert chaque mois : 180 000 s de processeur et 2 millions de requêtes.</p>
 </article>
 <article class="project-card">
 <div class="project-top"><span class="project-type">0 $ · ≈ 10 % DE L'OFFERT</span></div>
@@ -110,7 +110,7 @@
 <div class="container">
 <p class="section-number">03</p>
 <h2>Le schéma du déploiement</h2>
-<p class="section-intro">Le chemin d'une visite, de l'adresse tapée à la base, et les deux chemins qui écrivent dans la base sans visiteur : la collecte de la nuit et la lecture du PDF depuis mon poste.</p>
+<p class="section-intro">Le chemin d'une visite, de l'adresse tapée à la base, et les deux chemins qui écrivent dans la base en dehors des visites : la collecte de la nuit et la lecture du PDF depuis mon poste.</p>
 <figure class="story-figure"><svg class="story-svg" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 620" role="img" aria-label="Schéma du déploiement. Le visiteur tape www.sortiria-montpellier.fr ; le CNAME d'OVHcloud renvoie vers Static Web Apps (sortiria-web, East US 2), qui transmet les adresses /api à l'API liée sortiria-api sur Container Apps en France Central ; l'API lit et écrit dans PostgreSQL Flexible Server. Le Container Apps Job sortiria-collecte écrit chaque nuit dans PostgreSQL. Un poste de travail lit le programme PDF et l'écrit dans la base. L'API et le job envoient leurs journaux à Log Analytics et appellent l'API Mistral. GitHub Actions publie l'image sur GHCR, qui sert à mettre à jour l'API et le job, et envoie l'interface compilée sur Static Web Apps.">
 <rect width="1080" height="620" rx="18" fill="#111a22"/>
 <defs>
@@ -201,9 +201,9 @@
 <text x="890" y="534" fill="#98a8ad" font-size="12.5">API et collecte</text>
 
 <text x="36" y="584" fill="#98a8ad" font-size="12">Les données restent en France : API, collecte, base et journaux sont dans le groupe sortiria-rg, en France Central.</text>
-<text x="36" y="604" fill="#98a8ad" font-size="12">Seule la fiche du site est rangée en East US 2 ; ses pages sont distribuées partout. La liaison /api n'existe que sur le site de production.</text>
+<text x="36" y="604" fill="#98a8ad" font-size="12">Seule la fiche du site est rangée en East US 2 ; ses pages sont distribuées partout. La liaison /api existe uniquement sur le site de production.</text>
 </g>
-</svg><figcaption>D'après <code>docs/deploiement.md</code>, <code>.github/workflows/cd.yml</code> et mon journal de déploiement. Conséquence de la liaison : <code>/docs</code> et la route des notes des clients ne sont pas joignables directement, seulement par le site.</figcaption></figure>
+</svg><figcaption>D'après <code>docs/deploiement.md</code>, <code>.github/workflows/cd.yml</code> et mon journal de déploiement. Conséquence de la liaison : <code>/docs</code> et la route des notes des clients sont joignables uniquement par le site.</figcaption></figure>
 </div>
 </section>
 
@@ -211,9 +211,9 @@
 <section class="section section-alt" id="s04">
 <div class="container">
 <p class="section-number">04</p>
-<h2>Comment : la chaîne CI/CD</h2>
-<p class="section-intro">Depuis le 16/10/2026, je ne tape plus aucune commande Azure pour déployer. Un push sur <code>main</code> lance la CI ; si elle est verte, la CD publie l'image puis met tout à jour.</p>
-<figure class="story-figure"><svg class="story-svg" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 560" role="img" aria-label="Chaîne CI/CD. Un git push sur main lance la CI et ses cinq jobs : Ruff, pytest avec PostgreSQL et pgvector, construction de l'image Docker après Ruff et pytest, MkDocs en mode strict, évaluation de la recherche avec un seuil de 95 %. Si la CI est rouge, rien n'est publié. Si elle est verte, la CD construit l'image Docker taguée sha-commit et la pousse sur GHCR. Puis, si DEPLOY_ENABLED vaut true, le job Deploy Azure se connecte à Azure par OpenID Connect sans mot de passe, met à jour l'API sortiria-api, met à jour le job sortiria-collecte, compile et envoie l'interface sur Static Web Apps, et vérifie que le site et /api/v1/sources répondent.">
+<h2>Comment : la chaîne CI/CD (tests, puis mise en ligne automatiques)</h2>
+<p class="section-intro">Depuis le 16/10/2026, le déploiement est entièrement automatique. Un push sur <code>main</code> lance la CI ; si elle est verte, la CD publie l'image puis met tout à jour.</p>
+<figure class="story-figure"><svg class="story-svg" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 560" role="img" aria-label="Chaîne CI/CD. Un git push sur main lance la CI et ses cinq jobs : Ruff, pytest avec PostgreSQL et pgvector, construction de l'image Docker après Ruff et pytest, MkDocs en mode strict, évaluation de la recherche avec un seuil de 95 %. Si la CI est rouge, la publication est bloquée. Si elle est verte, la CD construit l'image Docker taguée sha-commit et la pousse sur GHCR. Puis, si DEPLOY_ENABLED vaut true, le job Deploy Azure se connecte à Azure par OpenID Connect avec un jeton signé, met à jour l'API sortiria-api, met à jour le job sortiria-collecte, compile et envoie l'interface sur Static Web Apps, et vérifie que le site et /api/v1/sources répondent.">
 <rect width="1080" height="560" rx="18" fill="#111a22"/>
 <defs>
 <marker id="arr-cicd-1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#98a8ad"/></marker>
@@ -248,7 +248,7 @@
 <line x1="716" y1="200" x2="754" y2="200" stroke="#48c9b0" stroke-width="1.8" marker-end="url(#arr-cicd-2)"/>
 <text x="735" y="192" fill="#48c9b0" font-size="12" text-anchor="middle">oui</text>
 <line x1="656" y1="250" x2="656" y2="270" stroke="#98a8ad" stroke-width="1.5" marker-end="url(#arr-cicd-1)"/>
-<text x="656" y="290" fill="#98a8ad" font-size="12" text-anchor="middle">non : rien n'est publié</text>
+<text x="656" y="290" fill="#98a8ad" font-size="12" text-anchor="middle">rouge : publication bloquée</text>
 
 <!-- Build -->
 <rect x="756" y="130" width="288" height="140" rx="12" fill="#17232d" stroke="#48c9b0" stroke-width="2"/>
@@ -268,7 +268,7 @@
 <text x="50" y="392" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">1 · CONNEXION</text>
 <text x="50" y="414" fill="#edf4f4" font-size="14" font-weight="700">Azure login</text>
 <text x="50" y="434" fill="#98a8ad" font-size="12.5">OpenID Connect</text>
-<text x="50" y="452" fill="#98a8ad" font-size="12.5">aucun mot de passe</text>
+<text x="50" y="452" fill="#98a8ad" font-size="12.5">jeton signé</text>
 <text x="50" y="470" fill="#98a8ad" font-size="12.5">droits : sortiria-rg</text>
 <line x1="206" y1="425" x2="240" y2="425" stroke="#98a8ad" stroke-width="1.6" marker-end="url(#arr-cicd-1)"/>
 <rect x="242" y="370" width="170" height="110" rx="10" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
@@ -298,30 +298,30 @@
 <text x="874" y="452" fill="#98a8ad" font-size="12.5">/api/v1/sources</text>
 <text x="874" y="470" fill="#98a8ad" font-size="12.5">6 essais, 10 s</text>
 
-<text x="36" y="516" fill="#98a8ad" font-size="12">Le jeton d'envoi de l'interface est lu dans Azure à chaque déploiement et masqué dans les journaux : aucun secret de plus chez GitHub.</text>
-<text x="36" y="536" fill="#98a8ad" font-size="12">Le contrôle passe par le site, car l'API ne répond qu'aux appels transmis par Static Web Apps ; il laisse à l'API le temps de se réveiller.</text>
+<text x="36" y="516" fill="#98a8ad" font-size="12">Le jeton d'envoi de l'interface est lu dans Azure à chaque déploiement et masqué dans les journaux : GitHub garde ses seuls identifiants.</text>
+<text x="36" y="536" fill="#98a8ad" font-size="12">Le contrôle passe par le site, car l'API répond uniquement aux appels transmis par Static Web Apps ; il laisse à l'API le temps de se réveiller.</text>
 </g>
 </svg><figcaption>D'après <code>.github/workflows/ci.yml</code> et <code>.github/workflows/cd.yml</code>. Le premier déploiement entièrement automatique est passé au vert le 16/10/2026 à 9 h.</figcaption></figure>
 
 <div class="about-grid">
-<div class="large-text">OpenID Connect : Azure fait confiance à ce dépôt et à sa branche <code>main</code>, et à rien d'autre.</div>
+<div class="large-text">OpenID Connect : Azure fait confiance à ce dépôt et à sa branche <code>main</code>, exclusivement.</div>
 <div>
-<p>J'ai créé dans Azure une application <code>sortiria-github-deploy</code>, avec le rôle Contributeur sur le seul groupe <code>sortiria-rg</code>. À chaque exécution, GitHub présente un jeton signé qui dit « je suis ce dépôt, sur la branche <code>main</code> » ; Azure le compare à des identités fédérées déclarées à l'avance. Rien à renouveler, aucun mot de passe stocké.</p>
-<p>GitHub ne garde que trois identifiants (application, annuaire, abonnement), qui ne sont pas des mots de passe, et une variable <code>DEPLOY_ENABLED</code> qui active ou coupe le déploiement.</p>
+<p>J'ai créé dans Azure une application <code>sortiria-github-deploy</code>, avec le rôle Contributeur sur le seul groupe <code>sortiria-rg</code>. À chaque exécution, GitHub présente un jeton signé qui dit « je suis ce dépôt, sur la branche <code>main</code> » ; Azure le compare à des identités fédérées déclarées à l'avance. Le jeton naît à chaque exécution : la connexion se renouvelle d'elle-même, et GitHub stocke zéro mot de passe.</p>
+<p>GitHub garde uniquement trois identifiants, distincts d'un mot de passe (application, annuaire, abonnement), et une variable <code>DEPLOY_ENABLED</code> qui active ou coupe le déploiement.</p>
 </div>
 </div>
 
 <h3>Les vraies pannes, et ce que j'en ai fait</h3>
 <div class="timeline">
-<div class="timeline-item"><span>16/10/2026 • Connexion OIDC</span><h3>« No matching federated identity record »</h3><p>Au premier essai, la connexion a échoué (<code>AADSTS700213</code>). J'avais déclaré deux identités fédérées, une par écriture du nom du dépôt. Mais GitHub présente désormais un sujet qui contient les <strong>identifiants numériques</strong> du compte et du dépôt (ils ne changent pas si l'un des deux est renommé). J'ai lu le sujet exact dans le journal de l'étape « Azure login », ajouté une <strong>troisième identité fédérée</strong> avec ce sujet, puis relancé le job : vert.</p></div>
+<div class="timeline-item"><span>16/10/2026 • Connexion OIDC</span><h3>« No matching federated identity record »</h3><p>Au premier essai, la connexion a échoué (<code>AADSTS700213</code>). J'avais déclaré deux identités fédérées, une par écriture du nom du dépôt. Mais GitHub présente désormais un sujet qui contient les <strong>identifiants numériques</strong> du compte et du dépôt (ils restent les mêmes si l'un des deux est renommé). J'ai lu le sujet exact dans le journal de l'étape « Azure login », ajouté une <strong>troisième identité fédérée</strong> avec ce sujet, puis relancé le job : vert.</p></div>
 <div class="timeline-item"><span>15/10/2026 • Collecte sur Azure</span><h3>Le PDF de Sète agglopôle bloqué</h3><p>La première collecte sur Azure est sortie « PARTIEL » : 2 009 événements enregistrés, mais la source <code>document</code> en échec. Log Analytics disait « Le document téléchargé n'est pas un PDF », en 0,1 s, aux deux essais ; depuis mon poste, la même adresse renvoyait bien le PDF. Le site de l'agglopôle sert une page web aux centres de données (protection anti-robots probable).</p></div>
-<div class="timeline-item"><span>15/10/2026 • Correction</span><h3><code>SOURCES_DESACTIVEES=document</code></h3><p>J'ai ajouté une variable qui coupe une source sur une machine : sur Azure, <code>document</code> n'est plus lancée, ses événements ne sont pas balayés et le mail l'indique. Je lis le programme depuis mon poste, vers la base de production (<code>uv run python -m agent --source document</code>) : 434 événements écrits, enrichis et vectorisés. Le diagnostic de l'agent range désormais cette panne en « accès bloqué », avec le bon conseil ; 4 tests ajoutés.</p></div>
-<div class="timeline-item"><span>15/10/2026 • Mise en place</span><h3>Les erreurs de la première journée</h3><p>Une option de la ligne de commande Azure réservée aux grappes de serveurs, des services pas encore « enregistrés » sur un abonnement neuf, une syntaxe de règle de pare-feu changée, et la région Europe de l'Ouest fermée aux nouveaux comptes. Chacune est notée avec sa solution dans mon journal de déploiement.</p></div>
+<div class="timeline-item"><span>15/10/2026 • Correction</span><h3><code>SOURCES_DESACTIVEES=document</code></h3><p>J'ai ajouté une variable qui coupe une source sur une machine : sur Azure, <code>document</code> est mise en pause, ses événements sont conservés et le mail l'indique. Je lis le programme depuis mon poste, vers la base de production (<code>uv run python -m agent --source document</code>) : 434 événements écrits, enrichis et vectorisés. Le diagnostic de l'agent range désormais cette panne en « accès bloqué », avec le bon conseil ; 4 tests ajoutés.</p></div>
+<div class="timeline-item"><span>15/10/2026 • Mise en place</span><h3>Les erreurs de la première journée</h3><p>Une option de la ligne de commande Azure réservée aux grappes de serveurs, des services à « enregistrer » sur un abonnement neuf, une syntaxe de règle de pare-feu changée, et la région Europe de l'Ouest fermée aux nouveaux comptes. Chacune est notée avec sa solution dans mon journal de déploiement.</p></div>
 </div>
 <div class="callout subtle">
 <span class="eyebrow">LIMITE</span>
 <strong>Le programme PDF dépend de mon poste de travail.</strong>
-<p>Il couvre septembre à décembre et ne change pas d'ici là : une lecture suffit. L'agent rappelle de chercher le programme suivant 21 jours avant la fin ; il faudra alors le relire depuis un poste, ou obtenir de l'agglopôle un accès autorisé.</p>
+<p>Il couvre septembre à décembre et reste le même d'ici là : une lecture suffit. L'agent rappelle de chercher le programme suivant 21 jours avant la fin ; il faudra alors le relire depuis un poste, ou obtenir de l'agglopôle un accès autorisé.</p>
 </div>
 </div>
 </section>
@@ -331,7 +331,7 @@
 <div class="container">
 <p class="section-number">05</p>
 <h2>Configuration et secrets</h2>
-<p class="section-intro">Le même code tourne sur mon poste et sur Azure : seules les variables d'environnement changent. Leurs noms sont documentés dans <code>.env.example</code> ; leurs valeurs ne sont jamais dans git.</p>
+<p class="section-intro">Le même code tourne sur mon poste et sur Azure : seules les variables d'environnement changent. Leurs noms sont documentés dans <code>.env.example</code> ; leurs valeurs restent hors de git.</p>
 <table class="story-table params-table">
 <thead><tr><th>Famille</th><th>Variables (noms seulement)</th><th>Rôle</th></tr></thead>
 <tbody>
@@ -345,16 +345,16 @@
 <tr><td>Suivi</td><td><code>MLFLOW_ACTIF</code>, <code>MLFLOW_TRACKING_URI</code></td><td>MLflow tourne sur mon poste : coupé sur Azure</td></tr>
 </tbody>
 </table>
-<p class="table-note">Liste complète dans <code>.env.example</code> (valeurs vides). Aucune valeur n'est reproduite sur ce site.</p>
+<p class="table-note">Liste complète dans <code>.env.example</code> (valeurs vides). Les valeurs restent privées.</p>
 <div class="reflection-grid">
 <div class="reflection-card"><h3>Sur mon poste</h3><p>Un fichier <code>.env</code> ignoré par git, et <code>.dockerignore</code> qui exclut <code>.env</code>, mes notes personnelles et les journaux de l'image. Les tests et la CI utilisent des secrets factices.</p></div>
-<div class="reflection-card"><h3>Sur Azure</h3><p>Chaque variable est un <strong>secret Container Apps</strong>, lu par l'API et la collecte par référence (<code>secretref:</code>). Je les ai créés depuis mon <code>.env</code> par un script qui n'affiche que leurs noms. Aucun secret dans l'image ni dans le dépôt.</p></div>
-<div class="reflection-card"><h3>Sur GitHub</h3><p>Les trois identifiants de la connexion OpenID Connect en secrets du dépôt, et <code>DEPLOY_ENABLED</code> en variable. Le jeton d'envoi de l'interface n'y est pas : la CD le lit dans Azure à chaque fois.</p></div>
+<div class="reflection-card"><h3>Sur Azure</h3><p>Chaque variable est un <strong>secret Container Apps</strong>, lu par l'API et la collecte par référence (<code>secretref:</code>). Je les ai créés depuis mon <code>.env</code> par un script qui affiche uniquement leurs noms. L'image et le dépôt restent vierges de tout secret.</p></div>
+<div class="reflection-card"><h3>Sur GitHub</h3><p>Les trois identifiants de la connexion OpenID Connect en secrets du dépôt, et <code>DEPLOY_ENABLED</code> en variable. Le jeton d'envoi de l'interface reste dans Azure : la CD l'y lit à chaque fois.</p></div>
 </div>
 <div class="callout">
 <span class="eyebrow">À RETENIR</span>
 <strong>Une mise à jour de l'image garde les secrets et les réglages.</strong>
-<p>La CD ne change que l'image (<code>az containerapp update --image</code>, <code>az containerapp job update --image</code>) : <code>SOURCES_DESACTIVEES=document</code> et les secrets restent en place d'un déploiement à l'autre.</p>
+<p>La CD change uniquement l'image (<code>az containerapp update --image</code>, <code>az containerapp job update --image</code>) : <code>SOURCES_DESACTIVEES=document</code> et les secrets restent en place d'un déploiement à l'autre.</p>
 </div>
 </div>
 </section>
@@ -376,8 +376,8 @@
 <thead><tr><th>Ce qui borne la facture</th><th>Comment</th></tr></thead>
 <tbody>
 <tr><td>Limite de débit</td><td>12 recherches par minute et par visiteur, 1 000 par heure pour tout le service : au plus 85 à 145 $ de Mistral par mois, même face à un robot.</td></tr>
-<tr><td>Cache</td><td>une question déjà posée le même jour ne coûte rien et répond en 0,1 s.</td></tr>
-<tr><td>Mise en veille</td><td>l'API passe à 0 réplique sans visiteur : pas de coût fixe de calcul.</td></tr>
+<tr><td>Cache</td><td>une question déjà posée le même jour est gratuite et répond en 0,1 s.</td></tr>
+<tr><td>Mise en veille</td><td>l'API passe à 0 réplique en l'absence de visiteurs : coût fixe de calcul nul.</td></tr>
 <tr><td>Budget de la nuit</td><td>au-delà de 0,50 $ de Mistral, une alerte part dans le mail du matin.</td></tr>
 <tr><td>Budget Azure</td><td><code>sortiria-mensuel</code> sur <code>sortiria-rg</code> (16/10/2026) : 20 € par mois, mails à 50, 80 et 100 % du coût réel et à 100 % du coût prévu.</td></tr>
 </tbody>
@@ -396,14 +396,14 @@
 <article class="project-card">
 <div class="project-top"><span class="project-type">TABLEAUX DE BORD</span></div>
 <h3>Grafana et MLflow</h3>
-<p>Trois tableaux Grafana, « Collecte nocturne », « Recherche » et « Modèles et coûts » (coût Mistral du mois et projection, tokens par modèle, versions de consigne, avis des visiteurs, dérive depuis le 19/10). Grafana tourne sur mon poste avec <code>docker compose</code> et lit la <strong>production</strong> par défaut, avec un compte en lecture seule (<code>scripts/creer_lecteur_grafana.py</code>). MLflow, sur le poste aussi, garde les expériences : collectes locales, évaluation de la recherche, juge de pertinence (modèle, consigne, accord, AC1). Le workflow GitHub « Surveillance » vérifie toutes les 3 h le site, l'API, la base et la collecte de la nuit, et prévient par mail ; le 1er de chaque mois, le workflow « Rapport Evidently » compare le mois écoulé au précédent, la base n'étant ouverte que le temps du rapport ; un budget Azure surveille la facture.</p>
+<p>Trois tableaux Grafana, « Collecte nocturne », « Recherche » et « Modèles et coûts » (coût Mistral du mois et projection, tokens par modèle, versions de consigne, avis des visiteurs, dérive depuis le 19/10). Grafana tourne sur mon poste avec <code>docker compose</code> et lit la <strong>production</strong> par défaut, avec un compte en lecture seule (<code>scripts/creer_lecteur_grafana.py</code>). MLflow, sur le poste aussi, garde les expériences : collectes locales, évaluation de la recherche, juge de pertinence (modèle, consigne, accord, AC1). Le workflow GitHub « Surveillance » vérifie toutes les 3 h le site, l'API, la base et la collecte de la nuit, et prévient par mail ; le 1er de chaque mois, le workflow « Rapport Evidently » compare le mois écoulé au précédent, la base s'ouvrant le temps du rapport ; un budget Azure surveille la facture.</p>
 <a class="project-link" href="resultats.html">Les résultats →</a>
 </article>
 </div>
 <div class="callout subtle">
 <span class="eyebrow">À SAVOIR</span>
 <strong>Une API mise en veille met quelques secondes à se réveiller.</strong>
-<p>C'est le prix d'un coût fixe nul. Avant une démonstration, j'ouvre le site une minute avant. C'est aussi pourquoi la surveillance GitHub ne passe que toutes les 3 h : chaque appel réveille l'API, et 8 réveils par jour restent dans l'offre gratuite.</p>
+<p>C'est le prix d'un coût fixe nul. Avant une démonstration, j'ouvre le site une minute avant. C'est aussi pourquoi la surveillance GitHub passe toutes les 3 h : chaque appel réveille l'API, et 8 réveils par jour restent dans l'offre gratuite.</p>
 </div>
 </div>
 </section>
@@ -417,13 +417,13 @@
 <table class="story-table params-table">
 <thead><tr><th>Fichier ou module</th><th>Origine</th><th>Statut</th><th>Ce qui a été adapté ou écrit</th></tr></thead>
 <tbody>
-<tr><td><code>.github/workflows/ci.yml</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Chess Agent (projet 13)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Structure reprise, simplifiée (pas de Milvus, Ollama ni Angular) ; PostgreSQL avec pgvector, construction MkDocs et rejeu de l'évaluation de la recherche ajoutés.</td></tr>
+<tr><td><code>.github/workflows/ci.yml</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Chess Agent (projet 13)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Structure reprise, simplifiée (Milvus, Ollama et Angular retirés) ; PostgreSQL avec pgvector, construction MkDocs et rejeu de l'évaluation de la recherche ajoutés.</td></tr>
 <tr><td><code>.github/workflows/cd.yml</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/medical_triage_agent">Triage médical (projet 14)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Image publiée sur GHCR après une CI verte sur <code>main</code>, puis déploiement Azure (Container Apps, tâche de la nuit, Static Web Apps) par OpenID Connect, à la place du déploiement SSH du triage médical.</td></tr>
 <tr><td><code>docker/Dockerfile.api</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/medical_triage_agent">Triage médical (projet 14)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Python 3.12, code dans <code>app/</code>, <code>src/</code> et <code>config/</code>, point d'entrée <code>app.main:app</code> ; la même image sert à la collecte de la nuit.</td></tr>
 <tr><td><code>frontend/Dockerfile</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Chess Agent (projet 13)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Image de l'interface pour docker compose (profil <code>interface</code>), avec <code>proxy.docker.json</code>.</td></tr>
 <tr><td><code>monitoring/</code> (Grafana)</td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/medical_triage_agent">Triage médical (projet 14)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Grafana branché sur PostgreSQL ; tableau du triage médical archivé dans <code>reference/</code> ; métriques Prometheus de l'API reportées (configuration retirée le 16/10/2026).</td></tr>
 <tr><td><code>monitoring/grafana/provisioning/dashboards/sortiria-*.json</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Tableaux « SortirIA - Collecte nocturne » (14/10), « SortirIA - Recherche » (16/10) et « SortirIA - Modèles et coûts » (16/10, partie dérive le 19/10), lus dans <code>collect_runs</code>, <code>rag_requests</code>, <code>feedback</code>, <code>event_ratings</code> et <code>agent_proposals</code>.</td></tr>
-<tr><td><code>reference/p5_monitoring/</code>, <code>reference/p14_observabilite/</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/pret_a_depenser">Scoring crédit (projet 5)</a> et <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/medical_triage_agent">Triage médical (projet 14)</a></td><td><span class="experiment-status rejected">Repris tel quel</span></td><td>Copiés comme modèles (journal des prédictions, Evidently, métriques, journal d'audit), non importés par l'application. La méthode de dérive d'Evidently (PSI) est recodée dans <code>agent/drift.py</code> (19/10).</td></tr>
+<tr><td><code>reference/p5_monitoring/</code>, <code>reference/p14_observabilite/</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/pret_a_depenser">Scoring crédit (projet 5)</a> et <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/medical_triage_agent">Triage médical (projet 14)</a></td><td><span class="experiment-status rejected">Repris tel quel</span></td><td>Copiés comme modèles (journal des prédictions, Evidently, métriques, journal d'audit), l'application garde son propre code. La méthode de dérive d'Evidently (PSI) est recodée dans <code>agent/drift.py</code> (19/10).</td></tr>
 </tbody>
 </table>
 <p class="table-note">Sources : en-têtes « Provenance » de <code>ci.yml</code>, <code>cd.yml</code>, <code>docker/Dockerfile.api</code> et <code>frontend/Dockerfile</code> ; <code>monitoring/README.md</code> ; mon journal de déploiement (étape 9a) ; <code>PROVENANCE.md</code>.</p>
@@ -435,7 +435,7 @@
 <section class="section contact">
 <div class="container">
 <p class="eyebrow">CONTINUER</p>
-<h2>Voir ce que ce déploiement permet de mesurer, et ce qu'il ne règle pas encore.</h2>
+<h2>Voir ce que ce déploiement permet de mesurer, et ses prochaines étapes.</h2>
 <div class="hero-actions">
 <a class="button primary" href="resultats.html">Résultats</a>
 <a class="button secondary" href="limites.html">Limites</a>

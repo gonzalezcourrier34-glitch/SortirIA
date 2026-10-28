@@ -21,7 +21,7 @@
 <div class="container hero-content">
 <p class="eyebrow">SORTIRIA · AGENT DE COLLECTE</p>
 <h1>L'agent de<span>collecte</span></h1>
-<p class="hero-text">Chaque nuit, un agent LangGraph met à jour la base d'événements de Montpellier et du bassin de Thau : il lit les sources, prépare, enregistre, enrichit avec Mistral, juge un échantillon, se surveille et rend compte. Il ne dégrade jamais la base quand une source tombe, et il <strong>propose</strong> toute modification de sa configuration à un humain, qui décide. Une nuit ordinaire coûte <strong>environ 0,005 $</strong>.</p>
+<p class="hero-text">Chaque nuit, un agent LangGraph met à jour la base d'événements de Montpellier et du bassin de Thau : il lit les sources, prépare, enregistre, enrichit avec Mistral, juge un échantillon, se surveille et rend compte. Il garde la base intacte quand une source tombe, et il <strong>propose</strong> toute modification de sa configuration à un humain, qui décide. Une nuit ordinaire coûte <strong>environ 0,005 $</strong>.</p>
 <div class="hero-tags"><span>LangGraph</span><span>Mistral</span><span>PostgreSQL + pgvector</span><span>MLflow</span><span>Grafana</span><span>Azure Container Apps Job</span></div>
 <div class="metrics">
 <div><strong>≈ 2 450</strong><span>événements en base</span></div>
@@ -30,7 +30,7 @@
 <div><strong>≈ 2 min 15</strong><span>une nuit ordinaire</span></div>
 <div><strong>≈ 0,005 $</strong><span>de Mistral par nuit ordinaire</span></div>
 </div>
-<p class="table-note">Sources : <code>docs/evaluation.md</code> (§ 4, chiffres au 16/10/2026), <code>docs/couts.md</code> (coût mesuré), <code>agent/README.md</code> (durée d'une nuit ordinaire ; la première nuit, base vide, dure environ 14 min et coûte 0,14 $).</p>
+<p class="table-note">Sources : <code>docs/evaluation.md</code> (§ 4, chiffres au 16/10/2026), <code>docs/couts.md</code> (coût mesuré), <code>agent/README.md</code> (durée d'une nuit ordinaire) ; la première collecte sur une base vide coûte environ 0,14 $.</p>
 <div class="hero-actions">
 <a class="button primary" href="#s01">Lire</a>
 <a class="button secondary" href="#s02">Voir le graphe</a>
@@ -42,39 +42,39 @@
 <section class="section" id="s01">
 <div class="container">
 <p class="section-number">01</p>
-<h2>Pourquoi un agent, et pas un simple ETL</h2>
+<h2>Pourquoi un agent, plutôt qu'un simple ETL</h2>
 <p class="section-intro">La question m'a été posée par mon mentor, et elle est juste. Ma réponse a changé en route : je la donne telle qu'elle est aujourd'hui.</p>
 
 <div class="about-grid">
-<div class="large-text">Sans les étapes qui lisent et jugent, un ETL suffirait.</div>
+<div class="large-text">Pour copier des données, un ETL (une chaîne qui extrait, transforme et charge) suffirait ; ce sont les étapes qui lisent et jugent qui demandent un agent.</div>
 <div>
-<p>Un ETL bien écrit, un DAG Airflow par exemple, sait aussi réessayer, traiter les erreurs et brancher selon une condition. Ce n'est donc pas là que se fait la différence. Dans SortirIA, les décisions de routage (réessayer une source, garder les événements de la veille, ne pas balayer une source partielle) sont des <strong>règles écrites dans le code</strong>, qu'un ETL pourrait porter.</p>
-<p>Ce qu'un ETL ne fait pas, ce sont les étapes qui demandent de <strong>comprendre un texte</strong> et de <strong>juger</strong> : lire un programme PDF sans schéma, lire la plaquette d'un partenaire, ranger un événement dans une catégorie et un public, contrôler la qualité d'un échantillon, comprendre ce qu'un utilisateur a cherché sans trouver. SortirIA est donc un <em>pipeline agentique</em> : des règles pour le routage, un modèle pour les jugements, un humain pour les changements de configuration. Ce n'est pas un agent qui planifie seul ; sur des données publiques, c'est un choix.</p>
+<p>Un ETL bien écrit, un DAG Airflow par exemple, sait aussi réessayer, traiter les erreurs et brancher selon une condition. La différence se joue donc ailleurs. Dans SortirIA, les décisions de routage (réessayer une source, garder les événements de la veille, préserver une source partielle) sont des <strong>règles écrites dans le code</strong>, qu'un ETL pourrait porter.</p>
+<p>Ce que l'agent apporte en plus, ce sont les étapes qui demandent de <strong>comprendre un texte</strong> et de <strong>juger</strong> : lire un programme PDF à mise en page libre, lire la plaquette d'un partenaire, ranger un événement dans une catégorie et un public, contrôler la qualité d'un échantillon, comprendre une recherche infructueuse d'un utilisateur. SortirIA est donc un <em>pipeline agentique</em> : des règles pour le routage, un modèle pour les jugements, un humain pour les changements de configuration. C'est un agent encadré, plutôt qu'un agent qui planifie seul ; sur des données publiques, c'est un choix.</p>
 </div>
 </div>
 
 <table class="story-table params-table">
 <thead><tr><th>Qui décide</th><th>Quoi</th><th>Exemples dans l'agent</th></tr></thead>
 <tbody>
-<tr><td>Des <strong>règles</strong> (code testé)</td><td>Le routage, la prudence, les seuils</td><td>Réessayer seulement les sources en échec (<code>agent/routing.py</code>) ; garder les événements de la veille d'une source en panne ou en baisse anormale ; ne lancer que les sources configurées ; statut <em>succès</em>, <em>partiel</em> ou <em>échec</em>.</td></tr>
+<tr><td>Des <strong>règles</strong> (code testé)</td><td>Le routage, la prudence, les seuils</td><td>Réessayer seulement les sources en échec (<code>agent/routing.py</code>) ; garder les événements de la veille d'une source en panne ou en baisse anormale ; lancer uniquement les sources configurées ; statut <em>succès</em>, <em>partiel</em> ou <em>échec</em>.</td></tr>
 <tr><td>Un <strong>modèle de langage</strong> (Mistral), sous contrôle</td><td>Ce qui demande de lire et de juger</td><td>Lire le PDF de Sète agglopôle ; lire le PDF ou le Word d'un partenaire ; enrichir (catégorie, publics, résumé) ; juger 20 fiches par nuit ; lire les recherches ratées (« zumba », « cirqe »).</td></tr>
-<tr><td>Un <strong>humain</strong></td><td>Tout ce qui change la configuration</td><td>Nouvelle adresse d'un PDF déplacé, agenda OpenAgenda à ajouter, synonyme, publication d'un document partenaire : l'agent ouvre une <strong>pull request</strong> par proposition, la CI la teste, je la merge ou la ferme (16/10/2026) ; en ligne de commande sans jeton GitHub : <code>uv run python -m agent.proposals --accepter N</code>.</td></tr>
+<tr><td>Un <strong>humain</strong></td><td>Tout ce qui change la configuration</td><td>Nouvelle adresse d'un PDF déplacé, agenda OpenAgenda à ajouter, synonyme, publication d'un document partenaire : l'agent ouvre une <strong>pull request</strong> par proposition, la CI la teste, je la merge ou la ferme (16/10/2026) ; en ligne de commande, hors jeton GitHub : <code>uv run python -m agent.proposals --accepter N</code>.</td></tr>
 </tbody>
 </table>
 <p class="table-note">Source : <code>agent/README.md</code>, section « Agent ou ETL ? Ce que LangGraph apporte vraiment » ; <code>docs/evaluation.md</code>, § 1.2.</p>
 
 <h3>Ce que LangGraph apporte vraiment</h3>
 <div class="reflection-grid">
-<div class="reflection-card"><h3>Un état partagé</h3><p>Un dictionnaire typé (<code>CollectionState</code>, <code>agent/state.py</code>) : sources, articles, événements, coût, alertes, propositions. Chaque nœud lit ce dont il a besoin et ne renvoie que les champs qu'il modifie ; LangGraph fusionne.</p></div>
+<div class="reflection-card"><h3>Un état partagé</h3><p>Un dictionnaire typé (<code>CollectionState</code>, <code>agent/state.py</code>) : sources, articles, événements, coût, alertes, propositions. Chaque nœud lit ce dont il a besoin et renvoie uniquement les champs qu'il modifie ; LangGraph fusionne.</p></div>
 <div class="reflection-card"><h3>Un routage explicite</h3><p>La décision après l'extraction est une fonction à part (<code>route_after_extraction</code>), lisible et testée seule : réessayer, préparer, ou aller au bilan.</p></div>
-<div class="reflection-card"><h3>Des services injectés</h3><p>Extraction, base, Mistral, mail et suivi arrivent par la configuration du graphe, jamais dans l'état. Une nuit complète se rejoue dans les tests avec de faux services, sans réseau ni Mistral.</p></div>
-<div class="reflection-card"><h3>Une trace</h3><p>Chaque nœud est chronométré (<code>graph.timed</code>) ; chaque collecte lancée sur mon poste est une exécution MLflow avec la trace des appels au modèle ; sur Azure, MLflow est coupé et la nuit se suit dans <code>collect_runs</code>, le mail et Grafana. Et une porte ouverte : une nouvelle source non structurée (pages HTML des lieux) sera un nœud du même type que la lecture des PDF.</p></div>
+<div class="reflection-card"><h3>Des services injectés</h3><p>Extraction, base, Mistral, mail et suivi arrivent toujours par la configuration du graphe, à l'écart de l'état. Une nuit complète se rejoue dans les tests avec de faux services, hors réseau et hors Mistral.</p></div>
+<div class="reflection-card"><h3>Une trace</h3><p>Chaque nœud est chronométré (<code>graph.timed</code>) ; chaque collecte lancée sur mon poste est une exécution MLflow avec la trace des appels au modèle ; sur Azure, MLflow est coupé et la nuit se suit dans <code>collect_runs</code>, le mail et Grafana. Et une porte ouverte : une nouvelle source à mise en page libre (pages HTML des lieux) sera un nœud du même type que la lecture des PDF.</p></div>
 </div>
 
 <div class="callout">
 <span class="eyebrow">À RETENIR</span>
-<strong>L'agent agit seul sur les données, mais ne modifie jamais seul sa configuration.</strong>
-<p>Il réessaie, garde, enrichit et juge sans demander. Il propose une réparation, un agenda, un synonyme ou l'import d'un document : un humain accepte ou refuse. L'organisation (services injectés, nœuds, routage séparé) est reprise du graphe LangGraph de mon projet Chess Agent.</p>
+<strong>L'agent agit seul sur les données, et me laisse toujours décider de sa configuration.</strong>
+<p>Il réessaie, garde, enrichit et juge de lui-même. Il propose une réparation, un agenda, un synonyme ou l'import d'un document : un humain accepte ou refuse. L'organisation (services injectés, nœuds, routage séparé) est reprise du graphe LangGraph de mon projet Chess Agent.</p>
 </div>
 </div>
 </section>
@@ -86,7 +86,7 @@
 <h2>La pipeline : le graphe réel</h2>
 <p class="section-intro">Le schéma reprend exactement <code>agent/graph.py</code> : sept nœuds, des transitions fixes et une seule transition conditionnelle, après l'extraction, qui peut boucler sur elle-même (réessai ciblé) ou sauter directement à la surveillance.</p>
 
-<figure class="story-figure"><svg class="story-svg" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 570" role="img" aria-label="Graphe LangGraph de la collecte nocturne. START mène à plan_sources, puis extract_sources. Après extract_sources, la fonction route_after_extraction choisit entre trois routes : retry revient sur extract_sources pour les sources en échec tant qu'il reste un essai ; prepare continue vers prepare, puis load_events, judge_quality, watch et write_report ; report saute directement à watch quand rien n'a été extrait après le dernier essai. write_report mène à END.">
+<figure class="story-figure"><svg class="story-svg" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 570" role="img" aria-label="Graphe LangGraph de la collecte nocturne. START mène à plan_sources, puis extract_sources. Après extract_sources, la fonction route_after_extraction choisit entre trois routes : retry revient sur extract_sources pour les sources en échec tant qu'il reste un essai ; prepare continue vers prepare, puis load_events, judge_quality, watch et write_report ; report saute directement à watch quand l'extraction reste vide après le dernier essai. write_report mène à END.">
 <rect width="1080" height="570" rx="18" fill="#111a22"/>
 <defs>
 <marker id="arr-agent-1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#98a8ad"/></marker>
@@ -126,7 +126,7 @@
 <!-- route retry -->
 <path d="M640,150 L640,120 L460,120 L460,148" fill="none" stroke="#48c9b0" stroke-width="1.8" marker-end="url(#arr-agent-1c)"/>
 <text x="470" y="110" fill="#48c9b0" font-size="12.5" font-weight="700">retry</text>
-<text x="510" y="110" fill="#98a8ad" font-size="12.5">: une source en échec, ou rien extrait, et un essai restant (2 au plus)</text>
+<text x="510" y="110" fill="#98a8ad" font-size="12.5">: une source en échec, ou une extraction vide, et un essai restant (2 au plus)</text>
 
 <!-- route prepare -->
 <line x1="715" y1="200" x2="768" y2="200" stroke="#48c9b0" stroke-width="1.8" marker-end="url(#arr-agent-1c)"/>
@@ -142,7 +142,7 @@
 <!-- route report -->
 <path d="M640,250 L640,296 L435,296 L435,338" fill="none" stroke="#48c9b0" stroke-width="1.8" marker-end="url(#arr-agent-1c)"/>
 <text x="448" y="318" fill="#48c9b0" font-size="12.5" font-weight="700">report</text>
-<text x="496" y="318" fill="#98a8ad" font-size="12.5">: rien après le dernier essai, bilan d'échec</text>
+<text x="496" y="318" fill="#98a8ad" font-size="12.5">: extraction vide après le dernier essai, bilan d'échec</text>
 
 <!-- prepare -> load -->
 <line x1="905" y1="250" x2="905" y2="338" stroke="#98a8ad" stroke-width="1.6" marker-end="url(#arr-agent-1)"/>
@@ -195,29 +195,29 @@
 <text x="40" y="540" fill="#98a8ad" font-size="12.5">RÈGLES : code déterministe et testé. MISTRAL : jugement d'un modèle, validé par un schéma et des contrôles.</text>
 <text x="40" y="558" fill="#98a8ad" font-size="12.5">Chaque nœud est chronométré (graph.timed), sauf write_report, qui enregistre les durées.</text>
 </g>
-</svg><figcaption>Le graphe tel qu'il est compilé par <code>build_graph()</code>. La route « retry » ne relance que les sources en échec ; leurs nouveaux événements s'ajoutent à ceux des autres. La route « report » passe par <code>watch</code> : la surveillance et le diagnostic tournent même après un échec total, et l'agent ne s'arrête jamais sans bilan.</figcaption></figure>
+</svg><figcaption>Le graphe tel qu'il est compilé par <code>build_graph()</code>. La route « retry » relance uniquement les sources en échec ; leurs nouveaux événements s'ajoutent à ceux des autres. La route « report » passe par <code>watch</code> : la surveillance et le diagnostic tournent même après un échec total, et l'agent finit toujours par un bilan.</figcaption></figure>
 
 <h3>La décision après l'extraction</h3>
 <table class="story-table params-table">
 <thead><tr><th>Situation à la sortie de <code>extract_sources</code></th><th>Route</th><th>Suite</th></tr></thead>
 <tbody>
 <tr><td>Une ou plusieurs sources en échec, et un essai restant</td><td><span class="experiment-status promising">retry</span></td><td>Nouvel essai de <strong>ces sources seulement</strong> ; un extracteur relancé remplace son bilan du premier essai.</td></tr>
-<tr><td>Rien n'a été extrait, et un essai restant</td><td><span class="experiment-status promising">retry</span></td><td>Nouvel essai de toutes les sources.</td></tr>
-<tr><td>Des éléments ont été extraits (et plus d'essai, ou aucune source en échec)</td><td><span class="experiment-status selected">prepare</span></td><td>La chaîne continue ; une source encore en échec passe le statut à « partiel ».</td></tr>
-<tr><td>Rien après le dernier essai</td><td><span class="experiment-status rejected">report</span></td><td>Directement à <code>watch</code> puis <code>write_report</code> : bilan d'échec, mail, trace.</td></tr>
+<tr><td>Extraction vide, et un essai restant</td><td><span class="experiment-status promising">retry</span></td><td>Nouvel essai de toutes les sources.</td></tr>
+<tr><td>Des éléments ont été extraits (essais épuisés, ou toutes les sources réussies)</td><td><span class="experiment-status selected">prepare</span></td><td>La chaîne continue ; une source encore en échec passe le statut à « partiel ».</td></tr>
+<tr><td>Extraction vide après le dernier essai</td><td><span class="experiment-status rejected">report</span></td><td>Directement à <code>watch</code> puis <code>write_report</code> : bilan d'échec, mail, trace.</td></tr>
 </tbody>
 </table>
 <p class="table-note">Source : <code>agent/routing.py</code> (<code>route_after_extraction</code>, <code>DEFAULT_MAX_ATTEMPTS = 2</code>), <code>agent/nodes.py</code> (<code>extract_sources</code>).</p>
 
 <h3>Nœud par nœud</h3>
 <div class="timeline">
-<div class="timeline-item"><span>01 • Règles</span><h3><code>plan_sources</code> : choisir les sources de la nuit</h3><p>Lit <code>config/sources.yaml</code> et ne garde que les sources qui ont une configuration active (aucun calendrier iCal déclaré : le moteur iCal n'est pas lancé, sinon il remonterait comme une panne chaque nuit). Retire ensuite les sources coupées sur ce serveur (<code>SOURCES_DESACTIVEES</code>). Un fichier de configuration illisible donne un bilan d'échec, pas un plantage. <strong>Entrée</strong> : rien, ou <code>--source</code>. <strong>Sortie</strong> : <code>sources</code>, <code>skipped_sources</code>, <code>disabled_sources</code>, <code>started_at</code>.</p></div>
-<div class="timeline-item"><span>02 • Moteurs + Mistral pour les PDF</span><h3><code>extract_sources</code> : lancer les extracteurs</h3><p>Lance les extracteurs du moteur CheckIt.AI : un adaptateur par API, un moteur « fichiers » commun à l'iCal et aux PDF lus par Mistral, un moteur « datasets » pour les partenaires. Une exception ne casse pas la nuit : elle devient une erreur tracée. <strong>Sortie</strong> : <code>articles</code>, <code>failed_sources</code>, <code>source_attempts</code>, <code>extractor_stats</code> (statut <code>success</code>, <code>partial_success</code>, <code>empty</code> ou <code>failed</code> par extracteur), <code>llm_usage</code>.</p></div>
-<div class="timeline-item"><span>03 • Règles, sans modèle</span><h3><code>prepare</code> : un seul modèle d'événement</h3><p>Convertit chaque article en <code>Event</code>, normalise (dates en Europe/Paris, prix lus dans le texte), ramène les champs libres dans les valeurs admises, valide et déduplique sur titre + jour + heure + lieu. Les rejets sont comptés par motif (<code>annule_ou_reporte</code>, <code>en_ligne_uniquement</code>, <code>pas_une_sortie</code>…). Rapide, gratuit, reproductible. <strong>Sortie</strong> : <code>events</code>, <code>preparation</code>.</p></div>
-<div class="timeline-item"><span>04 • Une transaction + Mistral</span><h3><code>load_events</code> : écrire, faire le ménage, enrichir</h3><p>Dans <strong>une seule transaction</strong> : partenaires et bilan de leurs fichiers, enregistrement, retrait des événements disparus (seulement pour une source lue en entier, sans échec ni baisse anormale), retrait des passés, plafond de 10 000, enrichissement Mistral des nouveaux ou modifiés (catégorie, publics, résumé), embeddings, modération des commentaires en attente, purge RGPD. Puis, à part : vocabulaire des titres recalculé et recherches de la semaine relues. Si une étape échoue, la base reste celle de la veille. En mode essai, rien n'est écrit.</p></div>
-<div class="timeline-item"><span>05 • Mistral medium</span><h3><code>judge_quality</code> : contrôler un échantillon</h3><p>Un autre modèle que celui qui enrichit juge 20 événements tirés au hasard : le titre, la catégorie et le résumé décrivent-ils le texte ? est-ce une sortie ? les publics sont-ils justes ? la catégorie est-elle la bonne ? Un contrôle, jamais une modification ; une panne du juge laisse simplement le score absent. <strong>Sortie</strong> : <code>quality</code>.</p></div>
+<div class="timeline-item"><span>01 • Règles</span><h3><code>plan_sources</code> : choisir les sources de la nuit</h3><p>Lit <code>config/sources.yaml</code> et garde uniquement les sources qui ont une configuration active (le moteur iCal attend son premier calendrier : lancé à vide, il remonterait comme une panne chaque nuit). Retire ensuite les sources coupées sur ce serveur (<code>SOURCES_DESACTIVEES</code>). Un fichier de configuration illisible donne un bilan d'échec propre, plutôt qu'un plantage. <strong>Entrée</strong> : vide, ou <code>--source</code>. <strong>Sortie</strong> : <code>sources</code>, <code>skipped_sources</code>, <code>disabled_sources</code>, <code>started_at</code>.</p></div>
+<div class="timeline-item"><span>02 • Moteurs + Mistral pour les PDF</span><h3><code>extract_sources</code> : lancer les extracteurs</h3><p>Lance les extracteurs du moteur CheckIt.AI : un adaptateur par API, un moteur « fichiers » commun à l'iCal et aux PDF lus par Mistral, un moteur « datasets » pour les partenaires. Une exception devient une erreur tracée, et la nuit continue. <strong>Sortie</strong> : <code>articles</code>, <code>failed_sources</code>, <code>source_attempts</code>, <code>extractor_stats</code> (statut <code>success</code>, <code>partial_success</code>, <code>empty</code> ou <code>failed</code> par extracteur), <code>llm_usage</code>.</p></div>
+<div class="timeline-item"><span>03 • Règles, hors modèle</span><h3><code>prepare</code> : un seul modèle d'événement</h3><p>Convertit chaque article en <code>Event</code>, normalise (dates en Europe/Paris, prix lus dans le texte), ramène les champs libres dans les valeurs admises, valide et déduplique sur titre + jour + heure + lieu. Les rejets sont comptés par motif (<code>annule_ou_reporte</code>, <code>en_ligne_uniquement</code>, <code>pas_une_sortie</code>…). Rapide, gratuit, reproductible. <strong>Sortie</strong> : <code>events</code>, <code>preparation</code>.</p></div>
+<div class="timeline-item"><span>04 • Une transaction + Mistral</span><h3><code>load_events</code> : écrire, faire le ménage, enrichir</h3><p>Dans <strong>une seule transaction</strong> : partenaires et bilan de leurs fichiers, enregistrement, retrait des événements disparus (seulement pour une source lue en entier, réussie et à volume normal), retrait des passés, plafond de 10 000, enrichissement Mistral des nouveaux ou modifiés (catégorie, publics, résumé), embeddings, modération des commentaires en attente, purge RGPD. Puis, à part : vocabulaire des titres recalculé et recherches de la semaine relues. Si une étape échoue, la base reste celle de la veille. En mode essai, la base reste intacte.</p></div>
+<div class="timeline-item"><span>05 • Mistral medium</span><h3><code>judge_quality</code> : contrôler un échantillon</h3><p>Un autre modèle que celui qui enrichit juge 20 événements tirés au hasard : le titre, la catégorie et le résumé décrivent-ils le texte ? est-ce une sortie ? les publics sont-ils justes ? la catégorie est-elle la bonne ? Un contrôle, qui laisse les fiches intactes ; une panne du juge laisse simplement le score vide. <strong>Sortie</strong> : <code>quality</code>.</p></div>
 <div class="timeline-item"><span>06 • Règles, diagnostic, Mistral le lundi</span><h3><code>watch</code> : surveiller, diagnostiquer, proposer</h3><p>Programmes PDF qui expirent, partenaires à relancer, couverture famille / soirée par zone, coût, qualité, capacité, notes des clients ; diagnostic des pannes ; découverte des agendas OpenAgenda le dimanche ; documents des partenaires à valider ; le lundi, bilan et apprentissage des recherches ratées, rapport de dérive (alerte si elle est forte). Calculé à partir de l'état et de la configuration, il tourne aussi en mode essai et après un échec total. <strong>Sortie</strong> : <code>watch_alerts</code>, <code>proposals</code>, <code>coverage</code>, <code>cost_usd</code>, <code>search_report</code>, <code>drift_report</code>.</p></div>
-<div class="timeline-item"><span>07 • Bilan</span><h3><code>write_report</code> : statut et compte rendu</h3><p>Décide le statut (<code>success</code>, <code>partial_success</code>, <code>failed</code>) et les alertes, écrit <code>collect_runs</code>, <code>collect_run_sources</code> et <code>agent_proposals</code>, envoie le mail. Un mail qui ne part pas ne fait jamais échouer la collecte ; aucun mail en mode essai. <strong>Sortie</strong> : <code>status</code>, <code>alerts</code>, <code>run_id</code>.</p></div>
+<div class="timeline-item"><span>07 • Bilan</span><h3><code>write_report</code> : statut et compte rendu</h3><p>Décide le statut (<code>success</code>, <code>partial_success</code>, <code>failed</code>) et les alertes, écrit <code>collect_runs</code>, <code>collect_run_sources</code> et <code>agent_proposals</code>, envoie le mail. Un mail en échec laisse la collecte réussir ; le mode essai reste silencieux. <strong>Sortie</strong> : <code>status</code>, <code>alerts</code>, <code>run_id</code>.</p></div>
 </div>
 </div>
 </section>
@@ -227,7 +227,7 @@
 <div class="container">
 <p class="section-number">03</p>
 <h2>Le cycle de vie d'une nuit</h2>
-<p class="section-intro">De son lancement à sa fin, l'agent ne garde rien en mémoire : tout ce qui doit survivre à une nuit est écrit en base, dans un cache ou dans la configuration, et relu la nuit suivante.</p>
+<p class="section-intro">De son lancement à sa fin, l'agent repart de zéro : tout ce qui doit survivre à une nuit est écrit en base, dans un cache ou dans la configuration, et relu la nuit suivante.</p>
 
 <figure class="story-figure"><svg class="story-svg" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 620" role="img" aria-label="Cycle de vie d'une nuit. Déclenchement par la tâche planifiée Azure à 1 h UTC, par le DAG Airflow en local ou à la main ; ouverture par run_nightly_collection avec les services injectés, l'état initial et le début du suivi MLflow ; exécution des 7 nœuds du graphe ; fin avec le bilan en base, les propositions, le mail et la fin du suivi MLflow. Ce qui reste entre deux nuits : la base PostgreSQL, l'historique des collectes, les propositions en attente, le cache des PDF, le vocabulaire des titres et le journal des recherches, relus la nuit suivante. Rythme de la semaine : chaque nuit, découverte des agendas le dimanche, bilan des recherches ratées le lundi.">
 <rect width="1080" height="620" rx="18" fill="#111a22"/>
@@ -304,8 +304,8 @@
 <rect x="550" y="348" width="225" height="98" rx="10" fill="#17232d" stroke="#2f9e8a" stroke-width="1.2"/>
 <text x="564" y="372" fill="#edf4f4" font-size="14" font-weight="700">Les propositions</text>
 <text x="564" y="394" fill="#98a8ad" font-size="12">agent_proposals en_attente ;</text>
-<text x="564" y="412" fill="#98a8ad" font-size="12">une refusée n'est jamais</text>
-<text x="564" y="430" fill="#98a8ad" font-size="12">reproposée</text>
+<text x="564" y="412" fill="#98a8ad" font-size="12">une refusée reste</text>
+<text x="564" y="430" fill="#98a8ad" font-size="12">écartée pour de bon</text>
 
 <rect x="795" y="348" width="225" height="98" rx="10" fill="#17232d" stroke="#2f9e8a" stroke-width="1.2"/>
 <text x="809" y="372" fill="#edf4f4" font-size="14" font-weight="700">Caches et vocabulaire</text>
@@ -341,12 +341,12 @@
 <article class="project-card">
 <div class="project-top"><span class="project-type">LOCAL</span></div>
 <h3>DAG Airflow</h3>
-<p><code>dags/sortiria_nightly_dag.py</code> : <code>0 2 * * *</code> en heure de Paris, une seule exécution à la fois, une heure au plus, un nouvel essai après 10 minutes. Le DAG ne fait que déclencher <code>run_nightly_collection()</code> et faire échouer la tâche si la collecte a échoué : toute la logique est dans l'agent.</p>
+<p><code>dags/sortiria_nightly_dag.py</code> : <code>0 2 * * *</code> en heure de Paris, une seule exécution à la fois, une heure au plus, un nouvel essai après 10 minutes. Le DAG se contente de déclencher <code>run_nightly_collection()</code> et faire échouer la tâche si la collecte a échoué : toute la logique est dans l'agent.</p>
 </article>
 <article class="project-card">
 <div class="project-top"><span class="project-type">À LA MAIN</span></div>
 <h3>Ligne de commande</h3>
-<p><code>uv run python -m agent</code>, avec <code>--essai</code> (rien n'est écrit, aucun mail), <code>--source document</code> (une source précise : c'est ainsi que le PDF de Sète est lu depuis mon PC), <code>--decouverte</code> (découverte des agendas), <code>--bilan-recherche --apprendre</code> (bilan du lundi, à la demande).</p>
+<p><code>uv run python -m agent</code>, avec <code>--essai</code> (base intacte, mode silencieux), <code>--source document</code> (une source précise : c'est ainsi que le PDF de Sète est lu depuis mon PC), <code>--decouverte</code> (découverte des agendas), <code>--bilan-recherche --apprendre</code> (bilan du lundi, à la demande).</p>
 </article>
 </div>
 
@@ -355,7 +355,7 @@
 <div class="large-text">Un seul dictionnaire, complété nœud après nœud.</div>
 <div>
 <p><code>CollectionState</code> (<code>agent/state.py</code>) part presque vide : <code>dry_run</code>, <code>max_attempts</code>, et éventuellement <code>sources</code> et <code>discover_agendas</code>. Chaque nœud renvoie un dictionnaire partiel que LangGraph fusionne : la planification ajoute les sources, l'extraction les articles et les bilans d'extracteurs, la préparation les événements, le chargement les compteurs, la surveillance les alertes et les propositions, le bilan le statut.</p>
-<p>Les services (extraction, base, Mistral, mail, suivi MLflow) ne sont jamais dans l'état : ils passent par <code>config["configurable"]["services"]</code>. C'est ce qui permet de remplacer chacun par un faux dans les tests.</p>
+<p>Les services (extraction, base, Mistral, mail, suivi MLflow) restent hors de l'état : ils passent par <code>config["configurable"]["services"]</code>. C'est ce qui permet de remplacer chacun par un faux dans les tests.</p>
 </div>
 </div>
 <div class="code-panel">
@@ -378,9 +378,9 @@ Bilan          status, alerts, run_id, errors</pre>
 <tbody>
 <tr><td>Les événements, leurs vecteurs et leur enrichissement</td><td>PostgreSQL + pgvector</td><td>Seuls les événements nouveaux ou modifiés sont enrichis et vectorisés à nouveau : c'est pourquoi une nuit ordinaire coûte environ 0,005 $ contre 0,14 $ la première.</td></tr>
 <tr><td>Le bilan de chaque nuit et de chaque source</td><td><code>collect_runs</code>, <code>collect_run_sources</code></td><td>Comparer une source à son meilleur total des 7 dernières nuits (alerte « baisse anormale ») ; tableaux Grafana ; lien vers l'exécution MLflow ; rapport de dérive de la nuit (<code>drift</code>).</td></tr>
-<tr><td>Les propositions</td><td><code>agent_proposals</code> (<code>en_attente</code>, <code>acceptee</code>, <code>refusee</code>, <code>appliquee</code>)</td><td>Une proposition déjà en attente n'est pas dupliquée ; une proposition refusée n'est jamais reproposée.</td></tr>
-<tr><td>Les lectures de PDF par Mistral</td><td><code>data/cache/documents/</code></td><td>Clé = empreinte du PDF + version et texte de la consigne + découpage : un programme inchangé ne rappelle pas Mistral ; un paquet en échec est seul redemandé.</td></tr>
-<tr><td>Le vocabulaire des titres et le journal des recherches</td><td><code>title_vocabulary</code>, <code>rag_requests</code></td><td>La recherche sait quels mots sont des sujets ; le lundi, l'agent relit ce qui a été cherché sans être trouvé.</td></tr>
+<tr><td>Les propositions</td><td><code>agent_proposals</code> (<code>en_attente</code>, <code>acceptee</code>, <code>refusee</code>, <code>appliquee</code>)</td><td>Une proposition déjà en attente reste unique ; une proposition refusée reste définitivement écartée.</td></tr>
+<tr><td>Les lectures de PDF par Mistral</td><td><code>data/cache/documents/</code></td><td>Clé = empreinte du PDF + version et texte de la consigne + découpage : un programme inchangé est servi depuis le cache, en économisant l'appel à Mistral ; un paquet en échec est seul redemandé.</td></tr>
+<tr><td>Le vocabulaire des titres et le journal des recherches</td><td><code>title_vocabulary</code>, <code>rag_requests</code></td><td>La recherche sait quels mots sont des sujets ; le lundi, l'agent relit les recherches infructueuses.</td></tr>
 <tr><td>La configuration validée par un humain</td><td><code>config/sources.yaml</code>, <code>config/synonymes.yaml</code>, <code>_documents_valides.json</code></td><td>Une proposition acceptée est prise en compte à la collecte suivante.</td></tr>
 </tbody>
 </table>
@@ -388,8 +388,8 @@ Bilan          status, alerts, run_id, errors</pre>
 
 <div class="callout subtle">
 <span class="eyebrow">LE LUNDI</span>
-<strong>Chaque lundi, le mail ajoute ce que les utilisateurs ont cherché sans trouver pendant 7 jours.</strong>
-<p>Questions sans réponse exacte, mots cherchés qui ne figurent dans aucun titre (« zumba (4) »). Pour chaque mot cherché au moins 2 fois (5 au plus par semaine), Mistral dit si c'est une faute, un synonyme, un sujet ou une ambiance ; l'agent en tire des propositions (section suivante). Le bilan ne compte que les questions posées depuis le 15/10/2026. Depuis le 19/10, il dit aussi si les questions, les réponses ou la collecte dérivent (<code>agent/drift.py</code>).</p>
+<strong>Chaque lundi, le mail ajoute les recherches infructueuses des 7 derniers jours.</strong>
+<p>Questions à réponse élargie, mots cherchés absents des titres (« zumba (4) »). Pour chaque mot cherché au moins 2 fois (5 au plus par semaine), Mistral dit si c'est une faute, un synonyme, un sujet ou une ambiance ; l'agent en tire des propositions (section suivante). Le bilan compte uniquement les questions posées depuis le 15/10/2026. Depuis le 19/10, il dit aussi si les questions, les réponses ou la collecte dérivent (<code>agent/drift.py</code>).</p>
 </div>
 </div>
 </section>
@@ -399,7 +399,7 @@ Bilan          status, alerts, run_id, errors</pre>
 <div class="container">
 <p class="section-number">04</p>
 <h2>Les actions et les propositions</h2>
-<p class="section-intro">La frontière est nette : l'agent agit seul sur les <strong>données</strong> ; il propose, sans jamais l'imposer, toute modification de la <strong>configuration</strong>.</p>
+<p class="section-intro">La frontière est nette : l'agent agit seul sur les <strong>données</strong> ; il propose, et me laisse décider, toute modification de la <strong>configuration</strong>.</p>
 
 <div class="reflection-grid">
 <div class="reflection-card"><h3>Ce que l'agent fait seul</h3><ul>
@@ -420,7 +420,7 @@ Bilan          status, alerts, run_id, errors</pre>
 </ul></div>
 </div>
 
-<figure class="story-figure"><svg class="story-svg" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 430" role="img" aria-label="Circuit propose, valide. Le nœud watch de l'agent produit une proposition enregistrée dans agent_proposals avec le statut en_attente et citée dans le mail du matin. L'humain la consulte avec python -m agent.proposals. S'il refuse, elle passe en refusee et ne revient jamais. S'il accepte, apply_proposal modifie config/sources.yaml, config/synonymes.yaml ou _documents_valides.json, et le changement est pris en compte à la collecte suivante.">
+<figure class="story-figure"><svg class="story-svg" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 430" role="img" aria-label="Circuit propose, valide. Le nœud watch de l'agent produit une proposition enregistrée dans agent_proposals avec le statut en_attente et citée dans le mail du matin. L'humain la consulte avec python -m agent.proposals. S'il refuse, elle passe en refusee et reste écartée. S'il accepte, apply_proposal modifie config/sources.yaml, config/synonymes.yaml ou _documents_valides.json, et le changement est pris en compte à la collecte suivante.">
 <rect width="1080" height="430" rx="18" fill="#111a22"/>
 <defs>
 <marker id="arr-agent-3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#98a8ad"/></marker>
@@ -466,7 +466,7 @@ Bilan          status, alerts, run_id, errors</pre>
 <text x="655" y="258" fill="#98a8ad" font-size="12">--refuser N</text>
 <rect x="540" y="280" width="210" height="72" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
 <text x="554" y="306" fill="#edf4f4" font-size="14" font-weight="700">refusee</text>
-<text x="554" y="328" fill="#98a8ad" font-size="12">jamais reproposée</text>
+<text x="554" y="328" fill="#98a8ad" font-size="12">définitivement écartée</text>
 
 <!-- fichiers -->
 <line x1="915" y1="230" x2="915" y2="268" stroke="#98a8ad" stroke-width="1.6" marker-end="url(#arr-agent-3)"/>
@@ -480,26 +480,26 @@ Bilan          status, alerts, run_id, errors</pre>
 <path d="M915,360 L915,398 L145,398 L145,232" fill="none" stroke="#48c9b0" stroke-width="1.8" stroke-dasharray="6 5" marker-end="url(#arr-agent-3c)"/>
 <text x="160" y="388" fill="#48c9b0" font-size="12.5">pris en compte à la collecte suivante</text>
 </g>
-</svg><figcaption>Le circuit des propositions. Rien n'est modifié sans <code>uv run python -m agent.proposals --accepter N</code>. Pour une adresse de PDF, le remplacement n'a lieu que si l'ancienne adresse figure exactement une fois dans <code>config/sources.yaml</code> ; sinon rien n'est touché.</figcaption></figure>
+</svg><figcaption>Le circuit des propositions. Toute modification passe par une pull request que je merge, ou en ligne de commande par <code>uv run python -m agent.proposals --accepter N</code>. Pour une adresse de PDF, le remplacement a lieu uniquement si l'ancienne adresse figure exactement une fois dans <code>config/sources.yaml</code> ; sinon tout reste en l'état.</figcaption></figure>
 
 <h3>Les types d'actions proposées</h3>
 <table class="story-table params-table">
 <thead><tr><th>Action</th><th>D'où elle vient</th><th>Comment l'agent la construit</th><th>Ce que fait <code>apply_proposal</code></th></tr></thead>
 <tbody>
-<tr><td><code>remplacer_url</code></td><td>Diagnostic d'une panne « document déplacé » (<code>agent/diagnosis.py</code>)</td><td>Cherche le même fichier dans les dossiers mensuels voisins (convention <code>uploads/AAAA/MM/</code>), vérifie la réponse et que c'est bien un PDF. Pas de modèle : des règles et une vérification.</td><td>Remplace l'ancienne adresse par la nouvelle dans <code>config/sources.yaml</code>, si elle y figure exactement une fois.</td></tr>
+<tr><td><code>remplacer_url</code></td><td>Diagnostic d'une panne « document déplacé » (<code>agent/diagnosis.py</code>)</td><td>Cherche le même fichier dans les dossiers mensuels voisins (convention <code>uploads/AAAA/MM/</code>), vérifie la réponse et que c'est bien un PDF. Ici, des règles et une vérification suffisent.</td><td>Remplace l'ancienne adresse par la nouvelle dans <code>config/sources.yaml</code>, si elle y figure exactement une fois.</td></tr>
 <tr><td><code>ajouter_agenda</code></td><td>Découverte du dimanche, ou sujet absent repéré le lundi</td><td>Recherche complète des agendas OpenAgenda de la zone ; un agenda utile absent de <code>agenda_uids</code>, avec son nombre d'événements dans la zone et son lien.</td><td>Ajoute l'agenda à la fin de <code>agenda_uids</code>, avec un commentaire (nombre d'événements, date) ; le fichier garde ses commentaires.</td></tr>
 <tr><td><code>ajouter_synonyme</code></td><td>Recherches ratées du lundi (<code>agent/search_learning.py</code>)</td><td>Mistral lit le mot (faute, synonyme, sujet, ambiance) ; le premier équivalent <strong>présent dans les titres de la base</strong> est proposé (« zumba » cherchera aussi « fitness »).</td><td>Ajoute le synonyme dans <code>config/synonymes.yaml</code> ; la recherche le relit dès qu'il change.</td></tr>
 <tr><td><code>valider_document_partenaire</code></td><td>PDF ou Word déposé dans <code>data/partenaires/</code></td><td>Mistral range chaque séance dans les colonnes du modèle ; mêmes contrôles qu'un tableur, titre présent dans le texte ; proposition avec le nombre de séances et un aperçu de 5 au plus.</td><td>Inscrit le fichier et son empreinte dans <code>_documents_valides.json</code> : importé à la collecte suivante ; un document modifié redemande un accord.</td></tr>
 </tbody>
 </table>
-<p class="table-note">Source : <code>agent/proposals.py</code>, <code>agent/nodes.py</code> (<code>agenda_proposals</code>, <code>partner_document_proposals</code>), <code>agent/diagnosis.py</code>, <code>agent/search_learning.py</code>, <code>docs/partenaires.md</code>. La boucle des synonymes est testée sur une vraie base : « de la zumba » ne trouve rien, puis trouve le cours de fitness une fois le synonyme accepté.</p>
+<p class="table-note">Source : <code>agent/proposals.py</code>, <code>agent/nodes.py</code> (<code>agenda_proposals</code>, <code>partner_document_proposals</code>), <code>agent/diagnosis.py</code>, <code>agent/search_learning.py</code>, <code>docs/partenaires.md</code>. La boucle des synonymes est testée sur une vraie base : « de la zumba » revient d'abord vide, puis trouve le cours de fitness une fois le synonyme accepté.</p>
 
 <h3>Ce que l'agent a fait pour de vrai</h3>
 <table class="story-table params-table">
 <thead><tr><th>Date</th><th>Ce qui s'est passé</th><th>Ce que l'agent en a tiré</th></tr></thead>
 <tbody>
 <tr><td>14/10/2026</td><td>Le PDF de l'Agglopôle passe de <code>uploads/2026/08/</code> à <code>uploads/2026/09/</code>.</td><td>Ce cas a motivé le diagnostic : l'agent trouve désormais seul la nouvelle adresse et la propose.</td></tr>
-<tr><td>14/10/2026</td><td>Une pagination perdue fait tomber DATAtourisme à 184 séances au lieu de près de 1 000.</td><td>Ce cas a motivé l'alerte « baisse anormale » : la même panne serait détectée la nuit même, sans vider la base.</td></tr>
+<tr><td>14/10/2026</td><td>Une pagination perdue fait tomber DATAtourisme à 184 séances au lieu de près de 1 000.</td><td>Ce cas a motivé l'alerte « baisse anormale » : la même panne serait détectée la nuit même, base intacte.</td></tr>
 <tr><td>15/10/2026</td><td>Le juge relève « ANNULÉ - Monte-Cristo » et « Aide aux devoirs ».</td><td>Ces deux cas sont maintenant rejetés à la préparation.</td></tr>
 <tr><td>15/10/2026</td><td>Sète agglopôle renvoie une page web au lieu du PDF aux serveurs d'Azure.</td><td>Nouveau diagnostic « accès bloqué » ; source coupée sur Azure et lue depuis mon PC.</td></tr>
 <tr><td>15/10/2026</td><td>Première découverte des agendas OpenAgenda.</td><td>5 nouveaux agendas proposés, 14 événements de plus dans la zone (102 au lieu de 88).</td></tr>
@@ -528,20 +528,20 @@ Bilan          status, alerts, run_id, errors</pre>
 <thead><tr><th>Source</th><th>Moteur</th><th>État</th><th>Ce qu'elle apporte, et ses garde-fous</th></tr></thead>
 <tbody>
 <tr><td>OpenAgenda</td><td>API JSON</td><td><span class="experiment-status selected">Chaque nuit</span></td><td>≈ 80 événements, lus dans 12 agendas choisis (<code>agenda_uids</code> ; 17 depuis le 18/10) : la recherche par termes lisait environ 10 000 événements pour en garder 83. Découverte des nouveaux agendas le dimanche.</td></tr>
-<tr><td>DATAtourisme</td><td>API JSON</td><td><span class="experiment-status selected">Chaque nuit</span></td><td>≈ 1 900 séances, la source la plus riche (Licence Ouverte 2.0) ; avec OpenAgenda, environ 1 980 événements par nuit.</td></tr>
+<tr><td>DATAtourisme</td><td>API JSON</td><td><span class="experiment-status selected">Chaque nuit</span></td><td>≈ 1 600 séances (1 612 le 28/10), la source la plus riche (Licence Ouverte 2.0) ; avec OpenAgenda, environ 1 700 événements par nuit fin octobre (≈ 1 980 mi-octobre).</td></tr>
 <tr><td>Programme PDF de Sète agglopôle</td><td>Fichiers, lu par Mistral</td><td><span class="experiment-status promising">Depuis mon PC</span></td><td>434 événements de l'« Agenda Culture ». Pages choisies, paquets de 4 pages avec une page de recouvrement, consigne versionnée, température 0, réponse JSON ; titre présent dans la page, date dans la période ; cache par empreinte. Coupé sur Azure (page web reçue au lieu du PDF).</td></tr>
 <tr><td>Fichiers des partenaires (Excel, CSV, JSON)</td><td>Datasets</td><td><span class="experiment-status selected">Chaque nuit</span></td><td>Un fichier par partenaire dans <code>data/partenaires/</code>, colonnes du modèle ; 15 séances fictives pour la démonstration. Rapport de vérification ligne par ligne avec motifs.</td></tr>
-<tr><td>Documents des partenaires (PDF, Word)</td><td>Datasets, lu par Mistral</td><td><span class="experiment-status promising">Après validation</span></td><td>Mistral range les séances dans les colonnes du modèle ; mêmes contrôles qu'un tableur ; <strong>rien n'est publié avant l'accord humain</strong>.</td></tr>
-<tr><td>Calendriers iCal</td><td>Fichiers</td><td><span class="experiment-status rejected">Prêt, désactivé</span></td><td>Aucun calendrier déclaré : le moteur n'est pas lancé. Brancher un lieu ne demande qu'une entrée dans <code>config/sources.yaml</code>.</td></tr>
-<tr><td>Flux RSS d'agenda</td><td>RSS</td><td><span class="experiment-status rejected">Prêt, désactivé</span></td><td>Aucun flux de la zone à la fois actif et autorisé trouvé.</td></tr>
-<tr><td>Agendas en ligne (scraper)</td><td>Scrapers</td><td><span class="experiment-status rejected">Prêt, désactivé</span></td><td>Jamais sans autorisation écrite de l'éditeur : <code>enabled: false</code>, demande envoyée à la ville de Frontignan, en attente.</td></tr>
+<tr><td>Documents des partenaires (PDF, Word)</td><td>Datasets, lu par Mistral</td><td><span class="experiment-status promising">Après validation</span></td><td>Mistral range les séances dans les colonnes du modèle ; mêmes contrôles qu'un tableur ; <strong>toute publication attend l'accord humain</strong>.</td></tr>
+<tr><td>Calendriers iCal</td><td>Fichiers</td><td><span class="experiment-status rejected">Prêt, désactivé</span></td><td>Moteur en attente du premier calendrier. Brancher un lieu demande une simple entrée dans <code>config/sources.yaml</code>.</td></tr>
+<tr><td>Flux RSS d'agenda</td><td>RSS</td><td><span class="experiment-status rejected">Prêt, désactivé</span></td><td>Moteur prêt ; flux de la zone à la fois actif et autorisé encore à trouver.</td></tr>
+<tr><td>Agendas en ligne (scraper)</td><td>Scrapers</td><td><span class="experiment-status rejected">Prêt, désactivé</span></td><td>Uniquement avec l'autorisation écrite de l'éditeur : <code>enabled: false</code>, demande envoyée à la ville de Frontignan, en attente.</td></tr>
 </tbody>
 </table>
 <p class="table-note">Sources : <code>docs/sources.md</code>, <code>docs/partenaires.md</code>, <code>config/sources.yaml</code>, <code>docs/mvp.md</code> (≈ 1 980 par nuit), <code>docs/evaluation.md</code> (répartition au 16/10/2026).</p>
 
 <div class="callout">
 <span class="eyebrow">LE CAS QUI PARLE LE MIEUX</span>
-<strong>Une plaquette n'a pas de colonnes.</strong>
+<strong>Une plaquette se lit comme un texte libre.</strong>
 <p>Un partenaire envoie un programme Word ou une plaquette PDF, mis en page à sa façon. Un ETL lit des colonnes connues ; ici il faut comprendre le texte (Mistral), contrôler chaque ligne (règles : titre présent dans le texte, date, lieu, commune) et laisser un humain décider de la publication (proposition <code>valider_document_partenaire</code>). Le document est lu une fois, mis en cache par empreinte.</p>
 </div>
 </div>
@@ -552,7 +552,7 @@ Bilan          status, alerts, run_id, errors</pre>
 <div class="container">
 <p class="section-number">06</p>
 <h2>La configuration</h2>
-<p class="section-intro">Deux endroits, et des constantes nommées dans le code. Les sources se règlent dans <code>config/sources.yaml</code> (versionné) ; l'exploitation dans les variables d'environnement (modèle dans <code>.env.example</code>, jamais de valeur secrète dans le dépôt).</p>
+<p class="section-intro">Deux endroits, et des constantes nommées dans le code. Les sources se règlent dans <code>config/sources.yaml</code> (versionné) ; l'exploitation dans les variables d'environnement (modèle dans <code>.env.example</code>, les valeurs secrètes restent hors du dépôt).</p>
 
 <div class="config-grid">
 <div class="config-card"><span>Fenêtre de lecture</span><strong>90 jours</strong></div>
@@ -574,13 +574,13 @@ Bilan          status, alerts, run_id, errors</pre>
 <tr><td><code>EMBEDDING_MODEL</code></td><td>Vecteurs des événements</td><td><code>mistral-embed</code></td></tr>
 <tr><td><code>LEARNING_MODEL</code></td><td>Lecture des recherches ratées</td><td><code>mistral-small-latest</code></td></tr>
 <tr><td><code>MODERATION_MODEL</code></td><td>Modération des commentaires</td><td><code>mistral-moderation-latest</code></td></tr>
-<tr><td><code>SOURCES_DESACTIVEES</code></td><td>Sources coupées sur ce serveur (« document » sur Azure)</td><td>aucune</td></tr>
+<tr><td><code>SOURCES_DESACTIVEES</code></td><td>Sources coupées sur ce serveur (« document » sur Azure)</td><td>liste vide</td></tr>
 <tr><td><code>SORTIRIA_MAX_EVENEMENTS</code></td><td>Plafond de la base</td><td>10 000</td></tr>
 <tr><td><code>COUVERTURE_MIN_SEMAINE</code></td><td>Sorties minimales par case famille / soirée × zone sur 7 jours (0 : désactivé)</td><td>10</td></tr>
 <tr><td><code>MISTRAL_BUDGET_NUIT_USD</code></td><td>Budget d'alerte d'une nuit</td><td>0,50 $</td></tr>
 <tr><td><code>MLFLOW_ACTIF</code>, <code>MLFLOW_TRACKING_URI</code>, <code>MLFLOW_EXPERIMENT</code></td><td>Suivi des collectes lancées sur le poste</td><td>actif, SQLite local sinon, <code>sortiria-collecte</code> ; coupé sur Azure (<code>MLFLOW_ACTIF=false</code>)</td></tr>
-<tr><td><code>REPORT_EMAIL_TO</code>, <code>REPORT_EMAIL_WHEN</code>, <code>SMTP_HOST</code>, <code>SMTP_PORT</code>, <code>SMTP_FROM</code></td><td>Mail de bilan : <code>toujours</code>, ou <code>alertes</code> seulement</td><td>pas de mail sans destinataire</td></tr>
-<tr><td><code>DATABASE_URL</code>, <code>MISTRAL_API_KEY</code>, <code>OPENAGENDA_API_KEY</code>, <code>DATATOURISME_API_KEY</code></td><td>Accès aux services ; une clé absente met la source en échec, jamais l'agent</td><td>—</td></tr>
+<tr><td><code>REPORT_EMAIL_TO</code>, <code>REPORT_EMAIL_WHEN</code>, <code>SMTP_HOST</code>, <code>SMTP_PORT</code>, <code>SMTP_FROM</code></td><td>Mail de bilan : <code>toujours</code>, ou <code>alertes</code> seulement</td><td>mail envoyé seulement si un destinataire est défini</td></tr>
+<tr><td><code>DATABASE_URL</code>, <code>MISTRAL_API_KEY</code>, <code>OPENAGENDA_API_KEY</code>, <code>DATATOURISME_API_KEY</code></td><td>Accès aux services ; une clé absente met la source en échec, et l'agent continue</td><td>—</td></tr>
 </tbody>
 </table>
 <p class="table-note">Noms seulement, d'après <code>.env.example</code>, <code>agent/services.py</code>, <code>agent/watch.py</code>, <code>agent/tracking.py</code> et <code>docs/sources.md</code>. Les valeurs réelles vivent dans le <code>.env</code> local et dans les secrets d'Azure.</p>
@@ -595,7 +595,7 @@ Bilan          status, alerts, run_id, errors</pre>
 <tr><td>Enrichissement</td><td>3 000 par nuit au plus, lots de 15</td><td><code>nodes.MAX_ENRICHMENTS_PER_RUN</code>, <code>ENRICHMENT_BATCH_SIZE</code></td></tr>
 <tr><td>Embeddings</td><td>10 000 par nuit au plus, lots de 64 ; 3 lots en échec de suite arrêtent les embeddings de la nuit</td><td><code>nodes.MAX_EMBEDDINGS_PER_RUN</code>, <code>MAX_EMBEDDING_FAILURES</code></td></tr>
 <tr><td>Échantillon du juge</td><td>20 fiches</td><td><code>quality_judge.SAMPLE_SIZE</code></td></tr>
-<tr><td>Fin d'un programme PDF, partenaire inactif</td><td>21 jours avant, 30 jours sans mise à jour</td><td><code>watch.DOCUMENT_EXPIRY_WARNING_DAYS</code>, <code>PARTNER_STALE_DAYS</code></td></tr>
+<tr><td>Fin d'un programme PDF, partenaire inactif</td><td>21 jours avant, 30 jours après la dernière mise à jour</td><td><code>watch.DOCUMENT_EXPIRY_WARNING_DAYS</code>, <code>PARTNER_STALE_DAYS</code></td></tr>
 <tr><td>Alerte de capacité</td><td>90 % du plafond</td><td><code>watch.CAPACITY_WARNING_RATIO</code></td></tr>
 <tr><td>Bilan des recherches</td><td>le lundi, 7 derniers jours ; 5 mots au plus, cherchés au moins 2 fois</td><td><code>watch.SEARCH_REPORT_WEEKDAY</code>, <code>search_learning.MAX_WORDS</code>, <code>MIN_TIMES</code></td></tr>
 <tr><td>Dérive</td><td>7 derniers jours contre les 28 précédents ; PSI 0,10 modérée, 0,25 forte ; jugée à partir de 30 questions par semaine, 20 avis, 3 nuits</td><td><code>drift.PSI_MODERATE</code>, <code>PSI_STRONG</code>, <code>DERIVE_MIN_QUESTIONS</code>, <code>MEASURE_RULES</code></td></tr>
@@ -611,20 +611,20 @@ Bilan          status, alerts, run_id, errors</pre>
 <div class="container">
 <p class="section-number">07</p>
 <h2>La fiabilité</h2>
-<p class="section-intro">Trois promesses : ne jamais dégrader la base, ne jamais laisser le modèle décider seul de ce qui est vrai, et toujours laisser une trace.</p>
+<p class="section-intro">Trois promesses : garder la base intacte, garder la main sur ce qui est vrai, et toujours laisser une trace.</p>
 
 <div class="result-grid">
 <div class="result-card"><strong>89 à 94 %</strong><span>qualité des fiches enrichies (juge, 20 fiches par nuit)</span></div>
 <div class="result-card"><strong>80 %</strong><span>seuil d'alerte du juge</span></div>
-<div class="result-card"><strong>1</strong><span>transaction par nuit : tout ou rien</span></div>
+<div class="result-card"><strong>1</strong><span>transaction par nuit, validée d'un seul bloc</span></div>
 <div class="result-card"><strong>0,50 $</strong><span>budget d'alerte d'une nuit</span></div>
 </div>
 <p class="table-note">Sources : <code>docs/evaluation.md</code> (qualité des fiches enrichies, cible 80 %), <code>agent/watch.py</code> (seuil, budget), <code>agent/nodes.py</code> (<code>load_events</code>).</p>
 
 <div class="skills-grid">
-<div class="skill-group"><h3>Validation</h3><div class="constraint-value">motifs comptés</div><p class="constraint-text">Pas de date, événement passé, annulé ou reporté, uniquement en ligne, pas une sortie (offre d'emploi, aide aux devoirs) : rejeté avec son motif, compté chaque nuit ; alerte au-delà de 20 % de rejets. Âges incohérents et publics inconnus ramenés dans les clous avant l'écriture.</p></div>
-<div class="skill-group"><h3>Déduplication</h3><div class="constraint-value">titre + jour + heure + lieu</div><p class="constraint-text">Identifiant stable, normalisé (minuscules, sans accents ni ponctuation) ; le doublon le plus complet est gardé, les champs manquants fusionnés. Un même événement publié par deux sources est fusionné, la fiche du partenaire, sinon d'OpenAgenda, est gardée.</p></div>
-<div class="skill-group"><h3>Retraits prudents</h3><div class="constraint-value">7 jours, sources saines</div><p class="constraint-text">Un événement passé est gardé 7 jours pour la notation, sans être proposé. Un événement disparu n'est retiré que pour une source lue en entier, sans échec ni baisse anormale ; les statistiques des suppressions sont gardées.</p></div>
+<div class="skill-group"><h3>Validation</h3><div class="constraint-value">motifs comptés</div><p class="constraint-text">Date absente, événement passé, annulé ou reporté, uniquement en ligne, hors sujet (offre d'emploi, aide aux devoirs) : rejeté avec son motif, compté chaque nuit ; alerte au-delà de 20 % de rejets. Âges incohérents et publics inconnus ramenés dans les clous avant l'écriture.</p></div>
+<div class="skill-group"><h3>Déduplication</h3><div class="constraint-value">titre + jour + heure + lieu</div><p class="constraint-text">Identifiant stable, normalisé (minuscules, accents et ponctuation retirés) ; le doublon le plus complet est gardé, les champs manquants fusionnés. Un même événement publié par deux sources est fusionné, la fiche du partenaire, sinon d'OpenAgenda, est gardée.</p></div>
+<div class="skill-group"><h3>Retraits prudents</h3><div class="constraint-value">7 jours, sources saines</div><p class="constraint-text">Un événement passé est gardé 7 jours pour la notation, retiré des propositions. Un événement disparu est retiré uniquement pour une source lue en entier, réussie et à volume normal ; les statistiques des suppressions sont gardées.</p></div>
 </div>
 
 <h3>Le diagnostic des pannes</h3>
@@ -639,7 +639,7 @@ Bilan          status, alerts, run_id, errors</pre>
 <tr><td><code>format_inattendu</code></td><td>JSON illisible, « n'est pas un PDF »</td><td>La source a peut-être changé de format : vérifier l'adaptateur.</td></tr>
 </tbody>
 </table>
-<p class="table-note">Source : <code>agent/diagnosis.py</code>. Le diagnostic n'utilise pas de modèle : des règles et une vérification de l'adresse. Un cas non reconnu renvoie au journal.</p>
+<p class="table-note">Source : <code>agent/diagnosis.py</code>. Le diagnostic repose sur des règles et une vérification de l'adresse. Un cas inconnu renvoie au journal.</p>
 
 <h3>Les décisions confiées à Mistral, et leurs garde-fous</h3>
 <table class="story-table params-table">
@@ -647,7 +647,7 @@ Bilan          status, alerts, run_id, errors</pre>
 <tbody>
 <tr><td>Lecture des PDF</td><td><code>mistral-small-latest</code></td><td>Schéma Pydantic, titre présent dans le texte de la page, date dans la période du programme ; sinon rejeté et compté. Sur le PDF de Sète : 434 événements, 1 seul rejeté pour titre absent du texte.</td></tr>
 <tr><td>Enrichissement</td><td><code>mistral-small-latest</code></td><td>Liste fermée de catégories et de publics ; un titre explicite fixe la catégorie ; un résumé qui cite un nom ou un nombre absent de la source est écarté ; les publics donnés par la source sont conservés.</td></tr>
-<tr><td>Juge de qualité</td><td><code>mistral-medium-latest</code></td><td>Un autre modèle que celui qui enrichit ; quatre questions fermées ; un contrôle, jamais une modification ; alerte sous 80 % avec des exemples.</td></tr>
+<tr><td>Juge de qualité</td><td><code>mistral-medium-latest</code></td><td>Un autre modèle que celui qui enrichit ; quatre questions fermées ; un contrôle, qui laisse les fiches intactes ; alerte sous 80 % avec des exemples.</td></tr>
 <tr><td>Recherches ratées</td><td><code>mistral-small-latest</code></td><td>Réponse JSON contrôlée ; synonyme proposé seulement s'il existe dans les titres ; agenda seulement s'il a des événements du sujet dans la zone ; un humain décide.</td></tr>
 </tbody>
 </table>
@@ -658,7 +658,7 @@ Bilan          status, alerts, run_id, errors</pre>
 <article class="project-card">
 <div class="project-top"><span class="project-type">EXPÉRIENCE</span></div>
 <h3>MLflow</h3>
-<p>Une nuit = une exécution de l'expérience <code>sortiria-collecte</code> : paramètres (modèles, version de consigne, seuils, sources), métriques (extraits, rejetés, enrichis, embeddings, score du juge, coût, durée par nœud, alertes, PSI de chaque indicateur de dérive) et trace des appels Mistral. Si le serveur ne répond pas, la nuit continue sans suivi.</p>
+<p>Une nuit = une exécution de l'expérience <code>sortiria-collecte</code> : paramètres (modèles, version de consigne, seuils, sources), métriques (extraits, rejetés, enrichis, embeddings, score du juge, coût, durée par nœud, alertes, PSI de chaque indicateur de dérive) et trace des appels Mistral. Si le serveur reste muet, la nuit continue, hors suivi.</p>
 </article>
 <article class="project-card">
 <div class="project-top"><span class="project-type">EXPLOITATION</span></div>
@@ -668,15 +668,15 @@ Bilan          status, alerts, run_id, errors</pre>
 <article class="project-card">
 <div class="project-top"><span class="project-type">HUMAIN</span></div>
 <h3>Le mail du matin</h3>
-<p>Le sujet donne le statut d'un coup d'œil, par exemple « [SortirIA] Collecte PARTIEL : 1059 événement(s), 1 alerte(s) ». Le corps reprend les chiffres, le détail par source, les sources non lancées, les alertes et les propositions à valider ; le lundi, le bilan de la recherche et le rapport de dérive. Les rappels de surveillance ne changent pas le statut : ce ne sont pas des pannes.</p>
+<p>Le sujet donne le statut d'un coup d'œil, par exemple « [SortirIA] Collecte PARTIEL : 1059 événement(s), 1 alerte(s) ». Le corps reprend les chiffres, le détail par source, les sources en attente, les alertes et les propositions à valider ; le lundi, le bilan de la recherche et le rapport de dérive. Les rappels de surveillance laissent le statut inchangé : ce sont des rappels, distincts des pannes.</p>
 </article>
 </div>
 <p class="table-note">Sources : <code>agent/tracking.py</code>, <code>agent/report.py</code>, <code>monitoring/README.md</code>.</p>
 
 <div class="callout subtle">
 <span class="eyebrow">LIMITE</span>
-<strong>Le graphe est presque linéaire : l'intérêt est dans les décisions, pas dans la topologie.</strong>
-<p>Le seul embranchement est après l'extraction. Je l'assume : la valeur de l'agent tient aux étapes qui lisent et jugent, et à la prudence de ses règles. À venir : un nœud de lecture des pages HTML des lieux, sur le même principe que les PDF (rien sans URL ni date, tout validé avant d'entrer en base), et la migration d'OpenAgenda vers son API v2. <a class="project-link" href="limites.html">Toutes les limites →</a></p>
+<strong>Le graphe est presque linéaire : l'intérêt est dans les décisions, plus que dans la forme du graphe.</strong>
+<p>Le seul embranchement est après l'extraction. Je l'assume : la valeur de l'agent tient aux étapes qui lisent et jugent, et à la prudence de ses règles. À venir : un nœud de lecture des pages HTML des lieux, sur le même principe que les PDF (URL et date obligatoires, tout validé avant d'entrer en base), et la migration d'OpenAgenda vers son API v2. <a class="project-link" href="limites.html">Toutes les limites →</a></p>
 </div>
 </div>
 </section>
@@ -690,15 +690,15 @@ Bilan          status, alerts, run_id, errors</pre>
 <table class="story-table params-table">
 <thead><tr><th>Fichier ou module</th><th>Origine</th><th>Statut</th><th>Ce qui a été adapté ou écrit</th></tr></thead>
 <tbody>
-<tr><td><code>agent/state.py</code>, <code>agent/graph.py</code>, <code>agent/routing.py</code></td><td>Écrit pour SortirIA, sur le modèle de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Chess Agent (projet 13)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Même découpage que <code>state.py</code>, <code>graph.py</code> et <code>routing.py</code> de Chess Agent : le graphe ne contient aucune logique métier, le routage est séparé et testé à part.</td></tr>
-<tr><td><code>agent/nodes.py</code>, <code>agent/services.py</code></td><td>Écrit pour SortirIA, sur le modèle de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Chess Agent (projet 13)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Un nœud = une étape, comme les nœuds <code>A_*</code> à <code>H_*</code> de Chess Agent ; services regroupés dans un objet injecté, pour tester les nœuds sans réseau ni base.</td></tr>
+<tr><td><code>agent/state.py</code>, <code>agent/graph.py</code>, <code>agent/routing.py</code></td><td>Écrit pour SortirIA, sur le modèle de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Chess Agent (projet 13)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Même découpage que <code>state.py</code>, <code>graph.py</code> et <code>routing.py</code> de Chess Agent : le graphe reste libre de toute logique métier, le routage est séparé et testé à part.</td></tr>
+<tr><td><code>agent/nodes.py</code>, <code>agent/services.py</code></td><td>Écrit pour SortirIA, sur le modèle de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Chess Agent (projet 13)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Un nœud = une étape, comme les nœuds <code>A_*</code> à <code>H_*</code> de Chess Agent ; services regroupés dans un objet injecté, pour tester les nœuds hors réseau et hors base.</td></tr>
 <tr><td><code>agent/watch.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Programme PDF à renouveler, partenaire à relancer, couverture famille / soirée par zone, coût Mistral de la nuit : fonctions pures, alertes en français.</td></tr>
 <tr><td><code>agent/drift.py</code></td><td>Écrit pour SortirIA (19/10), méthode du projet 5</td><td><span class="experiment-status selected">Écrit</span></td><td>Dérive des questions, des réponses et de la collecte : PSI (la méthode d'Evidently, recodée), 7 jours contre les 28 précédents, rapport dans <code>collect_runs.drift</code>, MLflow, Grafana et le mail du lundi.</td></tr>
 <tr><td><code>agent/diagnosis.py</code>, <code>agent/proposals.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Diagnostic des pannes, parti du cas réel du PDF de l'Agglopôle déplacé ; réparations proposées, appliquées seulement après décision humaine.</td></tr>
 <tr><td><code>agent/search_learning.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Le lundi, lecture par Mistral des mots cherchés absents de la base ; proposition d'un synonyme ou d'un agenda OpenAgenda.</td></tr>
-<tr><td><code>agent/report.py</code>, <code>src/utils/mail_utils.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Bilan de la nuit par mail (SMTP, bibliothèque standard) : aucun des projets repris n'envoyait de mail.</td></tr>
+<tr><td><code>agent/report.py</code>, <code>src/utils/mail_utils.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Bilan de la nuit par mail (SMTP, bibliothèque standard) : c'est un ajout propre à SortirIA.</td></tr>
 <tr><td><code>agent/tracking.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>MLflow avait servi au projet RAG pour suivre des expériences ; ici, une collecte lancée sur le poste = une exécution MLflow (coupé sur Azure).</td></tr>
-<tr><td><code>agent/__main__.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Lancement à la main : collecte complète, <code>--essai</code> sans écriture en base, <code>--decouverte</code>, <code>--bilan-recherche</code>.</td></tr>
+<tr><td><code>agent/__main__.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Lancement à la main : collecte complète, <code>--essai</code> base laissée intacte, <code>--decouverte</code>, <code>--bilan-recherche</code>.</td></tr>
 <tr><td><code>dags/sortiria_nightly_dag.py</code></td><td>Écrit pour SortirIA, sur le modèle des DAG de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">CheckIt.AI (projet 12)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Lance l'agent chaque nuit à 2 h (heure de Paris) ; les DAG <code>checkit_*</code> ont été retirés le 15/10.</td></tr>
 <tr><td><code>src/extractor_execution_service.py</code></td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">CheckIt.AI (projet 12)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Registre réduit à RSS, OpenAgenda, DATAtourisme, iCal, programmes PDF et fichiers des partenaires ; extracteurs de presse et de fake news retirés.</td></tr>
 <tr><td><code>src/extractors/apis/</code> (moteur API)</td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">CheckIt.AI (projet 12)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Moteur conservé ; pagination réparée le 14/10 (<code>fetch_json_object</code> effaçait la partie « ?… » du lien « page suivante »).</td></tr>

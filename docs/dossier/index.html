@@ -46,14 +46,14 @@
 <div class="large-text">« Que faire ce week-end avec les enfants à Sète ? » La réponse existe, mais dans dix endroits différents.</div>
 <div>
 <p>Les sorties de Montpellier et du bassin de Thau sont publiées dans les agendas des villes, ceux des offices de tourisme, sur OpenAgenda, dans des programmes PDF et sur les sites des lieux eux-mêmes. Pour trouver un concert samedi soir, il faut ouvrir plusieurs sites, croiser les dates, vérifier le prix et le lieu.</p>
-<p>Je voulais pouvoir demander en français « un concert pas cher samedi soir » et obtenir des événements <strong>réels</strong>, <strong>à venir</strong> et <strong>sourcés</strong> : pas une liste d'idées générales, pas un événement inventé, et pour chaque proposition le lien de l'organisateur.</p>
+<p>Je voulais pouvoir demander en français « un concert pas cher samedi soir » et obtenir des événements <strong>réels</strong>, <strong>à venir</strong> et <strong>sourcés</strong> : des propositions précises, toutes tirées de la base, chacune avec le lien de l'organisateur.</p>
 </div>
 </div>
 
 <h3>Pour qui</h3>
 <div class="reflection-grid">
-<div class="reflection-card"><h3>Les habitants</h3><p>Trouver une sortie pour ce soir ou ce week-end sans faire le tour des agendas : une question, une réponse, des liens.</p></div>
-<div class="reflection-card"><h3>Les touristes</h3><p>Découvrir ce qui se passe à Sète, Frontignan, Mèze ou Montpellier pendant le séjour, sans connaître les sites locaux.</p></div>
+<div class="reflection-card"><h3>Les habitants</h3><p>Trouver une sortie pour ce soir ou ce week-end en un seul endroit : une question, une réponse, des liens.</p></div>
+<div class="reflection-card"><h3>Les touristes</h3><p>Découvrir ce qui se passe à Sète, Frontignan, Mèze ou Montpellier pendant le séjour, même en découvrant la région.</p></div>
 <div class="reflection-card"><h3>Les familles</h3><p>Filtrer ce qui convient aux enfants, aux ados, ce qui est gratuit ou sous un budget : le public et le prix sont des contraintes strictes.</p></div>
 <div class="reflection-card"><h3>Les lieux et commerces partenaires</h3><p>Publier leurs offres par un simple fichier (Excel, CSV, ou même un PDF ou un Word lu par Mistral) ; elles passent en tête quand elles répondent à la question.</p></div>
 </div>
@@ -61,8 +61,8 @@
 <h3>Ce qui rend la promesse tenable</h3>
 <p>Trois conditions, et ce sont elles que le MVP doit prouver (<code>docs/mvp.md</code>).</p>
 <div class="skills-grid">
-<div class="skill-group"><h3>Des données fraîches sans intervention</h3><div class="constraint-value">Chaque nuit</div><p class="constraint-text">Collecte automatique, événements passés retirés, doublons fusionnés entre sources, pannes gérées par l'agent et signalées par mail.</p></div>
-<div class="skill-group"><h3>Des réponses justes et sourcées</h3><div class="constraint-value">98,7 %</div><p class="constraint-text">Des propositions respectent date, lieu, public et budget ; aucun événement inventé ; source et lien sur chaque carte.</p></div>
+<div class="skill-group"><h3>Des données fraîches, mises à jour toutes seules</h3><div class="constraint-value">Chaque nuit</div><p class="constraint-text">Collecte automatique, événements passés retirés, doublons fusionnés entre sources, pannes gérées par l'agent et signalées par mail.</p></div>
+<div class="skill-group"><h3>Des réponses justes et sourcées</h3><div class="constraint-value">98,7 %</div><p class="constraint-text">Des propositions respectent date, lieu, public et budget. Chaque événement vient de la base, avec sa source et son lien sur chaque carte.</p></div>
 <div class="skill-group"><h3>Un service en production</h3><div class="constraint-value">Depuis le 15/10</div><p class="constraint-text">Déployé sur Azure à chaque push, ≈ 3 880 tests automatisés, chaque question journalisée, coût mesuré.</p></div>
 </div>
 <p class="table-note">Sources : <code>docs/mvp.md</code>, <code>docs/evaluation.md</code>, <code>docs/deploiement.md</code>.</p>
@@ -132,10 +132,10 @@
 <div class="container">
 <p class="section-number">02</p>
 <h2>Le MVP et les arbitrages</h2>
-<p class="section-intro">J'ai trié chaque fonction en trois niveaux : indispensable (sans elle, pas de produit), important (fait, mais le produit vivrait sans), hors MVP (reporté ou abandonné, sans dommage).</p>
+<p class="section-intro">J'ai trié chaque fonction en trois niveaux : indispensable (le cœur du produit), important (fait aussi, un vrai plus), hors MVP (pour plus tard). Le MVP, c'est le produit minimum utile : la plus petite version qui rend déjà service.</p>
 <div class="about-grid">
-<div class="large-text">Le MVP est en production depuis le 15/10. Depuis, je n'ajoute plus de fonction : je mesure, je fiabilise, je documente.</div>
-<div><p>Le tri s'est fait sur une question simple : est-ce que la promesse tient sans cette fonction ? La collecte, la recherche sous contraintes, la réponse sourcée, l'interface, les tests et le déploiement sont indispensables. L'agent qui juge et diagnostique, les partenaires, les avis, le cache sont importants. Le reste attend, et je dis pourquoi.</p><p>Plusieurs arbitrages vont contre l'intuition : j'ai <strong>abandonné</strong> l'extraction des contraintes par un petit modèle, parce que des règles font 100 % sur le jeu de test, en 1 ms et sans coût.</p></div>
+<div class="large-text">Le MVP est en production depuis le 15/10. Depuis, je me concentre sur trois choses : je mesure, je fiabilise, je documente.</div>
+<div><p>Le tri s'est fait sur une question simple : cette fonction est-elle nécessaire pour tenir la promesse ? La collecte, la recherche sous contraintes, la réponse sourcée, l'interface, les tests et le déploiement sont indispensables. L'agent qui juge et diagnostique, les partenaires, les avis, le cache sont importants. Le reste attend, et je dis pourquoi.</p><p>Plusieurs arbitrages vont contre l'intuition : j'ai <strong>abandonné</strong> l'extraction des contraintes par un petit modèle, parce que des règles font 100 % sur le jeu de test, en 1 ms et gratuitement.</p></div>
 </div>
 <table class="story-table params-table">
 <thead><tr><th>Fonction</th><th>Niveau</th><th>Statut</th><th>Preuve ou raison</th></tr></thead>
@@ -144,22 +144,22 @@
 <tr><td>Validation, déduplication, retrait des événements passés</td><td>Indispensable</td><td><span class="experiment-status selected">Fait</span></td><td>Motifs de rejet comptés chaque nuit, fusion entre sources.</td></tr>
 <tr><td>Base PostgreSQL + pgvector, schéma versionné</td><td>Indispensable</td><td><span class="experiment-status selected">Fait</span></td><td><code>sql/sortiria/</code>, testé sur un vrai PostgreSQL.</td></tr>
 <tr><td>Compréhension de la question (quand, où, pour qui, budget, type)</td><td>Indispensable</td><td><span class="experiment-status selected">Fait</span></td><td>100 % sur le jeu de 50 questions, par règles (<code>app/query_understanding.py</code>).</td></tr>
-<tr><td>Recherche hybride sous filtres stricts, réponse sourcée sans invention</td><td>Indispensable</td><td><span class="experiment-status selected">Fait</span></td><td>98,7 % de propositions conformes ; citations vérifiées, repli sans Mistral.</td></tr>
+<tr><td>Recherche hybride (par les mots et par le sens) sous filtres stricts, réponse sourcée et fidèle à la base</td><td>Indispensable</td><td><span class="experiment-status selected">Fait</span></td><td>98,7 % de propositions conformes ; citations vérifiées, réponse de secours rédigée par le code si Mistral tombe.</td></tr>
 <tr><td>Interface web, tests, CI, déploiement, mesure</td><td>Indispensable</td><td><span class="experiment-status selected">Fait</span></td><td>Azure, déploiement à chaque push sur <code>main</code> ; évaluation rejouée en CI.</td></tr>
 <tr><td>Agent LangGraph : enrichissement, juge, diagnostic, propositions</td><td>Important</td><td><span class="experiment-status selected">Fait</span></td><td>Les étapes qui lisent et jugent (<code>agent/</code>).</td></tr>
-<tr><td>Programme PDF lu par Mistral</td><td>Important</td><td><span class="experiment-status selected">Fait</span></td><td>Première source non structurée : 434 événements du bassin de Thau.</td></tr>
+<tr><td>Programme PDF lu par Mistral</td><td>Important</td><td><span class="experiment-status selected">Fait</span></td><td>Première source à mise en page libre : 434 événements du bassin de Thau.</td></tr>
 <tr><td>Partenaires (fichiers, PDF, Word), avis, pouce haut / bas, cache, limite de débit</td><td>Important</td><td><span class="experiment-status selected">Fait</span></td><td>Piste de modèle économique, satisfaction mesurée, coût et latence bornés.</td></tr>
 <tr><td>Surveillance de la dérive : questions, réponses, collecte (19/10)</td><td>Important</td><td><span class="experiment-status selected">Fait</span></td><td>Chaque nuit, la semaine comparée aux 28 jours précédents (PSI) ; dans le mail du lundi, alerte si elle est forte.</td></tr>
-<tr><td>Scraping d'agendas en ligne, flux RSS</td><td>Hors MVP</td><td><span class="experiment-status promising">Reporté</span></td><td>Moteurs prêts ; aucun site sans autorisation écrite, flux testés vides ou interdits par leur <code>robots.txt</code>.</td></tr>
-<tr><td>Base de lieux (sport, loisirs, restaurants), fine-tuning, lecture des pages HTML ; agenda, itinéraire, partage et distance sur les cartes</td><td>Hors MVP</td><td><span class="experiment-status promising">Après soutenance</span></td><td>Un second produit ; pas encore de données réelles pour entraîner (<a class="project-link" href="limites.html">Limites →</a>).</td></tr>
+<tr><td>Scraping d'agendas en ligne, flux RSS</td><td>Hors MVP</td><td><span class="experiment-status promising">Reporté</span></td><td>Moteurs prêts ; chaque site attend son autorisation écrite. Les flux testés étaient vides ou fermés par leur <code>robots.txt</code>.</td></tr>
+<tr><td>Base de lieux (sport, loisirs, restaurants), fine-tuning, lecture des pages HTML ; agenda, itinéraire, partage et distance sur les cartes</td><td>Hors MVP</td><td><span class="experiment-status promising">Après soutenance</span></td><td>Un second produit ; le fine-tuning attend assez de données réelles pour entraîner (<a class="project-link" href="limites.html">Limites →</a>).</td></tr>
 <tr><td>Extraction des contraintes par un petit modèle (Ministral), météo</td><td>Hors MVP</td><td><span class="experiment-status rejected">Abandonné</span></td><td>Les règles suffisent sur le jeu de test ; la météo sort de la promesse.</td></tr>
 </tbody>
 </table>
-<p class="table-note">D'après <code>docs/mvp.md</code> (mis à jour le 19/10/2026). Les métriques Prometheus de l'API sont aussi reportées : le journal <code>rag_requests</code> et Grafana couvrent le besoin.</p>
+<p class="table-note">D'après <code>docs/mvp.md</code> (mis à jour le 27/10/2026). Les métriques Prometheus de l'API sont aussi reportées : le journal <code>rag_requests</code> et Grafana couvrent le besoin.</p>
 <div class="callout">
 <span class="eyebrow">À RETENIR</span>
 <strong>Les onze critères d'acceptation du MVP sont atteints.</strong>
-<p>Contraintes ≥ 95 % (98,7 %), compréhension ≥ 95 % (100 %), pertinence@3 ≥ 70 % (97,8 %), P95 sans cache ≤ 8 s (6,0 à 6,4 s), coût Mistral ≤ 1 $ pour 1 000 questions (0,12 $), qualité des fiches ≥ 80 % (89 à 94 %), aucun événement inventé. Le détail : <a class="project-link" href="resultats.html">Résultats →</a></p>
+<p>Contraintes ≥ 95 % (98,7 %), compréhension ≥ 95 % (100 %), pertinence@3 ≥ 70 % (97,8 %), temps de réponse hors cache ≤ 8 s pour 95 % des réponses (6,0 à 6,4 s), coût Mistral ≤ 1 $ pour 1 000 questions (0,12 $), qualité des fiches ≥ 80 % (89 à 94 %), 100 % d'événements réels dans les réponses. Le détail : <a class="project-link" href="resultats.html">Résultats →</a></p>
 </div>
 </div>
 </section>
@@ -172,7 +172,7 @@
 <div class="timeline">
 <div class="timeline-item"><span>01 • 13-15/10</span><h3>Collecte multi-sources</h3><p>Moteur multi-sources de CheckIt.AI adapté aux événements : OpenAgenda, DATAtourisme, programme PDF de Sète agglopôle lu par Mistral, fichiers des partenaires ; moteurs iCal, RSS et agendas en ligne prêts. Validation, normalisation, déduplication, fusion entre sources. <a class="project-link" href="architecture.html">Architecture →</a></p></div>
 <div class="timeline-item"><span>02 • 14-15/10</span><h3>Base et agent nocturne</h3><p>PostgreSQL + pgvector, schéma versionné. Agent LangGraph : nouvel essai ciblé, enrichissement et juge Mistral, surveillance (fraîcheur, couverture, coût), diagnostic et réparations proposées, bilan par mail, apprentissage des recherches ratées. <a class="project-link" href="agent.html">Agent →</a></p></div>
-<div class="timeline-item"><span>03 • 14-16/10</span><h3>Recherche et interface</h3><p>Compréhension par règles, recherche hybride sous filtres SQL, élargissement au sujet plutôt que des idées sans rapport, rédaction sourcée, cache. Interface Angular : réponse au fil de l'eau, cartes, détail, avis. <a class="project-link" href="recherche.html">Recherche →</a> <a class="project-link" href="interface.html">Interface →</a></p></div>
+<div class="timeline-item"><span>03 • 14-16/10</span><h3>Recherche et interface</h3><p>Compréhension par règles, recherche hybride sous filtres SQL, élargissement au même sujet, pour rester proche de la demande, rédaction sourcée, cache. Interface Angular : réponse au fil de l'eau, cartes, détail, avis. <a class="project-link" href="recherche.html">Recherche →</a> <a class="project-link" href="interface.html">Interface →</a></p></div>
 <div class="timeline-item"><span>04 • 15-16/10</span><h3>Production et suivi</h3><p>Azure (Static Web Apps, Container Apps, PostgreSQL Flexible Server), domaine <code>www.sortiria-montpellier.fr</code>, CI/CD à chaque push, limite de débit, journal des questions, trois tableaux Grafana, évaluation rejouée en CI ; dérive surveillée depuis le 19/10. <a class="project-link" href="deploiement.html">Déploiement →</a></p></div>
 <div class="timeline-item"><span>05 • 16/10</span><h3>Mesures</h3><p>Grille de pertinence annotée à la main, juge Mistral calibré puis vérifié sur une seconde grille, coût et temps de réponse mesurés, évaluation des contraintes rejouée en CI. <a class="project-link" href="resultats.html">Résultats →</a></p></div>
 <div class="timeline-item"><span>06 • 17/10-4/11</span><h3>Fiabilisation et gel</h3><p>Plus de nouvelle fonction : lecture des premiers retours, corrections ciblées, documentation, préparation de la soutenance ; gel du code le 4/11. <a class="project-link" href="limites.html">Limites →</a></p></div>
@@ -197,7 +197,7 @@
 <article class="project-card">
 <div class="project-top"><span class="project-type">REPRIS · PROJET 6</span></div>
 <h3>Assistant RAG OpenAgenda</h3>
-<p>Le point de départ de l'API FastAPI. L'index FAISS ne savait pas filtrer « samedi soir à Sète, gratuit » : je l'ai remplacé par une recherche hybride PostgreSQL + pgvector sous filtres SQL, retiré le 15/10.</p>
+<p>Le point de départ de l'API FastAPI. L'index FAISS filtrait mal « samedi soir à Sète, gratuit » : je l'ai remplacé par une recherche hybride PostgreSQL + pgvector sous filtres SQL, retiré le 15/10.</p>
 <a class="project-link" href="recherche.html">Recherche →</a> · <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/rag-openagenda">Dépôt rag-openagenda →</a>
 </article>
 <article class="project-card">
@@ -246,7 +246,7 @@
 <article class="project-card">
 <div class="project-top"><span class="project-type">LA NUIT</span></div>
 <h3>Agent</h3>
-<p>Ce que fait l'agent LangGraph chaque nuit, et pourquoi ce n'est pas un simple ETL : des règles pour le routage, un modèle pour les jugements, un humain pour la configuration.</p>
+<p>Ce que fait l'agent LangGraph chaque nuit (un programme qui enchaîne seul les étapes), et pourquoi il va plus loin qu'un simple ETL : des règles pour le routage, un modèle pour les jugements, un humain pour la configuration.</p>
 <a class="project-link" href="agent.html">Agent →</a>
 </article>
 <article class="project-card">

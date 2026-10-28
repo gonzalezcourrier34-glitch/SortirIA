@@ -20,7 +20,7 @@
 <div class="container hero-content">
 <p class="eyebrow">SORTIRIA · RÉSULTATS</p>
 <h1>Les <span>résultats</span></h1>
-<p class="hero-text">Chaque chiffre de cette page vient d'un script que l'on peut relancer, et chaque lancement est gardé. J'ai mesuré ce que le code peut vérifier seul (les contraintes : <strong>98,7 %</strong>), puis ce qui demande un jugement (la pertinence : <strong>97,8 %</strong>, jugée à la main), puis j'ai calibré un juge Mistral sur mon jugement pour pouvoir le rejouer sans moi.</p>
+<p class="hero-text">Chaque chiffre de cette page vient d'un script que l'on peut relancer, et chaque lancement est gardé. J'ai mesuré ce que le code peut vérifier seul (les contraintes : <strong>98,7 %</strong>), puis ce qui demande un jugement (la pertinence : <strong>97,8 %</strong>, jugée à la main), puis j'ai calibré un juge Mistral sur mon jugement pour pouvoir le rejouer en toute autonomie.</p>
 <div class="metrics">
 <div><strong>98,7 %</strong><span>propositions qui respectent les contraintes (50 questions)</span></div>
 <div><strong>97,8 %</strong><span>pertinence@3, jugement humain (139 cartes)</span></div>
@@ -46,15 +46,15 @@
 <tr><td>Propositions qui respectent les contraintes (50 questions annotées)</td><td>≥ 95 %</td><td><strong>98,7 %</strong></td><td><span class="experiment-status selected">Atteint</span></td></tr>
 <tr><td>Compréhension des questions (50 questions)</td><td>≥ 95 %</td><td><strong>100 %</strong></td><td><span class="experiment-status selected">Atteint</span></td></tr>
 <tr><td>Recherches courtes avec une réponse exacte (125 recherches)</td><td>—</td><td>97,6 % de propositions correctes ; 19 « idées voisines » annoncées comme telles</td><td><span class="experiment-status selected">Atteint</span></td></tr>
-<tr><td>Recherches « faire soi-même » (« je veux chanter », 13 recherches de pratique, 17/10)</td><td>≥ 95 %</td><td><strong>98 %</strong> de cartes correctes sur la vraie base (61 % avant la correction) ; compréhension 100 % (35 % avant)</td><td><span class="experiment-status selected">Atteint</span></td></tr>
-<tr><td>Recherches « regarder » (« un spectacle de danse », 4 recherches, 17/10)</td><td>≥ 95 %</td><td><strong>93 %</strong> de cartes correctes sur la vraie base (67 % avant : bal folk, stage, atelier) ; 100 % sur la base figée (75 % avant) ; tout le jeu 94,5 % → 97,9 %</td><td><span class="experiment-status selected">Atteint</span></td></tr>
+<tr><td>Recherches « faire soi-même » (« je veux chanter », 13 recherches de pratique, 17/10)</td><td>≥ 90 %</td><td><strong>98 %</strong> de cartes correctes sur la vraie base (61 % avant la correction) ; compréhension 100 % (35 % avant)</td><td><span class="experiment-status selected">Atteint</span></td></tr>
+<tr><td>Recherches « regarder » (« un spectacle de danse », 4 recherches, 17/10)</td><td>≥ 90 %</td><td><strong>93 %</strong> de cartes correctes sur la vraie base (67 % avant : bal folk, stage, atelier) ; 100 % sur la base figée (75 % avant) ; tout le jeu 94,5 % → 97,9 %</td><td><span class="experiment-status selected">Atteint</span></td></tr>
 <tr><td>Pertinence des 3 premières propositions (sujet et public, jugement humain, 50 questions)</td><td>≥ 70 %</td><td><strong>97,8 %</strong> (136 cartes sur 139) ; 96,4 % sur la seconde grille, après corrections</td><td><span class="experiment-status selected">Atteint</span></td></tr>
-<tr><td>Accord du juge Mistral avec l'humain (pour rejouer la pertinence sans annotation)</td><td>≥ 85 %, AC1 ≥ 0,6</td><td><strong>98,6 %</strong>, AC1 0,985 ; confirmé sur 135 cartes nouvelles : <strong>91,9 %</strong>, AC1 0,889</td><td><span class="experiment-status selected">Atteint</span></td></tr>
-<tr><td>Temps de réponse P95 (sans cache)</td><td>≤ 8 s</td><td>6,0 à 6,4 s, mesuré depuis un poste ; Grafana suit la production</td><td><span class="experiment-status selected">Atteint</span></td></tr>
-<tr><td>Temps de réponse P95 (réponse en cache)</td><td>≤ 1 s</td><td>0,11 s</td><td><span class="experiment-status selected">Atteint</span></td></tr>
+<tr><td>Accord du juge Mistral avec l'humain (pour rejouer la pertinence automatiquement)</td><td>≥ 85 %, AC1 ≥ 0,6</td><td><strong>98,6 %</strong>, AC1 0,985 ; confirmé sur 135 cartes nouvelles : <strong>91,9 %</strong>, AC1 0,889</td><td><span class="experiment-status selected">Atteint</span></td></tr>
+<tr><td>Temps de réponse pour 95 % des réponses (P95, hors cache)</td><td>≤ 8 s</td><td>6,0 à 6,4 s, mesuré depuis un poste ; Grafana suit la production</td><td><span class="experiment-status selected">Atteint</span></td></tr>
+<tr><td>Temps de réponse P95 (réponse déjà en mémoire, ou cache)</td><td>≤ 1 s</td><td>0,11 s</td><td><span class="experiment-status selected">Atteint</span></td></tr>
 <tr><td>Coût Mistral de la recherche</td><td>≤ 1 $ pour 1 000 questions</td><td>0,12 $</td><td><span class="experiment-status selected">Atteint</span></td></tr>
 <tr><td>Fraîcheur : collecte réussie depuis moins de 24 h</td><td>chaque jour</td><td>suivi Grafana et mail du matin</td><td><span class="experiment-status selected">Atteint</span></td></tr>
-<tr><td>Aucun événement inventé dans une réponse</td><td>0</td><td>citations limitées aux événements fournis, vérifiées</td><td><span class="experiment-status selected">Atteint</span></td></tr>
+<tr><td>Événements réels dans les réponses (zéro invention)</td><td>100 %</td><td>citations limitées aux événements fournis, vérifiées</td><td><span class="experiment-status selected">Atteint</span></td></tr>
 <tr><td>Qualité des fiches (juge Mistral, 20 fiches par nuit)</td><td>≥ 80 %</td><td>89 à 94 %</td><td><span class="experiment-status selected">Atteint</span></td></tr>
 </tbody>
 </table>
@@ -62,7 +62,7 @@
 <div class="callout">
 <span class="eyebrow">À RETENIR</span>
 <strong>Le code vérifie les contraintes ; l'humain, puis un juge calibré, jugent la pertinence.</strong>
-<p>Le moment, le lieu et le budget se vérifient sans jugement : c'est du code (§ 02). Le sujet et le public demandent de comprendre la demande : c'est un jugement, d'abord humain, puis confié à un juge Mistral seulement après avoir mesuré son accord avec moi (§ 03 et 04).</p>
+<p>Le moment, le lieu et le budget se vérifient objectivement : c'est du code (§ 02). Le sujet et le public demandent de comprendre la demande : c'est un jugement, d'abord humain, puis confié à un juge Mistral seulement après avoir mesuré son accord avec moi (§ 03 et 04).</p>
 </div>
 </div>
 </section>
@@ -73,22 +73,22 @@
 <h2>Compréhension et respect des contraintes</h2>
 <p class="section-intro">Une mesure automatique : la recherche se trompe-t-elle de cible ?</p>
 <div class="about-grid">
-<div class="large-text">Une carte compte comme juste seulement si elle n'a aucune erreur : date, lieu, public, gratuité, budget, type.</div>
+<div class="large-text">Une carte compte comme juste seulement si tout est exact : date, lieu, public, gratuité, budget, type.</div>
 <div>
 <p>Le jeu de test, <code>config/eval_recherche.yaml</code>, compte <strong>50 questions</strong> écrites à la main, en <strong>8 familles</strong> : type de sortie ; quand ; où ; pour qui, combien ; noms et sujets précis ; cases cochées et question ; budget, météo, distance ; questions du quotidien. Pour chacune, j'ai écrit ce que la recherche doit comprendre (période, communes, public, gratuit, soir, types, budget, cadre) et parfois des mots qui doivent figurer dans les propositions.</p>
 <p>Un second jeu, <code>config/eval_mots.yaml</code>, contient <strong>125 recherches courtes</strong>, comme les tapent les visiteurs (« jazz », « brocante », « bowling »). Même mesure.</p>
-<p>Un troisième jeu, <code>config/eval_pratique.yaml</code> (17/10), est né d'un échec observé : « je veux chanter » proposait des concerts. Il compte 13 recherches « faire soi-même » (chanter, danser, jouer, dessiner, cuisiner…) et 7 témoins qui ne doivent pas changer. Mesuré avant et après la correction en retirant la règle (<code>--sans-pratique</code>, une ablation), sur la vraie base : compréhension <strong>35 % → 100 %</strong>, cartes correctes des recherches de pratique <strong>61 % → 98 %</strong>, témoins inchangés. Sur la base figée de la CI, les 125 recherches courtes et les 50 questions donnent exactement les mêmes cartes qu'avant. Puis l'inverse, « regarder » : « un spectacle de danse » proposait un bal folk ; 4 recherches ajoutées, cartes correctes <strong>67 % → 93 %</strong> sur la vraie base (75 % → 100 % sur la base figée), sans régression ailleurs (125 recherches 98,2 % → 98,4 %, 50 questions 98,0 % → 98,3 %).</p>
+<p>Un troisième jeu, <code>config/eval_pratique.yaml</code> (17/10), est né d'un échec observé : « je veux chanter » proposait des concerts. Il compte 13 recherches « faire soi-même » (chanter, danser, jouer, dessiner, cuisiner…) et 7 témoins qui doivent rester identiques. Mesuré avant et après la correction en retirant la règle (<code>--sans-pratique</code>, une ablation), sur la vraie base : compréhension <strong>35 % → 100 %</strong>, cartes correctes des recherches de pratique <strong>61 % → 98 %</strong>, témoins inchangés. Sur la base figée de la CI, les 125 recherches courtes et les 50 questions donnent exactement les mêmes cartes qu'avant. Puis l'inverse, « regarder » : « un spectacle de danse » proposait un bal folk ; 4 recherches ajoutées, cartes correctes <strong>67 % → 93 %</strong> sur la vraie base (75 % → 100 % sur la base figée), avec le reste stable (125 recherches 98,2 % → 98,4 %, 50 questions 98,0 % → 98,3 %).</p>
 </div>
 </div>
 <div class="experiment-method">
 <div class="method-step"><span>01 • COMPRÉHENSION</span><strong>Champ par champ</strong><small>La question est comprise si tous les champs attendus sont justes.</small></div>
-<div class="method-step"><span>02 • CONTRAINTES</span><strong>Chaque carte contrôlée</strong><small>Score = part des cartes sans aucune erreur. Objectif : 95 %.</small></div>
-<div class="method-step"><span>03 • IDÉES VOISINES</span><strong>Comptées à part</strong><small>Quand la base n'a rien d'exact, la réponse le dit ; ces questions sortent du score.</small></div>
+<div class="method-step"><span>02 • CONTRAINTES</span><strong>Chaque carte contrôlée</strong><small>Score = part des cartes entièrement exactes. Objectif : 95 %.</small></div>
+<div class="method-step"><span>03 • IDÉES VOISINES</span><strong>Comptées à part</strong><small>Quand la base manque d'événements exacts, la réponse le dit ; ces questions sortent du score.</small></div>
 </div>
 <div class="experiment-metrics">
 <div><strong>100 %</strong><span>compréhension (50 questions)</span></div>
-<div><strong>98,7 %</strong><span>cartes sans erreur (50 questions)</span></div>
-<div><strong>97,6 %</strong><span>cartes sans erreur (125 recherches courtes, vraie base, 15/10)</span></div>
+<div><strong>98,7 %</strong><span>cartes entièrement exactes (50 questions)</span></div>
+<div><strong>97,6 %</strong><span>cartes entièrement exactes (125 recherches courtes, vraie base, 15/10)</span></div>
 <div><strong>19 / 125</strong><span>recherches de lieux ouverts toute l'année (bowling, padel…)</span></div>
 </div>
 <p class="table-note">Source : <code>docs/evaluation.md</code> § 1, mesures des 15 et 16/10/2026.</p>
@@ -96,7 +96,7 @@
 <figure class="story-figure"><svg class="story-svg" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 420" role="img" aria-label="Graphique en barres de la précision de la recherche : 32 questions, 82 % puis 99 % ; 50 questions, 95,7 % puis 98,7 % ; recherches courtes, 80,8 % sur 100 puis 97,6 % sur 125. Seuil de 95 %.">
 <rect width="1080" height="420" rx="18" fill="#111a22"/>
 <text x="40" y="46" fill="#edf4f4" font-size="22" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">Respect des contraintes, mesure après mesure</text>
-<text x="40" y="72" fill="#98a8ad" font-size="14" font-family="Inter, 'Segoe UI', Arial, sans-serif">Part des cartes proposées sans aucune erreur (date, lieu, public, gratuité, budget, type), 15/10/2026</text>
+<text x="40" y="72" fill="#98a8ad" font-size="14" font-family="Inter, 'Segoe UI', Arial, sans-serif">Part des cartes proposées entièrement exactes (date, lieu, public, gratuité, budget, type), 15/10/2026</text>
 <rect x="40" y="90" width="14" height="14" rx="3" fill="#48c9b0"/><text x="62" y="102" fill="#98a8ad" font-size="13" font-family="Inter, 'Segoe UI', Arial, sans-serif">au-dessus du seuil</text>
 <rect x="210" y="90" width="14" height="14" rx="3" fill="#4a5d66"/><text x="232" y="102" fill="#98a8ad" font-size="13" font-family="Inter, 'Segoe UI', Arial, sans-serif">sous le seuil</text>
 <line x1="350" y1="97" x2="384" y2="97" stroke="#edf4f4" stroke-width="1.5" stroke-dasharray="6 4"/><text x="392" y="102" fill="#98a8ad" font-size="13" font-family="Inter, 'Segoe UI', Arial, sans-serif">seuil d'acceptation : 95 %</text>
@@ -138,11 +138,11 @@
 <line x1="100" y1="350" x2="1040" y2="350" stroke="#98a8ad" stroke-width="1.2"/>
 <line x1="100" y1="124" x2="100" y2="350" stroke="#98a8ad" stroke-width="1.2"/>
 </svg>
-<figcaption>Chaque correction de la recherche a été suivie d'une nouvelle mesure. Les deux jeux de 32 et 50 questions ne se comparent pas strictement (empreinte de jeu différente). Les deux premières valeurs sont dans <code>benchmarks/recherche/historique.csv</code> (reconstituées depuis le terminal, arrondies) ; les suivantes viennent du tableau d'historique de <code>docs/evaluation.md</code> § 1.</figcaption></figure>
+<figcaption>Chaque correction de la recherche a été suivie d'une nouvelle mesure. Les deux jeux de 32 et 50 questions se comparent avec prudence (empreinte de jeu différente). Les deux premières valeurs sont dans <code>benchmarks/recherche/historique.csv</code> (reconstituées depuis le terminal, arrondies) ; les suivantes viennent du tableau d'historique de <code>docs/evaluation.md</code> § 1.</figcaption></figure>
 
 <div class="reflection-grid">
-<div class="reflection-card"><h3>Rejouée à chaque push</h3><p>Le job « Évaluation de la recherche » de <code>.github/<wbr/>workflows/<wbr/>ci.yml</code> charge une base <strong>figée</strong> (<code>tests/<wbr/>data/<wbr/>jeu_recherche.json.gz</code>, exportée par <code>scripts/<wbr/>jeu_test_recherche.py</code>) dans un PostgreSQL avec pgvector, place l'horloge à l'instant de l'export et lance les 50 questions sans vecteur ni Mistral : aucune clé, aucun coût. Il <strong>échoue sous 95 %</strong> de précision ou de compréhension, et le déploiement attend la CI.</p></div>
-<div class="reflection-card"><h3>Ce que ce score ne dit pas</h3><p>Il dit si la recherche se trompe de cible. Il ne dit pas si les propositions sont les meilleures : c'est la pertinence, mesurée à part (§ 03). Le jeu figé exclut aussi le programme PDF de Sète agglopôle : publié avec le code, il ne garde que des données sous licence ouverte.</p></div>
+<div class="reflection-card"><h3>Rejouée à chaque push</h3><p>Le job « Évaluation de la recherche » de <code>.github/<wbr/>workflows/<wbr/>ci.yml</code> charge une base <strong>figée</strong> (<code>tests/<wbr/>data/<wbr/>jeu_recherche.json.gz</code>, exportée par <code>scripts/<wbr/>jeu_test_recherche.py</code>) dans un PostgreSQL avec pgvector, place l'horloge à l'instant de l'export et lance les 50 questions sur les filtres seuls, hors Mistral : zéro clé, zéro coût. Il <strong>échoue sous 95 %</strong> de précision ou de compréhension, et le déploiement attend la CI.</p></div>
+<div class="reflection-card"><h3>Ce que ce score mesure, et ses bornes</h3><p>Il dit si la recherche vise la bonne cible. La qualité du choix parmi les bonnes cibles, c'est la pertinence, mesurée à part (§ 03). Le jeu figé laisse aussi de côté le programme PDF de Sète agglopôle : publié avec le code, il garde uniquement des données sous licence ouverte.</p></div>
 </div>
 </div>
 </section>
@@ -153,15 +153,15 @@
 <h2>Pertinence des propositions</h2>
 <p class="section-intro">« Est-ce que je proposerais cette sortie à la personne qui a posé cette question ? » C'est un jugement, donc humain d'abord.</p>
 <div class="timeline">
-<div class="timeline-item"><span>01 • PRÉPARER</span><h3>La grille</h3><p>Les 50 questions passent par la vraie recherche, sans journal ni cache. Les 3 premières cartes de chaque réponse sont écrites dans un CSV : titre, date, lieu, catégorie, prix, public, résumé (<code>--preparer</code>).</p></div>
-<div class="timeline-item"><span>02 • ANNOTER</span><h3>o ou n, à la main</h3><p>Une colonne <code>pertinent</code>, un commentaire court pour chaque « n ». Une question sans proposition compte 0 carte pertinente sur 3. Environ 140 cartes, une heure.</p></div>
+<div class="timeline-item"><span>01 • PRÉPARER</span><h3>La grille</h3><p>Les 50 questions passent par la vraie recherche, hors journal et hors cache. Les 3 premières cartes de chaque réponse sont écrites dans un CSV : titre, date, lieu, catégorie, prix, public, résumé (<code>--preparer</code>).</p></div>
+<div class="timeline-item"><span>02 • ANNOTER</span><h3>o ou n, à la main</h3><p>Une colonne <code>pertinent</code>, un commentaire court pour chaque « n ». Une question restée vide compte 0 carte pertinente sur 3. Environ 140 cartes, une heure.</p></div>
 <div class="timeline-item"><span>03 • CALCULER</span><h3>pertinence@3</h3><p>Part des cartes pertinentes (objectif 70 %), part des questions avec au moins une carte pertinente, détail par famille de questions (<code>--calculer</code>).</p></div>
-<div class="timeline-item"><span>04 • JUGER</span><h3>Le juge calibré</h3><p>Mistral Large juge les mêmes cartes ; on mesure son accord avec moi (§ 04). Au-dessus du seuil, il peut rejouer la mesure sans annotation (<code>--juge</code>).</p></div>
+<div class="timeline-item"><span>04 • JUGER</span><h3>Le juge calibré</h3><p>Mistral Large juge les mêmes cartes ; on mesure son accord avec moi (§ 04). Au-dessus du seuil, il peut rejouer la mesure tout seul (<code>--juge</code>).</p></div>
 </div>
 <div class="callout subtle">
 <span class="eyebrow">QUI JUGE QUOI</span>
-<strong>La pertinence juge le sujet et le public, pas les contraintes.</strong>
-<p>Le moment, le lieu et le budget sont vérifiés par du code (§ 02). La pertinence mesure ce que le code ne sait pas juger : le sujet (une lecture de contes pour « une lecture de contes ») et le public (rien pour tout-petits quand on demande « pour des ados »). Le même partage vaut pour l'humain et pour le juge.</p>
+<strong>La pertinence juge le sujet et le public ; le code juge les contraintes.</strong>
+<p>Le moment, le lieu et le budget sont vérifiés par du code (§ 02). La pertinence mesure ce qui demande un jugement humain : le sujet (une lecture de contes pour « une lecture de contes ») et le public (des sorties pour ados quand on demande « pour des ados »). Le même partage vaut pour l'humain et pour le juge.</p>
 </div>
 <table class="story-table params-table">
 <thead><tr><th>Grille</th><th>Cartes</th><th>pertinence@3 (humain)</th><th>Questions satisfaites</th></tr></thead>
@@ -181,7 +181,7 @@
 <article class="project-card">
 <div class="project-top"><span class="project-type">CORRIGÉ LE 16/10</span></div>
 <h3>Partenaires : type et public exacts</h3>
-<p>Une offre partenaire ne passe en tête que si son type précis et son public correspondent. Sur la seconde grille, les 3 cartes ne sont plus dans les 3 premières : deux vraies pièces pour « théâtre », un atelier théâtre ados pour « ados ».</p>
+<p>Une offre partenaire passe en tête uniquement si son type précis et son public correspondent. Sur la seconde grille, les 3 cartes ont laissé leur place dans les 3 premières à deux vraies pièces pour « théâtre », un atelier théâtre ados pour « ados ».</p>
 </article>
 <article class="project-card">
 <div class="project-top"><span class="project-type">HORS PERTINENCE</span></div>
@@ -190,8 +190,8 @@
 </article>
 </div>
 <div class="reflection-grid">
-<div class="reflection-card"><h3>Par famille : où ça pèche</h3><p>Sur les recherches courtes, la faiblesse est concentrée : <strong>0 à 57 %</strong> sur le sport et les loisirs ouverts toute l'année (piscine, VTT, billard, trampoline park). Ce sont des <strong>lieux</strong>, pas des événements datés ; SortirIA est un agenda. Les sports datés (matchs, courses, randonnées) sont trouvés. C'est une limite voulue, et la base de lieux est une évolution prévue après la soutenance.</p></div>
-<div class="reflection-card"><h3>Les 5 « non » de la seconde grille de départ</h3><p>Ils portent tous sur le <strong>prix</strong> : ce sont les idées voisines payantes des deux questions « gratuit », où la base n'a rien de gratuit. La réponse l'annonce, et <code>eval_recherche</code> les compte à part.</p></div>
+<div class="reflection-card"><h3>Par famille : où ça pèche</h3><p>Sur les recherches courtes, la faiblesse est concentrée : <strong>0 à 57 %</strong> sur le sport et les loisirs ouverts toute l'année (piscine, VTT, billard, trampoline park). Ce sont des <strong>lieux</strong>, plutôt que des événements datés ; SortirIA est un agenda. Les sports datés (matchs, courses, randonnées) sont trouvés. C'est une limite voulue, et la base de lieux est une évolution prévue après la soutenance.</p></div>
+<div class="reflection-card"><h3>Les 5 « non » de la seconde grille de départ</h3><p>Ils portent tous sur le <strong>prix</strong> : ce sont les idées voisines payantes des deux questions « gratuit », pour lesquelles la base proposait uniquement des sorties payantes. La réponse l'annonce, et <code>eval_recherche</code> les compte à part.</p></div>
 </div>
 </div>
 </section>
@@ -200,7 +200,7 @@
 <div class="container">
 <p class="section-number">04</p>
 <h2>Le juge LLM</h2>
-<p class="section-intro">Un juge seul se note lui-même sans garantie ; une annotation seule ne se rejoue pas. J'ai calibré l'un sur l'autre.</p>
+<p class="section-intro">Un juge seul a besoin d'une référence ; une annotation seule se refait à la main à chaque fois. J'ai calibré l'un sur l'autre.</p>
 <table class="story-table params-table">
 <thead><tr><th>Version</th><th>Changement</th><th>Accord</th><th>AC1</th></tr></thead>
 <tbody>
@@ -274,8 +274,8 @@
 <figcaption>Chaque version corrige une erreur systématique lue dans les raisons du juge, puis on mesure à nouveau. La plupart des corrections retirent un critère au juge pour le confier au code. Source : <code>docs/evaluation.md</code> § 2.</figcaption></figure>
 
 <div class="reflection-grid">
-<div class="reflection-card"><h3>Ce que les raisons ont révélé</h3><ul><li><strong>Des dates mal calculées</strong> : « 31 oct. &lt; 16 oct. 2026 ».</li><li><strong>Des contraintes inventées</strong> : un « délai implicite », un lieu « Montpellier » non demandé.</li><li><strong>Un prix absent lu comme payant.</strong></li></ul></div>
-<div class="reflection-card"><h3>Le partage code / LLM</h3><p>Ces vérifications sont donc faites par du code : dates, prix, commune. Le juge garde ce qu'il fait mieux que le code : comprendre un sujet et un public. Aucune règle n'a été écrite pour une carte précise ; une raison courte accompagne chaque verdict (colonne <code>raison_juge</code>).</p></div>
+<div class="reflection-card"><h3>Ce que les raisons ont révélé</h3><ul><li><strong>Des dates mal calculées</strong> : « 31 oct. &lt; 16 oct. 2026 ».</li><li><strong>Des contraintes inventées</strong> : un « délai implicite », un lieu « Montpellier » ajouté de lui-même.</li><li><strong>Un prix absent lu comme payant.</strong></li></ul></div>
+<div class="reflection-card"><h3>Le partage code / LLM</h3><p>Ces vérifications sont donc faites par du code : dates, prix, commune. Le juge garde ce qu'il fait mieux que le code : comprendre un sujet et un public. Chaque règle est générale, écrite pour toutes les cartes ; une raison courte accompagne chaque verdict (colonne <code>raison_juge</code>).</p></div>
 </div>
 <div class="callout subtle">
 <span class="eyebrow">TRANSPARENCE</span>
@@ -285,7 +285,7 @@
 
 <div class="experiment-card">
 <div class="experiment-header">
-<div><span class="experiment-number">CONFIRMATION · JUGE v7 FIGÉ</span><h3>135 cartes qu'il n'avait jamais vues</h3></div>
+<div><span class="experiment-number">CONFIRMATION · JUGE v7 FIGÉ</span><h3>135 cartes toutes nouvelles pour lui</h3></div>
 <span class="experiment-status selected">Au-dessus du seuil</span>
 </div>
 <div class="experiment-metrics">
@@ -296,14 +296,14 @@
 </div>
 <div class="experiment-analysis">
 <div><span>LES DÉSACCORDS VONT DANS LES DEUX SENS</span><p>Sur les 11 désaccords des recherches courtes, le juge est plus indulgent sur 6 (un « Paint &amp; Drink » pour « peinture », un marché à Carnon-Plage pour « plage ») et plus sévère sur 5 (des expositions nocturnes pour « marché nocturne », un concert intitulé « Salon de musique » pour « salon »).</p></div>
-<div><span>UN ÉCART ATTENDU</span><p>Sur les 50 questions après corrections, 4 des 10 désaccords viennent des idées voisines payantes : le juge ne voit pas le prix, contrôlé par le code. À surveiller avant de le laisser seul juge d'un rejeu : les recherches d'un mot (« marché nocturne », « salon »).</p></div>
+<div><span>UN ÉCART ATTENDU</span><p>Sur les 50 questions après corrections, 4 des 10 désaccords viennent des idées voisines payantes : le prix est contrôlé par le code, hors de la vue du juge. À surveiller avant de le laisser seul juge d'un rejeu : les recherches d'un mot (« marché nocturne », « salon »).</p></div>
 </div>
 </div>
 <p class="table-note">Source : <code>docs/evaluation.md</code> § 2 « Seconde grille », 16/10/2026. Coût du juge : environ 0,03 $ par passage, lancé à la main (<code>docs/couts.md</code>).</p>
 
 <div class="callout">
 <span class="eyebrow">KAPPA OU AC1 ?</span>
-<strong>Avec 3 « non » sur 139, le kappa de Cohen est instable ; l'AC1 de Gwet ne l'est pas.</strong>
+<strong>Avec 3 « non » sur 139, le kappa de Cohen est instable ; l'AC1 de Gwet, lui, reste stable.</strong>
 <p>Les deux corrigent l'accord brut de la part due au hasard. Le kappa estime ce hasard à partir des proportions de « oui » : quand presque tout est « oui », deux juges qui disent toujours « oui » s'accordent déjà presque toujours par hasard, et une seule carte fait basculer le score. Sur la grille 1, il passe de 0,05 à 0,74 pour quelques cartes. L'AC1 calcule le hasard autrement et reste stable dans ce déséquilibre : 0,985 pour le même juge, avec un kappa de 0,74. Je donne les deux, et je lis l'accord brut et l'AC1.</p>
 </div>
 </div>
@@ -313,21 +313,21 @@
 <div class="container">
 <p class="section-number">05</p>
 <h2>Temps de réponse et coût</h2>
-<p class="section-intro">Les 175 questions des deux jeux, dans un ordre fixe, passent par la vraie recherche avec la rédaction par Mistral, sans être tracées.</p>
+<p class="section-intro">Les 175 questions des deux jeux, dans un ordre fixe, passent par la vraie recherche avec la rédaction par Mistral, hors du journal.</p>
 <div class="experiment-metrics">
-<div><strong>3,0 à 3,3 s</strong><span>médiane, sans cache (100 puis 175 questions)</span></div>
-<div><strong>6,0 à 6,4 s</strong><span>P95, sans cache (seuil 8 s)</span></div>
+<div><strong>3,0 à 3,3 s</strong><span>médiane, hors cache (100 puis 175 questions)</span></div>
+<div><strong>6,0 à 6,4 s</strong><span>P95 : 95 % des réponses plus rapides, hors cache (seuil 8 s)</span></div>
 <div><strong>0,11 s</strong><span>P95 avec cache (médiane 0,10 s)</span></div>
 <div><strong>0,000118 $</strong><span>coût Mistral par question (0,12 $ pour 1 000)</span></div>
 </div>
-<p class="table-note">Source : <code>docs/evaluation.md</code> § 3 et <code>docs/couts.md</code>, mesures du 16/10/2026 (<code>benchmarks/cout_latence/</code>). Réponses dégradées, sans carte : 0.</p>
+<p class="table-note">Source : <code>docs/evaluation.md</code> § 3 et <code>docs/couts.md</code>, mesures du 16/10/2026 (<code>benchmarks/cout_latence/</code>). Chaque réponse a présenté des cartes.</p>
 <div class="about-grid">
-<div class="large-text">Le temps se partage entre la base et Mistral ; comprendre la question ne coûte presque rien.</div>
+<div class="large-text">Le temps se partage entre la base et Mistral ; comprendre la question est quasi instantané et gratuit.</div>
 <div>
 <table class="story-table params-table">
-<thead><tr><th>Étape (moyenne, sans cache)</th><th>Temps</th><th>Ce qui s'y passe</th></tr></thead>
+<thead><tr><th>Étape (moyenne, hors cache)</th><th>Temps</th><th>Ce qui s'y passe</th></tr></thead>
 <tbody>
-<tr><td>Comprendre</td><td>1 ms</td><td>des règles, pas de modèle</td></tr>
+<tr><td>Comprendre</td><td>1 ms</td><td>des règles, plus rapides qu'un modèle</td></tr>
 <tr><td>Rechercher</td><td>1,5 s</td><td>embedding de la question par Mistral, requêtes SQL</td></tr>
 <tr><td>Filtrer</td><td>0,5 s</td><td>autres dates de chaque événement, une requête par carte</td></tr>
 <tr><td>Rédiger</td><td>1,2 s</td><td><code>mistral-small</code></td></tr>
@@ -336,8 +336,8 @@
 </div>
 </div>
 <div class="config-grid">
-<div class="config-card"><span>Cache</span><strong>0,1 s et 0 $</strong><p>Une question déjà posée le même jour, sur la même collecte, répond en 0,1 s et ne coûte rien. Avec 30 % de questions répétées, le coût pour 1 000 questions passe de 0,12 $ à 0,08 $.</p></div>
-<div class="config-card"><span>Modèle plus petit</span><strong>ministral-8b non retenu</strong><p>Mesuré sur 100 questions : médiane 3,8 s, P95 6,4 s (maximum 13,8 s), rédaction 1,9 s contre 1,3 s ; 0,097 $ pour 1 000 questions contre 0,117 $. 17 % d'économie, soit 0,02 $ pour 1 000 questions, pour des réponses plus lentes et une qualité non mesurée : <code>mistral-small</code> est gardé.</p></div>
+<div class="config-card"><span>Cache</span><strong>0,1 s et 0 $</strong><p>Une question déjà posée le même jour, sur la même collecte, répond en 0,1 s, gratuitement. Avec 30 % de questions répétées, le coût pour 1 000 questions passe de 0,12 $ à 0,08 $.</p></div>
+<div class="config-card"><span>Modèle plus petit</span><strong>ministral-8b écarté</strong><p>Mesuré sur 100 questions : médiane 3,8 s, P95 6,4 s (maximum 13,8 s), rédaction 1,9 s contre 1,3 s ; 0,097 $ pour 1 000 questions contre 0,117 $. 17 % d'économie, soit 0,02 $ pour 1 000 questions, pour des réponses plus lentes et une qualité restée à mesurer : <code>mistral-small</code> est gardé.</p></div>
 <div class="config-card"><span>Lecture des temps</span><strong>Un majorant</strong><p>Mesuré depuis un poste de travail : chaque requête fait l'aller-retour jusqu'à la base, à Paris. En production, l'API est dans le même centre de données que la base. Le tableau Grafana « Recherche » donne la latence réelle.</p></div>
 </div>
 <h3>Projection des coûts mensuels</h3>
@@ -363,15 +363,15 @@
 <div class="container">
 <p class="section-number">06</p>
 <h2>Qualité des données</h2>
-<p class="section-intro">Une bonne recherche sur une base fausse ne sert à rien : la base est contrôlée chaque nuit.</p>
+<p class="section-intro">Une bonne recherche demande une base juste : la base est contrôlée chaque nuit.</p>
 <div class="skills-grid">
 <div class="skill-group"><h3>Juge de qualité nocturne</h3><div class="constraint-value">89 à 94 %</div><p class="constraint-text">Chaque nuit, 20 fiches tirées au hasard sont notées par <code>mistral-medium</code>, un autre modèle que celui qui enrichit, sur quatre questions fermées : cohérence, est une sortie, publics justes, catégorie juste. Alerte sous 80 %. 89 %, puis 94 % après correction.</p></div>
 <div class="skill-group"><h3>Collecte de la nuit</h3><div class="constraint-value">≈ 1 980</div><p class="constraint-text">événements par nuit via OpenAgenda et DATAtourisme, environ 2 450 en base, dont 434 lus dans le programme PDF de Sète agglopôle. Coût : 0,14 $ la première nuit (base vide), ≈ 0,005 $ ensuite.</p></div>
-<div class="skill-group"><h3>Fraîcheur</h3><div class="constraint-value">&lt; 24 h</div><p class="constraint-text">Collecte réussie depuis moins de 24 h, suivie dans Grafana (heures depuis la dernière collecte réussie) et dans le mail du matin. La recherche ne propose que les 3 prochains mois.</p></div>
+<div class="skill-group"><h3>Fraîcheur</h3><div class="constraint-value">&lt; 24 h</div><p class="constraint-text">Collecte réussie depuis moins de 24 h, suivie dans Grafana (heures depuis la dernière collecte réussie) et dans le mail du matin. La recherche couvre les 3 prochains mois.</p></div>
 </div>
 <div class="reflection-grid">
-<div class="reflection-card"><h3>Motifs de rejet, comptés chaque nuit</h3><ul><li>pas de date ;</li><li>événement passé ;</li><li>annulé ou reporté ;</li><li>pas une sortie (offre d'emploi, collecte de sang…).</li></ul><p>Chaque nuit, par source : extraits, rejetés et pourquoi, enregistrés, disparus ; dans le mail, en base (<code>collect_runs</code>) et dans Grafana.</p></div>
-<div class="reflection-card"><h3>Une base à jour sans intervention</h3><ul><li>événements passés retirés chaque nuit ;</li><li>événements disparus retirés seulement si la source a été lue en entier, sans échec ;</li><li>alerte si une source échoue ou baisse de moitié, ou si la couverture famille ou soirée d'une zone tombe sous 10 sorties dans la semaine ;</li><li>date de mise à jour de la source sur chaque fiche.</li></ul></div>
+<div class="reflection-card"><h3>Motifs de rejet, comptés chaque nuit</h3><ul><li>date manquante ;</li><li>événement passé ;</li><li>annulé ou reporté ;</li><li>hors sujet (offre d'emploi, collecte de sang…).</li></ul><p>Chaque nuit, par source : extraits, rejetés et pourquoi, enregistrés, disparus ; dans le mail, en base (<code>collect_runs</code>) et dans Grafana.</p></div>
+<div class="reflection-card"><h3>Une base à jour toute seule</h3><ul><li>événements passés retirés chaque nuit ;</li><li>événements disparus retirés seulement si la source a été lue en entier, avec succès ;</li><li>alerte si une source échoue ou baisse de moitié, ou si la couverture famille ou soirée d'une zone tombe sous 10 sorties dans la semaine ;</li><li>date de mise à jour de la source sur chaque fiche.</li></ul></div>
 </div>
 <p class="table-note">Source : <code>docs/fiabilite.md</code> § 1 et 2, <code>docs/evaluation.md</code> § 4, <code>docs/couts.md</code>.</p>
 </div>
@@ -405,10 +405,10 @@ uv run python -m scripts.mesure_cout_latence --n 1000 --oui</code></pre></div>
 <tr><td>Contraintes et compréhension</td><td><code>benchmarks/recherche/historique.csv</code> (une ligne par lancement) et un rapport JSON question par question ; MLflow, expérience <code>sortiria-evaluation-recherche</code>, quand le serveur répond</td></tr>
 <tr><td>Pertinence et juge</td><td><code>benchmarks/pertinence/</code> : grilles annotées, verdicts et raisons du juge (<code>…_juge.csv</code>), <code>historique.csv</code> du juge v1 au v7</td></tr>
 <tr><td>Temps de réponse et coût</td><td><code>benchmarks/cout_latence/</code> : rapport JSON (temps par étape, coût selon la part de questions répétées) et <code>historique.csv</code></td></tr>
-<tr><td>CI</td><td>rapports <code>eval_recherche.json</code>, <code>eval_pratique.json</code> et <code>eval_moments.json</code> attachés au job « Évaluation de la recherche » (seuils 95 %, 90 %, 90 %) ; environ 3 860 tests pytest sur un vrai PostgreSQL</td></tr>
+<tr><td>CI</td><td>rapports <code>eval_recherche.json</code>, <code>eval_pratique.json</code> et <code>eval_moments.json</code> attachés au job « Évaluation de la recherche » (seuils 95 %, 90 %, 90 %) ; environ 3 880 tests pytest sur un vrai PostgreSQL</td></tr>
 </tbody>
 </table>
-<p class="table-note">Source : <code>benchmarks/README.md</code>, docstrings de <code>scripts/eval_recherche.py</code>, <code>scripts/eval_pertinence.py</code>, <code>scripts/mesure_cout_latence.py</code>, <code>scripts/jeu_test_recherche.py</code>, et <code>.github/workflows/ci.yml</code>. Le juge (<code>--juge</code>) coûte environ 0,03 $ par passage ; il est lancé à la main, jamais pendant une démonstration.</p>
+<p class="table-note">Source : <code>benchmarks/README.md</code>, docstrings de <code>scripts/eval_recherche.py</code>, <code>scripts/eval_pertinence.py</code>, <code>scripts/mesure_cout_latence.py</code>, <code>scripts/jeu_test_recherche.py</code>, et <code>.github/workflows/ci.yml</code>. Le juge (<code>--juge</code>) coûte environ 0,03 $ par passage ; il est lancé à la main, en dehors des démonstrations.</p>
 </div>
 </section>
 
@@ -416,11 +416,11 @@ uv run python -m scripts.mesure_cout_latence --n 1000 --oui</code></pre></div>
 <div class="container">
 <p class="section-number">08</p>
 <h2>Limites des mesures</h2>
-<p class="section-intro">Ces chiffres sont solides pour ce qu'ils mesurent. Voici ce qu'ils ne mesurent pas.</p>
+<p class="section-intro">Ces chiffres sont solides pour ce qu'ils mesurent. Voici ce qui reste à mesurer, et comment.</p>
 <div class="reflection-grid">
-<div class="reflection-card"><h3>Des questions écrites à la main</h3><p>Les 50 questions et les 125 recherches courtes sont les miennes. Elles couvrent 8 familles, mais pas encore la façon dont de vrais visiteurs écrivent.</p></div>
-<div class="reflection-card"><h3>L'annotateur est l'auteur</h3><p>Biais possible vers l'indulgence. Contre-mesure : un juge qui n'a pas vu le code et se montre plutôt plus sévère, des désaccords publiés, et une seconde grille sur des cartes nouvelles.</p></div>
-<div class="reflection-card"><h3>Peu d'usage réel</h3><p>Le pouce haut / bas et le tableau Grafana « Recherche » tournent depuis le 16/10. Les testeurs ont posé 93 questions (17 au 26/10) : 47 % de réponses exactes, un seul avis. La satisfaction réelle reste à mesurer, sur des questions réelles en nombre. De même pour la dérive (depuis le 19/10) : sous 30 questions par semaine, elle n'est pas jugée, pour ne pas lancer de fausse alerte.</p></div>
+<div class="reflection-card"><h3>Des questions écrites à la main</h3><p>Les 50 questions et les 125 recherches courtes sont les miennes. Elles couvrent 8 familles ; la façon dont de vrais visiteurs écrivent viendra de l'usage réel.</p></div>
+<div class="reflection-card"><h3>L'annotateur est l'auteur</h3><p>Biais possible vers l'indulgence. Contre-mesure : un juge indépendant du code, plutôt plus sévère, des désaccords publiés, et une seconde grille sur des cartes nouvelles.</p></div>
+<div class="reflection-card"><h3>Un usage réel encore jeune</h3><p>Le pouce haut / bas et le tableau Grafana « Recherche » tournent depuis le 16/10. Les testeurs ont posé 93 questions (17 au 26/10) : 47 % de réponses exactes, un seul avis. La satisfaction réelle sera mesurée sur des questions réelles en nombre, lors de la prochaine phase d'usage. De même pour la dérive (depuis le 19/10) : elle est jugée à partir de 30 questions par semaine, pour éviter les fausses alertes.</p></div>
 <div class="reflection-card"><h3>Des temps majorés</h3><p>La latence est mesurée depuis un poste, avec l'aller-retour vers la base : un majorant de la production.</p></div>
 </div>
 <div class="hero-actions">
@@ -434,14 +434,14 @@ uv run python -m scripts.mesure_cout_latence --n 1000 --oui</code></pre></div>
 <div class="container">
 <p class="section-number">09</p>
 <h2>D'où vient le code</h2>
-<p class="section-intro">Les mesures sont toutes écrites pour SortirIA : aucun outil d'évaluation n'est repris des projets précédents (RAGAS, utilisé au projet 6, n'a pas été repris). Chaque lancement garde son résultat dans <code>benchmarks/</code>.</p>
+<p class="section-intro">Les mesures sont toutes écrites pour SortirIA : chaque outil d'évaluation est nouveau (RAGAS, utilisé au projet 6, est resté au projet 6). Chaque lancement garde son résultat dans <code>benchmarks/</code>.</p>
 <table class="story-table params-table">
 <thead><tr><th>Fichier ou module</th><th>Origine</th><th>Statut</th><th>Ce qui a été adapté ou écrit</th></tr></thead>
 <tbody>
 <tr><td><code>scripts/eval_recherche.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Compréhension des questions et respect des contraintes sur les 50 questions et les 125 recherches courtes ; historique dans <code>benchmarks/recherche/</code>.</td></tr>
 <tr><td><code>scripts/jeu_test_recherche.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Base de test figée pour rejouer l'évaluation des contraintes à chaque push dans la CI (échec sous 95 %).</td></tr>
 <tr><td><code>scripts/eval_pertinence.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Pertinence des 3 premières propositions : grille de jugement humain, puis juge Mistral Large calibré sur cette grille.</td></tr>
-<tr><td><code>scripts/mesure_cout_latence.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Temps de réponse et coût Mistral, avec ou sans cache, sans trace dans <code>rag_requests</code> ; résultats dans <code>benchmarks/cout_latence/</code>.</td></tr>
+<tr><td><code>scripts/mesure_cout_latence.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Temps de réponse et coût Mistral, avec et hors cache, hors du journal <code>rag_requests</code> ; résultats dans <code>benchmarks/cout_latence/</code>.</td></tr>
 <tr><td><code>src/event/quality_judge.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Méthode « LLM comme juge » : 20 fiches enrichies tirées au hasard chaque nuit, score suivi dans Grafana (et dans MLflow pour une collecte lancée sur le poste).</td></tr>
 </tbody>
 </table>

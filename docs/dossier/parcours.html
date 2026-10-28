@@ -21,7 +21,7 @@
 <div class="container hero-content">
 <p class="eyebrow">SORTIRIA · MON PARCOURS</p>
 <h1>Mon parcours<span>de cinq projets à SortirIA</span></h1>
-<p class="hero-text"><strong>SortirIA ne part pas de zéro : il assemble et industrialise cinq de mes projets</strong> de la formation Ingénieur IA. J'en suis l'auteur, ils sont publics sur GitHub, et SortirIA en reprend et adapte le code : la collecte de CheckIt.AI, l'organisation de l'agent et l'interface de Chess Agent, l'API de l'Assistant RAG OpenAgenda, la livraison du triage médical, le suivi du scoring crédit. Cette page montre ce que chaque projet m'a appris, ce qu'il apporte, et ce que j'ai dû changer.</p>
+<p class="hero-text"><strong>SortirIA s'appuie sur cinq de mes projets : il les assemble et les rend solides pour la production</strong> de la formation Ingénieur IA. J'en suis l'auteur, ils sont publics sur GitHub, et SortirIA en reprend et adapte le code : la collecte de CheckIt.AI, l'organisation de l'agent et l'interface de Chess Agent, l'API de l'Assistant RAG OpenAgenda, la livraison du triage médical, le suivi du scoring crédit. Cette page montre ce que chaque projet m'a appris, ce qu'il apporte, et ce que j'ai dû changer.</p>
 <div class="result-grid">
 <div class="result-card"><strong>5</strong><span>projets précédents réutilisés</span></div>
 <div class="result-card"><strong>134</strong><span>commits dans ces cinq dépôts</span></div>
@@ -46,13 +46,13 @@
 <div class="timeline">
 <div class="timeline-item"><span>Projet 6 • 17/03 → 10/04/2026 • 40 commits</span><h3>Assistant RAG OpenAgenda</h3>
 <p><strong>Objectif.</strong> Démontrer la faisabilité d'un assistant qui recommande des événements culturels à partir d'une question libre, sur des données réelles d'OpenAgenda (Montpellier) : recherche vectorielle FAISS, réponse de Mistral contrainte par le contexte, API FastAPI et tableau Streamlit.</p>
-<p><strong>Ce que j'y ai appris.</strong> La chaîne RAG complète, et sa limite : une recherche par le sens respecte mal « samedi », « à Sète » ou « gratuit ». Mon README le notait déjà : « pas encore de recherche hybride vectorielle et lexicale », « le filtrage métier reste encore perfectible », et « déploiement cloud » en piste.</p>
+<p><strong>Ce que j'y ai appris.</strong> La chaîne RAG complète (chercher des documents, puis faire rédiger la réponse par un modèle), et sa limite : une recherche par le sens respecte mal « samedi », « à Sète » ou « gratuit ». Mon README le notait déjà : « pas encore de recherche hybride vectorielle et lexicale », « le filtrage métier reste encore perfectible », et « déploiement cloud » en piste. SortirIA répond à ces trois pistes.</p>
 <p><strong>Ce qu'il apporte à SortirIA.</strong> L'appel à l'API OpenAgenda (porté dans l'extracteur), le point d'entrée de l'API (<code>app/main.py</code>, <code>app/security.py</code>), l'idée du texte indexé. Ses limites sont devenues le cahier des charges de la recherche.</p>
 <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/rag-openagenda">Dépôt rag-openagenda →</a></div>
 <div class="timeline-item"><span>Projet 5 • 14/04 → 13/05/2026 • 45 commits</span><h3>Scoring crédit « Prêt à dépenser »</h3>
 <p><strong>Objectif.</strong> Mettre un modèle de scoring crédit en production : API FastAPI, prédictions historisées dans PostgreSQL, monitoring (dérive avec Evidently, latence P95 et P99, temps d'inférence), tableau Streamlit, optimisation ONNX, CI/CD.</p>
 <p><strong>Ce que j'y ai appris.</strong> Un modèle en production se surveille : tracer chaque appel, séparer la latence de l'API et le temps du modèle, suivre la dérive et un coût métier.</p>
-<p><strong>Ce qu'il apporte à SortirIA.</strong> La façon de suivre le service : chaque question est journalisée dans <code>rag_requests</code> (contraintes comprises, latence, tokens, coût) et le P95 est mesuré. Ses modules de suivi sont copiés comme modèles dans <code>reference/p5_monitoring/</code>, non importés. Le suivi de la dérive y revient le 19/10 : la méthode d'Evidently (PSI) recodée dans <code>agent/drift.py</code>, appliquée aux questions, aux réponses et à la collecte.</p>
+<p><strong>Ce qu'il apporte à SortirIA.</strong> La façon de suivre le service : chaque question est journalisée dans <code>rag_requests</code> (contraintes comprises, latence, tokens, coût) et le P95 est mesuré (le temps sous lequel arrivent 95 % des réponses). Ses modules de suivi servent de modèles dans <code>reference/p5_monitoring/</code> : je m'en inspire, l'application garde son propre code. Le suivi de la dérive (les changements dans les usages et les données) y revient le 19/10 : la méthode d'Evidently (PSI) recodée dans <code>agent/drift.py</code>, appliquée aux questions, aux réponses et à la collecte.</p>
 <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/pret_a_depenser">Dépôt pret_a_depenser →</a></div>
 <div class="timeline-item"><span>Projet 12 • 26/07 → 30/07/2026 • 6 commits</span><h3>CheckIt.AI</h3>
 <p><strong>Objectif.</strong> Un pipeline d'acquisition d'articles de presse destinés au fact-checking : flux RSS, API d'actualité, scraping, réseaux sociaux et jeux de données académiques, puis validation, déduplication et stockage PostgreSQL, orchestrés par Airflow.</p>
@@ -61,17 +61,17 @@
 <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">Dépôt checkit_ai →</a></div>
 <div class="timeline-item"><span>Projet 13 • 18/08 → 14/10/2026 • 16 commits</span><h3>Chess Agent</h3>
 <p><strong>Objectif.</strong> Aider à apprendre les ouvertures d'échecs : à partir d'une position, produire une analyse pédagogique qui combine python-chess, Lichess, Stockfish, un RAG Wikichess (Milvus), YouTube et un LLM local ; le tout orchestré par LangGraph, exposé par FastAPI, affiché par Angular.</p>
-<p><strong>Ce que j'y ai appris.</strong> Écrire un agent LangGraph lisible : un état commun, des nœuds sans routage, un routage à part et testé. Et un principe : « Stockfish calcule, les sources documentaires apportent le contexte et le LLM explique ».</p>
+<p><strong>Ce que j'y ai appris.</strong> Écrire un agent LangGraph lisible (un programme qui enchaîne seul des étapes) : un état commun, des nœuds centrés sur leur tâche, un routage à part et testé. Et un principe : « Stockfish calcule, les sources documentaires apportent le contexte et le LLM explique ».</p>
 <p><strong>Ce qu'il apporte à SortirIA.</strong> L'organisation de l'agent (état, nœuds, routage, services injectés par la configuration), la configuration Angular, le Dockerfile et la lecture du flux SSE de l'interface, la CI GitHub Actions.</p>
 <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Dépôt chess_agent →</a></div>
 <div class="timeline-item"><span>Projet 14 • 22/09 → 13/10/2026 • 27 commits</span><h3>Triage médical</h3>
 <p><strong>Objectif.</strong> Un petit modèle de langage (Qwen3-1.7B-Base, QLoRA, SFT puis DPO) qui classe un patient en P1, P2 ou P3 et justifie sa décision, servi par vLLM derrière une API FastAPI, avec Docker et une CI/CD.</p>
-<p><strong>Ce que j'y ai appris.</strong> Un protocole d'évaluation qui sépare strictement sélection et mesure (un test gelé), une API qui ne dépend pas du modèle (un moteur simulé pour la CI), une livraison automatique, et un site de documentation par pages.</p>
-<p><strong>Ce qu'il apporte à SortirIA.</strong> Le Dockerfile de l'API, la CD (<code>cd.yml</code>), Grafana (<code>monitoring/</code> ; Prometheus, essayé, n'a pas été gardé), la forme de ce site. La même discipline se retrouve dans le juge de pertinence : calibré sur une grille, puis vérifié sur 135 cartes nouvelles.</p>
+<p><strong>Ce que j'y ai appris.</strong> Un protocole d'évaluation qui sépare strictement sélection et mesure (un test gelé), une API indépendante du modèle (un moteur simulé pour la CI, les tests automatiques), une livraison automatique, et un site de documentation par pages.</p>
+<p><strong>Ce qu'il apporte à SortirIA.</strong> Le Dockerfile de l'API, la CD (<code>cd.yml</code>), Grafana (<code>monitoring/</code> ; Prometheus, reporté à un trafic plus fort), la forme de ce site. La même discipline se retrouve dans le juge de pertinence : calibré sur une grille, puis vérifié sur 135 cartes nouvelles.</p>
 <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/medical_triage_agent">Dépôt medical_triage_agent →</a></div>
 <div class="timeline-item"><span>SortirIA • code copié le 13/10, dépôt à partir du 14/10/2026</span><h3>SortirIA</h3>
 <p><strong>Objectif.</strong> Un assistant de sorties pour Montpellier et le bassin de Thau : des événements réels, à venir, qui respectent la demande et citent leur source, mis à jour chaque nuit, en production sur <code>www.sortiria-montpellier.fr</code> depuis le 15/10/2026.</p>
-<p><strong>Ce que j'y fais.</strong> J'assemble les briques des cinq projets, je les adapte à des événements datés et situés, et j'écris ce qui n'existait nulle part : l'agent qui propose, la lecture des PDF, la recherche sous contraintes, le déploiement Azure, les mesures (section 06).</p>
+<p><strong>Ce que j'y fais.</strong> J'assemble les briques des cinq projets, je les adapte à des événements datés et situés, et j'écris ce qui manquait à tous : l'agent qui propose, la lecture des PDF, la recherche sous contraintes, le déploiement Azure, les mesures (section 06).</p>
 <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/SortirIA">Dépôt SortirIA →</a></div>
 </div>
 <p class="table-note">Objectifs résumés d'après le README de chaque dépôt ; apports d'après <code>PROVENANCE.md</code> et les tableaux « D'où vient le code » de ce site.</p>
@@ -185,7 +185,7 @@ class ApiAdapter:
     validate_item=validate_openagenda_item,
 )</code></pre></div>
 </div>
-<p>Le contrat d'adaptateur est le même fichier, à la mention de provenance près. Une nouvelle source se branche en écrivant trois fonctions (parcourir, construire, valider), sans toucher au moteur.</p>
+<p>Le contrat d'adaptateur est le même fichier, à la mention de provenance près. Une nouvelle source se branche en écrivant trois fonctions (parcourir, construire, valider) ; le moteur reste intact.</p>
 
 <h3>Les sources décrites en YAML</h3>
 <div class="api-example">
@@ -210,7 +210,7 @@ class ApiAdapter:
     api_key_secret_name: "openagenda_api_key"
     zone: "Montpellier"</code></pre></div>
 </div>
-<p>Même forme (identifiant, type, rôle, adresse, nom du secret), autre contenu : des agendas d'une zone au lieu de flux d'actualité. La clé reste dans <code>.env</code>, le fichier ne porte que le nom du secret.</p>
+<p>Même forme (identifiant, type, rôle, adresse, nom du secret), autre contenu : des agendas d'une zone au lieu de flux d'actualité. La clé reste dans <code>.env</code>, le fichier porte uniquement le nom du secret.</p>
 
 <h3>D'un article étiqueté à un événement daté</h3>
 <div class="api-example">
@@ -246,7 +246,7 @@ class ApiAdapter:
 <tr><td>Moteur API (<code>api_extractor.py</code>)</td><td>Pagination, nouveaux essais, secrets, métriques.</td><td>Une ligne, le 14/10 : <code>params=request_params or None</code>.</td><td>Avec des paramètres vides, le lien « page suivante » de DATAtourisme perdait ses filtres et son curseur.</td></tr>
 <tr><td>Contrat d'adaptateur</td><td>Tel quel.</td><td>Nouveaux adaptateurs : OpenAgenda, DATAtourisme, iCal, PDF, partenaires, RSS d'agenda, agenda en ligne.</td><td>Chaque source garde ses particularités hors du moteur.</td></tr>
 <tr><td><code>config/sources.yaml</code></td><td>Une section par moteur, la même description de source.</td><td>Sources de presse retirées ; zones (<code>areas</code>), agendas, fenêtre de 90 jours ajoutés.</td><td>Le périmètre est Montpellier et le bassin de Thau.</td></tr>
-<tr><td>Modèle de données</td><td>L'« article » comme format intermédiaire des moteurs.</td><td>Converti en <code>Event</code> par <code>src/event/</code> ; étiquettes vrai / faux (<code>BINARY_LABELS</code>, <code>LIAR_LABELS</code>, <code>LABEL_MAPPING</code>…) et rôles <code>*_reference</code> retirés le 16/10, avec leurs 68 tests.</td><td>Un événement n'est ni vrai ni faux : il est daté, situé, gratuit ou payant.</td></tr>
+<tr><td>Modèle de données</td><td>L'« article » comme format intermédiaire des moteurs.</td><td>Converti en <code>Event</code> par <code>src/event/</code> ; étiquettes vrai / faux (<code>BINARY_LABELS</code>, <code>LIAR_LABELS</code>, <code>LABEL_MAPPING</code>…) et rôles <code>*_reference</code> retirés le 16/10, avec leurs 68 tests.</td><td>Un événement se décrit autrement : il est daté, situé, gratuit ou payant.</td></tr>
 <tr><td>Base</td><td>Des scripts SQL versionnés, rejouables.</td><td>Table <code>articles</code> → table <code>events</code> (schéma <code>sql/sortiria/</code>) ; anciens fichiers archivés dans <code>reference/sql_checkit/</code>.</td><td>Les filtres de la recherche se font en SQL : les contraintes doivent être des colonnes.</td></tr>
 <tr><td>Extracteurs de presse</td><td>Les moteurs génériques (API, RSS, scraper, jeux de données).</td><td>22 extracteurs de presse et de fact-checking, le moteur réseaux sociaux et <code>praw</code> retirés le 13/10.</td><td>Hors du sujet ; l'ancien code reste dans l'historique git.</td></tr>
 </tbody>
@@ -260,9 +260,9 @@ class ApiAdapter:
 <div class="container">
 <p class="section-number">04</p>
 <h2>Avant / après : de Chess Agent à l'agent de collecte</h2>
-<p class="section-intro">Chess Agent analysait une position d'échecs à la demande. L'agent de SortirIA collecte chaque nuit. J'ai repris l'organisation (graphe, état, routage, nœuds, services injectés) et réécrit le contenu : aucun nœud n'est commun. <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Dépôt chess_agent →</a></p>
+<p class="section-intro">Chess Agent analysait une position d'échecs à la demande. L'agent de SortirIA collecte chaque nuit. J'ai repris l'organisation (graphe, état, routage, nœuds, services injectés) et réécrit le contenu : chaque nœud est neuf. <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Dépôt chess_agent →</a></p>
 
-<h3>Le graphe : des transitions, aucune logique métier</h3>
+<h3>Le graphe : uniquement des transitions</h3>
 <div class="api-example">
 <div><span>AVANT · CHESS AGENT · backend/app/agent/graph.py</span><pre><code>    graph_builder.add_edge(START, VALIDATE_POSITION_NODE)
 
@@ -339,18 +339,18 @@ class ApiAdapter:
     started_at: str                   # début de la collecte (ISO 8601)
     skipped_sources: list[str]        # sources sans configuration active, non lancées</code></pre></div>
 </div>
-<p>Même règle que dans Chess Agent : chaque nœud renvoie une mise à jour partielle, et les services ne sont jamais dans l'état, ils arrivent par la configuration du graphe.</p>
+<p>Même règle que dans Chess Agent : chaque nœud renvoie une mise à jour partielle, et les services restent hors de l'état : ils arrivent par la configuration du graphe.</p>
 
 <table class="story-table params-table">
 <thead><tr><th>Élément</th><th>Gardé</th><th>Changé</th><th>Pourquoi</th></tr></thead>
 <tbody>
-<tr><td>Graphe (<code>graph.py</code>)</td><td>Nœuds nommés, transitions déclarées à un seul endroit, aucune logique métier.</td><td>Analyse d'une position → collecte nocturne ; durée de chaque nœud mesurée (<code>timed</code>) ; suivi MLflow autour du graphe.</td><td>La durée par nœud et le coût alimentent <code>collect_runs</code> et Grafana.</td></tr>
+<tr><td>Graphe (<code>graph.py</code>)</td><td>Nœuds nommés, transitions déclarées à un seul endroit, logique métier rangée dans les nœuds.</td><td>Analyse d'une position → collecte nocturne ; durée de chaque nœud mesurée (<code>timed</code>) ; suivi MLflow autour du graphe.</td><td>La durée par nœud et le coût alimentent <code>collect_runs</code> et Grafana.</td></tr>
 <tr><td>État (<code>state.py</code>)</td><td>Mises à jour partielles, services hors de l'état.</td><td>Modèle Pydantic → <code>TypedDict</code> ; champs de collecte, de coût, de couverture, de propositions.</td><td>L'état final est remis tel quel au suivi (<code>services.tracker.finish(state)</code>).</td></tr>
 <tr><td>Routage (<code>routing.py</code>)</td><td>Séparé des nœuds, testé à part.</td><td>7 fonctions guidées par les options → 1 fonction guidée par le résultat.</td><td>La seule décision d'une nuit : réessayer, préparer, ou écrire un bilan d'échec.</td></tr>
-<tr><td>Nœuds</td><td>Le principe : un nœud, une responsabilité.</td><td>Écrits pour SortirIA : <code>plan_sources</code>, <code>extract_sources</code>, <code>prepare</code>, <code>load_events</code>, <code>judge_quality</code>, <code>watch_collection</code>, <code>write_report</code>.</td><td>Rien de commun entre une analyse d'échecs et une collecte.</td></tr>
+<tr><td>Nœuds</td><td>Le principe : un nœud, une responsabilité.</td><td>Écrits pour SortirIA : <code>plan_sources</code>, <code>extract_sources</code>, <code>prepare</code>, <code>load_events</code>, <code>judge_quality</code>, <code>watch_collection</code>, <code>write_report</code>.</td><td>Une analyse d'échecs et une collecte sont deux métiers distincts.</td></tr>
 <tr><td>Interface Angular</td><td>Configuration Angular, proxy <code>/api</code>, Dockerfile, lecture du flux SSE (<code>sse.ts</code>).</td><td>L'écran est écrit pour SortirIA, d'après la maquette validée.</td><td>La recherche s'affiche en direct, étape par étape, comme l'analyse de Chess Agent.</td></tr>
-<tr><td>CI (<code>ci.yml</code>)</td><td>La structure du workflow GitHub Actions.</td><td>Sans Milvus, Ollama ni Angular ; PostgreSQL avec pgvector, MkDocs et rejeu de l'évaluation de la recherche ajoutés.</td><td>Les tests doivent tourner sur une vraie base, et la qualité de la recherche bloquer un push.</td></tr>
-<tr><td>Principe</td><td>« Stockfish calcule, les sources apportent le contexte, le LLM explique. »</td><td>Le SQL filtre, la base fournit les événements, Mistral rédige.</td><td>Le modèle ne décide ni d'une date ni d'un prix : il ne peut pas en inventer.</td></tr>
+<tr><td>CI (<code>ci.yml</code>)</td><td>La structure du workflow GitHub Actions.</td><td>Milvus, Ollama et Angular retirés ; PostgreSQL avec pgvector, MkDocs et rejeu de l'évaluation de la recherche ajoutés.</td><td>Les tests doivent tourner sur une vraie base, et la qualité de la recherche bloquer un push.</td></tr>
+<tr><td>Principe</td><td>« Stockfish calcule, les sources apportent le contexte, le LLM explique. »</td><td>Le SQL filtre, la base fournit les événements, Mistral rédige.</td><td>Les dates et les prix viennent de la base : le modèle se contente de les citer.</td></tr>
 </tbody>
 </table>
 <p class="table-note">Extraits copiés des fichiers d'origine (Chess Agent, commit 5606117) et actuels ; détail : <a class="project-link" href="agent.html#s08">Agent →</a></p>
@@ -362,7 +362,7 @@ class ApiAdapter:
 <div class="container">
 <p class="section-number">05</p>
 <h2>Avant / après : de l'Assistant RAG à la recherche</h2>
-<p class="section-intro">L'Assistant RAG OpenAgenda préfiltrait les documents en Python, cherchait par le sens dans un index FAISS, puis réordonnait les résultats avec un score métier. Il ne savait pas garantir « samedi soir à Sète, gratuit ». SortirIA filtre d'abord en SQL, cherche ensuite par le sens et par les mots, et laisse Mistral rédiger à partir des seuls événements retenus. <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/rag-openagenda">Dépôt rag-openagenda →</a></p>
+<p class="section-intro">L'Assistant RAG OpenAgenda préfiltrait les documents en Python, cherchait par le sens dans un index FAISS, puis réordonnait les résultats avec un score métier. Garantir « samedi soir à Sète, gratuit » restait hors de sa portée. SortirIA filtre d'abord en SQL, cherche ensuite par le sens et par les mots, et laisse Mistral rédiger à partir des seuls événements retenus. <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/rag-openagenda">Dépôt rag-openagenda →</a></p>
 
 <h3>La recherche par le sens : de FAISS à pgvector</h3>
 <div class="api-example">
@@ -409,16 +409,16 @@ class ApiAdapter:
         conditions.append("sortiria.normalize_city(e.city) = ANY (%(cities)s)")
         params["cities"] = list(plan.cities)</code></pre></div>
 </div>
-<p>Dans le RAG, le préfiltre se relâchait quand il ne trouvait rien (la ville était abandonnée), puis les contraintes pesaient dans un score : un événement hors contrainte pouvait remonter. Dans SortirIA, il est exclu avant tout classement, et un élargissement est annoncé comme tel : 98,7 % des propositions respectent les contraintes sur 50 questions annotées.</p>
+<p>Dans le RAG, le préfiltre se relâchait quand la recherche revenait vide (la ville était abandonnée), puis les contraintes pesaient dans un score : un événement hors contrainte pouvait remonter. Dans SortirIA, il est exclu avant tout classement, et un élargissement est annoncé comme tel : 98,7 % des propositions respectent les contraintes sur 50 questions annotées.</p>
 
 <table class="story-table params-table">
 <thead><tr><th>Élément</th><th>Avant (projet 6)</th><th>Après (SortirIA)</th><th>Pourquoi</th></tr></thead>
 <tbody>
 <tr><td>Index</td><td>FAISS, construit en mémoire.</td><td>PostgreSQL + pgvector, colonne <code>embedding vector(1024)</code> remplie la nuit.</td><td>Une seule base pour les filtres, les vecteurs, le journal et les avis.</td></tr>
-<tr><td>Contraintes</td><td>Préfiltre en Python, relâché quand il ne trouve rien ; puis signaux métier qui réordonnent les candidats.</td><td>Filtres SQL stricts : période, public, zone ou commune, gratuit, budget, soirée, intérieur ou extérieur.</td><td>Une proposition hors contrainte est une erreur, pas un moins bon score.</td></tr>
+<tr><td>Contraintes</td><td>Préfiltre en Python, relâché quand la recherche revient vide ; puis signaux métier qui réordonnent les candidats.</td><td>Filtres SQL stricts : période, public, zone ou commune, gratuit, budget, soirée, intérieur ou extérieur.</td><td>Une proposition hors contrainte compte comme une erreur, au-delà d'un simple score.</td></tr>
 <tr><td>Classement</td><td>Vectoriel, puis score métier.</td><td>Hybride : sens (pgvector) et mots (plein texte français), rangs fusionnés (RRF).</td><td>Les mots retrouvent les noms propres que le sens rate ; c'était une limite écrite dans mon README.</td></tr>
-<tr><td>Compréhension</td><td>Extraction de signaux dans le service de classement.</td><td>Module dédié, <code>app/query_understanding.py</code> : règles et synonymes validés, 100 % sur 50 questions, sans appel à un modèle.</td><td>Testable seule, en 1 ms et sans coût.</td></tr>
-<tr><td>Rédaction</td><td>Mistral avec le contexte récupéré.</td><td>Mistral ne voit que les événements retenus, cite [1], [2]… ; citations vérifiées ; repli sans Mistral.</td><td>Aucun événement inventé, et une réponse même si Mistral ne répond pas.</td></tr>
+<tr><td>Compréhension</td><td>Extraction de signaux dans le service de classement.</td><td>Module dédié, <code>app/query_understanding.py</code> : règles et synonymes validés, 100 % sur 50 questions, avec des règles seules.</td><td>Testable seule, en 1 ms et gratuitement.</td></tr>
+<tr><td>Rédaction</td><td>Mistral avec le contexte récupéré.</td><td>Mistral voit uniquement les événements retenus, cite [1], [2]… ; citations vérifiées ; réponse de secours rédigée par le code.</td><td>100 % d'événements réels, et une réponse même quand Mistral reste muet.</td></tr>
 <tr><td>Ce qui reste du projet 6</td><td colspan="2"><code>app/main.py</code>, <code>app/config.py</code>, <code>app/security.py</code>, l'appel à l'API OpenAgenda (porté dans l'extracteur) et l'idée du texte indexé. L'ancien RAG (<code>rag_service</code>, <code>retrieval_service</code>, routes <code>/ask</code> et <code>/rebuild</code>, Streamlit, FAISS) est retiré le 15/10.</td><td>L'ancien code reste dans l'historique git.</td></tr>
 </tbody>
 </table>
@@ -431,13 +431,13 @@ class ApiAdapter:
 <div class="container">
 <p class="section-number">06</p>
 <h2>Ce qui est nouveau dans SortirIA</h2>
-<p class="section-intro">Ce qui suit n'existait dans aucun de mes projets précédents. C'est ce qui transforme un assemblage de briques en service.</p>
+<p class="section-intro">Ce qui suit est entièrement nouveau par rapport à mes projets précédents. C'est ce qui transforme un assemblage de briques en service.</p>
 <div class="reflection-grid">
-<div class="reflection-card"><h3>Un agent qui propose, un humain qui valide</h3><p>L'agent diagnostique une panne, propose une réparation, un synonyme ou un agenda ; tout passe par <code>agent_proposals</code> et attend une décision humaine. Il ne modifie jamais seul sa configuration.</p></div>
-<div class="reflection-card"><h3>Le programme PDF lu par Mistral</h3><p>Première source non structurée : 434 événements du programme de Sète agglopôle, avec des garde-fous (titre présent dans la page, date dans la période du document).</p></div>
+<div class="reflection-card"><h3>Un agent qui propose, un humain qui valide</h3><p>L'agent diagnostique une panne, propose une réparation, un synonyme ou un agenda ; tout passe par <code>agent_proposals</code> et attend une décision humaine. Chaque changement de configuration passe par moi.</p></div>
+<div class="reflection-card"><h3>Le programme PDF lu par Mistral</h3><p>Première source en texte libre : 434 événements du programme de Sète agglopôle, avec des garde-fous (titre présent dans la page, date dans la période du document).</p></div>
 <div class="reflection-card"><h3>Les documents des partenaires</h3><p>Un tableur, ou un PDF ou un Word mis en page librement et lu par Mistral ; l'import est proposé avec un aperçu, publié après validation.</p></div>
-<div class="reflection-card"><h3>La compréhension par règles</h3><p>Quand, où, pour qui, quel budget : 100 % sur 50 questions, sans appel à un modèle. J'ai abandonné l'extraction par un petit modèle, inutile ici.</p></div>
-<div class="reflection-card"><h3>La recherche sous contraintes</h3><p>Filtres SQL stricts, puis sens et mots fusionnés ; élargissement au sujet plutôt que des idées sans rapport : 98,7 % des propositions respectent la demande.</p></div>
+<div class="reflection-card"><h3>La compréhension par règles</h3><p>Quand, où, pour qui, quel budget : 100 % sur 50 questions, avec des règles seules. J'ai écarté l'extraction par un petit modèle : les règles suffisaient.</p></div>
+<div class="reflection-card"><h3>La recherche sous contraintes</h3><p>Filtres SQL stricts, puis sens et mots fusionnés ; élargissement au même sujet plutôt qu'à des idées éloignées : 98,7 % des propositions respectent la demande.</p></div>
 <div class="reflection-card"><h3>L'évaluation rejouée en CI</h3><p>À chaque push, le jeu de questions est rejoué sur une base figée ; sous 95 % de propositions conformes, la CI échoue.</p></div>
 <div class="reflection-card"><h3>Un juge de pertinence calibré</h3><p>Mistral Large, consigne v7 figée : 98,6 % d'accord avec mon jugement (AC1 0,985) sur la grille de calibrage, 91,9 % (AC1 0,889) sur 135 cartes nouvelles.</p></div>
 <div class="reflection-card"><h3>L'enrichissement et le juge des fiches</h3><p>Chaque nuit, Mistral range les nouveaux événements dans un vocabulaire commun ; un autre modèle juge 20 fiches : 89 à 94 % de qualité.</p></div>

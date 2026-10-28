@@ -21,7 +21,7 @@
 <div class="container hero-content">
 <p class="eyebrow">SORTIRIA · PROCÉDURES</p>
 <h1>Le mode<span> d'emploi</span></h1>
-<p class="hero-text">Construire SortirIA ne suffit pas : il faut savoir l'exploiter. Cette page rassemble les gestes que je fais, ou que ferait quelqu'un qui reprendrait le service : installer le poste, lancer une collecte, trancher les propositions de l'agent, brancher une source ou un partenaire, mesurer, déployer, revenir en arrière, réagir à un incident. Pour chaque procédure : <strong>la commande exacte</strong> (PowerShell et uv, sous Windows), <strong>ce qu'on doit voir</strong>, et <strong>quoi faire si ça échoue</strong>. Chaque option a été relevée dans le code (<code>argparse</code> des modules), aucune n'est inventée.</p>
+<p class="hero-text">Construire SortirIA, c'est la moitié du travail ; l'autre moitié, c'est le faire vivre. Cette page rassemble les gestes que je fais, ou que ferait quelqu'un qui reprendrait le service : installer le poste, lancer une collecte, trancher les propositions de l'agent, brancher une source ou un partenaire, mesurer, déployer, revenir en arrière, réagir à un incident. Pour chaque procédure : <strong>la commande exacte</strong> (PowerShell et uv, sous Windows), <strong>ce qu'on doit voir</strong>, et <strong>quoi faire si ça échoue</strong>. Chaque option a été relevée dans le code (<code>argparse</code>, la partie qui lit les options de chaque module) : toutes existent vraiment.</p>
 <div class="metrics">
 <div><strong>1 h UTC</strong><span>collecte de chaque nuit, sur Azure</span></div>
 <div><strong>4</strong><span>types de propositions, toutes validées par un humain</span></div>
@@ -42,7 +42,7 @@
 <div class="container">
 <p class="section-number">01</p>
 <h2>Installer et lancer en local</h2>
-<p class="section-intro">Tout se lance depuis PowerShell, à la racine du dépôt. Les ports ne sont pas ceux par défaut : sur mon poste, 8000 et 4200 sont déjà pris par le triage médical et Chess Agent, d'où 8010 pour l'API et 4210 pour l'interface.</p>
+<p class="section-intro">Tout se lance depuis PowerShell, à la racine du dépôt. J'utilise des ports dédiés (les « portes » d'accès aux services) : sur mon poste, 8000 et 4200 sont déjà pris par le triage médical et Chess Agent, d'où 8010 pour l'API et 4210 pour l'interface.</p>
 
 <div class="config-grid">
 <div class="config-card"><span>PostgreSQL + pgvector (<code>db</code>)</span><strong>5432</strong></div>
@@ -61,7 +61,7 @@
 </div>
 <div class="experiment-analysis">
 <div><span>BUT</span><p>Avoir Python, les dépendances, les clés et une base PostgreSQL au bon schéma, puis vérifier que tout passe les tests.</p></div>
-<div><span>PRÉREQUIS</span><p>Python 3.12 et <strong>uv</strong> ; <strong>Docker Desktop</strong> pour PostgreSQL, MLflow et Grafana ; <strong>Node</strong> et npm pour l'interface (Node 22 en CD). Le DAG Airflow (<code>dags/sortiria_nightly_dag.py</code>) existe pour orchestrer la nuit en local, mais il n'est pas dans <code>docker-compose.yml</code> : en production, c'est la tâche Container Apps qui lance la collecte.</p></div>
+<div><span>PRÉREQUIS</span><p>Python 3.12 et <strong>uv</strong> ; <strong>Docker Desktop</strong> pour PostgreSQL, MLflow et Grafana ; <strong>Node</strong> et npm pour l'interface (Node 22 en CD). Le DAG Airflow (<code>dags/sortiria_nightly_dag.py</code>) existe pour orchestrer la nuit en local, et il reste en dehors de <code>docker-compose.yml</code> : en production, c'est la tâche Container Apps qui lance la collecte.</p></div>
 </div>
 <table class="story-table params-table">
 <thead><tr><th>Étape</th><th>Commande</th><th>Ce qu'on doit voir</th></tr></thead>
@@ -69,14 +69,14 @@
 <tr><td>1. Python 3.12</td><td><code>uv python install 3.12</code></td><td>Python 3.12 disponible pour uv (c'est aussi la première étape de chaque job de CI).</td></tr>
 <tr><td>2. Le fichier .env</td><td><code>Copy-Item .env.example .env</code>, puis renseigner <code>MISTRAL_API_KEY</code>, <code>OPENAGENDA_API_KEY</code>, <code>DATATOURISME_API_KEY</code>, <code>POSTGRES_DB</code>, <code>POSTGRES_USER</code>, <code>POSTGRES_PASSWORD</code>, <code>DATABASE_URL</code>, <code>GRAFANA_ADMIN_PASSWORD</code>, <code>MLFLOW_TRACKING_URI</code> et, pour le mail, <code>REPORT_EMAIL_TO</code> et <code>SMTP_*</code></td><td>Un <code>.env</code> rempli à la racine. Il est exclu de git (<code>.gitignore</code>) et de l'image (<code>.dockerignore</code>).</td></tr>
 <tr><td>3. Dépendances</td><td><code>uv sync</code></td><td>Le dossier <code>.venv</code> créé, versions figées par <code>uv.lock</code>.</td></tr>
-<tr><td>4. Services Docker</td><td><code>docker compose up -d</code> puis <code>docker compose ps</code></td><td><code>sortiria_db</code> (healthy), <code>sortiria_mlflow</code>, <code>sortiria_grafana</code>. Sans profil, l'API et l'interface ne démarrent pas.</td></tr>
+<tr><td>4. Services Docker</td><td><code>docker compose up -d</code> puis <code>docker compose ps</code></td><td><code>sortiria_db</code> (healthy), <code>sortiria_mlflow</code>, <code>sortiria_grafana</code>. L'API et l'interface démarrent avec leur profil (procédure 1.2).</td></tr>
 <tr><td>5. Schéma</td><td><code>uv run python -m scripts.init_db</code></td><td>« appliqué : 00_extensions.sql »… jusqu'à « 07_vocabulary.sql », la liste des tables et des vues, puis « Schéma complet. »</td></tr>
-<tr><td>6. Vérifier le schéma</td><td><code>uv run python -m scripts.init_db --verifier</code></td><td>13 tables, 6 vues, « Schéma complet. » ; rien n'est modifié.</td></tr>
-<tr><td>7. Tests</td><td><code>uv run pytest</code></td><td>Tous les tests passent (environ 3 880 ; ceux qui demandent un vrai PostgreSQL sont ignorés sans <code>SORTIRIA_TEST_DATABASE_URL</code>), sans aucune clé : <code>tests/conftest.py</code> crée des secrets factices et le réseau est simulé.</td></tr>
+<tr><td>6. Vérifier le schéma</td><td><code>uv run python -m scripts.init_db --verifier</code></td><td>13 tables, 6 vues, « Schéma complet. » ; la base reste intacte.</td></tr>
+<tr><td>7. Tests</td><td><code>uv run pytest</code></td><td>Tous les tests passent (environ 3 880 ; ceux qui demandent un vrai PostgreSQL sont ignorés tant que <code>SORTIRIA_TEST_DATABASE_URL</code> est vide), et de fausses clés suffisent : <code>tests/conftest.py</code> crée des secrets factices et le réseau est simulé.</td></tr>
 </tbody>
 </table>
 <div class="experiment-analysis">
-<div><span>SI ÇA ÉCHOUE</span><p>« Base pas encore prête, nouvel essai dans 2 s » : normal juste après <code>docker compose up</code> (premier démarrage, la base exécute <code>sql/sortiria/</code> puis redémarre) ; le script réessaie pendant 90 s. « MANQUANT : … » (code de sortie 1) : relancer l'étape 5 sans <code>--verifier</code>, les fichiers SQL sont réexécutables. Port 5432 déjà pris : un autre PostgreSQL tourne sur le poste. <code>KeyError: 'DATABASE_URL'</code> : la variable manque dans <code>.env</code>.</p></div>
+<div><span>SI ÇA ÉCHOUE</span><p>« Base pas encore prête, nouvel essai dans 2 s » : normal juste après <code>docker compose up</code> (premier démarrage, la base exécute <code>sql/sortiria/</code> puis redémarre) ; le script réessaie pendant 90 s. « MANQUANT : … » (code de sortie 1) : relancer l'étape 5 en retirant <code>--verifier</code>, les fichiers SQL peuvent être rejoués. Port 5432 déjà pris : un autre PostgreSQL tourne sur le poste. <code>KeyError: 'DATABASE_URL'</code> : la variable manque dans <code>.env</code>.</p></div>
 <div><span>À SAVOIR</span><p>Le schéma est créé tout seul au premier démarrage d'une base vide (<code>sql/sortiria</code> monté dans <code>/docker-entrypoint-initdb.d</code>). <code>init_db</code> sert ensuite après chaque nouveau fichier SQL, et pour la base Azure (procédure 7.2). Depuis le 15/10, le <code>DATABASE_URL</code> de mon <code>.env</code> pointe vers la base Azure ; la ligne locale reste en commentaire.</p></div>
 </div>
 </div>
@@ -102,8 +102,8 @@
 </tbody>
 </table>
 <div class="experiment-analysis">
-<div><span>SI ÇA ÉCHOUE</span><p>L'interface s'affiche mais rien ne revient : l'API ne tourne pas sur 8010 (c'est l'adresse de <code>proxy.conf.json</code>). Erreur 500 sur <code>/api/v1/sources</code> : l'API n'arrive pas à joindre la base (base arrêtée, <code>DATABASE_URL</code> faux, ou adresse IP du poste refusée par le pare-feu Azure, voir 7.2). Port déjà pris : un autre projet occupe 8010 ou 4210.</p></div>
-<div><span>À SAVOIR</span><p>Sur Azure, <code>/docs</code> et <code>/health</code> ne sont pas joignables de l'extérieur : l'API n'accepte que les appels passés par le site. Le contrôle de production passe donc par <code>/api/v1/sources</code> (procédure 7.1).</p></div>
+<div><span>SI ÇA ÉCHOUE</span><p>L'interface s'affiche mais reste vide : vérifier que l'API tourne bien sur 8010 (c'est l'adresse de <code>proxy.conf.json</code>). Erreur 500 sur <code>/api/v1/sources</code> : l'API cherche en vain à joindre la base (base arrêtée, <code>DATABASE_URL</code> faux, ou adresse IP du poste refusée par le pare-feu Azure, voir 7.2). Port déjà pris : un autre projet occupe 8010 ou 4210.</p></div>
+<div><span>À SAVOIR</span><p>Sur Azure, <code>/docs</code> et <code>/health</code> restent fermés à l'extérieur : l'API accepte uniquement les appels passés par le site. Le contrôle de production passe donc par <code>/api/v1/sources</code> (procédure 7.1).</p></div>
 </div>
 </div>
 <p class="table-note">Sources : <code>docs/demarrage.md</code>, <code>frontend/README.md</code>, <code>frontend/package.json</code> (<code>"start": "ng serve"</code>), <code>app/main.py</code>, <code>app/interface_api.py</code>, <code>docs/deploiement.md</code>.</p>
@@ -114,7 +114,7 @@
 <span class="experiment-status selected">Quelques secondes</span>
 </div>
 <div class="experiment-analysis">
-<div><span>BUT</span><p>Savoir, avant de lancer quoi que ce soit, si la clé est valide et s'il reste du quota. Le script fait une seule petite requête par service et <strong>n'affiche jamais la clé</strong>.</p></div>
+<div><span>BUT</span><p>Savoir, avant de lancer quoi que ce soit, si la clé est valide et s'il reste du quota. Le script fait une seule petite requête par service et <strong>garde la clé masquée</strong>.</p></div>
 <div><span>D'OÙ IL VIENT</span><p>Écrit le 14/10/2026 après des erreurs 429 (« Rate limit exceeded ») dès le premier appel de la lecture des PDF.</p></div>
 </div>
 <div class="code-panel">
@@ -140,14 +140,14 @@
 <div class="container">
 <p class="section-number">02</p>
 <h2>La collecte</h2>
-<p class="section-intro">En production, la nuit se lance seule (tâche <code>sortiria-collecte</code>, 1 h UTC). Je n'interviens que pour essayer une source, rejouer une nuit ratée ou lire le bilan. Voici le rythme de la semaine, puis les trois gestes.</p>
+<p class="section-intro">En production, la nuit se lance seule (tâche <code>sortiria-collecte</code>, 1 h UTC). J'interviens seulement pour essayer une source, rejouer une nuit ratée ou lire le bilan. Voici le rythme de la semaine, puis les trois gestes.</p>
 
 <table class="story-table params-table">
 <thead><tr><th>Quand</th><th>Ce que fait l'agent</th><th>Ce que j'en fais</th></tr></thead>
 <tbody>
-<tr><td>Chaque nuit, 1 h UTC</td><td>Collecte complète, validation, dédoublonnage, enrichissement, embeddings, juge sur 20 fiches, bilan dans <code>collect_runs</code> et par mail</td><td>Je lis le mail le matin ; rien à faire s'il est vert.</td></tr>
+<tr><td>Chaque nuit, 1 h UTC</td><td>Collecte complète, validation, dédoublonnage, enrichissement, embeddings, juge sur 20 fiches, bilan dans <code>collect_runs</code> et par mail</td><td>Je lis le mail le matin ; s'il est vert, tout va bien.</td></tr>
 <tr><td>Le dimanche (<code>discovery_weekday: 6</code>)</td><td>Découverte des agendas OpenAgenda : recherche complète, agendas utiles absents de <code>agenda_uids</code> proposés</td><td>Propositions <code>ajouter_agenda</code> à trancher (section 03).</td></tr>
-<tr><td>Le lundi</td><td>Bilan de la recherche : ce que les gens ont cherché sans trouver sur 7 jours ; propositions de synonymes et d'agendas ; rapport de dérive (questions, réponses, collecte)</td><td>Propositions <code>ajouter_synonyme</code> et <code>ajouter_agenda</code> à trancher ; une dérive forte à comprendre (procédure 2.3, étape 4).</td></tr>
+<tr><td>Le lundi</td><td>Bilan de la recherche : les recherches à réponse élargie sur 7 jours ; propositions de synonymes et d'agendas ; rapport de dérive (questions, réponses, collecte)</td><td>Propositions <code>ajouter_synonyme</code> et <code>ajouter_agenda</code> à trancher ; une dérive forte à comprendre (procédure 2.3, étape 4).</td></tr>
 <tr><td>Quand un partenaire dépose un PDF ou un Word</td><td>Lecture par Mistral, séances comptées, import proposé avec un aperçu</td><td>Proposition <code>valider_document_partenaire</code> (section 05).</td></tr>
 <tr><td>21 jours avant la fin d'un programme PDF</td><td>Rappel « chercher le prochain programme »</td><td>Trouver la nouvelle adresse, l'écrire dans <code>config/sources.yaml</code>.</td></tr>
 </tbody>
@@ -160,13 +160,13 @@
 <span class="experiment-status selected">2 à 9 min sur Azure</span>
 </div>
 <div class="experiment-analysis">
-<div><span>BUT</span><p>Rejouer une collecte sans attendre la nuit : pour essayer une source, après une correction, ou pour remplir une base vide. Toujours commencer par un <strong>essai</strong>, qui n'écrit rien.</p></div>
-<div><span>ATTENTION</span><p>Mon <code>.env</code> pointe vers la base Azure : <code>uv run python -m agent</code> sans <code>--essai</code> écrit <strong>en production</strong>. C'est voulu pour le programme PDF (incident n° 3), mais il faut le savoir.</p></div>
+<div><span>BUT</span><p>Rejouer une collecte tout de suite, en journée : pour essayer une source, après une correction, ou pour remplir une base vide. Toujours commencer par un <strong>essai</strong>, qui laisse la base intacte.</p></div>
+<div><span>ATTENTION</span><p>Mon <code>.env</code> pointe vers la base Azure : <code>uv run python -m agent</code> sans <code>--essai</code> écrit <strong>en production</strong>. C'est voulu pour le programme PDF (incident n° 3) : à garder en tête.</p></div>
 </div>
 <table class="story-table params-table">
 <thead><tr><th>Étape</th><th>Commande</th><th>Ce qu'on doit voir</th></tr></thead>
 <tbody>
-<tr><td>1. Essai complet</td><td><code>uv run python -m agent --essai</code></td><td>Un bilan JSON : <code>status</code> (<code>success</code>, <code>partial_success</code> ou <code>failed</code>), <code>sources</code>, <code>preparation</code>, <code>failed_sources</code>, <code>alerts</code>, <code>cost_usd</code>… Aucune écriture en base, pas de mail ; le juge note quand même un échantillon.</td></tr>
+<tr><td>1. Essai complet</td><td><code>uv run python -m agent --essai</code></td><td>Un bilan JSON : <code>status</code> (<code>success</code>, <code>partial_success</code> ou <code>failed</code>), <code>sources</code>, <code>preparation</code>, <code>failed_sources</code>, <code>alerts</code>, <code>cost_usd</code>… La base reste intacte et le mail reste en attente ; le juge note quand même un échantillon.</td></tr>
 <tr><td>2. Une seule source</td><td><code>uv run python -m agent --essai --source openagenda</code></td><td>Le même bilan pour cette source. Noms acceptés : <code>openagenda</code>, <code>datatourisme</code>, <code>rss</code>, <code>ical</code>, <code>document</code>, <code>partenaire</code>, <code>scraper</code> ; l'option se répète (<code>--source a --source b</code>).</td></tr>
 <tr><td>3. Collecte réelle</td><td><code>uv run python -m agent</code></td><td>Le bilan JSON, avec <code>events_upserted</code>, <code>events_expired</code>, <code>events_embedded</code> et un <code>run_id</code> : une ligne de plus dans <code>collect_runs</code>, et le mail.</td></tr>
 <tr><td>4. Avec la découverte</td><td><code>uv run python -m agent --decouverte</code></td><td>Comme 3, plus la recherche des nouveaux agendas OpenAgenda (environ 6 min de plus) ; fait d'office le dimanche.</td></tr>
@@ -175,7 +175,7 @@
 </table>
 <div class="experiment-analysis">
 <div><span>SI ÇA ÉCHOUE</span><p><code>"status": "failed"</code> : lire <code>errors</code> et <code>alerts</code> dans le bilan. Une source dans <code>failed_sources</code> : la rejouer seule (étape 2) pour voir son message ; l'agent a déjà réessayé ces sources-là. Erreur de connexion à la base : la collecte réelle demande PostgreSQL (base démarrée, pare-feu Azure). Clé manquante : <code>OPENAGENDA_API_KEY</code> ou <code>DATATOURISME_API_KEY</code> dans <code>.env</code>.</p></div>
-<div><span>À SAVOIR</span><p>Une source coupée par <code>SOURCES_DESACTIVEES</code> n'est pas lancée, sauf si on la demande explicitement par <code>--source</code>. Une source sans configuration active (aucun calendrier iCal déclaré) n'est pas lancée non plus, pour ne pas remonter une fausse panne chaque nuit.</p></div>
+<div><span>À SAVOIR</span><p>Une source coupée par <code>SOURCES_DESACTIVEES</code> reste à l'arrêt ; on la lance à la demande avec <code>--source</code>. Une source dont la configuration est vide (zéro calendrier iCal déclaré) reste aussi à l'arrêt : la nuit signale ainsi uniquement de vraies pannes.</p></div>
 </div>
 </div>
 <p class="table-note">Options relevées dans <code>agent/__main__.py</code> (<code>--essai</code>, <code>--source</code>, <code>--decouverte</code>, <code>--bilan-recherche</code>, <code>--apprendre</code>) ; noms de sources dans <code>agent/services.py</code> ; statuts dans <code>agent/state.py</code>.</p>
@@ -197,7 +197,7 @@
 --------+------------------------+-----------------+------------+-----------------+----------------
    …    | (date de la nuit)      | success         |     …      |        …        |        …</code></pre></div>
 <div class="experiment-analysis">
-<div><span>SI ÇA ÉCHOUE</span><p>Pas de mail : vérifier <code>REPORT_EMAIL_TO</code> et <code>SMTP_*</code> ; avec <code>REPORT_EMAIL_WHEN=alertes</code>, une nuit sans alerte n'envoie rien. Un mail qui ne part pas ne fait jamais échouer la collecte. MLflow vide : si le serveur ne répond pas en 3 s, la nuit se fait sans suivi ; sur Azure, le suivi MLflow est coupé (<code>MLFLOW_ACTIF=false</code>), le mail et <code>collect_runs</code> restent.</p></div>
+<div><span>SI ÇA ÉCHOUE</span><p>Mail absent : vérifier <code>REPORT_EMAIL_TO</code> et <code>SMTP_*</code> ; avec <code>REPORT_EMAIL_WHEN=alertes</code>, le mail part uniquement les nuits avec alerte. La collecte réussit même quand le mail échoue. MLflow vide : si le serveur met plus de 3 s à répondre, la nuit continue, ce suivi en moins ; sur Azure, le suivi MLflow est coupé (<code>MLFLOW_ACTIF=false</code>), le mail et <code>collect_runs</code> restent.</p></div>
 <div><span>EN PRODUCTION</span><p>Le statut de chaque exécution se lit avec <code>az containerapp job execution list</code> (procédure 7.4). Grafana lit la production par défaut, avec un compte en lecture seule (procédure 7.5).</p></div>
 </div>
 </div>
@@ -209,8 +209,8 @@
 <span class="experiment-status selected">Le lundi</span>
 </div>
 <div class="experiment-analysis">
-<div><span>BUT</span><p>Voir ce que les visiteurs ont cherché sans trouver sur 7 jours, et laisser l'agent en tirer des propositions (synonymes, agendas à lire). La collecte du lundi le fait d'office ; ces commandes le font à la demande.</p></div>
-<div><span>CE QUI EST ÉCRIT</span><p>Le vocabulaire des titres est recalculé. Avec <code>--apprendre</code>, les propositions sont enregistrées <strong>en attente</strong> dans <code>agent_proposals</code>, comme celles de la nuit : rien n'est appliqué.</p></div>
+<div><span>BUT</span><p>Voir les recherches des visiteurs à réponse élargie sur 7 jours, et laisser l'agent en tirer des propositions (synonymes, agendas à lire). La collecte du lundi le fait d'office ; ces commandes le font à la demande.</p></div>
+<div><span>CE QUI EST ÉCRIT</span><p>Le vocabulaire des titres est recalculé. Avec <code>--apprendre</code>, les propositions sont enregistrées <strong>en attente</strong> dans <code>agent_proposals</code>, comme celles de la nuit : elles attendent ma décision.</p></div>
 </div>
 <table class="story-table params-table">
 <thead><tr><th>Étape</th><th>Commande</th><th>Ce qu'on doit voir</th></tr></thead>
@@ -222,8 +222,8 @@
 </tbody>
 </table>
 <div class="experiment-analysis">
-<div><span>SI RIEN NE SORT</span><p>« rien à proposer (aucun mot cherché au moins 2 fois et absent de la base) » : c'est la règle, pas une panne. Un mot cherché une seule fois ne déclenche rien.</p></div>
-<div><span>À SAVOIR</span><p><code>--apprendre</code> n'a d'effet qu'avec <code>--bilan-recherche</code>. Un sujet absent de la base et des agendas de la zone (« kitesurf ») revient comme une piste à proposer aux partenaires, pas comme une proposition à appliquer.</p></div>
+<div><span>SI LA LISTE EST VIDE</span><p>« rien à proposer (aucun mot cherché au moins 2 fois et absent de la base) » : c'est la règle, tout fonctionne. Il faut qu'un mot soit cherché au moins deux fois pour déclencher une proposition.</p></div>
+<div><span>À SAVOIR</span><p><code>--apprendre</code> s'utilise avec <code>--bilan-recherche</code>. Un sujet absent de la base et des agendas de la zone (« kitesurf ») revient comme une piste à proposer aux partenaires.</p></div>
 </div>
 </div>
 </div>
@@ -234,7 +234,7 @@
 <div class="container">
 <p class="section-number">03</p>
 <h2>Valider les propositions de l'agent</h2>
-<p class="section-intro">C'est le « humain dans la boucle » : l'agent propose, je décide. Aucune modification de configuration ne se fait sans cette décision.</p>
+<p class="section-intro">C'est le « humain dans la boucle » : l'agent propose, je décide. Chaque modification de configuration passe par cette décision.</p>
 
 <div class="experiment-card">
 <div class="experiment-header">
@@ -243,21 +243,21 @@
 </div>
 <div class="experiment-analysis">
 <div><span>BUT</span><p>Depuis le 16/10/2026, l'agent ouvre une <strong>pull request par proposition</strong> (<code>agent/pull_requests.py</code>) : le changement exact (une ligne de <code>config/sources.yaml</code>, de <code>config/synonymes.yaml</code> ou de <code>_documents_valides.json</code>) et son diagnostic. Le mail du matin donne le lien de chacune ; Grafana les liste (« Modèles et coûts », partie 05).</p></div>
-<div><span>DÉCIDER</span><p>Ouvrir la PR, lire le diagnostic et le changement, attendre la CI verte (tests et évaluation de la recherche à 95 %). <strong>Merge</strong> : appliquée, la CD déploie et la collecte suivante l'utilise. <strong>Close</strong> : refusée, jamais reproposée. La nuit suivante, l'agent note la décision en base (<code>decided_by = github</code>).</p></div>
+<div><span>DÉCIDER</span><p>Ouvrir la PR, lire le diagnostic et le changement, attendre la CI verte (tests et évaluation de la recherche à 95 %). <strong>Merge</strong> : appliquée, la CD déploie et la collecte suivante l'utilise. <strong>Close</strong> : refusée, et classée définitivement. La nuit suivante, l'agent note la décision en base (<code>decided_by = github</code>).</p></div>
 </div>
 <div class="experiment-analysis">
-<div><span>UNE FOIS</span><p>Un jeton GitHub « fine-grained » limité au dépôt SortirIA (droits <em>Contents</em> et <em>Pull requests</em> en écriture), rangé en secret de la tâche <code>sortiria-collecte</code> (<code>GITHUB_TOKEN_AGENT</code>). Sans jeton, pas de PR : on décide en ligne de commande, ci-dessous.</p></div>
-<div><span>SI ÇA ÉCHOUE</span><p>PR en conflit (le fichier a changé entre-temps) : l'agent la refait sur <code>main</code> à jour la nuit suivante. Proposition qui ne peut pas devenir une PR (document absent du dépôt, adresse présente deux fois) : le mail le dit, elle se décide à la main.</p></div>
+<div><span>UNE FOIS</span><p>Un jeton GitHub « fine-grained » limité au dépôt SortirIA (droits <em>Contents</em> et <em>Pull requests</em> en écriture), rangé en secret de la tâche <code>sortiria-collecte</code> (<code>GITHUB_TOKEN_AGENT</code>). Autre voie : décider en ligne de commande, ci-dessous.</p></div>
+<div><span>SI ÇA ÉCHOUE</span><p>PR en conflit (le fichier a changé entre-temps) : l'agent la refait sur <code>main</code> à jour la nuit suivante. Proposition impossible à transformer en PR (document absent du dépôt, adresse présente deux fois) : le mail le signale, elle se décide à la main.</p></div>
 </div>
 </div>
 
 <div class="experiment-card">
 <div class="experiment-header">
-<div><span class="experiment-number">PROCÉDURE 3.2 · SANS JETON GITHUB, OU EN LOCAL</span><h3>Lister, accepter, refuser en ligne de commande</h3></div>
+<div><span class="experiment-number">PROCÉDURE 3.2 · EN LOCAL, OU AVANT LE JETON GITHUB</span><h3>Lister, accepter, refuser en ligne de commande</h3></div>
 <span class="experiment-status selected">agent.proposals</span>
 </div>
 <div class="experiment-analysis">
-<div><span>BUT</span><p>Trancher chaque proposition en attente. Il n'y a pas d'option pour lister : lancé sans option, le module liste. <code>--accepter</code> et <code>--refuser</code> s'excluent et prennent un numéro.</p></div>
+<div><span>BUT</span><p>Trancher chaque proposition en attente. Pour lister, il suffit de lancer le module tel quel. <code>--accepter</code> et <code>--refuser</code> s'excluent et prennent un numéro.</p></div>
 <div><span>OÙ SONT LES PROPOSITIONS</span><p>Dans la table <code>agent_proposals</code> de la base que désigne <code>DATABASE_URL</code> : celles de la production si le <code>.env</code> pointe vers Azure. Les fichiers modifiés, eux, sont ceux du poste.</p></div>
 </div>
 <table class="story-table params-table">
@@ -271,8 +271,8 @@
 </tbody>
 </table>
 <div class="experiment-analysis">
-<div><span>SI ÇA ÉCHOUE</span><p>« Pas de proposition en attente n° N. » : numéro faux ou déjà traité, relister. « La table des propositions n'existe pas encore » : lancer <code>uv run python -m scripts.init_db</code>. « La proposition n° N a une pull request » : décider sur GitHub, la commande renvoie vers la PR pour que la base et la PR ne disent pas deux choses différentes. « Proposition n° N acceptée : … à corriger à la main » : l'action n'a pas pu s'appliquer sans risque (adresse présente plusieurs fois, liste écrite autrement) ; le message dit quoi faire, rien n'a été touché.</p></div>
-<div><span>STATUTS</span><p><code>en_attente</code> à la création ; puis <code>appliquee</code> (fichier modifié), <code>acceptee</code> (accord donné, à faire à la main) ou <code>refusee</code>. Une même proposition ne peut être en attente qu'une fois (index unique).</p></div>
+<div><span>SI ÇA ÉCHOUE</span><p>« Pas de proposition en attente n° N. » : numéro faux ou déjà traité, relister. « La table des propositions n'existe pas encore » : lancer <code>uv run python -m scripts.init_db</code>. « La proposition n° N a une pull request » : décider sur GitHub, la commande renvoie vers la PR pour que la base et la PR restent d'accord. « Proposition n° N acceptée : … à corriger à la main » : l'action demande un regard humain (adresse présente plusieurs fois, liste écrite autrement) ; le message dit quoi faire, et les fichiers restent intacts.</p></div>
+<div><span>STATUTS</span><p><code>en_attente</code> à la création ; puis <code>appliquee</code> (fichier modifié), <code>acceptee</code> (accord donné, à faire à la main) ou <code>refusee</code>. Une même proposition est en attente une seule fois (index unique).</p></div>
 </div>
 </div>
 
@@ -280,9 +280,9 @@
 <table class="story-table params-table">
 <thead><tr><th>Type</th><th>D'où elle vient</th><th>Ce que fait <code>--accepter</code></th><th>Garde-fou</th></tr></thead>
 <tbody>
-<tr><td><code>remplacer_url</code></td><td>Diagnostic d'une panne, la nuit (par exemple la nouvelle adresse d'un programme PDF)</td><td>Remplace l'ancienne adresse par la nouvelle dans <code>config/sources.yaml</code></td><td>Seulement si l'ancienne adresse y figure exactement une fois ; sinon rien n'est touché.</td></tr>
+<tr><td><code>remplacer_url</code></td><td>Diagnostic d'une panne, la nuit (par exemple la nouvelle adresse d'un programme PDF)</td><td>Remplace l'ancienne adresse par la nouvelle dans <code>config/sources.yaml</code></td><td>Seulement si l'ancienne adresse y figure exactement une fois ; sinon le fichier reste intact.</td></tr>
 <tr><td><code>ajouter_agenda</code></td><td>Découverte du dimanche, ou bilan du lundi (un sujet cherché présent dans un agenda de la zone)</td><td>Ajoute l'agenda à la fin de <code>agenda_uids</code>, avec un commentaire (nombre d'événements, date de la découverte)</td><td>Refusé s'il y est déjà ; commentaires et fins de ligne du fichier gardés.</td></tr>
-<tr><td><code>ajouter_synonyme</code></td><td>Apprentissage du lundi : un mot cherché au moins 2 fois, absent de la base</td><td>Ajoute « mot : mot connu » à <code>config/synonymes.yaml</code> ; la recherche relit le fichier dès qu'il change, sans redémarrer l'API</td><td>Mot déjà présent ou illisible (hors <code>[a-z0-9 ]</code>) : à faire à la main.</td></tr>
+<tr><td><code>ajouter_synonyme</code></td><td>Apprentissage du lundi : un mot cherché au moins 2 fois, absent de la base</td><td>Ajoute « mot : mot connu » à <code>config/synonymes.yaml</code> ; la recherche relit le fichier dès qu'il change, l'API continue de tourner</td><td>Mot déjà présent ou illisible (hors <code>[a-z0-9 ]</code>) : à faire à la main.</td></tr>
 <tr><td><code>valider_document_partenaire</code></td><td>Un PDF ou un Word de partenaire lu par Mistral</td><td>Inscrit le fichier et son empreinte SHA-256 dans <code>data/partenaires/_documents_valides.json</code> ; importé à la collecte suivante</td><td>Un document modifié (autre empreinte) redemande un accord.</td></tr>
 </tbody>
 </table>
@@ -294,8 +294,8 @@
 <span class="experiment-status selected">agent.commentaires</span>
 </div>
 <div class="experiment-analysis">
-<div><span>BUT</span><p>Les commentaires sont modérés par Mistral Moderation, sans intervention. Le mail du lundi liste ceux qu'il a refusés dans la semaine, avec les catégories signalées : je publie celui refusé à tort, ou je masque un commentaire publié qui n'aurait pas dû l'être. Effet immédiat sur le site.</p></div>
-<div><span>TRACE</span><p>La décision est gardée dans <code>event_ratings.moderation</code> (clé <code>revue_humaine</code> : décision, statut d'avant, date). La modération de la nuit ne revient jamais sur une décision humaine : elle ne relit que les commentaires en attente.</p></div>
+<div><span>BUT</span><p>Les commentaires sont modérés automatiquement par Mistral Moderation. Le mail du lundi liste ceux qu'il a refusés dans la semaine, avec les catégories signalées : je publie celui refusé à tort, ou je masque un commentaire publié par erreur. Effet immédiat sur le site.</p></div>
+<div><span>TRACE</span><p>La décision est gardée dans <code>event_ratings.moderation</code> (clé <code>revue_humaine</code> : décision, statut d'avant, date). La modération de la nuit respecte toujours une décision humaine : elle relit uniquement les commentaires en attente.</p></div>
 </div>
 <table class="story-table params-table">
 <thead><tr><th>Étape</th><th>Commande</th><th>Ce qu'on doit voir</th></tr></thead>
@@ -315,12 +315,12 @@
 <div class="container">
 <p class="section-number">04</p>
 <h2>Ajouter une source</h2>
-<p class="section-intro">Brancher une source ne demande en général aucun code : une entrée dans <code>config/sources.yaml</code>, un essai, les tests, un push. Le moteur générique de CheckIt.AI fait le reste (requêtes, nouvelles tentatives, validation, dédoublonnage, statuts).</p>
+<p class="section-intro">Brancher une source demande en général une simple configuration : une entrée dans <code>config/sources.yaml</code>, un essai, les tests, un push. Le moteur générique de CheckIt.AI fait le reste (requêtes, nouvelles tentatives, validation, dédoublonnage, statuts).</p>
 
 <div class="callout subtle">
 <span class="eyebrow">RÈGLE DU PROJET</span>
-<strong>Un site n'est lu qu'avec l'autorisation écrite de son éditeur, ou une licence qui le permet.</strong>
-<p>Un flux RSS ou iCal n'est branché que s'il est prévu pour la reprise (syndication, partenaire), <code>robots.txt</code> respecté. C'est pour cela que le scraper de Frontignan reste <code>enabled: false</code> : la demande d'autorisation est partie le 14/10/2026, sans réponse.</p>
+<strong>Un site est lu uniquement avec l'autorisation écrite de son éditeur, ou une licence qui le permet.</strong>
+<p>Un flux RSS ou iCal est branché uniquement s'il est prévu pour la reprise (syndication, partenaire), <code>robots.txt</code> respecté. C'est pour cela que le scraper de Frontignan reste <code>enabled: false</code> : la demande d'autorisation est partie le 14/10/2026, et j'attends la réponse.</p>
 </div>
 
 <div class="experiment-card">
@@ -329,20 +329,20 @@
 <span class="experiment-status selected">≈ 6 min d'audit</span>
 </div>
 <div class="experiment-analysis">
-<div><span>BUT</span><p>La nuit ne lit que les agendas de <code>agenda_uids</code> (la recherche par termes lit environ 10 000 événements pour en garder 83 dans la zone, en 6 minutes). Ajouter un agenda, c'est ajouter son identifiant à cette liste.</p></div>
+<div><span>BUT</span><p>La nuit lit uniquement les agendas de <code>agenda_uids</code> (la recherche par termes lit environ 10 000 événements pour en garder 83 dans la zone, en 6 minutes). Ajouter un agenda, c'est ajouter son identifiant à cette liste.</p></div>
 <div><span>DEUX CHEMINS</span><p>Le plus simple : accepter la proposition <code>ajouter_agenda</code> du dimanche (section 03). À la main : l'audit en mode découverte ci-dessous.</p></div>
 </div>
 <table class="story-table params-table">
 <thead><tr><th>Étape</th><th>Commande</th><th>Ce qu'on doit voir</th></tr></thead>
 <tbody>
-<tr><td>1. Chercher les agendas</td><td><code>uv run python -m scripts.audit_openagenda --decouverte --json audit_decouverte.json</code></td><td>Un résumé JSON : <code>agendas_utiles</code> (identifiant : événements retenus dans la zone) et <code>nouveaux_agendas</code> (utiles et absents de <code>agenda_uids</code>). Rien n'est écrit en base.</td></tr>
+<tr><td>1. Chercher les agendas</td><td><code>uv run python -m scripts.audit_openagenda --decouverte --json audit_decouverte.json</code></td><td>Un résumé JSON : <code>agendas_utiles</code> (identifiant : événements retenus dans la zone) et <code>nouveaux_agendas</code> (utiles et absents de <code>agenda_uids</code>). La base reste intacte.</td></tr>
 <tr><td>2. L'ajouter</td><td>Dans <code>config\sources.yaml</code>, sous <code>agenda_uids</code> : <code>- "&lt;UID&gt;"    # N événements</code></td><td>Une ligne de plus dans la liste, sur le modèle des 17 existantes.</td></tr>
 <tr><td>3. Essayer</td><td><code>uv run python -m agent --essai --source openagenda</code></td><td><code>"status": "success"</code> et plus d'événements préparés qu'avant.</td></tr>
 <tr><td>4. Tests et push</td><td><code>uv run pytest tests\extractors tests\event tests\config</code> puis commit et push</td><td>Tests verts ; la configuration part en production avec l'image.</td></tr>
 </tbody>
 </table>
 <div class="experiment-analysis">
-<div><span>SI ÇA ÉCHOUE</span><p>Pas de clé : <code>OPENAGENDA_API_KEY</code> dans <code>.env</code>. Un agenda en quota : statut « partiel », les autres agendas continuent et les événements de la veille de la source sont gardés. Peu d'événements dans <code>agendas_utiles</code> : l'agenda est surtout hors zone, le filtre géographique (<code>areas</code>, <code>cities</code>) écarte le reste.</p></div>
+<div><span>SI ÇA ÉCHOUE</span><p>Clé manquante : ajouter <code>OPENAGENDA_API_KEY</code> dans <code>.env</code>. Un agenda en quota : statut « partiel », les autres agendas continuent et les événements de la veille de la source sont gardés. Peu d'événements dans <code>agendas_utiles</code> : l'agenda est surtout hors zone, le filtre géographique (<code>areas</code>, <code>cities</code>) écarte le reste.</p></div>
 <div><span>À SAVOIR</span><p><code>--brut audit_brut.json</code> enregistre la structure réelle de quelques événements (où la source range la catégorie, le public…). Les fichiers <code>audit*.json</code> sont exclus de git.</p></div>
 </div>
 </div>
@@ -374,7 +374,7 @@
 <div class="experiment-card">
 <div class="experiment-header">
 <div><span class="experiment-number">PROCÉDURE 4.3 · ICAL OU RSS</span><h3>Brancher le calendrier ou le flux d'un lieu</h3></div>
-<span class="experiment-status selected">Sans code</span>
+<span class="experiment-status selected">Configuration seule</span>
 </div>
 <div class="experiment-analysis">
 <div><span>BUT</span><p>C'est la voie prévue pour les lieux : beaucoup publient leur programmation en iCal (souvent un agenda Google). Une entrée dans <code>ical_sources</code> suffit ; pour un flux RSS d'agenda, dans <code>rss_sources</code>. Les deux listes sont vides aujourd'hui.</p></div>
@@ -417,7 +417,7 @@ rss_sources:
 </tbody>
 </table>
 <div class="experiment-analysis">
-<div><span>SI ÇA ÉCHOUE</span><p>Flux RSS rejeté en bloc avec <code>date_evenement_absente</code> : le flux n'a pas les balises <code>ev:startdate</code> ; <code>event_date: "published"</code> ne se met que si la date de publication est vraiment celle de l'événement. <code>commune_absente</code> : déclarer <code>city</code>. <code>hors_fenetre</code> : événement passé ou au-delà de la fenêtre. Coupure réseau : le téléchargement iCal réessaie trois fois.</p></div>
+<div><span>SI ÇA ÉCHOUE</span><p>Flux RSS rejeté en bloc avec <code>date_evenement_absente</code> : le flux manque des balises <code>ev:startdate</code> ; réserver <code>event_date: "published"</code> aux flux où la date de publication est vraiment celle de l'événement. <code>commune_absente</code> : déclarer <code>city</code>. <code>hors_fenetre</code> : événement passé ou au-delà de la fenêtre. Coupure réseau : le téléchargement iCal réessaie trois fois.</p></div>
 <div><span>À SAVOIR</span><p>Le lecteur iCal gère les lignes continuées, les fuseaux, les journées entières, les répétitions quotidiennes et hebdomadaires, les dates exclues et les événements annulés.</p></div>
 </div>
 </div>
@@ -428,20 +428,20 @@ rss_sources:
 <span class="experiment-status promising">Autorisation écrite</span>
 </div>
 <div class="experiment-analysis">
-<div><span>BUT</span><p>Lire la page de liste d'un agenda en ligne avec les sélecteurs CSS de la configuration. Le moteur vérifie <code>robots.txt</code> avant chaque page et attend 2 s entre deux pages ; seule la liste est lue, jamais la page de chaque événement ni les images.</p></div>
-<div><span>CONDITION</span><p>Aucune activation sans l'autorisation écrite de l'éditeur, gardée avec le projet.</p></div>
+<div><span>BUT</span><p>Lire la page de liste d'un agenda en ligne avec les sélecteurs CSS de la configuration. Le moteur vérifie <code>robots.txt</code> avant chaque page et attend 2 s entre deux pages ; seule la page de liste est lue, à l'exclusion des pages d'événement et des images.</p></div>
+<div><span>CONDITION</span><p>Activation uniquement après l'autorisation écrite de l'éditeur, gardée avec le projet.</p></div>
 </div>
 <table class="story-table params-table">
 <thead><tr><th>Étape</th><th>Commande</th><th>Ce qu'on doit voir</th></tr></thead>
 <tbody>
-<tr><td>1. Essai hors ligne</td><td><code>uv run python -m src.extractors.scrapers.source.agenda_scraper --fichier perso\frontignan_agenda.html</code></td><td>Les fiches lues dans la page enregistrée (12 le 14/10/2026), sans aucune requête au site. <code>--source</code> choisit l'entrée de <code>scraper_sources</code> (par défaut <code>frontignan_agenda</code>).</td></tr>
+<tr><td>1. Essai hors ligne</td><td><code>uv run python -m src.extractors.scrapers.source.agenda_scraper --fichier perso\frontignan_agenda.html</code></td><td>Les fiches lues dans la page enregistrée (12 le 14/10/2026), entièrement hors ligne, le site reste au calme. <code>--source</code> choisit l'entrée de <code>scraper_sources</code> (par défaut <code>frontignan_agenda</code>).</td></tr>
 <tr><td>2. Activer</td><td>Dans <code>scraper_sources</code> : <code>enabled: true</code></td><td>L'agent lancera la source.</td></tr>
 <tr><td>3. Essai réel</td><td><code>uv run python -m agent --essai --source scraper</code></td><td>10 pages au plus, la source en succès.</td></tr>
 <tr><td>4. Tests et push</td><td><code>uv run pytest tests\extractors\scrapers tests\event\test_html_agenda_mapper.py</code> puis commit et push</td><td>Tests verts.</td></tr>
 </tbody>
 </table>
 <div class="experiment-analysis">
-<div><span>SI ÇA ÉCHOUE</span><p>Page anti-robots détectée ou <code>robots.txt</code> fermé : le moteur s'arrête, c'est voulu. Zéro fiche : le site a changé sa mise en page, revoir les sélecteurs (<code>selectors</code>) sur une page enregistrée, sans requête.</p></div>
+<div><span>SI ÇA ÉCHOUE</span><p>Page anti-robots détectée ou <code>robots.txt</code> fermé : le moteur s'arrête, c'est voulu. Zéro fiche : le site a changé sa mise en page, revoir les sélecteurs (<code>selectors</code>, les repères qui désignent chaque information dans la page) sur une page enregistrée, hors ligne.</p></div>
 <div><span>TESTS À LANCER POUR TOUTE SOURCE</span><p><code>uv run pytest tests\extractors tests\event tests\config</code>, puis la suite complète <code>uv run pytest</code> avant le push : la CI la rejouera de toute façon.</p></div>
 </div>
 </div>
@@ -459,24 +459,24 @@ rss_sources:
 <div class="experiment-card">
 <div class="experiment-header">
 <div><span class="experiment-number">PROCÉDURE 5.1 · TABLEUR EXCEL OU CSV</span><h3>Recevoir, vérifier, déposer</h3></div>
-<span class="experiment-status selected">Sans Mistral</span>
+<span class="experiment-status selected">Règles seules</span>
 </div>
 <div class="experiment-analysis">
-<div><span>BUT</span><p>Importer la programmation d'un partenaire sans erreur, en lui renvoyant au besoin la liste exacte des lignes à corriger.</p></div>
+<div><span>BUT</span><p>Importer la programmation d'un partenaire proprement, en lui renvoyant au besoin la liste exacte des lignes à corriger.</p></div>
 <div><span>LE MODÈLE</span><p><code>docs\modeles\modele_partenaire.xlsx</code> (onglets « Programme », « Exemple », « Aide ») ou <code>modele_partenaire.csv</code>. Colonnes obligatoires : <code>titre</code>, <code>date</code>, <code>lieu</code>, <code>commune</code>. Le modèle et le lecteur viennent de la même liste (<code>TEMPLATE_COLUMNS</code>) ; on le régénère avec <code>uv run python -m scripts.creer_modele_partenaire</code>.</p></div>
 </div>
 <table class="story-table params-table">
 <thead><tr><th>Étape</th><th>Commande</th><th>Ce qu'on doit voir</th></tr></thead>
 <tbody>
-<tr><td>1. Vérifier le fichier reçu</td><td><code>uv run python -m src.extractors.datasets.source.partner_extractor --verifier data\partenaires\saintlouis.xlsx</code></td><td>« saintlouis.xlsx : N séance(s) à venir prête(s), M ligne(s) à corriger. », une ligne par refus (« ligne 7 : date_illisible ») et les premières lignes « ok ». Aucune écriture en base.</td></tr>
+<tr><td>1. Vérifier le fichier reçu</td><td><code>uv run python -m src.extractors.datasets.source.partner_extractor --verifier data\partenaires\saintlouis.xlsx</code></td><td>« saintlouis.xlsx : N séance(s) à venir prête(s), M ligne(s) à corriger. », une ligne par refus (« ligne 7 : date_illisible ») et les premières lignes « ok ». La base reste intacte.</td></tr>
 <tr><td>2. Renvoyer les corrections</td><td>Les motifs tels quels : <code>date_illisible</code>, <code>heure_illisible</code>, <code>lieu_manquant</code>, <code>commune_manquante</code>, <code>ages_incoherents</code>, <code>lien_invalide</code>, <code>lien_manquant</code>…</td><td>Un fichier corrigé, revérifié.</td></tr>
-<tr><td>3. Déposer</td><td>Copier le fichier à la racine de <code>data\partenaires\</code>, nommé d'après le partenaire</td><td>Une nouvelle version remplace l'ancienne (même nom) ; les séances passées sont ignorées sans erreur.</td></tr>
-<tr><td>4. Facultatif : le déclarer</td><td>Dans <code>config\sources.yaml</code>, <code>datasets</code> &gt; <code>partenaire</code> &gt; <code>partners</code> : <code>file</code>, <code>name</code>, <code>sector</code>, <code>website</code>, <code>formule</code>, <code>sponsored_until</code>, <code>enabled</code></td><td>Son vrai nom, son secteur, son lien par défaut, sa formule (<code>gratuit</code>, <code>mis_en_avant</code>, <code>premium</code>) et la fin de la formule payante. Sans entrée : nom tiré du fichier, secteur « autre », un lien obligatoire sur chaque ligne.</td></tr>
+<tr><td>3. Déposer</td><td>Copier le fichier à la racine de <code>data\partenaires\</code>, nommé d'après le partenaire</td><td>Une nouvelle version remplace l'ancienne (même nom) ; les séances passées sont simplement mises de côté.</td></tr>
+<tr><td>4. Facultatif : le déclarer</td><td>Dans <code>config\sources.yaml</code>, <code>datasets</code> &gt; <code>partenaire</code> &gt; <code>partners</code> : <code>file</code>, <code>name</code>, <code>sector</code>, <code>website</code>, <code>formule</code>, <code>sponsored_until</code>, <code>enabled</code></td><td>Son vrai nom, son secteur, son lien par défaut, sa formule (<code>gratuit</code>, <code>mis_en_avant</code>, <code>premium</code>) et la fin de la formule payante. Par défaut : nom tiré du fichier, secteur « autre », un lien obligatoire sur chaque ligne.</td></tr>
 <tr><td>5. Essayer et publier</td><td><code>uv run python -m agent --essai --source partenaire</code>, puis commit et push</td><td>La source en succès. <code>data/partenaires/</code> est suivi par git et copié dans l'image : c'est le push qui l'amène en production.</td></tr>
 </tbody>
 </table>
 <div class="experiment-analysis">
-<div><span>SI ÇA ÉCHOUE</span><p>« Fichier introuvable » : chemin faux. « colonnes manquantes » : tableur trop éloigné du modèle (un onglet par mois, cellules fusionnées) ; le reprendre dans le modèle, ou l'enregistrer en PDF (5.2). Fichier non importé : un nom qui commence par <code>_</code>, <code>.</code> ou <code>~$</code> (fichier ouvert dans Excel), un sous-dossier ou une autre extension sont ignorés.</p></div>
+<div><span>SI ÇA ÉCHOUE</span><p>« Fichier introuvable » : chemin faux. « colonnes manquantes » : tableur trop éloigné du modèle (un onglet par mois, cellules fusionnées) ; le reprendre dans le modèle, ou l'enregistrer en PDF (5.2). Fichier ignoré : un nom qui commence par <code>_</code>, <code>.</code> ou <code>~$</code> (fichier ouvert dans Excel), un sous-dossier ou une autre extension sont ignorés.</p></div>
 <div><span>FORMATS</span><p><code>.xlsx</code>, <code>.xls</code> (premier onglet), <code>.csv</code> (<code>;</code> ou <code>,</code>), <code>.json</code>. Dates <code>25/10/2026</code> ou <code>2026-10-25</code>, heures <code>20:30</code> ou <code>20h30</code>. Les noms de colonnes courants d'un fichier « maison » (<code>ville</code>, <code>tarif</code>, <code>url</code>…) sont reconnus.</p></div>
 </div>
 </div>
@@ -487,7 +487,7 @@ rss_sources:
 <span class="experiment-status selected">Validation humaine</span>
 </div>
 <div class="experiment-analysis">
-<div><span>BUT</span><p>Accepter une plaquette PDF ou un programme Word sans demander au partenaire de remplir le modèle. Mistral range chaque séance dans les colonnes du modèle ; <strong>rien n'est publié avant mon accord</strong>.</p></div>
+<div><span>BUT</span><p>Accepter une plaquette PDF ou un programme Word tel quel : le partenaire garde son document. Mistral range chaque séance dans les colonnes du modèle ; <strong>la publication attend mon accord</strong>.</p></div>
 <div><span>POUR ESSAYER</span><p><code>docs\modeles\exemple_plaquette_partenaire.docx</code> : plaquette fictive d'un bar sétois, quatre séances en novembre, dont une dans un tableau. Coût d'une lecture : de l'ordre d'un centime, une seule fois par version du fichier (cache par empreinte).</p></div>
 </div>
 <table class="story-table params-table">
@@ -501,8 +501,8 @@ rss_sources:
 </tbody>
 </table>
 <div class="experiment-analysis">
-<div><span>SI ÇA ÉCHOUE</span><p>Lignes refusées <code>titre_absent_du_texte</code> : Mistral a proposé un titre qu'on ne retrouve pas dans le document, la ligne est écartée (c'est le garde-fou contre l'invention). <code>lieu_manquant</code> ou <code>commune_manquante</code> : sur la plaquette d'un lieu, ils sont souvent implicites ; les déclarer pour ce partenaire (<code>venue</code>, <code>city</code>). Document modifié après l'accord : nouvelle empreinte, nouvelle proposition.</p></div>
-<div><span>POURQUOI CE CIRCUIT</span><p>Un ETL lit des colonnes connues ; une plaquette n'en a pas. Il faut comprendre le texte (Mistral), contrôler ce qui en sort (règles) et laisser un humain décider de ce qui est publié.</p></div>
+<div><span>SI ÇA ÉCHOUE</span><p>Lignes refusées <code>titre_absent_du_texte</code> : Mistral a proposé un titre absent du document, la ligne est écartée (c'est le garde-fou contre l'invention). <code>lieu_manquant</code> ou <code>commune_manquante</code> : sur la plaquette d'un lieu, ils sont souvent implicites ; les déclarer pour ce partenaire (<code>venue</code>, <code>city</code>). Document modifié après l'accord : nouvelle empreinte, nouvelle proposition.</p></div>
+<div><span>POURQUOI CE CIRCUIT</span><p>Un ETL (outil qui copie des données d'un format à un autre) lit des colonnes connues ; une plaquette est mise en page librement. Il faut comprendre le texte (Mistral), contrôler ce qui en sort (règles) et laisser un humain décider de ce qui est publié.</p></div>
 </div>
 </div>
 
@@ -538,7 +538,7 @@ uv run python -m agent.proposals    # rien en attente pour lui</code></pre>
 <div class="experiment-metrics">
 <div><strong>98,7 %</strong><span>propositions qui respectent les contraintes (50 questions)</span></div>
 <div><strong>97,8 %</strong><span>pertinence@3, jugement humain (139 cartes)</span></div>
-<div><strong>6,0 à 6,4 s</strong><span>P95 sans cache ; 0,11 s avec cache</span></div>
+<div><strong>6,0 à 6,4 s</strong><span>pour 95 % des réponses, cache coupé ; 0,11 s avec le cache (les réponses déjà calculées)</span></div>
 <div><strong>0,12 $</strong><span>coût Mistral pour 1 000 questions</span></div>
 </div>
 <p class="table-note">Les valeurs de référence à retrouver, au 16/10/2026 : <code>docs/evaluation.md</code>, <code>docs/couts.md</code>. Détail : <a class="project-link" href="resultats.html">Résultats →</a></p>
@@ -549,7 +549,7 @@ uv run python -m agent.proposals    # rien en attente pour lui</code></pre>
 <span class="experiment-status selected">≈ 0,0001 $</span>
 </div>
 <div class="experiment-analysis">
-<div><span>BUT</span><p>Rejouer les 50 questions de <code>config/eval_recherche.yaml</code> sur la vraie base (sans les tracer dans <code>rag_requests</code>) et mesurer la compréhension, la précision des propositions, le temps de réponse et les questions sans résultat. Objectif : 95 %.</p></div>
+<div><span>BUT</span><p>Rejouer les 50 questions de <code>config/eval_recherche.yaml</code> sur la vraie base (hors du journal <code>rag_requests</code>) et mesurer la compréhension, la précision des propositions, le temps de réponse et les questions à résultat vide. Objectif : 95 %.</p></div>
 <div><span>OÙ VONT LES RÉSULTATS</span><p><code>benchmarks/recherche/historique.csv</code> (une ligne par lancement), un rapport <code>AAAA-MM-JJ_HHhMM.json</code>, et MLflow (expérience <code>sortiria-evaluation-recherche</code>) quand le serveur répond.</p></div>
 </div>
 <table class="story-table params-table">
@@ -559,12 +559,12 @@ uv run python -m agent.proposals    # rien en attente pour lui</code></pre>
 <tr><td>Avec la rédaction</td><td><code>uv run python -m scripts.eval_recherche --avec-redaction</code></td><td>Même rapport, réponse de Mistral comprise (environ 0,01 $).</td></tr>
 <tr><td>Autre jeu de questions</td><td><code>uv run python -m scripts.eval_recherche --fichier config\eval_mots.yaml</code></td><td>Les 125 recherches courtes.</td></tr>
 <tr><td>Recherches « faire soi-même », avant / après</td><td><code>uv run python -m scripts.eval_recherche --fichier config\eval_pratique.yaml</code>, puis la même avec <code>--sans-pratique</code></td><td>Les 25 recherches de pratique et « regarder » ; <code>--sans-pratique</code> ou <code>--sans-regarder</code> retire la règle correspondante (mesure « avant »).</td></tr>
-<tr><td>Comme la CI</td><td><code>uv run python -m scripts.eval_recherche --jeu-test --seuil 0.95 --json eval_recherche.json</code></td><td>Base figée, horloge à l'instant de l'export, sans vecteur ni Mistral ; code de sortie 1 si la précision ou la compréhension passe sous 0,95. Demande la base de test chargée (6.2).</td></tr>
+<tr><td>Comme la CI</td><td><code>uv run python -m scripts.eval_recherche --jeu-test --seuil 0.95 --json eval_recherche.json</code></td><td>Base figée, horloge à l'instant de l'export, recherche par mots et règles uniquement (vecteurs et Mistral coupés) ; code de sortie 1 si la précision ou la compréhension passe sous 0,95. Demande la base de test chargée (6.2).</td></tr>
 </tbody>
 </table>
 <div class="experiment-analysis">
-<div><span>SI LE SCORE BAISSE</span><p>Ouvrir le rapport JSON : il donne le détail question par question. Les questions sans réponse exacte, où la recherche propose des idées voisines et le dit, sont comptées à part (<code>idees_voisines</code>), pas dans la précision.</p></div>
-<div><span>À SAVOIR</span><p>La mesure est automatique : elle dit si la recherche se trompe de cible, pas si les propositions sont les meilleures. C'est le rôle de la pertinence (6.3).</p></div>
+<div><span>SI LE SCORE BAISSE</span><p>Ouvrir le rapport JSON : il donne le détail question par question. Les questions à réponse élargie, où la recherche propose des idées voisines et le dit, sont comptées à part (<code>idees_voisines</code>), en dehors de la précision.</p></div>
+<div><span>À SAVOIR</span><p>La mesure est automatique : elle dit si la recherche vise juste. Juger si les propositions sont les meilleures, c'est le rôle de la pertinence (6.3).</p></div>
 </div>
 </div>
 
@@ -574,8 +574,8 @@ uv run python -m agent.proposals    # rien en attente pour lui</code></pre>
 <span class="experiment-status selected">Avec un commit</span>
 </div>
 <div class="experiment-analysis">
-<div><span>BUT</span><p>La CI rejoue l'évaluation sur une base <strong>figée</strong> : <code>tests/data/jeu_recherche.json.gz</code>. La réexporter quand la base a vraiment changé (nouvelles catégories, nouvelles sources), pas pour faire passer une CI rouge.</p></div>
-<div><span>CE QUI EST EXPORTÉ</span><p>Les sorties à venir, leurs sources et les partenaires, avec l'instant de l'export. Pas les embeddings, pas les événements du PDF de Sète agglopôle (le jeu est publié avec le code : seulement des données sous licence ouverte et les partenaires fictifs), pas les journaux.</p></div>
+<div><span>BUT</span><p>La CI rejoue l'évaluation sur une base <strong>figée</strong> : <code>tests/data/jeu_recherche.json.gz</code>. La réexporter quand la base a vraiment changé (nouvelles catégories, nouvelles sources), uniquement dans ce cas.</p></div>
+<div><span>CE QUI EST EXPORTÉ</span><p>Les sorties à venir, leurs sources et les partenaires, avec l'instant de l'export. Les embeddings, les événements du PDF de Sète agglopôle et les journaux restent en dehors : le jeu est publié avec le code, il contient donc uniquement des données sous licence ouverte et les partenaires fictifs.</p></div>
 </div>
 <div class="code-panel">
 <div class="code-panel-header"><span>PowerShell</span><small>exporter, puis rejouer la CI sur le poste</small></div>
@@ -596,8 +596,8 @@ git add tests\data\jeu_recherche.json.gz
 git commit -m "Jeu de test de la recherche réexporté : &lt;raison&gt;"</code></pre>
 </div>
 <div class="experiment-analysis">
-<div><span>SI ÇA ÉCHOUE</span><p><code>--charger</code> efface le schéma <code>sortiria</code> de la base visée, le recrée, puis charge les lignes : il refuse donc toute base dont le nom ne contient pas « test », pour ne jamais écraser la vraie. « database "sortiria_test" already exists » à l'étape 2 : la base existe déjà, passer à l'étape 3.</p></div>
-<div><span>À SAVOIR</span><p>Le <code>.env</code> est lu sans écraser une variable déjà définie (<code>override=False</code>) : c'est ce qui permet de viser une autre base le temps d'une fenêtre.</p></div>
+<div><span>SI ÇA ÉCHOUE</span><p><code>--charger</code> efface le schéma <code>sortiria</code> de la base visée, le recrée, puis charge les lignes : il accepte donc uniquement une base dont le nom contient « test » : la vraie base est protégée. « database "sortiria_test" already exists » à l'étape 2 : la base existe déjà, passer à l'étape 3.</p></div>
+<div><span>À SAVOIR</span><p>Le <code>.env</code> est lu en respectant les variables déjà définies (<code>override=False</code>) : c'est ce qui permet de viser une autre base le temps d'une fenêtre.</p></div>
 </div>
 </div>
 
@@ -607,7 +607,7 @@ git commit -m "Jeu de test de la recherche réexporté : &lt;raison&gt;"</code><
 <span class="experiment-status selected">≈ 1 h d'annotation</span>
 </div>
 <div class="experiment-analysis">
-<div><span>BUT</span><p>Répondre à la question qu'aucune règle ne tranche : « est-ce que je proposerais cette sortie à quelqu'un qui a posé cette question ? ». Les 3 premières cartes de chaque réponse sont annotées à la main, puis un juge Mistral calibré sur cette annotation peut rejouer la mesure.</p></div>
+<div><span>BUT</span><p>Répondre à la question qui demande un jugement humain : « est-ce que je proposerais cette sortie à quelqu'un qui a posé cette question ? ». Les 3 premières cartes de chaque réponse sont annotées à la main, puis un juge Mistral calibré sur cette annotation peut rejouer la mesure.</p></div>
 <div><span>OPTIONS</span><p><code>--preparer</code> ou <code>--calculer</code> (l'un des deux, obligatoire). Avec <code>--preparer</code> : <code>--questions</code>, <code>--echantillon</code>, <code>--reprendre</code>. Avec <code>--calculer</code> : <code>--juge</code>. Partout : <code>--note</code>.</p></div>
 </div>
 <table class="story-table params-table">
@@ -617,13 +617,13 @@ git commit -m "Jeu de test de la recherche réexporté : &lt;raison&gt;"</code><
 <tr><td>2. Annoter</td><td>Colonne <code>pertinent</code> : <code>o</code> ou <code>n</code></td><td>Chaque carte notée (environ une heure).</td></tr>
 <tr><td>3. Calculer</td><td><code>uv run python -m scripts.eval_pertinence --calculer benchmarks\pertinence\grille_….csv</code></td><td>Pertinence@3, part des questions satisfaites, détail par famille de question ; une ligne dans <code>historique.csv</code>. Objectif : 70 %.</td></tr>
 <tr><td>4. Avec le juge</td><td><code>uv run python -m scripts.eval_pertinence --calculer benchmarks\pertinence\grille_….csv --juge</code></td><td>En plus, l'accord du juge Mistral avec l'humain (environ 0,03 $ par passage).</td></tr>
-<tr><td>5. Seconde grille</td><td><code>uv run python -m scripts.eval_pertinence --preparer --questions config\eval_mots.yaml --echantillon 50</code></td><td>50 recherches courtes tirées au hasard, graine fixe : des cartes que le juge n'a jamais vues.</td></tr>
+<tr><td>5. Seconde grille</td><td><code>uv run python -m scripts.eval_pertinence --preparer --questions config\eval_mots.yaml --echantillon 50</code></td><td>50 recherches courtes tirées au hasard, graine fixe : des cartes toutes nouvelles pour le juge.</td></tr>
 <tr><td>6. Reprendre</td><td><code>uv run python -m scripts.eval_pertinence --preparer --reprendre benchmarks\pertinence\grille_….csv</code></td><td>Une nouvelle grille où les cartes déjà annotées (même question, même titre) gardent leur note.</td></tr>
 </tbody>
 </table>
 <div class="experiment-analysis">
-<div><span>SI ÇA ÉCHOUE</span><p>« one of the arguments --preparer --calculer is required » : il en faut un. Une grille rouverte puis enregistrée par Excel dans un autre encodage ou séparateur ne se relit plus : garder <code>;</code> et UTF-8.</p></div>
-<div><span>À SAVOIR</span><p>Le juge n'est jamais appelé à chaque question ni chaque nuit : il est lancé à la main, avant une version.</p></div>
+<div><span>SI ÇA ÉCHOUE</span><p>« one of the arguments --preparer --calculer is required » : il en faut un. Une grille rouverte puis enregistrée par Excel dans un autre encodage ou séparateur devient illisible : garder <code>;</code> et UTF-8.</p></div>
+<div><span>À SAVOIR</span><p>Le juge est lancé à la main, avant une version, en dehors des questions et des nuits.</p></div>
 </div>
 </div>
 
@@ -633,46 +633,46 @@ git commit -m "Jeu de test de la recherche réexporté : &lt;raison&gt;"</code><
 <span class="experiment-status selected">100 questions par défaut</span>
 </div>
 <div class="experiment-analysis">
-<div><span>BUT</span><p>Faire passer les 175 questions des deux jeux, dans un ordre fixe et répétées jusqu'à <code>--n</code>, par la vraie recherche, sans les tracer ; mesurer médiane, P95 et maximum, le temps de chaque étape et le coût ramené à 1 000 questions.</p></div>
+<div><span>BUT</span><p>Faire passer les 175 questions des deux jeux, dans un ordre fixe et répétées jusqu'à <code>--n</code>, par la vraie recherche, hors du journal ; mesurer médiane, P95 et maximum, le temps de chaque étape et le coût ramené à 1 000 questions.</p></div>
 <div><span>OÙ VONT LES RÉSULTATS</span><p><code>benchmarks/cout_latence/</code> : un rapport JSON et une ligne dans <code>historique.csv</code> par lancement.</p></div>
 </div>
 <table class="story-table params-table">
 <thead><tr><th>Variante</th><th>Commande</th><th>Ce qu'on doit voir</th></tr></thead>
 <tbody>
-<tr><td>Standard</td><td><code>uv run python -m scripts.mesure_cout_latence</code></td><td>100 questions, sans cache : temps par étape (comprendre, rechercher, filtrer, rédiger) et coût.</td></tr>
-<tr><td>Grand échantillon</td><td><code>uv run python -m scripts.mesure_cout_latence --n 1000 --oui</code></td><td>1 000 questions (environ 0,5 $) ; sans <code>--oui</code>, le script demande confirmation au-delà de 100.</td></tr>
+<tr><td>Standard</td><td><code>uv run python -m scripts.mesure_cout_latence</code></td><td>100 questions, cache coupé : temps par étape (comprendre, rechercher, filtrer, rédiger) et coût.</td></tr>
+<tr><td>Grand échantillon</td><td><code>uv run python -m scripts.mesure_cout_latence --n 1000 --oui</code></td><td>1 000 questions (environ 0,5 $) ; <code>--oui</code> confirme d'avance, sinon le script demande confirmation au-delà de 100.</td></tr>
 <tr><td>Avec le cache</td><td><code>uv run python -m scripts.mesure_cout_latence --cache</code></td><td>Deux passages, le second servi par le cache, et le coût pour une part de questions répétées.</td></tr>
 <tr><td>Autre modèle</td><td><code>uv run python -m scripts.mesure_cout_latence --modele ministral-8b-latest</code></td><td>La même mesure avec un autre modèle de rédaction.</td></tr>
-<tr><td>Sans Mistral</td><td><code>uv run python -m scripts.mesure_cout_latence --sans-redaction --note "recherche seule"</code></td><td>Le temps de la recherche seule.</td></tr>
+<tr><td>Recherche seule</td><td><code>uv run python -m scripts.mesure_cout_latence --sans-redaction --note "recherche seule"</code></td><td>Le temps de la recherche seule.</td></tr>
 </tbody>
 </table>
 <div class="experiment-analysis">
 <div><span>SI LES TEMPS SONT HAUTS</span><p>Depuis le poste, le temps inclut l'aller-retour vers la base Azure (si le <code>.env</code> y pointe) ; en production, l'API est à côté de la base. Le détail par étape dit ce qui vient de la base et ce qui vient de Mistral.</p></div>
-<div><span>RÉFÉRENCES</span><p>Médiane 3,0 à 3,3 s, P95 6,0 à 6,4 s sans cache (seuil 8 s), 0,11 s avec cache ; 0,000118 $ par question.</p></div>
+<div><span>RÉFÉRENCES</span><p>Médiane 3,0 à 3,3 s, P95 6,0 à 6,4 s cache coupé (seuil 8 s), 0,11 s avec cache ; 0,000118 $ par question.</p></div>
 </div>
 </div>
 <div class="experiment-card">
 <div class="experiment-header">
 <div><span class="experiment-number">PROCÉDURE 6.5 · APRÈS UN CHANGEMENT DE CONSIGNE OU DE MODÈLE</span><h3>Versionner la chaîne dans MLflow</h3></div>
-<span class="experiment-status selected">Sans appel à Mistral</span>
+<span class="experiment-status selected">Mistral au repos</span>
 </div>
 <div class="experiment-analysis">
 <div><span>BUT</span><p>Garder une trace de ce qui tourne : les 8 consignes dans le Prompt Registry, la chaîne (modèles Mistral, versions des consignes, empreintes des jeux d'évaluation) dans le Model Registry, avec l'alias <code>production</code> sur la version en service et <code>precedente</code> sur celle d'avant.</p></div>
-<div><span>OÙ VONT LES RÉSULTATS</span><p>MLflow (<code>http://localhost:5000</code>, onglets Prompts et Models ; expérience <code>sortiria-versionnage</code>), ou la base locale <code>data/mlflow/mlflow.db</code> sans serveur.</p></div>
+<div><span>OÙ VONT LES RÉSULTATS</span><p>MLflow (<code>http://localhost:5000</code>, onglets Prompts et Models ; expérience <code>sortiria-versionnage</code>), ou la base locale <code>data/mlflow/mlflow.db</code>, hors serveur.</p></div>
 </div>
 <table class="story-table params-table">
 <thead><tr><th>Étape</th><th>Commande</th><th>Ce qu'on doit voir</th></tr></thead>
 <tbody>
-<tr><td>1. Changer la consigne</td><td>Modifier le texte <strong>et</strong> sa constante de version (par exemple <code>PROMPT_VERSION</code> dans <code>app/search_answer.py</code>)</td><td>Sans nouvelle version, la CI échoue : « texte modifié sans changer sa version ».</td></tr>
+<tr><td>1. Changer la consigne</td><td>Modifier le texte <strong>et</strong> sa constante de version (par exemple <code>PROMPT_VERSION</code> dans <code>app/search_answer.py</code>)</td><td>La CI exige une nouvelle version, sinon elle échoue : « texte modifié sans changer sa version ».</td></tr>
 <tr><td>2. Mettre le manifeste à jour</td><td><code>uv run python -m scripts.versionnage --manifeste</code></td><td><code>config/versions_consignes.json</code> modifié, à commiter avec la consigne.</td></tr>
 <tr><td>3. Vérifier</td><td><code>uv run python -m scripts.versionnage --verifier</code></td><td>« 8 consignes conformes au manifeste ».</td></tr>
-<tr><td>4. Après le déploiement</td><td><code>uv run python -m scripts.versionnage</code></td><td>« nouvelle version » de <code>sortiria-chaine</code>, alias <code>production</code> ; relancé sans changement : « inchangée ».</td></tr>
+<tr><td>4. Après le déploiement</td><td><code>uv run python -m scripts.versionnage</code></td><td>« nouvelle version » de <code>sortiria-chaine</code>, alias <code>production</code> ; relancé à l'identique : « inchangée ».</td></tr>
 <tr><td>Avec une mesure</td><td><code>uv run python -m scripts.versionnage --evaluation eval_recherche.json</code></td><td>Précision, compréhension et latences rattachées à la version en service.</td></tr>
 </tbody>
 </table>
 <div class="experiment-analysis">
 <div><span>REVENIR EN ARRIÈRE</span><p>Les consignes vivent dans le code : on revient par <code>git revert</code> (procédure 7.3). Le registre dit quelle version tournait, et l'alias <code>precedente</code> donne ses consignes et ses modèles exacts.</p></div>
-<div><span>POURQUOI PAS DVC</span><p>Les jeux d'évaluation pèsent environ 1 Mo et sont dans Git ; MLflow garde leur empreinte et le lien vers le fichier au commit exact. DVC servira quand un jeu ne tiendra plus dans Git (avis réels pour un fine-tuning).</p></div>
+<div><span>ET DVC ?</span><p>Les jeux d'évaluation pèsent environ 1 Mo et sont dans Git ; MLflow garde leur empreinte et le lien vers le fichier au commit exact. DVC (outil de versionnage des gros fichiers de données) servira quand un jeu dépassera ce que Git gère bien (avis réels pour un fine-tuning).</p></div>
 </div>
 </div>
 <p class="table-note">Options relevées dans l'<code>argparse</code> de <code>scripts/eval_recherche.py</code>, <code>scripts/jeu_test_recherche.py</code>, <code>scripts/eval_pertinence.py</code>, <code>scripts/mesure_cout_latence.py</code> (<code>CONFIRM_ABOVE = 100</code>) et <code>scripts/versionnage.py</code> ; coûts d'après leurs docstrings et <code>docs/couts.md</code>.</p>
@@ -684,7 +684,7 @@ git commit -m "Jeu de test de la recherche réexporté : &lt;raison&gt;"</code><
 <div class="container">
 <p class="section-number">07</p>
 <h2>Déployer</h2>
-<p class="section-intro">Depuis le 16/10/2026, je ne déploie plus à la main : un push sur <code>main</code> lance la CI, et la CD ne part que si la CI est verte. Les commandes <code>az</code> ne servent plus qu'à revenir en arrière, relancer la collecte et lire les journaux.</p>
+<p class="section-intro">Depuis le 16/10/2026, le déploiement est automatique : un push sur <code>main</code> lance la CI (les tests), et la CD (la mise en ligne) part uniquement si la CI est verte. Les commandes <code>az</code> servent désormais à revenir en arrière, relancer la collecte et lire les journaux.</p>
 
 <div class="experiment-card">
 <div class="experiment-header">
@@ -692,13 +692,13 @@ git commit -m "Jeu de test de la recherche réexporté : &lt;raison&gt;"</code><
 <span class="experiment-status selected">Automatique</span>
 </div>
 <div class="experiment-analysis">
-<div><span>BUT</span><p>Mettre une modification en production sans geste manuel sur Azure : nouvelle image <code>sha-&lt;commit&gt;</code>, nouvelle révision de l'API, image de la collecte mise à jour, interface recompilée et envoyée, contrôle final.</p></div>
-<div><span>CE QUI EST GARDÉ</span><p>Les secrets et réglages des Container Apps (dont <code>SOURCES_DESACTIVEES=document</code> sur la collecte) ne sont pas touchés par la CD : seule l'image change.</p></div>
+<div><span>BUT</span><p>Mettre une modification en production automatiquement : nouvelle image <code>sha-&lt;commit&gt;</code>, nouvelle révision de l'API, image de la collecte mise à jour, interface recompilée et envoyée, contrôle final.</p></div>
+<div><span>CE QUI EST GARDÉ</span><p>Les secrets et réglages des Container Apps (dont <code>SOURCES_DESACTIVEES=document</code> sur la collecte) restent en place : la CD change uniquement l'image.</p></div>
 </div>
 <table class="story-table params-table">
 <thead><tr><th>Étape</th><th>Commande</th><th>Ce qu'on doit voir</th></tr></thead>
 <tbody>
-<tr><td>1. Avant le push</td><td><code>uv run pytest</code> ; <code>uv run ruff check --select E9,F63,F7,F82 --exclude reference .</code></td><td>Tests verts, aucune erreur Ruff (la même commande qu'en CI).</td></tr>
+<tr><td>1. Avant le push</td><td><code>uv run pytest</code> ; <code>uv run ruff check --select E9,F63,F7,F82 --exclude reference .</code></td><td>Tests verts, Ruff (le vérificateur de code) au propre : la même commande qu'en CI.</td></tr>
 <tr><td>2. Pousser</td><td><code>git add …</code> ; <code>git commit -m "…"</code> ; <code>git push</code></td><td>Le commit sur <code>main</code>.</td></tr>
 <tr><td>3. Suivre la CI</td><td>GitHub &gt; Actions &gt; CI</td><td>Cinq jobs verts : « Qualité (Ruff) », « Tests (pytest) », « Docker build », « Documentation (MkDocs) », « Évaluation de la recherche (≥ 95 %) ».</td></tr>
 <tr><td>4. Suivre la CD</td><td>GitHub &gt; Actions &gt; CD</td><td>« Build &amp; Publish » puis « Deploy Azure » en vert ; son dernier pas, « Healthcheck », a interrogé le site et <code>/api/v1/sources</code>.</td></tr>
@@ -707,8 +707,8 @@ git commit -m "Jeu de test de la recherche réexporté : &lt;raison&gt;"</code><
 </tbody>
 </table>
 <div class="experiment-analysis">
-<div><span>SI ÇA ÉCHOUE</span><p>CI rouge : la CD ne part pas, rien n'est déployé (incident n° 6). « Deploy Azure » ignoré : la variable de dépôt <code>DEPLOY_ENABLED</code> ne vaut pas <code>true</code>. « Azure login » en échec : incident n° 4. « Healthcheck » en échec : l'API ne se réveille pas ou n'atteint pas la base ; lire ses journaux (7.4). Relance sans nouveau commit : Actions &gt; CD &gt; « Run workflow », ou « Re-run failed jobs ».</p></div>
-<div><span>CE QUE LA CD NE FAIT PAS</span><p>Elle ne touche pas au schéma de la base. Un nouveau fichier dans <code>sql/sortiria/</code> s'applique à la main sur Azure : procédure 7.2.</p></div>
+<div><span>SI ÇA ÉCHOUE</span><p>CI rouge : la CD attend, la production reste telle quelle (incident n° 6). « Deploy Azure » ignoré : mettre la variable de dépôt <code>DEPLOY_ENABLED</code> à <code>true</code>. « Azure login » en échec : incident n° 4. « Healthcheck » en échec : l'API peine à se réveiller ou à joindre la base ; lire ses journaux (7.4). Relance avec le même commit : Actions &gt; CD &gt; « Run workflow », ou « Re-run failed jobs ».</p></div>
+<div><span>CE QUE LA CD LAISSE À LA MAIN</span><p>Le schéma de la base. Un nouveau fichier dans <code>sql/sortiria/</code> s'applique à la main sur Azure : procédure 7.2.</p></div>
 </div>
 </div>
 
@@ -719,7 +719,7 @@ git commit -m "Jeu de test de la recherche réexporté : &lt;raison&gt;"</code><
 </div>
 <div class="experiment-analysis">
 <div><span>BUT</span><p>Appliquer les fichiers <code>sql/sortiria/*.sql</code> à la base Azure. Ils sont réexécutables : les données déjà en base sont conservées.</p></div>
-<div><span>SANS TOUCHER AU .ENV</span><p>L'adresse de la base Azure est dans <code>.env.azure</code> (sur le poste, hors git) ; on la lit pour cette fenêtre seulement. La sortie ne contient pas le mot de passe.</p></div>
+<div><span>LE .ENV RESTE INTACT</span><p>L'adresse de la base Azure est dans <code>.env.azure</code> (sur le poste, hors git) ; on la lit pour cette fenêtre seulement. La sortie garde le mot de passe masqué.</p></div>
 </div>
 <div class="code-panel">
 <div class="code-panel-header"><span>PowerShell</span><small>depuis le dossier du projet</small></div>
@@ -740,7 +740,7 @@ az postgres flexible-server firewall-rule create --resource-group sortiria-rg --
 <span class="experiment-status promising">Deux options</span>
 </div>
 <div class="experiment-analysis">
-<div><span>OPTION A · IMMÉDIATE</span><p>Remettre l'API et la collecte sur l'image d'un commit précédent. GHCR garde une image par commit (<code>sha-&lt;commit complet&gt;</code>), le nom du dépôt en minuscules. L'interface n'est pas concernée, et le prochain push redéploiera <code>main</code> : c'est un pansement.</p></div>
+<div><span>OPTION A · IMMÉDIATE</span><p>Remettre l'API et la collecte sur l'image d'un commit précédent. GHCR garde une image par commit (<code>sha-&lt;commit complet&gt;</code>), le nom du dépôt en minuscules. L'interface reste telle quelle, et le prochain push redéploiera <code>main</code> : c'est un pansement.</p></div>
 <div><span>OPTION B · DURABLE</span><p>Annuler le commit fautif dans git, puis pousser : la CI et la CD redéploient tout, interface comprise, et l'historique garde la trace de l'annulation.</p></div>
 </div>
 <div class="code-panel">
@@ -760,7 +760,7 @@ git push
 </div>
 <div class="experiment-analysis">
 <div><span>CE QU'ON DOIT VOIR</span><p>Option A : le nom de la nouvelle révision (<code>sortiria-api--…</code>), puis le nom de la tâche ; le site répond avec l'ancienne API. Option B : les deux workflows verts, comme en 7.1.</p></div>
-<div><span>SI ÇA ÉCHOUE</span><p>« manifest unknown » ou image introuvable : hash incomplet ou mal recopié (il faut les 40 caractères). Un changement de schéma déjà appliqué n'est pas annulé par un retour d'image : vérifier que l'ancienne version le supporte.</p></div>
+<div><span>SI ÇA ÉCHOUE</span><p>« manifest unknown » ou image introuvable : hash incomplet ou mal recopié (il faut les 40 caractères). Un changement de schéma déjà appliqué reste en place après un retour d'image : vérifier que l'ancienne version le supporte.</p></div>
 </div>
 </div>
 
@@ -770,7 +770,7 @@ git push
 <span class="experiment-status selected">Azure CLI</span>
 </div>
 <div class="experiment-analysis">
-<div><span>BUT</span><p>Relancer la collecte de production sans attendre la nuit suivante, suivre son état, et lire le journal d'une exécution ou de l'API.</p></div>
+<div><span>BUT</span><p>Relancer la collecte de production tout de suite, suivre son état, et lire le journal d'une exécution ou de l'API.</p></div>
 <div><span>RÉGLAGES DE LA TÂCHE</span><p>Planifiée <code>0 1 * * *</code> (1 h UTC), une heure au plus (<code>--replica-timeout 3600</code>), un nouvel essai en cas d'échec (<code>--replica-retry-limit 1</code>), commande <code>python agent</code>.</p></div>
 </div>
 <div class="code-panel">
@@ -792,8 +792,8 @@ $WS = az containerapp env show --name sortiria-env --resource-group sortiria-rg 
 az monitor log-analytics query --workspace $WS --analytics-query "ContainerAppConsoleLogs_CL | where Log_s has_any ('Agenda Culture', 'PDF') | project TimeGenerated, Log_s | order by TimeGenerated asc | take 30" -o table</code></pre>
 </div>
 <div class="experiment-analysis">
-<div><span>SI ÇA ÉCHOUE</span><p>État <code>Failed</code> : lire le journal de l'exécution, corriger, pousser, relancer. La première requête Log Analytics installe l'extension <code>log-analytics</code> (répondre <code>Y</code>). Sans résultat : les journaux arrivent dans Log Analytics avec quelques minutes de retard.</p></div>
-<div><span>À SAVOIR</span><p>Le journal se lit aussi dans le portail : <code>sortiria-collecte</code> &gt; Historique des exécutions &gt; Journaux. Toutes les commandes <code>az</code> de cette page filtrent leur sortie (<code>--query … -o tsv</code> ou <code>-o table</code>) : aucun secret ne s'affiche.</p></div>
+<div><span>SI ÇA ÉCHOUE</span><p>État <code>Failed</code> : lire le journal de l'exécution, corriger, pousser, relancer. La première requête Log Analytics installe l'extension <code>log-analytics</code> (répondre <code>Y</code>). Résultat vide : les journaux arrivent dans Log Analytics avec quelques minutes de retard.</p></div>
+<div><span>À SAVOIR</span><p>Le journal se lit aussi dans le portail : <code>sortiria-collecte</code> &gt; Historique des exécutions &gt; Journaux. Toutes les commandes <code>az</code> de cette page filtrent leur sortie (<code>--query … -o tsv</code> ou <code>-o table</code>) : les secrets restent masqués.</p></div>
 </div>
 </div>
 <div class="experiment-card">
@@ -802,7 +802,7 @@ az monitor log-analytics query --workspace $WS --analytics-query "ContainerAppCo
 <span class="experiment-status selected">Grafana · GitHub · Azure</span>
 </div>
 <div class="experiment-analysis">
-<div><span>BUT</span><p>Voir les modèles, les coûts et les avis <strong>de la production</strong> dans Grafana, être prévenu si le site tombe ou si la nuit n'est pas passée, et surveiller la facture Azure.</p></div>
+<div><span>BUT</span><p>Voir les modèles, les coûts et les avis <strong>de la production</strong> dans Grafana, être prévenu si le site tombe ou si la nuit a échoué, et surveiller la facture Azure.</p></div>
 <div><span>UNE FOIS</span><p>Compte <code>grafana_lecture</code> en lecture seule (le <code>.env</code> pointe déjà sur Azure avec le compte d'administration) ; les 4 variables <code>AZURE_PG_*</code> dans le <code>.env</code> ; budget <code>sortiria-mensuel</code> dans le portail (recherche <code>sortiria-rg</code> &gt; Gestion des coûts &gt; Budgets).</p></div>
 </div>
 <div class="code-panel">
@@ -819,11 +819,11 @@ docker compose up -d
 # http://localhost:3001 : Data sources &gt; SortirIA production (Azure) &gt; Test</code></pre>
 </div>
 <div class="experiment-analysis">
-<div><span>CHAQUE JOUR</span><p>Le mail de bilan ; Grafana s'ouvre sur la production (« Collecte nocturne », « Recherche », « Modèles et coûts »). Sans mail de GitHub ni d'Azure, le site, la base, la nuit et la facture vont bien.</p></div>
+<div><span>CHAQUE JOUR</span><p>Le mail de bilan ; Grafana s'ouvre sur la production (« Collecte nocturne », « Recherche », « Modèles et coûts »). Tant que GitHub et Azure restent silencieux, le site, la base, la nuit et la facture vont bien.</p></div>
 <div><span>SI ÇA ÉCHOUE</span><p>Test Grafana rouge avec « timeout » : l'adresse IP du poste a changé, mettre à jour la règle du pare-feu (<code>firewall-rule update --server-name … --name &lt;règle&gt;</code>). « password authentication failed » : relancer le script et recopier le mot de passe (lettres et chiffres seulement). Mail « Surveillance » de GitHub : ouvrir l'exécution dans Actions, puis la procédure 7.4.</p></div>
 </div>
 </div>
-<p class="table-note">Sources : <code>.github/workflows/ci.yml</code> et <code>cd.yml</code>, <code>docs/deploiement.md</code>, mon journal de déploiement (étapes 8, 9d, 9f, 11 et 12). <code>az containerapp logs show</code> et <code>az containerapp revision list</code> sont des commandes standard d'Azure CLI que le journal de déploiement n'utilise pas encore. Plus de contexte : <a class="project-link" href="deploiement.html">Déploiement →</a></p>
+<p class="table-note">Sources : <code>.github/workflows/ci.yml</code> et <code>cd.yml</code>, <code>docs/deploiement.md</code>, mon journal de déploiement (étapes 8, 9d, 9f, 11 et 12). <code>az containerapp logs show</code> et <code>az containerapp revision list</code> sont des commandes standard d'Azure CLI, encore à éprouver dans mon journal de déploiement. Plus de contexte : <a class="project-link" href="deploiement.html">Déploiement →</a></p>
 </div>
 </section>
 
@@ -837,14 +837,14 @@ docker compose up -d
 <table class="story-table params-table">
 <thead><tr><th>N°</th><th>Symptôme</th><th>Cause</th><th>Action</th></tr></thead>
 <tbody>
-<tr><td>1</td><td>Mistral répond 429 « Rate limit exceeded »</td><td>Quota du plan gratuit : le premier essai de lecture du PDF (19 appels en 6 s) a reçu 19 erreurs 429 le 14/10</td><td><code>uv run python -m scripts.check_mistral</code> pour voir les limites ; attendre. La lecture des PDF fait une pause entre les appels (<code>DOCUMENT_CALL_PAUSE_S</code>, 3 s), réessaie à 10, 20, 40 s… et garde en cache les paquets réussis : relancer reprend où elle s'était arrêtée. Côté recherche, sans Mistral, une réponse simple liste les événements, signalée à l'écran.</td></tr>
-<tr><td>2</td><td>Mail : une source « en échec » ou « partiel », ou « baisse anormale »</td><td>Site ou API indisponible, adresse changée, quota d'un agenda</td><td>Rien n'est perdu : l'agent a réessayé cette source, ses événements de la veille sont gardés. Rejouer <code>uv run python -m agent --essai --source &lt;nom&gt;</code> ; si l'adresse a changé, le diagnostic a pu proposer un <code>remplacer_url</code> (section 03).</td></tr>
-<tr><td>3</td><td>Source <code>document</code> en échec sur Azure seulement : « Le document téléchargé n'est pas un PDF », en 0,1 s</td><td>Le site de Sète agglopôle sert une page web aux adresses des centres de données (protection anti-robots probable), le PDF à une box</td><td>Couper la source sur Azure : <code>az containerapp job update --name sortiria-collecte --resource-group sortiria-rg --set-env-vars SOURCES_DESACTIVEES=document --query name -o tsv</code> ; la lire depuis le poste vers la base de production : <code>uv run python -m agent --source document</code>. Ses événements ne sont plus balayés la nuit ; l'agent rappelle de chercher le programme suivant 21 jours avant la fin.</td></tr>
-<tr><td>4</td><td>CD, étape « Azure login » : <code>AADSTS700213: No matching federated identity record found for presented assertion subject</code></td><td>GitHub présente désormais un sujet avec les identifiants numériques du compte et du dépôt ; aucun identifiant fédéré ne correspond</td><td>Lire le sujet exact (« subject claim ») dans le journal de l'étape ; l'ajouter : <code>az ad app federated-credential create --id &lt;APP_ID&gt; --parameters perso\fic3.json --query name -o tsv</code> (fichier JSON avec ce <code>subject</code>, émetteur <code>https://token.actions.githubusercontent.com</code>, audience <code>api://AzureADTokenExchange</code>) ; puis Actions &gt; CD &gt; « Re-run failed jobs ».</td></tr>
-<tr><td>5</td><td>Le premier appel au site est lent, ou le « Healthcheck » de la CD réessaie</td><td>L'API est mise en veille sans visiteur (de 0 à 1 copie) et met quelques secondes à se réveiller</td><td>Normal : la CD réessaie 6 fois à 10 s d'intervalle. Avant une démonstration, ouvrir le site une minute avant.</td></tr>
-<tr><td>6</td><td>CI rouge sur « Évaluation de la recherche (≥ 95 %) »</td><td>Précision ou compréhension sous 0,95 (50 questions) ou sous 0,90 (« faire soi-même », moments de la journée) sur la base figée, après un changement de la recherche</td><td>La CD ne part pas : la production est intacte. Télécharger l'artefact <code>eval-recherche</code> (rapport JSON), rejouer en local (6.2), corriger le code. Réexporter la base de test seulement si la base a vraiment changé, jamais pour faire passer la CI.</td></tr>
+<tr><td>1</td><td>Mistral répond 429 « Rate limit exceeded »</td><td>Quota du plan gratuit : le premier essai de lecture du PDF (19 appels en 6 s) a reçu 19 erreurs 429 le 14/10</td><td><code>uv run python -m scripts.check_mistral</code> pour voir les limites ; attendre. La lecture des PDF fait une pause entre les appels (<code>DOCUMENT_CALL_PAUSE_S</code>, 3 s), réessaie à 10, 20, 40 s… et garde en cache les paquets réussis : relancer reprend où elle s'était arrêtée. Côté recherche, pendant une panne de Mistral, une réponse simple liste les événements, signalée à l'écran.</td></tr>
+<tr><td>2</td><td>Mail : une source « en échec » ou « partiel », ou « baisse anormale »</td><td>Site ou API indisponible, adresse changée, quota d'un agenda</td><td>Tout est conservé : l'agent a réessayé cette source, ses événements de la veille sont gardés. Rejouer <code>uv run python -m agent --essai --source &lt;nom&gt;</code> ; si l'adresse a changé, le diagnostic a pu proposer un <code>remplacer_url</code> (section 03).</td></tr>
+<tr><td>3</td><td>Source <code>document</code> en échec sur Azure seulement : « Le document téléchargé n'est pas un PDF », en 0,1 s</td><td>Le site de Sète agglopôle sert une page web aux adresses des centres de données (protection anti-robots probable), le PDF à une box</td><td>Couper la source sur Azure : <code>az containerapp job update --name sortiria-collecte --resource-group sortiria-rg --set-env-vars SOURCES_DESACTIVEES=document --query name -o tsv</code> ; la lire depuis le poste vers la base de production : <code>uv run python -m agent --source document</code>. Ses événements restent en base, épargnés par la purge de la nuit ; l'agent rappelle de chercher le programme suivant 21 jours avant la fin.</td></tr>
+<tr><td>4</td><td>CD, étape « Azure login » : <code>AADSTS700213: No matching federated identity record found for presented assertion subject</code></td><td>GitHub présente désormais un sujet avec les identifiants numériques du compte et du dépôt ; il manque l'identifiant fédéré correspondant</td><td>Lire le sujet exact (« subject claim ») dans le journal de l'étape ; l'ajouter : <code>az ad app federated-credential create --id &lt;APP_ID&gt; --parameters perso\fic3.json --query name -o tsv</code> (fichier JSON avec ce <code>subject</code>, émetteur <code>https://token.actions.githubusercontent.com</code>, audience <code>api://AzureADTokenExchange</code>) ; puis Actions &gt; CD &gt; « Re-run failed jobs ».</td></tr>
+<tr><td>5</td><td>Le premier appel au site est lent, ou le « Healthcheck » de la CD réessaie</td><td>L'API se met en veille en l'absence de visiteurs (de 0 à 1 copie) et met quelques secondes à se réveiller</td><td>Normal : la CD réessaie 6 fois à 10 s d'intervalle. Avant une démonstration, ouvrir le site une minute avant.</td></tr>
+<tr><td>6</td><td>CI rouge sur « Évaluation de la recherche (≥ 95 %) »</td><td>Précision ou compréhension sous 0,95 (50 questions) ou sous 0,90 (« faire soi-même », moments de la journée) sur la base figée, après un changement de la recherche</td><td>La CD attend : la production est intacte. Télécharger l'artefact <code>eval-recherche</code> (rapport JSON), rejouer en local (6.2), corriger le code. Réexporter la base de test uniquement si la base a vraiment changé.</td></tr>
 <tr><td>7</td><td>Alerte Dependabot ou <code>npm audit</code> sur l'interface</td><td>Une dépendance npm vulnérable</td><td>Dans <code>frontend</code> : <code>npm audit</code>, mettre à jour la dépendance (c'est ainsi qu'Angular est passé en 21.2.25), <code>npm install</code>, <code>npx ng build</code>, <code>npm test</code>, puis push : la CD recompile et redéploie l'interface. État au 16/10 : 0 alerte.</td></tr>
-<tr><td>8</td><td>Connexion refusée ou délai dépassé vers la base Azure depuis le poste</td><td>L'adresse IP de la box a changé : le pare-feu ne la connaît plus</td><td>Ajouter la nouvelle adresse (procédure 7.2, deuxième bloc).</td></tr>
+<tr><td>8</td><td>Connexion refusée ou délai dépassé vers la base Azure depuis le poste</td><td>L'adresse IP de la box a changé : le pare-feu attend la nouvelle</td><td>Ajouter la nouvelle adresse (procédure 7.2, deuxième bloc).</td></tr>
 <tr><td>9</td><td>Des visiteurs reçoivent 429 de SortirIA</td><td>La limite de débit de l'API (par visiteur, ou 1 000 recherches par heure pour tout le service)</td><td>Voulu : l'en-tête <code>Retry-After</code> dit combien attendre. Si la limite est trop basse pour un usage légitime, la relever (procédure 9.3).</td></tr>
 </tbody>
 </table>
@@ -901,7 +901,7 @@ docker compose up -d
 <line x1="380" y1="485" x2="458" y2="485" stroke="#48c9b0" stroke-width="1.6" marker-end="url(#arr-proc-2)"/>
 <text x="408" y="476" fill="#48c9b0" font-size="12" font-family="Inter, 'Segoe UI', Arial, sans-serif">oui</text>
 <rect x="460" y="452" width="580" height="66" rx="12" fill="#17232d" stroke="#48c9b0" stroke-width="1.5"/>
-<text x="476" y="478" fill="#edf4f4" font-size="13" font-family="Inter, 'Segoe UI', Arial, sans-serif">Les événements de la veille sont gardés : rien n'est perdu</text>
+<text x="476" y="478" fill="#edf4f4" font-size="13" font-family="Inter, 'Segoe UI', Arial, sans-serif">Les événements de la veille sont gardés : tout est conservé</text>
 <text x="476" y="502" fill="#98a8ad" font-size="13" font-family="Inter, 'Segoe UI', Arial, sans-serif">Vérifier la source ; le dimanche, des agendas sont proposés</text>
 <line x1="210" y1="518" x2="210" y2="546" stroke="#98a8ad" stroke-width="1.6" marker-end="url(#arr-proc-1)"/>
 <text x="218" y="537" fill="#98a8ad" font-size="12" font-family="Inter, 'Segoe UI', Arial, sans-serif">non</text>
@@ -928,22 +928,22 @@ docker compose up -d
 <div class="container">
 <p class="section-number">09</p>
 <h2>Sécurité au quotidien</h2>
-<p class="section-intro">Aucun secret dans le code, l'image ou la documentation. Les clés vivent à trois endroits, et chacun a sa façon d'être mis à jour.</p>
+<p class="section-intro">Les secrets restent hors du code, de l'image et de la documentation. Les clés vivent à trois endroits, et chacun a sa façon d'être mis à jour.</p>
 
 <div class="reflection-grid">
 <div class="reflection-card"><h3>Sur le poste</h3><p><code>.env</code> (développement) et <code>.env.azure</code> (adresse de la base de production et mots de passe). Les deux sont exclus de git (<code>.env.*</code> sauf <code>.env.example</code>) et de l'image Docker (<code>.dockerignore</code>).</p></div>
 <div class="reflection-card"><h3>Sur Azure</h3><p>Les secrets Container Apps de l'API et de la collecte : chaque variable du <code>.env</code> devient un secret (nom en minuscules, <code>_</code> remplacé par <code>-</code>, par exemple <code>mistral-api-key</code>), lu par <code>secretref:</code>. Le jeton d'envoi de Static Web Apps est lu dans Azure à chaque déploiement, et masqué.</p></div>
-<div class="reflection-card"><h3>Sur GitHub</h3><p><code>AZURE_CLIENT_ID</code>, <code>AZURE_TENANT_ID</code>, <code>AZURE_SUBSCRIPTION_ID</code> : des identifiants, pas des mots de passe. La connexion se fait par OpenID Connect, limitée à la branche <code>main</code> et au seul groupe <code>sortiria-rg</code> ; rien à renouveler. La variable <code>DEPLOY_ENABLED</code> active le déploiement.</p></div>
+<div class="reflection-card"><h3>Sur GitHub</h3><p><code>AZURE_CLIENT_ID</code>, <code>AZURE_TENANT_ID</code>, <code>AZURE_SUBSCRIPTION_ID</code> : de simples identifiants, distincts des mots de passe. La connexion se fait par OpenID Connect, limitée à la branche <code>main</code> et au seul groupe <code>sortiria-rg</code> ; zéro secret à renouveler. La variable <code>DEPLOY_ENABLED</code> active le déploiement.</p></div>
 </div>
 
 <div class="experiment-card">
 <div class="experiment-header">
-<div><span class="experiment-number">PROCÉDURE 9.1 · AVANT CHAQUE COMMIT</span><h3>Ce qu'on ne commite jamais</h3></div>
+<div><span class="experiment-number">PROCÉDURE 9.1 · AVANT CHAQUE COMMIT</span><h3>Ce qui reste hors de Git</h3></div>
 <span class="experiment-status selected">Réflexe</span>
 </div>
 <div class="experiment-analysis">
-<div><span>JAMAIS DANS GIT</span><p><code>.env</code>, <code>.env.azure</code> et tout <code>.env.*</code> sauf l'exemple ; <code>perso/</code> (notes privées) ; <code>secrets/</code> ; <code>logs/</code> ; les données brutes de <code>data/</code>. Seul <code>data/partenaires/</code> est suivi, car il part dans l'image.</p></div>
-<div><span>POUR VÉRIFIER</span><p><code>git status</code> avant chaque commit, et <code>git check-ignore -v .env .env.azure perso</code> : chaque chemin doit sortir avec la règle de <code>.gitignore</code> qui l'exclut. Rien ne doit s'afficher en « Changes to be committed » parmi ces fichiers.</p></div>
+<div><span>TOUJOURS HORS DE GIT</span><p><code>.env</code>, <code>.env.azure</code> et tout <code>.env.*</code> sauf l'exemple ; <code>perso/</code> (notes privées) ; <code>secrets/</code> ; <code>logs/</code> ; les données brutes de <code>data/</code>. Seul <code>data/partenaires/</code> est suivi, car il part dans l'image.</p></div>
+<div><span>POUR VÉRIFIER</span><p><code>git status</code> avant chaque commit, et <code>git check-ignore -v .env .env.azure perso</code> : chaque chemin doit sortir avec la règle de <code>.gitignore</code> qui l'exclut. La liste « Changes to be committed » doit rester vide pour ces fichiers.</p></div>
 </div>
 </div>
 
@@ -953,11 +953,11 @@ docker compose up -d
 <span class="experiment-status selected">API et collecte</span>
 </div>
 <div class="experiment-analysis">
-<div><span>BUT</span><p>Remplacer une clé (Mistral, OpenAgenda, DATAtourisme, SMTP) partout où elle sert, sans qu'elle s'affiche ni reste dans un fichier suivi. L'API et la tâche de collecte ont chacune leurs secrets : il faut mettre à jour les deux.</p></div>
+<div><span>BUT</span><p>Remplacer une clé (Mistral, OpenAgenda, DATAtourisme, SMTP) partout où elle sert, en la gardant masquée et hors des fichiers suivis. L'API et la tâche de collecte ont chacune leurs secrets : il faut mettre à jour les deux.</p></div>
 <div><span>ORDRE</span><p>Créer la nouvelle clé chez le fournisseur ; la mettre dans <code>.env</code> et <code>.env.azure</code> ; mettre à jour les secrets Azure ; redémarrer la révision de l'API ; vérifier ; <strong>révoquer l'ancienne</strong> en dernier.</p></div>
 </div>
 <div class="code-panel">
-<div class="code-panel-header"><span>PowerShell</span><small>exemple : la clé Mistral ; aucune valeur écrite dans la commande</small></div>
+<div class="code-panel-header"><span>PowerShell</span><small>exemple : la clé Mistral ; la valeur reste hors de la commande</small></div>
 <pre><code>$cle = Read-Host "Nouvelle clé Mistral"
 
 # Secrets de l'API et de la tâche de collecte
@@ -974,8 +974,8 @@ uv run python -m scripts.check_mistral
 Invoke-RestMethod https://www.sortiria-montpellier.fr/api/v1/sources</code></pre>
 </div>
 <div class="experiment-analysis">
-<div><span>CE QU'ON DOIT VOIR</span><p>Les noms des secrets (pas leurs valeurs), « HTTP 200 » trois fois pour <code>check_mistral</code>, une réponse du site. La collecte prendra la nouvelle clé à sa prochaine exécution.</p></div>
-<div><span>SI ÇA ÉCHOUE</span><p>HTTP 401 après le changement : l'ancienne clé a été révoquée trop tôt ou la nouvelle est mal recopiée. Ces commandes <code>secret set</code> et <code>revision restart</code> sont standard dans Azure CLI mais n'ont pas encore servi sur ce projet : en cas de doute, <code>az containerapp secret set --help</code> donne la syntaxe de la version installée.</p></div>
+<div><span>CE QU'ON DOIT VOIR</span><p>Les noms des secrets (leurs valeurs restent masquées), « HTTP 200 » trois fois pour <code>check_mistral</code>, une réponse du site. La collecte prendra la nouvelle clé à sa prochaine exécution.</p></div>
+<div><span>SI ÇA ÉCHOUE</span><p>HTTP 401 après le changement : l'ancienne clé a été révoquée trop tôt ou la nouvelle est mal recopiée. Ces commandes <code>secret set</code> et <code>revision restart</code> sont standard dans Azure CLI et restent à éprouver sur ce projet : en cas de doute, <code>az containerapp secret set --help</code> donne la syntaxe de la version installée.</p></div>
 </div>
 </div>
 
@@ -998,7 +998,7 @@ Invoke-RestMethod https://www.sortiria-montpellier.fr/api/v1/sources</code></pre
 <tr><td><code>LIMITE_LECTURES_MINUTE</code></td><td>120</td><td>Lectures par minute, par visiteur</td></tr>
 </tbody>
 </table>
-<p class="table-note">Sources : <code>app/rate_limit.py</code>, <code>.env.example</code>, <code>docs/deploiement.md</code> (secrets), mon journal de déploiement étape 9c (création des secrets à partir du <code>.env</code>, sans afficher les valeurs).</p>
+<p class="table-note">Sources : <code>app/rate_limit.py</code>, <code>.env.example</code>, <code>docs/deploiement.md</code> (secrets), mon journal de déploiement étape 9c (création des secrets à partir du <code>.env</code>, valeurs masquées).</p>
 </div>
 </div>
 </section>
@@ -1008,20 +1008,20 @@ Invoke-RestMethod https://www.sortiria-montpellier.fr/api/v1/sources</code></pre
 <div class="container">
 <p class="section-number">10</p>
 <h2>D'où vient le code</h2>
-<p class="section-intro">Les commandes de cette page lancent du code écrit pour SortirIA : aucun script d'exploitation n'est repris. Elles s'appuient sur les moteurs de collecte de CheckIt.AI (projet 12) ; la configuration des tests (<code>tests/conftest.py</code>) vient aussi de CheckIt.AI.</p>
+<p class="section-intro">Les commandes de cette page lancent du code écrit pour SortirIA : tous les scripts d'exploitation ont été écrits pour ce projet. Elles s'appuient sur les moteurs de collecte de CheckIt.AI (projet 12) ; la configuration des tests (<code>tests/conftest.py</code>) vient aussi de CheckIt.AI.</p>
 <table class="story-table params-table">
 <thead><tr><th>Fichier ou module</th><th>Origine</th><th>Statut</th><th>Ce qui a été adapté ou écrit</th></tr></thead>
 <tbody>
-<tr><td><code>agent/__main__.py</code> (<code>python -m agent</code>)</td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Collecte complète, essai sans écriture en base, découverte des agendas OpenAgenda, bilan des recherches.</td></tr>
+<tr><td><code>agent/__main__.py</code> (<code>python -m agent</code>)</td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Collecte complète, essai qui laisse la base intacte, découverte des agendas OpenAgenda, bilan des recherches.</td></tr>
 <tr><td><code>agent/proposals.py</code> (<code>python -m agent.proposals</code>)</td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>L'humain dans la boucle : lister, accepter ou refuser les propositions de l'agent.</td></tr>
 <tr><td><code>scripts/init_db.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Exécute dans l'ordre les fichiers <code>sql/sortiria/*.sql</code>, réexécutables ; les fichiers SQL de CheckIt.AI sont archivés.</td></tr>
 <tr><td><code>scripts/audit_openagenda.py</code>, <code>scripts/explore_datatourisme.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Audit d'une vraie collecte OpenAgenda ; exploration de l'API DATAtourisme sur le même modèle (<code>field_paths</code> réutilisée).</td></tr>
-<tr><td><code>scripts/creer_modele_partenaire.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Modèle Excel / CSV généré depuis <code>TEMPLATE_COLUMNS</code> : le modèle et le lecteur ne peuvent pas diverger.</td></tr>
+<tr><td><code>scripts/creer_modele_partenaire.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Modèle Excel / CSV généré depuis <code>TEMPLATE_COLUMNS</code> : le modèle et le lecteur restent toujours d'accord.</td></tr>
 <tr><td><code>src/extractors/datasets/source/partner_extractor.py</code> (<code>--verifier</code>)</td><td>Écrit pour SortirIA, branché sur le moteur datasets de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">CheckIt.AI (projet 12)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Vérification d'un fichier de partenaire reçu ; le moteur repris trouve, contrôle, filtre et dédoublonne les fichiers.</td></tr>
 <tr><td><code>src/extractors/scrapers/source/agenda_scraper.py</code></td><td>Écrit pour SortirIA, branché sur le moteur scraper de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">CheckIt.AI (projet 12)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Lecture d'un agenda en ligne autorisé par ses sélecteurs CSS ; robots.txt et pauses viennent du moteur repris.</td></tr>
-<tr><td><code>scripts/check_mistral.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Diagnostic d'une erreur 429 de Mistral, sans afficher la clé.</td></tr>
+<tr><td><code>scripts/check_mistral.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Diagnostic d'une erreur 429 de Mistral, clé masquée.</td></tr>
 <tr><td><code>scripts/eval_recherche.py</code>, <code>eval_pertinence.py</code>, <code>jeu_test_recherche.py</code>, <code>mesure_cout_latence.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Les mesures de la page Résultats, relançables à la main.</td></tr>
-<tr><td><code>tests/conftest.py</code> (<code>uv run pytest</code>)</td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">CheckIt.AI (projet 12)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Secrets factices, pour que les tests tournent sans clé d'API sur un poste neuf ou dans la CI.</td></tr>
+<tr><td><code>tests/conftest.py</code> (<code>uv run pytest</code>)</td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/checkit_ai">CheckIt.AI (projet 12)</a></td><td><span class="experiment-status promising">Repris et adapté</span></td><td>Secrets factices, pour que les tests tournent avec des clés fictives sur un poste neuf ou dans la CI.</td></tr>
 </tbody>
 </table>
 <p class="table-note">Sources : mentions « Provenance » des docstrings des fichiers cités ; <code>PROVENANCE.md</code> (modifications du 13/10/2026).</p>

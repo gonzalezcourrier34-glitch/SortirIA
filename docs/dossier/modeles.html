@@ -21,7 +21,7 @@
 <div class="container hero-content">
 <p class="eyebrow">SORTIRIA · LES MODÈLES D'IA</p>
 <h1>Les modèles et<span>leurs réglages</span></h1>
-<p class="hero-text"><strong>Un seul fournisseur, six usages, aucun modèle là où une règle suffit.</strong> SortirIA appelle Mistral pour six choses : <strong>lire</strong> des documents, <strong>classer</strong> (les événements, les mots cherchés sans réponse), <strong>vectoriser</strong>, <strong>rédiger</strong> la réponse, <strong>juger</strong> et <strong>modérer</strong>. Ces six usages font neuf appels dans le code. Chacun a sa consigne versionnée, sa température à 0, une sortie JSON contrôlée par du code, un coût mesuré et un repli quand Mistral ne répond pas. Tout ce qui se vérifie (dates, lieux, prix, compréhension de la question) est fait par des règles.</p>
+<p class="hero-text"><strong>Un seul fournisseur, six usages, une règle partout où elle suffit.</strong> SortirIA appelle Mistral pour six choses : <strong>lire</strong> des documents, <strong>classer</strong> (les événements, les mots cherchés introuvables), <strong>vectoriser</strong>, <strong>rédiger</strong> la réponse, <strong>juger</strong> et <strong>modérer</strong>. Ces six usages font neuf appels dans le code. Chacun a sa consigne versionnée, sa température à 0, une sortie JSON contrôlée par du code, un coût mesuré et un repli quand Mistral reste muet. Tout ce qui se vérifie (dates, lieux, prix, compréhension de la question) est fait par des règles.</p>
 <div class="hero-tags"><span>mistral-small</span><span>mistral-medium</span><span>mistral-large</span><span>mistral-embed</span><span>Mistral Moderation</span><span>pgvector</span><span>sortie JSON</span><span>température 0</span></div>
 <div class="metrics">
 <div><strong>0,000118 $</strong><span>de Mistral par question (rédaction et embedding)</span></div>
@@ -47,22 +47,22 @@
 <div class="about-grid">
 <div class="large-text">Une règle quand c'est vérifiable. Un modèle quand il faut lire ou juger du sens.</div>
 <div>
-<p>« Samedi », « à Sète », « gratuit », « pour les enfants » : ce sont des contraintes. Un modèle de langage peut se tromper sur une date relative ou supposer qu'un prix absent est payant ; une règle et un filtre SQL ne se trompent pas, coûtent 0 $ et répondent en 1 ms. J'ai mesuré ces erreurs chez le juge de pertinence (« 31 oct. &lt; 16 oct. 2026 », un lieu « Montpellier » exigé alors que la demande ne le disait pas) : elles sont devenues des règles.</p>
-<p>À l'inverse, savoir qu'une « PAUSE JEUX : Les échecs » est un jeu et pas un atelier, résumer un texte en une phrase, lire une plaquette PDF mise en page à la main ou décider qu'une proposition « convient à des ados » : c'est du sens. Là, j'utilise un modèle, avec trois conditions : une consigne versionnée, une sortie JSON lue par du code, et un contrôle par règle de ce qui en sort.</p>
+<p>« Samedi », « à Sète », « gratuit », « pour les enfants » : ce sont des contraintes. Un modèle de langage peut se tromper sur une date relative (« samedi ») ou supposer qu'un prix absent est payant. Une règle et un filtre SQL (une condition dans la requête à la base) restent exacts, coûtent 0 $ et répondent en 1 ms. J'ai mesuré ces erreurs chez le juge de pertinence (« 31 oct. &lt; 16 oct. 2026 », un lieu « Montpellier » exigé alors que la demande laissait le lieu libre) : elles sont devenues des règles.</p>
+<p>À l'inverse, savoir qu'une « PAUSE JEUX : Les échecs » est un jeu plutôt qu'un atelier, résumer un texte en une phrase, lire une plaquette PDF mise en page à la main ou décider qu'une proposition « convient à des ados » : c'est du sens. Là, j'utilise un modèle, avec trois conditions : une consigne versionnée, une sortie JSON lue par du code, et un contrôle par règle de ce qui en sort.</p>
 </div>
 </div>
 
 <table class="story-table params-table">
 <thead><tr><th>Tâche</th><th>Fait par</th><th>Pourquoi</th></tr></thead>
 <tbody>
-<tr><td>Comprendre la question (quand, où, pour qui, budget, type)</td><td>Règles (<code>app/query_understanding.py</code>)</td><td>100 % sur 50 questions, 1 ms, sans coût ; un modèle calcule mal les dates relatives.</td></tr>
-<tr><td>Respecter date, lieu, public, prix</td><td>Filtres SQL stricts</td><td>98,7 % des cartes sans erreur ; une contrainte ne se « devine » pas.</td></tr>
+<tr><td>Comprendre la question (quand, où, pour qui, budget, type)</td><td>Règles (<code>app/query_understanding.py</code>)</td><td>100 % sur 50 questions, 1 ms, gratuit. Un modèle calcule mal les dates relatives.</td></tr>
+<tr><td>Respecter date, lieu, public, prix</td><td>Filtres SQL stricts</td><td>98,7 % des cartes justes. Une contrainte se vérifie, au lieu de se « deviner ».</td></tr>
 <tr><td>Tranche de prix d'un événement</td><td>Règle (<code>price_band</code>)</td><td>« Inutile de payer un modèle pour une comparaison » (commentaire du code).</td></tr>
 <tr><td>Catégorie quand le titre la dit (« visite guidée », « concert »)</td><td>Règle (<code>TITLE_CATEGORY_RULES</code>)</td><td>Le titre l'emporte sur le modèle quand il est explicite.</td></tr>
 <tr><td>Catégorie, publics et résumé des autres fiches</td><td>Modèle (<code>mistral-small</code>)</td><td>Lire un texte libre et le ranger dans une liste fermée.</td></tr>
-<tr><td>Lire un programme PDF ou un document Word</td><td>Modèle (<code>mistral-small</code>)</td><td>Chaque document a sa mise en page ; un ETL ne lit que des colonnes connues.</td></tr>
-<tr><td>Chercher par le sens</td><td>Modèle d'embeddings (<code>mistral-embed</code>)</td><td>Retrouver « une sortie romantique » sans mot commun avec les titres.</td></tr>
-<tr><td>Rédiger la réponse, juger une fiche ou une proposition, modérer un avis</td><td>Modèles</td><td>Du langage et du jugement ; jamais la décision finale sur ce qui est vrai.</td></tr>
+<tr><td>Lire un programme PDF ou un document Word</td><td>Modèle (<code>mistral-small</code>)</td><td>Chaque document a sa mise en page. Un ETL (un outil qui recopie des données d'un format à un autre) lit uniquement des colonnes connues.</td></tr>
+<tr><td>Chercher par le sens</td><td>Modèle d'embeddings (<code>mistral-embed</code>)</td><td>Retrouver « une sortie romantique », même quand les titres emploient d'autres mots.</td></tr>
+<tr><td>Rédiger la réponse, juger une fiche ou une proposition, modérer un avis</td><td>Modèles</td><td>Du langage et du jugement. La décision finale sur ce qui est vrai revient au code.</td></tr>
 </tbody>
 </table>
 <p class="table-note">D'après le code (fichiers cités) et <code>docs/evaluation.md</code> (§ 1 et calibrage du juge, 16/10/2026).</p>
@@ -70,7 +70,7 @@
 <h3>Pourquoi Mistral</h3>
 <div class="reflection-grid">
 <div class="reflection-card"><h3>Hébergement européen</h3><p>C'est la première raison notée dans l'architecture. SortirIA journalise les questions des visiteurs ; j'ai préféré un fournisseur européen, dans la même logique que la purge du journal après 90 jours et l'anonymat des avis.</p></div>
-<div class="reflection-card"><h3>Un coût bas, mesuré</h3><p><code>mistral-small</code> rédige une réponse pour 0,000118 $ avec l'embedding de la question ; une nuit ordinaire coûte environ 0,005 $. Le coût n'est pas un frein à la mesure.</p></div>
+<div class="reflection-card"><h3>Un coût bas, mesuré</h3><p><code>mistral-small</code> rédige une réponse pour 0,000118 $ avec l'embedding de la question ; une nuit ordinaire coûte environ 0,005 $. Le coût laisse toute liberté pour mesurer.</p></div>
 <div class="reflection-card"><h3>Un seul fournisseur</h3><p>Une seule clé, un seul suivi de coût (une grille de prix dans <code>agent/watch.py</code>), et des modèles différents selon le rôle : <code>small</code> produit, <code>medium</code> juge la nuit, <code>large</code> juge la pertinence.</p></div>
 <div class="reflection-card"><h3>Une sortie JSON imposée</h3><p>Tous les appels de langage passent <code>response_format={"type": "json_object"}</code> et <code>temperature=0</code> : la réponse se lit et se valide par du code (Pydantic), et deux nuits identiques donnent le même résultat autant que possible.</p></div>
 </div>
@@ -88,7 +88,7 @@
 <rect x="500" y="84" width="28" height="16" rx="4" fill="#111a22" stroke="#edf4f4" stroke-width="1.3" stroke-dasharray="2 3"/>
 <text x="536" y="97" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">humain</text>
 <rect x="610" y="84" width="28" height="16" rx="4" fill="#111a22" stroke="#4a5d66" stroke-width="1.3" stroke-dasharray="5 4"/>
-<text x="646" y="97" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">essayé, non retenu</text>
+<text x="646" y="97" fill="#98a8ad" font-size="12.5" font-family="Inter, 'Segoe UI', Arial, sans-serif">essayé, écarté</text>
 <rect x="20" y="116" width="1040" height="268" rx="14" fill="#0b1117" stroke="#24333d" stroke-width="1"/>
 <text x="34" y="142" fill="#48c9b0" font-size="10.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" letter-spacing="1.0">LA NUIT</text>
 <text x="34" y="166" fill="#edf4f4" font-size="16" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">Agent</text>
@@ -233,16 +233,16 @@
 <text x="616" y="649" fill="#edf4f4" font-size="13" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">Vérifier</text>
 <text x="616" y="665" fill="#98a8ad" font-size="12" font-family="Inter, 'Segoe UI', Arial, sans-serif">un document</text>
 <rect x="752" y="612" width="136" height="64" rx="10" fill="#111a22" stroke="#4a5d66" stroke-width="1.3" stroke-dasharray="5 4"/>
-<text x="764" y="630" fill="#4a5d66" font-size="10.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" letter-spacing="0.8">NON RETENU</text>
+<text x="764" y="630" fill="#4a5d66" font-size="10.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" letter-spacing="0.8">ÉCARTÉ</text>
 <text x="764" y="649" fill="#98a8ad" font-size="13" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">ministral-8b</text>
 <text x="764" y="665" fill="#98a8ad" font-size="12" font-family="Inter, 'Segoe UI', Arial, sans-serif">rédaction</text>
 <rect x="900" y="612" width="136" height="64" rx="10" fill="#111a22" stroke="#4a5d66" stroke-width="1.3" stroke-dasharray="5 4"/>
-<text x="912" y="630" fill="#4a5d66" font-size="10.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" letter-spacing="0.8">NON RETENU</text>
+<text x="912" y="630" fill="#4a5d66" font-size="10.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" letter-spacing="0.8">ÉCARTÉ</text>
 <text x="912" y="649" fill="#98a8ad" font-size="13" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700">Ministral</text>
 <text x="912" y="665" fill="#98a8ad" font-size="12" font-family="Inter, 'Segoe UI', Arial, sans-serif">contraintes</text>
 <line x1="296" y1="644" x2="307" y2="644" stroke="#98a8ad" stroke-width="1.5" marker-end="url(#arr-modeles-1)"/>
 <line x1="444" y1="644" x2="455" y2="644" stroke="#48c9b0" stroke-width="1.5" marker-end="url(#arr-modeles-2)"/>
-</svg><figcaption>Trois moments, neuf appels à un modèle, et après chacun une règle. La nuit, les modèles lisent, rangent, vectorisent et jugent ; à la question, seuls l'embedding et la rédaction sont des modèles, la compréhension et les filtres sont des règles ; à la main, le juge de pertinence et les essais. Les flèches en pointillés sont les replis quand Mistral ne répond pas.</figcaption></figure>
+</svg><figcaption>Trois moments, neuf appels à un modèle, et après chacun une règle. La nuit, les modèles lisent, rangent, vectorisent et jugent ; à la question, seuls l'embedding et la rédaction sont des modèles, la compréhension et les filtres sont des règles ; à la main, le juge de pertinence et les essais. Les flèches en pointillés sont les replis quand Mistral reste muet.</figcaption></figure>
 </div>
 </section>
 
@@ -255,18 +255,18 @@
 <table class="story-table">
 <thead><tr><th>Usage</th><th>Où</th><th>Modèle</th><th>Variable</th><th>Paramètres</th><th>Sortie contrôlée par</th><th>Coût</th><th>Repli si panne</th></tr></thead>
 <tbody>
-<tr><td><strong>Enrichissement</strong> (catégorie, publics, résumé)</td><td><code>src/event/event_enrichment.py</code></td><td><code>mistral-small-latest</code></td><td><code>ENRICHMENT_MODEL</code></td><td>T = 0, JSON ; lots de 15, 3 000 par nuit au plus ; texte coupé à 800 caractères ; identifiants courts e1, e2…</td><td>Pydantic, liste fermée (sinon « autre »), catégorie du titre, résumé sans nom absent de la source</td><td>dans le coût de la nuit (≈ 0,005 $)</td><td>lot ignoré, repris la nuit suivante ; les événements sont écrits quand même</td></tr>
-<tr><td><strong>Lecture du PDF</strong> (Sète agglopôle)</td><td><code>src/extractors/documents/document_extractor.py</code></td><td><code>mistral-small-latest</code></td><td><code>DOCUMENT_EXTRACTION_MODEL</code></td><td>T = 0, JSON ; pages 4-59 et 63, paquets de 4 pages + 1 de recouvrement ; 15 000 caractères au plus ; pause de 3 s ; 429 : 5 essais (10, 20, 40 s…)</td><td>Pydantic, titre retrouvé dans la page (60 % des mots), date dans la période</td><td>1 à 2 centimes une lecture complète ; 0 $ si le PDF n'a pas changé (cache)</td><td>paquets réussis gardés en cache, seuls les manquants redemandés ; aucun paquet lu : source en échec, signalée</td></tr>
-<tr><td><strong>Documents partenaires</strong> (PDF, Word)</td><td><code>src/extractors/datasets/source/partner_documents.py</code></td><td><code>mistral-small-latest</code></td><td><code>DOCUMENT_EXTRACTION_MODEL</code></td><td>T = 0, JSON ; une page de PDF ou 40 paragraphes de Word par appel ; 15 000 caractères au plus ; 429 : mêmes essais</td><td>titre retrouvé dans le texte, mêmes contrôles qu'un tableur partenaire, <strong>validation humaine</strong> avant publication</td><td>non mesuré à part ; 0 $ si le document n'a pas changé (cache)</td><td>réponse illisible : ligne rejetée (<code>reponse_llm_illisible</code>) ; rien n'est publié sans accord</td></tr>
-<tr><td><strong>Embeddings</strong> (événements et question)</td><td><code>agent/services.py</code>, <code>agent/nodes.py</code>, <code>app/search_query.py</code></td><td><code>mistral-embed</code></td><td><code>EMBEDDING_MODEL</code></td><td>1 024 dimensions ; lots de 64, 10 000 par nuit au plus ; texte : titre, catégorie, résumé, lieu, description (1 500 caractères)</td><td>colonne <code>vector(1024)</code> ; événements passés jamais vectorisés</td><td>0,10 $ le million de tokens (estimés : l'API ne les rend pas)</td><td>nuit : lot passé, 3 échecs de suite arrêtent les embeddings ; question : recherche par mots et date</td></tr>
-<tr><td><strong>Rédaction de la réponse</strong></td><td><code>app/search_answer.py</code></td><td><code>mistral-small-latest</code></td><td><code>SEARCH_MODEL</code></td><td>T = 0, JSON ; 8 événements numérotés au plus ; 2 à 4 phrases, 3 relances</td><td>citations [n] hors liste retirées, cartes tirées de la base, partenaires en tête seulement s'ils répondent</td><td>0,000118 $ par question (avec l'embedding)</td><td>second essai avec <code>SEARCH_FALLBACK_MODEL</code> (<code>mistral-medium-latest</code>) ; sinon réponse simple listant les cartes, signalée à l'écran, jamais mise en cache</td></tr>
+<tr><td><strong>Enrichissement</strong> (catégorie, publics, résumé)</td><td><code>src/event/event_enrichment.py</code></td><td><code>mistral-small-latest</code></td><td><code>ENRICHMENT_MODEL</code></td><td>T = 0, JSON ; lots de 15, 3 000 par nuit au plus ; texte coupé à 800 caractères ; identifiants courts e1, e2…</td><td>Pydantic, liste fermée (sinon « autre »), catégorie du titre, résumé limité aux noms présents dans la source</td><td>dans le coût de la nuit (≈ 0,005 $)</td><td>lot ignoré, repris la nuit suivante ; les événements sont écrits quand même</td></tr>
+<tr><td><strong>Lecture du PDF</strong> (Sète agglopôle)</td><td><code>src/extractors/documents/document_extractor.py</code></td><td><code>mistral-small-latest</code></td><td><code>DOCUMENT_EXTRACTION_MODEL</code></td><td>T = 0, JSON ; pages 4-59 et 63, paquets de 4 pages + 1 de recouvrement ; 15 000 caractères au plus ; pause de 3 s ; 429 : 5 essais (10, 20, 40 s…)</td><td>Pydantic, titre retrouvé dans la page (60 % des mots), date dans la période</td><td>1 à 2 centimes une lecture complète ; 0 $ si le PDF est identique (cache)</td><td>paquets réussis gardés en cache, seuls les manquants redemandés ; zéro paquet lu : source en échec, signalée</td></tr>
+<tr><td><strong>Documents partenaires</strong> (PDF, Word)</td><td><code>src/extractors/datasets/source/partner_documents.py</code></td><td><code>mistral-small-latest</code></td><td><code>DOCUMENT_EXTRACTION_MODEL</code></td><td>T = 0, JSON ; une page de PDF ou 40 paragraphes de Word par appel ; 15 000 caractères au plus ; 429 : mêmes essais</td><td>titre retrouvé dans le texte, mêmes contrôles qu'un tableur partenaire, <strong>validation humaine</strong> avant publication</td><td>à mesurer à part ; 0 $ si le document est identique (cache)</td><td>réponse illisible : ligne rejetée (<code>reponse_llm_illisible</code>) ; toute publication passe par mon accord</td></tr>
+<tr><td><strong>Embeddings</strong> (événements et question)</td><td><code>agent/services.py</code>, <code>agent/nodes.py</code>, <code>app/search_query.py</code></td><td><code>mistral-embed</code></td><td><code>EMBEDDING_MODEL</code></td><td>1 024 dimensions ; lots de 64, 10 000 par nuit au plus ; texte : titre, catégorie, résumé, lieu, description (1 500 caractères)</td><td>colonne <code>vector(1024)</code> ; seuls les événements à venir sont vectorisés</td><td>0,10 $ le million de tokens (estimés, faute de décompte renvoyé par l'API)</td><td>nuit : lot passé, 3 échecs de suite arrêtent les embeddings ; question : recherche par mots et date</td></tr>
+<tr><td><strong>Rédaction de la réponse</strong></td><td><code>app/search_answer.py</code></td><td><code>mistral-small-latest</code></td><td><code>SEARCH_MODEL</code></td><td>T = 0, JSON ; 8 événements numérotés au plus ; 2 à 4 phrases, 3 relances</td><td>citations [n] hors liste retirées, cartes tirées de la base, partenaires en tête seulement s'ils répondent</td><td>0,000118 $ par question (avec l'embedding)</td><td>second essai avec <code>SEARCH_FALLBACK_MODEL</code> (<code>mistral-medium-latest</code>) ; sinon réponse simple listant les cartes, signalée à l'écran, gardée hors du cache</td></tr>
 <tr><td><strong>Juge de qualité de la nuit</strong></td><td><code>src/event/quality_judge.py</code></td><td><code>mistral-medium-latest</code></td><td><code>JUDGE_MODEL</code></td><td>T = 0, JSON ; 20 fiches au hasard en un appel ; 4 questions fermées ; texte coupé à 600 caractères</td><td>Pydantic (booléens), score moyen, seuil <code>QUALITE_MIN</code> 0,80 : alerte dans le mail</td><td>dans le coût de la nuit ; 0,40 $ / 2,00 $ le million (entrée / sortie)</td><td>score absent, la collecte continue</td></tr>
-<tr><td><strong>Lecture des recherches ratées</strong> (le lundi)</td><td><code>agent/search_learning.py</code></td><td><code>mistral-small-latest</code></td><td><code>LEARNING_MODEL</code></td><td>T = 0, JSON ; mots cherchés au moins 2 fois, 5 par semaine au plus, 4 équivalents au plus</td><td>nature dans une liste fermée, équivalent d'un seul mot, présent dans les titres de la base ; un humain valide</td><td>un appel par semaine</td><td>le bilan part sans les pistes</td></tr>
+<tr><td><strong>Lecture des recherches ratées</strong> (le lundi)</td><td><code>agent/search_learning.py</code></td><td><code>mistral-small-latest</code></td><td><code>LEARNING_MODEL</code></td><td>T = 0, JSON ; mots cherchés au moins 2 fois, 5 par semaine au plus, 4 équivalents au plus</td><td>nature dans une liste fermée, équivalent d'un seul mot, présent dans les titres de la base ; un humain valide</td><td>un appel par semaine</td><td>le bilan part avec ses chiffres seuls</td></tr>
 <tr><td><strong>Modération des avis</strong></td><td><code>src/event/event_ratings.py</code></td><td><code>mistral-moderation-latest</code></td><td><code>MODERATION_MODEL</code></td><td>API <code>/v1/moderations</code>, délai 10 s ; commentaire de 300 caractères au plus</td><td>une seule catégorie signalée : refusé ; sinon publié</td><td>absent de la grille de prix du code</td><td>commentaire « en attente », repris par l'agent la nuit</td></tr>
-<tr><td><strong>Juge de pertinence</strong> (à la main)</td><td><code>scripts/eval_pertinence.py</code></td><td><code>mistral-large-latest</code></td><td><code>PERTINENCE_JUDGE_MODEL</code></td><td>T = 0, JSON ; consigne v7 figée ; une question par appel, une raison par verdict ; pause <code>JUDGE_CALL_PAUSE_S</code> 3 s</td><td>verdict booléen par carte, comparé à l'annotation humaine (accord, AC1 de Gwet)</td><td>≈ 0,03 $ par passage</td><td>429 : mêmes essais espacés ; réponse illisible : carte sans verdict</td></tr>
+<tr><td><strong>Juge de pertinence</strong> (à la main)</td><td><code>scripts/eval_pertinence.py</code></td><td><code>mistral-large-latest</code></td><td><code>PERTINENCE_JUDGE_MODEL</code></td><td>T = 0, JSON ; consigne v7 figée ; une question par appel, une raison par verdict ; pause <code>JUDGE_CALL_PAUSE_S</code> 3 s</td><td>verdict booléen par carte, comparé à l'annotation humaine (accord, AC1 de Gwet)</td><td>≈ 0,03 $ par passage</td><td>429 : mêmes essais espacés ; réponse illisible : la carte reste à juger</td></tr>
 </tbody>
 </table>
-<p class="table-note">Lu dans le code au 16/10/2026 (constantes <code>DEFAULT_MODEL</code>, <code>ENRICHMENT_BATCH_SIZE</code>, <code>EMBEDDING_BATCH_SIZE</code>, <code>SAMPLE_SIZE</code>, <code>MAX_PROPOSALS</code>…) et dans <code>config/sources.yaml</code> (pages et découpage du PDF ; le défaut du code est de 3 pages sans recouvrement). Coûts : <code>docs/couts.md</code>, <code>docs/sources.md</code> (lecture complète du PDF), grille <code>PRICES_USD_PER_MILLION</code> de <code>agent/watch.py</code>. Les variables <code>LLM_MODEL</code> et <code>EXTRACTION_MODEL</code>, restes de l'essai de Ministral, ont été retirées de <code>.env.example</code> le 16/10/2026 : aucun fichier ne les lisait.</p>
+<p class="table-note">Lu dans le code au 16/10/2026 (constantes <code>DEFAULT_MODEL</code>, <code>ENRICHMENT_BATCH_SIZE</code>, <code>EMBEDDING_BATCH_SIZE</code>, <code>SAMPLE_SIZE</code>, <code>MAX_PROPOSALS</code>…) et dans <code>config/sources.yaml</code> (pages et découpage du PDF ; par défaut, le code découpe en 3 pages, bord à bord). Coûts : <code>docs/couts.md</code>, <code>docs/sources.md</code> (lecture complète du PDF), grille <code>PRICES_USD_PER_MILLION</code> de <code>agent/watch.py</code>. Les variables <code>LLM_MODEL</code> et <code>EXTRACTION_MODEL</code>, restes de l'essai de Ministral, ont été retirées de <code>.env.example</code> le 16/10/2026 : elles étaient devenues inutiles.</p>
 </div>
 </section>
 
@@ -290,7 +290,7 @@
 </div>
 <div class="experiment-analysis">
 <div><span>LA CONSIGNE, RÉSUMÉE</span><p>Pour chaque événement (titre, catégorie d'origine, lieu, âges, texte), rendre une catégorie de la liste d'après ce qu'on y <strong>fait</strong> (atelier = on pratique soi-même), des publics (famille, soirée, ados, seniors), un résumé de 160 caractères « sans nom propre, date ni prix absents du texte », et <code>est_une_sortie</code> (faux pour une offre d'emploi, une collecte de sang). Les événements sont numérotés e1, e2… : un identifiant long était souvent mal recopié.</p></div>
-<div><span>CONTRÔLES APRÈS LE MODÈLE</span><p>Pydantic ; catégorie ramenée sans accents et par synonymes (« expo » → « exposition »), sinon « autre » ; public hors liste ignoré ; si le titre dit clairement la catégorie (<code>TITLE_CATEGORY_RULES</code>), il l'emporte ; un résumé qui cite un nom ou un nombre absent du titre, du lieu et du texte (<code>unsupported_names</code>) est effacé. Les publics du modèle s'ajoutent à ceux de la source, sans les effacer.</p></div>
+<div><span>CONTRÔLES APRÈS LE MODÈLE</span><p>Pydantic ; catégorie normalisée (accents retirés, synonymes ramenés) (« expo » → « exposition »), sinon « autre » ; public hors liste ignoré ; si le titre dit clairement la catégorie (<code>TITLE_CATEGORY_RULES</code>), il l'emporte ; un résumé qui cite un nom ou un nombre absent du titre, du lieu et du texte (<code>unsupported_names</code>) est effacé. Les publics du modèle s'ajoutent à ceux de la source, en complément.</p></div>
 <div><span>ERREURS RÉELLES ATTRAPÉES</span><p>« MHSC vs Nantes » alors que la source disait Metz, relevé par le juge de la nuit : d'où le contrôle des noms. « Cyrano de Bergerac » pour un spectacle nommé « CYRANA » : résumé écarté. Le juge relevait 25 % de catégories discutables (« PAUSE JEUX : Les échecs » en atelier) : d'où les règles du titre.</p></div>
 <div><span>CE QUE LES CONTRÔLES ONT CORRIGÉ CHEZ EUX-MÊMES</span><p>14/10 : plus de la moitié des lots perdus pour des accents (« Théâtre ») ; 15/10 : 8 à 10 événements refusés par nuit pour une catégorie hors liste, désormais « autre » ; 7 résumés écartés à tort pour « DJ », un pour « XIXe », un pour des âges (« 4, 12 ») transmis au modèle.</p></div>
 </div>
@@ -305,13 +305,13 @@
 <div><strong>mistral-small</strong><span><code>DOCUMENT_EXTRACTION_MODEL</code></span></div>
 <div><strong>2026-10-14.2</strong><span><code>PROMPT_VERSION</code> (<code>src/event/document_mapper.py</code>)</span></div>
 <div><strong>19 paquets</strong><span>de 4 pages, ≈ 50 000 tokens en entrée</span></div>
-<div><strong>1 à 2 centimes</strong><span>une lecture complète ; 0 $ si le PDF n'a pas changé</span></div>
+<div><strong>1 à 2 centimes</strong><span>une lecture complète ; 0 $ si le PDF est identique</span></div>
 </div>
 <div class="experiment-analysis">
 <div><span>LA CONSIGNE, RÉSUMÉE</span><p>Relever les événements <strong>explicitement</strong> décrits, sans rien inventer (null si absent) ; une entrée par date ; une activité répétée (« tous les mercredis ») rendue avec <code>jours_semaine</code>, que le code déroule ; le public déduit de la rubrique (« Jeunesse et famille (0-12 ans) ») ; ignorer sommaire, édito et horaires d'ouverture. La période du document est injectée dans la consigne.</p></div>
 <div><span>CONTRÔLES APRÈS LE MODÈLE</span><p><code>pypdf</code> extrait le texte localement (gratuit) ; chaque page est marquée « [Page N] ». Après Mistral : champs validés (<code>champs_llm_invalides</code>), titre retrouvé dans la page à 60 % de ses mots (<code>titre_absent_du_texte</code>), date dans la période (<code>hors_periode</code>). Les rejets sont comptés et suivis dans MLflow (<code>pdf/inventions_rattrapees</code>).</p></div>
 <div><span>LE QUOTA, APPRIS À LA DURE</span><p>Premier essai : 19 appels en 6 s, 19 erreurs 429. D'où la pause de 3 s (<code>DOCUMENT_CALL_PAUSE_S</code>) et <code>call_with_rate_limit</code> : 5 essais, attente de 10 s doublée à chaque fois.</p></div>
-<div><span>LE CACHE</span><p>Clé : empreinte du PDF, version et texte de la consigne, découpage, modèle. Il garde les réponses <strong>avant</strong> validation (une règle durcie s'applique sans rappeler Mistral) et seulement les paquets réussis (correction du 14/10 : un paquet en échec mis en cache rendait le document « vide » pour toujours).</p></div>
+<div><span>LE CACHE</span><p>Clé : empreinte du PDF, version et texte de la consigne, découpage, modèle. Il garde les réponses <strong>avant</strong> validation (une règle durcie s'applique directement, Mistral reste au repos) et seulement les paquets réussis (correction du 14/10 : un paquet en échec mis en cache rendait le document « vide » pour toujours).</p></div>
 </div>
 </div>
 
@@ -324,13 +324,13 @@
 <div><strong>mistral-small</strong><span><code>DOCUMENT_EXTRACTION_MODEL</code></span></div>
 <div><strong>2026-10-16.1</strong><span><code>PROMPT_VERSION</code> des documents partenaires</span></div>
 <div><strong>1 page</strong><span>de PDF, ou 40 paragraphes de Word, par appel</span></div>
-<div><strong>0 publication</strong><span>sans accord humain sur cette empreinte du fichier</span></div>
+<div><strong>100 % des publications</strong><span>validées par un humain, sur l'empreinte du fichier</span></div>
 </div>
 <div class="experiment-analysis">
 <div><span>LA CONSIGNE, RÉSUMÉE</span><p>Lire la plaquette d'un bar, d'une salle, d'un club ; rendre une ligne par séance dans <strong>les colonnes du modèle partenaire</strong> (titre recopié, date, heures, lieu, prix « tel qu'écrit », public, lien) ; « N'invente RIEN » ; ignorer horaires d'ouverture, mentions légales, publicités. La date du jour est donnée pour déduire l'année.</p></div>
 <div><span>CONTRÔLES APRÈS LE MODÈLE</span><p>Titre retrouvé dans le texte de sa page ; puis chaque ligne passe par les mêmes contrôles qu'un tableur partenaire (<code>map_partner_row</code>). L'agent lit, compte et <strong>propose</strong> l'import avec un aperçu ; accepter inscrit le fichier et son empreinte dans <code>_documents_valides.json</code> ; un document modifié redemande un accord.</p></div>
-<div><span>ERREUR RÉELLE ATTRAPÉE</span><p>Essai du 16/10 sur la plaquette d'exemple : Mistral lit bien les 4 séances, mais le lien « Programme et réservations » n'est écrit qu'une fois, en bas. Les 4 séances étaient refusées (« lien manquant »). Correction par règle : le lien écrit dans le document est repris, rien n'est inventé.</p></div>
-<div><span>VÉRIFIER AVANT DE DÉPOSER</span><p><code>partner_extractor --verifier programme.docx</code> fait lire un document par Mistral sans rien écrire en base. Un Word est lu sans bibliothèque de plus : c'est une archive zip, le texte est dans <code>word/document.xml</code>.</p></div>
+<div><span>ERREUR RÉELLE ATTRAPÉE</span><p>Essai du 16/10 sur la plaquette d'exemple : Mistral lit bien les 4 séances, mais le lien « Programme et réservations » est écrit une seule fois, en bas. Les 4 séances étaient refusées (« lien manquant »). Correction par règle : le lien écrit dans le document est repris, et tout vient du document.</p></div>
+<div><span>VÉRIFIER AVANT DE DÉPOSER</span><p><code>partner_extractor --verifier programme.docx</code> fait lire un document par Mistral en lecture seule : la base reste intacte. Un Word se lit avec les outils de base : c'est une archive zip, le texte est dans <code>word/document.xml</code>.</p></div>
 </div>
 </div>
 
@@ -347,7 +347,7 @@
 </div>
 <div class="experiment-analysis">
 <div><span>CE QUI EST VECTORISÉ</span><p>Pour un événement : titre, catégorie (celle de l'enrichissement si elle existe), résumé, lieu et description, dans un seul texte. Pour une question : la question, avec la précédente quand c'est une relance. Le client d'embeddings est créé une fois par modèle (il télécharge le tokenizer).</p></div>
-<div><span>QUAND IL EST RECALCULÉ</span><p>Un nouvel enrichissement efface le vecteur : il est recalculé avec la nouvelle catégorie et le nouveau résumé. Un événement passé n'est jamais vectorisé (« on ne paie pas pour lui »). Détail en section 04.</p></div>
+<div><span>QUAND IL EST RECALCULÉ</span><p>Un nouvel enrichissement efface le vecteur : il est recalculé avec la nouvelle catégorie et le nouveau résumé. Seuls les événements à venir sont vectorisés (« on ne paie pas pour lui », dit le code). Détail en section 04.</p></div>
 </div>
 </div>
 
@@ -364,9 +364,9 @@
 </div>
 <div class="experiment-analysis">
 <div><span>LA CONSIGNE, RÉSUMÉE</span><p>2 à 4 phrases ; ne parler <strong>que</strong> des événements de la liste ; citer chacun par [n] ; dire franchement si rien ne correspond, et d'abord ce qui manque (« Je n'ai pas trouvé de théâtre gratuit en famille… ») ; citer d'abord les offres partenaires, sans ton publicitaire ; 3 relances de moins de 6 mots. Le code ajoute des précisions à la demande : contraintes relâchées, type absent, relance.</p></div>
-<div><span>CONTRÔLES APRÈS LE MODÈLE</span><p>Une citation qui ne renvoie à aucun événement fourni ([7] quand il y en a 4) est retirée ; les cartes affichées viennent de la base, pas du texte ; elles sont réordonnées (partenaires, puis cités, puis les autres) et les numéros de la réponse suivent. Réponse vide ou JSON illisible : repli.</p></div>
-<div><span>ERREUR RÉELLE CORRIGÉE</span><p>Grille de pertinence du 16/10 : les 3 cartes non pertinentes étaient des offres partenaires mises en tête sur un critère trop large (des marionnettes pour « un spectacle de danse »). La version 2026-10-16.2 ne les met en tête que si leur type précis et leur public correspondent ; sur la seconde grille, elles ne sont plus dans les 3 premières.</p></div>
-<div><span>SI MISTRAL TOMBE</span><p><code>fallback_answer</code> : « Voici ce que j'ai trouvé pour… » suivi des trois premiers titres et de leur numéro. La réponse est marquée <code>degraded</code>, signalée à l'écran, et jamais mise en cache.</p></div>
+<div><span>CONTRÔLES APRÈS LE MODÈLE</span><p>Chaque citation doit renvoyer à un événement fourni, sinon elle est retirée ([7] quand il y en a 4). Les cartes affichées viennent de la base, et le texte les accompagne ; elles sont réordonnées (partenaires, puis cités, puis les autres) et les numéros de la réponse suivent. Réponse vide ou JSON illisible : repli.</p></div>
+<div><span>ERREUR RÉELLE CORRIGÉE</span><p>Grille de pertinence du 16/10 : les 3 cartes hors sujet étaient des offres partenaires mises en tête sur un critère trop large (des marionnettes pour « un spectacle de danse »). La version 2026-10-16.2 les met en tête uniquement si leur type précis et leur public correspondent ; sur la seconde grille, elles sortent des 3 premières.</p></div>
+<div><span>SI MISTRAL TOMBE</span><p><code>fallback_answer</code> : « Voici ce que j'ai trouvé pour… » suivi des trois premiers titres et de leur numéro. La réponse est marquée <code>degraded</code>, signalée à l'écran, et gardée hors du cache.</p></div>
 </div>
 </div>
 
@@ -384,15 +384,15 @@
 <div class="experiment-analysis">
 <div><span>LA CONSIGNE, RÉSUMÉE</span><p>Quatre questions fermées, vrai ou faux, plus simples à fiabiliser qu'une note libre : <code>coherent</code>, <code>est_une_sortie</code>, <code>publics_corrects</code>, <code>categorie_correcte</code> ; une courte phrase dans <code>probleme</code> si une réponse est fausse. Le juge voit ce que le visiteur verrait, plus 600 caractères du texte d'origine.</p></div>
 <div><span>CONTRÔLES APRÈS LE MODÈLE</span><p>Pydantic (quatre booléens) ; score d'une fiche = part des quatre « vrai » ; score de la nuit = moyenne. Le score, le taux par question et 5 exemples de problèmes vont dans le mail, MLflow (<code>qualite/score</code>) et Grafana.</p></div>
-<div><span>LA CONSIGNE CORRIGÉE LE 16/10</span><p>Sans la liste fermée des catégories, le juge reprochait à « marche » de ne pas être « brocante », ou à une dégustation de ne pas être « œnologie », catégories qui n'existent pas. La version 2026-10-16.1 lui donne la liste.</p></div>
-<div><span>SI MISTRAL TOMBE</span><p>Le juge est un contrôle, pas une étape indispensable : le score est absent du bilan, la collecte continue.</p></div>
+<div><span>LA CONSIGNE CORRIGÉE LE 16/10</span><p>Avant d'avoir la liste fermée des catégories, le juge reprochait à « marche » d'être autre chose qu'une « brocante », ou à une dégustation d'être autre chose qu'« œnologie », deux catégories absentes de la liste. La version 2026-10-16.1 lui donne la liste.</p></div>
+<div><span>SI MISTRAL TOMBE</span><p>Le juge est un contrôle en plus : s'il tombe, le score manque au bilan et la collecte continue.</p></div>
 </div>
 </div>
 
 <div class="experiment-card">
 <div class="experiment-header">
 <div><span class="experiment-number">USAGE 7 · LE LUNDI · CLASSER</span><h3>Lire les recherches ratées</h3></div>
-<span class="experiment-status selected">Propose, ne décide pas</span>
+<span class="experiment-status selected">Propose, l'humain décide</span>
 </div>
 <div class="experiment-metrics">
 <div><strong>mistral-small</strong><span><code>LEARNING_MODEL</code></span></div>
@@ -401,8 +401,8 @@
 <div><strong>4</strong><span>natures possibles : faute, synonyme, sujet, ambiance</span></div>
 </div>
 <div class="experiment-analysis">
-<div><span>LA CONSIGNE, RÉSUMÉE</span><p>Pour chaque mot cherché qu'aucun titre de la base ne contient, dire sa nature (« cirqe » est une faute de « cirque », « stand-up » un synonyme d'« humour », « escalade » un sujet, « romantique » une ambiance) et proposer jusqu'à 4 mots équivalents, d'un seul mot, sans accents.</p></div>
-<div><span>CONTRÔLES APRÈS LE MODÈLE</span><p>Seuls les mots demandés, une nature de la liste, des équivalents d'un seul mot différents du mot cherché ; surtout, un synonyme n'est retenu que s'il <strong>figure dans les titres de la base</strong>. Un sujet absent est cherché dans les agendas OpenAgenda non lus. Tout devient une proposition, appliquée seulement par un humain.</p></div>
+<div><span>LA CONSIGNE, RÉSUMÉE</span><p>Pour chaque mot cherché absent de tous les titres de la base, dire sa nature (« cirqe » est une faute de « cirque », « stand-up » un synonyme d'« humour », « escalade » un sujet, « romantique » une ambiance) et proposer jusqu'à 4 mots équivalents, d'un seul mot, sans accents.</p></div>
+<div><span>CONTRÔLES APRÈS LE MODÈLE</span><p>Seuls les mots demandés, une nature de la liste, des équivalents d'un seul mot différents du mot cherché ; surtout, un synonyme est retenu seulement s'il <strong>figure dans les titres de la base</strong>. Un sujet absent est cherché dans les agendas OpenAgenda encore inexplorés. Tout devient une proposition, appliquée seulement par un humain.</p></div>
 </div>
 </div>
 
@@ -418,8 +418,8 @@
 <div><strong>3 statuts</strong><span>publié, refusé, en attente</span></div>
 </div>
 <div class="experiment-analysis">
-<div><span>CE QUI EST APPELÉ</span><p>Pas de consigne ici : l'API de modération de Mistral rend des catégories signalées ou non. La règle est dans le code : une seule catégorie signalée et le commentaire est refusé ; aucune, il est publié. Les étoiles seules ne sont pas modérées.</p></div>
-<div><span>SI MISTRAL TOMBE</span><p>Le commentaire reste « en attente », invisible ; l'agent le reprend la nuit suivante. Rien n'est publié sans être passé par la modération.</p></div>
+<div><span>CE QUI EST APPELÉ</span><p>Ici, l'API de modération de Mistral suffit : elle signale, catégorie par catégorie, ce qui pose problème. La règle est dans le code : une seule catégorie signalée et le commentaire est refusé ; zéro, il est publié. Les étoiles seules passent directement.</p></div>
+<div><span>SI MISTRAL TOMBE</span><p>Le commentaire reste « en attente », invisible ; l'agent le reprend la nuit suivante. Tout commentaire passe par la modération avant d'être publié.</p></div>
 </div>
 </div>
 
@@ -435,10 +435,10 @@
 <div><strong>≈ 0,03 $</strong><span>par passage, lancé à la main</span></div>
 </div>
 <div class="experiment-analysis">
-<div><span>LA CONSIGNE, RÉSUMÉE</span><p>Une demande et ses propositions : chacune est-elle pertinente ? Le moment, le lieu et le budget « ont déjà été vérifiés par un contrôle automatique » : le juge ne les voit pas. Il ne juge que le <strong>sujet</strong> (titre et résumé) et le <strong>public</strong> (« qui convient », pas « réservé à »), et donne une raison par verdict.</p></div>
-<div><span>POURQUOI UNE QUESTION PAR APPEL</span><p>v2 mêlait 15 cartes de 5 questions sans justification : 55 % d'accord. v3, une question par appel et une raison par verdict : les raisons ont montré les erreurs systématiques (dates mal calculées, lieu exigé). De v4 à v7 : ce que la demande ne précise pas n'est plus une contrainte, puis la date, le prix et la commune sont retirés au juge et vérifiés par le code.</p></div>
+<div><span>LA CONSIGNE, RÉSUMÉE</span><p>Une demande et ses propositions : chacune est-elle pertinente ? Le moment, le lieu et le budget « ont déjà été vérifiés par un contrôle automatique » : le code s'en charge. Le juge évalue uniquement le <strong>sujet</strong> (titre et résumé) et le <strong>public</strong> (« qui convient », plutôt que « réservé à »), et donne une raison par verdict.</p></div>
+<div><span>POURQUOI UNE QUESTION PAR APPEL</span><p>v2 mêlait 15 cartes de 5 questions, avec des verdicts seuls : 55 % d'accord. v3, une question par appel et une raison par verdict : les raisons ont montré les erreurs systématiques (dates mal calculées, lieu exigé). De v4 à v7 : seul ce que la demande précise devient une contrainte, puis la date, le prix et la commune sont retirés au juge et vérifiés par le code.</p></div>
 <div><span>POURQUOI LARGE</span><p><code>mistral-medium</code> lisait mal les résumés (« marionnettes avec lecture de contes » rejeté pour « une lecture de contes ») : le juge est passé à <code>mistral-large</code> à partir de v6.</p></div>
-<div><span>QUOTA</span><p>Le 16/10, erreurs 429 dès les premiers appels avec <code>mistral-large</code> : pause de 3 s entre deux questions, puis 10 s, 20 s, 40 s si Mistral refuse encore. Il partage le quota du site : jamais pendant une démonstration.</p></div>
+<div><span>QUOTA</span><p>Le 16/10, erreurs 429 dès les premiers appels avec <code>mistral-large</code> : pause de 3 s entre deux questions, puis 10 s, 20 s, 40 s si Mistral refuse encore. Il partage le quota du site : je le lance toujours en dehors des démonstrations.</p></div>
 </div>
 </div>
 <p class="table-note">Sources : docstrings et commentaires datés des fichiers cités en section 02 ; <code>docs/fiabilite.md</code> (CYRANA), <code>agent/README.md</code> (MHSC), <code>docs/sources.md</code> (19 erreurs 429, lecture complète), <code>docs/evaluation.md</code> (grilles et calibrage), <code>docs/couts.md</code>, <code>docs/evaluation.md</code> (434 événements du PDF).</p>
@@ -450,7 +450,7 @@
 <div class="container">
 <p class="section-number">04</p>
 <h2>Les embeddings et la recherche vectorielle</h2>
-<p class="section-intro">Le vecteur sert à classer, jamais à filtrer. Les contraintes sont des conditions SQL ; le sens et les mots se partagent le classement.</p>
+<p class="section-intro">Le vecteur (la traduction d'un texte en nombres, qui permet de comparer des sens) sert uniquement à classer. Les contraintes sont des conditions SQL ; le sens et les mots se partagent le classement.</p>
 <div class="config-grid">
 <div class="config-card"><span>Modèle</span><strong>mistral-embed</strong></div>
 <div class="config-card"><span>Dimension</span><strong>1 024 (<code>vector(1024)</code>)</strong></div>
@@ -468,10 +468,10 @@
 </div>
 
 <div class="reflection-grid">
-<div class="reflection-card"><h3>Pourquoi pgvector, pas FAISS</h3><p>L'index FAISS du projet 6 ne savait pas filtrer « samedi soir à Sète, gratuit ». PostgreSQL fait les filtres, le vecteur et le plein texte dans la même requête. FAISS a été retiré le 15/10.</p></div>
-<div class="reflection-card"><h3>Pourquoi la fusion des rangs</h3><p>Le sens rate les noms propres, les mots ratent les envies (« romantique »). RRF additionne des rangs, pas des scores de natures différentes : pas de pondération à régler.</p></div>
-<div class="reflection-card"><h3>Quand l'événement n'a pas de vecteur</h3><p>Il reste trouvable : le classement par le sens ignore les fiches sans vecteur, le classement par les mots les voit. Son vecteur sera calculé la nuit suivante.</p></div>
-<div class="reflection-card"><h3>Quand la question n'a pas de vecteur</h3><p>Mistral ne répond pas : la recherche continue par les mots, et sans mots, par date. La réponse est marquée dégradée. La CI rejoue les 50 questions <strong>sans vecteur ni Mistral</strong> et échoue sous 95 % : les contraintes ne dépendent pas du modèle.</p></div>
+<div class="reflection-card"><h3>Pourquoi pgvector plutôt que FAISS</h3><p>L'index FAISS du projet 6 cherchait par le sens, mais filtrer « samedi soir à Sète, gratuit » lui échappait. PostgreSQL fait les filtres, le vecteur et le plein texte dans la même requête. FAISS a été retiré le 15/10.</p></div>
+<div class="reflection-card"><h3>Pourquoi la fusion des rangs</h3><p>Le sens rate les noms propres, les mots ratent les envies (« romantique »). RRF (la fusion de deux classements) additionne des rangs plutôt que des scores de natures différentes : zéro pondération à régler.</p></div>
+<div class="reflection-card"><h3>Quand l'événement attend son vecteur</h3><p>Il reste trouvable : le classement par le sens laisse de côté les fiches en attente, le classement par les mots les voit. Son vecteur sera calculé la nuit suivante.</p></div>
+<div class="reflection-card"><h3>Quand le vecteur de la question manque</h3><p>Mistral reste muet : la recherche continue par les mots, et à défaut de mots, par date. La réponse est marquée dégradée. La CI rejoue les 50 questions <strong>en mode règles seules, vecteur et Mistral coupés,</strong> et échoue sous 95 % : les contraintes reposent entièrement sur le code.</p></div>
 </div>
 <p class="table-note">Sources : <code>app/search_query.py</code> (<code>embed_question</code>), <code>agent/nodes.py</code> (<code>embed_missing</code>), <code>src/event/event_repository.py</code> (vecteur effacé après un nouvel enrichissement), <code>docs/evaluation.md</code> (§ 1, CI), <code>docs/evaluation.md</code> (FAISS). Détail de la recherche : <a class="project-link" href="recherche.html">Recherche →</a></p>
 </div>
@@ -481,23 +481,23 @@
 <section class="section" id="s05">
 <div class="container">
 <p class="section-number">05</p>
-<h2>Ce qui n'est pas un modèle, et pourquoi</h2>
+<h2>Ce qui reste en règles, et pourquoi</h2>
 <p class="section-intro">Le choix le plus défendable du projet est peut-être ce que j'ai refusé de confier à un modèle.</p>
 <div class="skills-grid">
-<div class="skill-group"><h3>Comprendre la question</h3><div class="constraint-value">100 % · 1 ms</div><p class="constraint-text">Des règles lisent quand, où, pour qui, combien et quoi ; les mots qui restent vont à la recherche par mots. Aucun appel à Mistral, 0 $, testé sur 50 questions. Les synonymes appris le lundi s'y ajoutent après validation.</p></div>
-<div class="skill-group"><h3>Respecter les contraintes</h3><div class="constraint-value">98,7 %</div><p class="constraint-text">Filtres SQL stricts : un prix inconnu n'est jamais pris pour gratuit, une heure inconnue n'est jamais inventée. Le modèle de rédaction ne voit que ce qui a passé les filtres.</p></div>
-<div class="skill-group"><h3>Juger date, lieu et prix</h3><div class="constraint-value">Retirés au juge</div><p class="constraint-text">Le juge de pertinence v7 ne voit plus ni la date, ni la commune, ni le prix : un modèle calculait « 31 oct. &lt; 16 oct. 2026 » et exigeait un lieu non demandé. Le code les vérifie.</p></div>
+<div class="skill-group"><h3>Comprendre la question</h3><div class="constraint-value">100 % · 1 ms</div><p class="constraint-text">Des règles lisent quand, où, pour qui, combien et quoi ; les mots qui restent vont à la recherche par mots. Zéro appel à Mistral, 0 $, testé sur 50 questions. Les synonymes appris le lundi s'y ajoutent après validation.</p></div>
+<div class="skill-group"><h3>Respecter les contraintes</h3><div class="constraint-value">98,7 %</div><p class="constraint-text">Filtres SQL stricts : un prix inconnu reste inconnu, bien distinct de gratuit ; une heure inconnue reste inconnue. Le modèle de rédaction voit uniquement ce qui a passé les filtres.</p></div>
+<div class="skill-group"><h3>Juger date, lieu et prix</h3><div class="constraint-value">Retirés au juge</div><p class="constraint-text">Pour le juge de pertinence v7, la date, la commune et le prix sont confiés au code : un modèle calculait « 31 oct. &lt; 16 oct. 2026 » et exigeait un lieu hors demande.</p></div>
 </div>
 <p class="table-note">Sources : <code>app/query_understanding.py</code> (docstring : « aucun appel à Mistral »), <code>docs/evaluation.md</code> (§ 1, § 2 et § 3 : 1 ms), <code>docs/fiabilite.md</code> (§ 1).</p>
 
-<h3>Essayés, et non retenus</h3>
+<h3>Essayés, puis écartés</h3>
 <table class="story-table params-table">
 <thead><tr><th>Essai</th><th>Mesure</th><th>Décision</th><th>Raison</th></tr></thead>
 <tbody>
-<tr><td><code>ministral-8b</code> pour rédiger</td><td>100 questions, 16/10 : 0,097 $ pour 1 000 contre 0,117 $ (− 17 %) ; rédaction 1,9 s contre 1,3 s ; médiane 3,8 s, maximum 13,8 s</td><td><span class="experiment-status rejected">Non retenu</span></td><td>0,02 $ d'écart pour 1 000 questions, des réponses plus lentes et une qualité de rédaction non mesurée : le risque ne vaut pas l'économie.</td></tr>
-<tr><td>Extraction des contraintes par un petit modèle (Ministral)</td><td>Les règles font 100 % sur le jeu de test, en 1 ms et sans coût</td><td><span class="experiment-status rejected">Abandonné</span></td><td>Un modèle se justifiera avec des questions réelles en nombre.</td></tr>
+<tr><td><code>ministral-8b</code> pour rédiger</td><td>100 questions, 16/10 : 0,097 $ pour 1 000 contre 0,117 $ (− 17 %) ; rédaction 1,9 s contre 1,3 s ; médiane 3,8 s, maximum 13,8 s</td><td><span class="experiment-status rejected">Écarté</span></td><td>0,02 $ d'écart pour 1 000 questions, des réponses plus lentes et une qualité de rédaction encore à mesurer : l'économie reste trop faible face au risque.</td></tr>
+<tr><td>Extraction des contraintes par un petit modèle (Ministral)</td><td>Les règles font 100 % sur le jeu de test, en 1 ms, gratuitement</td><td><span class="experiment-status rejected">Abandonné</span></td><td>Un modèle se justifiera avec des questions réelles en nombre.</td></tr>
 <tr><td><code>mistral-medium</code> comme juge de pertinence</td><td>Lisait mal les résumés (jusqu'à v5)</td><td><span class="experiment-status rejected">Remplacé</span></td><td><code>mistral-large</code> à partir de v6.</td></tr>
-<tr><td>Fine-tuning d'un modèle</td><td>Aucune donnée réelle annotée pour l'instant</td><td><span class="experiment-status promising">Après soutenance</span></td><td>Sans utilisateurs, un modèle affiné apprendrait surtout les jeux d'évaluation ; la mesure avant / après existe déjà.</td></tr>
+<tr><td>Fine-tuning d'un modèle</td><td>Données réelles annotées : à constituer</td><td><span class="experiment-status promising">Après soutenance</span></td><td>Tant que les avis réels restent rares, un modèle affiné apprendrait surtout les jeux d'évaluation ; la mesure avant / après existe déjà.</td></tr>
 </tbody>
 </table>
 <p class="table-note">Sources : <code>docs/evaluation.md</code> (§ 3), <code>docs/couts.md</code> (leviers), <code>scripts/mesure_cout_latence.py</code> (option <code>--modele</code>), <code>docs/mvp.md</code> (« Abandonné »), <code>scripts/eval_pertinence.py</code> (historique des versions), <code>docs/evolutions.md</code> (§ 2).</p>
@@ -509,23 +509,23 @@
 <div class="container">
 <p class="section-number">06</p>
 <h2>Coûts et quotas</h2>
-<p class="section-intro">Chaque appel compte ses tokens ; le code les convertit en dollars avec une grille de prix fixe. C'est un ordre de grandeur, pas une facture : la console Mistral fait foi.</p>
+<p class="section-intro">Chaque appel compte ses tokens ; le code les convertit en dollars avec une grille de prix fixe. C'est un ordre de grandeur : la facture exacte se lit dans la console Mistral.</p>
 <table class="story-table params-table">
 <thead><tr><th>Modèle</th><th>Entrée ($ / million de tokens)</th><th>Sortie</th><th>D'où vient le prix</th></tr></thead>
 <tbody>
-<tr><td><code>mistral-embed</code></td><td>0,10</td><td>—</td><td>grille du code ; tokens estimés à 4 caractères par token, l'API ne les rend pas</td></tr>
+<tr><td><code>mistral-embed</code></td><td>0,10</td><td>—</td><td>grille du code ; tokens estimés à 4 caractères par token, faute de décompte renvoyé par l'API</td></tr>
 <tr><td><code>mistral-small-latest</code></td><td>0,10</td><td>0,30</td><td>grille du code</td></tr>
 <tr><td><code>ministral-8b-latest</code></td><td>0,10</td><td>0,10</td><td>grille du code (essai de rédaction)</td></tr>
 <tr><td><code>mistral-medium-latest</code></td><td>0,40</td><td>2,00</td><td>grille du code ; certaines pages publiques donnent plus cher, ce qui porterait la collecte à environ 0,5 $ par mois</td></tr>
 <tr><td>modèle absent de la grille</td><td>0,40</td><td>2,00</td><td><code>DEFAULT_PRICE</code> : par prudence, le prix d'un grand modèle</td></tr>
-<tr><td><code>mistral-large-latest</code></td><td>0,50</td><td>1,50</td><td>grille du code, relevé dans <code>docs/couts.md</code> ; le script de pertinence ne calcule pas de coût</td></tr>
+<tr><td><code>mistral-large-latest</code></td><td>0,50</td><td>1,50</td><td>grille du code, relevé dans <code>docs/couts.md</code> ; ≈ 0,03 $ par passage du juge de pertinence</td></tr>
 </tbody>
 </table>
 <p class="table-note">Source : <code>agent/watch.py</code> (<code>PRICES_USD_PER_MILLION</code>, <code>DEFAULT_PRICE</code>, <code>estimate_tokens</code>), <code>docs/couts.md</code> (prix relevés le 16/10/2026).</p>
 
 <div class="config-grid">
 <div class="config-card"><span>Une question (rédaction et embedding)</span><strong>0,000118 $</strong></div>
-<div class="config-card"><span>1 000 questions, sans cache / 30 % répétées</span><strong>0,12 $ / 0,08 $</strong></div>
+<div class="config-card"><span>1 000 questions, cache vide / 30 % répétées</span><strong>0,12 $ / 0,08 $</strong></div>
 <div class="config-card"><span>Première nuit (base vide) / nuit ordinaire</span><strong>0,14 $ / ≈ 0,005 $</strong></div>
 <div class="config-card"><span>Lecture complète du PDF</span><strong>1 à 2 centimes</strong></div>
 <div class="config-card"><span>Un passage du juge de pertinence</span><strong>≈ 0,03 $</strong></div>
@@ -537,8 +537,8 @@
 <div class="reflection-grid">
 <div class="reflection-card"><h3>L'offre gratuite de Mistral</h3><p>« Quelques requêtes par minute » (<code>.env.example</code>). Le premier essai de lecture du PDF, 19 appels en 6 s, a reçu 19 erreurs 429.</p></div>
 <div class="reflection-card"><h3>Pauses et nouveaux essais</h3><p>3 s entre deux appels (<code>DOCUMENT_CALL_PAUSE_S</code>, <code>JUDGE_CALL_PAUSE_S</code>) ; sur 429, 5 essais, attente de 10 s doublée à chaque fois. Le même mécanisme sert au PDF, aux documents partenaires et au juge de pertinence.</p></div>
-<div class="reflection-card"><h3>Un quota partagé</h3><p>Une seule clé pour la nuit, le site et les scripts : le juge de pertinence n'est jamais lancé pendant une démonstration, et un lot en panne la nuit est simplement repris la suivante.</p></div>
-<div class="reflection-card"><h3>Le plafond côté SortirIA</h3><p>12 recherches par minute et par visiteur, et 1 000 par heure pour tout le service : même en cas d'abus, au plus 85 à 145 $ de Mistral par mois. Une question déjà posée le jour même ne coûte rien (cache).</p></div>
+<div class="reflection-card"><h3>Un quota partagé</h3><p>Une seule clé pour la nuit, le site et les scripts : le juge de pertinence tourne toujours en dehors des démonstrations, et un lot en panne la nuit est simplement repris la suivante.</p></div>
+<div class="reflection-card"><h3>Le plafond côté SortirIA</h3><p>12 recherches par minute et par visiteur, et 1 000 par heure pour tout le service : même en cas d'abus, au plus 85 à 145 $ de Mistral par mois. Une question déjà posée le jour même est gratuite (cache).</p></div>
 </div>
 <p class="table-note">Sources : <code>docs/sources.md</code>, <code>src/extractors/documents/document_extractor.py</code> (<code>call_with_rate_limit</code>), <code>scripts/eval_pertinence.py</code>, <code>docs/evaluation.md</code> (quota partagé), <code>docs/couts.md</code> (limite de débit, plafond). Le coût complet du service : <a class="project-link" href="deploiement.html">Déploiement →</a></p>
 </div>
@@ -558,28 +558,28 @@
 <tr><td><code>PROMPT_VERSION</code> (partenaires)</td><td>2026-10-16.1</td><td><code>src/extractors/datasets/source/partner_documents.py</code></td><td>dans la clé du cache des documents partenaires</td></tr>
 <tr><td><code>PROMPT_VERSION</code> (recherche)</td><td>2026-10-19.1</td><td><code>app/search_answer.py</code></td><td>dans la clé du cache des réponses, dans <code>rag_requests.prompt_version</code> et dans l'historique des grilles de pertinence</td></tr>
 <tr><td><code>JUDGE_VERSION</code></td><td>2026-10-16.1</td><td><code>src/event/quality_judge.py</code></td><td>repère daté de la consigne du juge ; écrit dans le bilan du juge depuis le 23/10/2026 (<code>collect_runs.quality</code>, champ <code>version</code>)</td></tr>
-<tr><td>Juge de pertinence</td><td>v7, figé</td><td><code>scripts/eval_pertinence.py</code></td><td>les sept versions et leur accord sont gardés ; v7 n'est plus modifié, pour rester comparable</td></tr>
+<tr><td>Juge de pertinence</td><td>v7, figé</td><td><code>scripts/eval_pertinence.py</code></td><td>les sept versions et leur accord sont gardés ; v7 est figé, pour rester comparable</td></tr>
 <tr><td><code>LEARNING_PROMPT_VERSION</code>, <code>FEEDBACK_PROMPT_VERSION</code></td><td>v1</td><td><code>agent/search_learning.py</code>, <code>agent/feedback_learning.py</code></td><td>versions des deux consignes du lundi (recherches ratées, pouces bas), ajoutées le 26/10/2026</td></tr>
 </tbody>
 </table>
 <p class="table-note">Lu dans le code au 26/10/2026 ; colonnes dans <code>sql/sortiria/02_events.sql</code>, <code>03_collect.sql</code> et <code>04_rag.sql</code>.</p>
-<p><strong>Dans les registres de MLflow (26/10/2026).</strong> Les 8 consignes sont enregistrées dans le Prompt Registry, chacune avec sa version, son modèle et l'empreinte de son texte ; la chaîne <code>sortiria-chaine</code> (modèles, versions des consignes, empreintes des jeux d'évaluation) est dans le Model Registry, avec les alias <code>production</code> et <code>precedente</code> (<code>scripts/versionnage.py</code>, procédure 6.5). Le manifeste <code>config/versions_consignes.json</code> est contrôlé en CI : une consigne modifiée sans nouvelle version fait échouer les tests.</p>
+<p><strong>Dans les registres de MLflow (26/10/2026).</strong> Les 8 consignes sont enregistrées dans le Prompt Registry, chacune avec sa version, son modèle et l'empreinte de son texte ; la chaîne <code>sortiria-chaine</code> (modèles, versions des consignes, empreintes des jeux d'évaluation) est dans le Model Registry, avec les alias <code>production</code> et <code>precedente</code> (<code>scripts/versionnage.py</code>, procédure 6.5). Le manifeste <code>config/versions_consignes.json</code> est contrôlé en CI : toute consigne modifiée exige une nouvelle version, sinon les tests échouent.</p>
 
 <h3>Les caches, clés par version</h3>
 <div class="reflection-grid">
-<div class="reflection-card"><h3>PDF</h3><p>Empreinte du PDF, version et texte de la consigne (période comprise), découpage, modèle. Changer l'un d'eux relit le document ; un PDF inchangé ne coûte rien.</p></div>
+<div class="reflection-card"><h3>PDF</h3><p>Empreinte du PDF, version et texte de la consigne (période comprise), découpage, modèle. Changer l'un d'eux relit le document ; un PDF identique est gratuit.</p></div>
 <div class="reflection-card"><h3>Documents partenaires</h3><p>Empreinte du fichier, version de la consigne, modèle. Un document modifié est relu et redemande un accord humain.</p></div>
-<div class="reflection-card"><h3>Réponses</h3><p>Version de la consigne, numéro de la dernière collecte, jour, question et contexte, cases cochées, synonymes appris. Valable 6 h, jamais après minuit. Une réponse dégradée n'y entre pas.</p></div>
+<div class="reflection-card"><h3>Réponses</h3><p>Version de la consigne, numéro de la dernière collecte, jour, question et contexte, cases cochées, synonymes appris. Valable 6 h, jusqu'à minuit au plus. Seules les réponses complètes y entrent.</p></div>
 </div>
 
 <h3>Ce qui est journalisé</h3>
 <table class="story-table params-table">
 <thead><tr><th>Où</th><th>Quoi</th><th>Pour quoi faire</th></tr></thead>
 <tbody>
-<tr><td><code>rag_requests</code></td><td><code>prompt_tokens</code>, <code>completion_tokens</code>, <code>cost_usd</code> (au millionième), <code>llm_model</code>, <code>prompt_version</code>, <code>degraded</code>, <code>from_cache</code></td><td>coût et part des réponses dégradées dans Grafana ; comparer deux consignes ou deux modèles. Les questions d'évaluation n'y sont pas écrites.</td></tr>
+<tr><td><code>rag_requests</code></td><td><code>prompt_tokens</code>, <code>completion_tokens</code>, <code>cost_usd</code> (au millionième), <code>llm_model</code>, <code>prompt_version</code>, <code>degraded</code>, <code>from_cache</code></td><td>coût et part des réponses dégradées dans Grafana ; comparer deux consignes ou deux modèles. Les questions d'évaluation restent à part.</td></tr>
 <tr><td><code>collect_runs</code></td><td><code>cost_usd</code>, <code>llm_usage</code> (tokens par modèle, entrée et sortie), <code>prompt_version</code>, <code>quality_score</code></td><td>coût et qualité de chaque nuit, alerte au-delà du budget ou sous le seuil, mail du matin, tableau Grafana de la collecte</td></tr>
 <tr><td>MLflow (collectes lancées sur le poste)</td><td><code>qualite/score</code> et ses quatre taux, <code>pdf/inventions_rattrapees</code>, modèles d'embeddings et de lecture des PDF</td><td>suivre la qualité nuit après nuit, voir une consigne ou une source qui dégrade la base</td></tr>
-<tr><td>Dérive (<code>collect_runs.drift</code> ; MLflow <code>derive/…</code> pour une collecte sur le poste)</td><td>chaque nuit, la semaine comparée aux 28 jours précédents (PSI) : types de réponse, part sans Mistral, latence, avis, taux de rejet, score du juge</td><td>voir qu'une consigne, un modèle ou une source se dégrade dans la durée, même sans alerte un soir donné</td></tr>
+<tr><td>Dérive (<code>collect_runs.drift</code> ; MLflow <code>derive/…</code> pour une collecte sur le poste)</td><td>chaque nuit, la semaine comparée aux 28 jours précédents (PSI) : types de réponse, part servie en repli, latence, avis, taux de rejet, score du juge</td><td>voir qu'une consigne, un modèle ou une source se dégrade dans la durée, même quand chaque soir reste sous le seuil d'alerte</td></tr>
 <tr><td><code>events</code></td><td><code>embedding_model</code>, <code>enrichment_version</code>, <code>enriched_at</code></td><td>savoir avec quel modèle et quelle consigne chaque fiche a été traitée</td></tr>
 </tbody>
 </table>
@@ -587,8 +587,8 @@
 
 <div class="callout">
 <span class="eyebrow">À RETENIR</span>
-<strong>Le modèle ne décide jamais seul de ce qui est vrai.</strong>
-<p>Il ne voit que ce que la base lui donne ; sa sortie est du JSON validé ; une règle vérifie ce qu'il affirme (titre dans la page, nom dans la source, citation dans la liste, mot dans les titres) ; un humain valide ce qui change la configuration ou publie un document ; et quand Mistral tombe, le service répond quand même, en le disant. Les risques et leurs parades : <a class="project-link" href="limites.html">Limites →</a></p>
+<strong>Ce qui est vrai, c'est toujours une règle ou un humain qui le décide.</strong>
+<p>Il voit uniquement ce que la base lui donne ; sa sortie est du JSON validé ; une règle vérifie ce qu'il affirme (titre dans la page, nom dans la source, citation dans la liste, mot dans les titres) ; un humain valide ce qui change la configuration ou publie un document ; et quand Mistral tombe, le service répond quand même, en le disant. Les risques et leurs parades : <a class="project-link" href="limites.html">Limites →</a></p>
 </div>
 </div>
 </section>
@@ -598,7 +598,7 @@
 <div class="container">
 <p class="section-number">08</p>
 <h2>D'où vient le code</h2>
-<p class="section-intro">Aucun appel à un modèle n'est repris tel quel. Le RAG du projet 6 pouvait appeler OpenAI : cette branche a été retirée le 13/10/2026, puis tout l'ancien RAG le 15/10. Tous les fichiers qui appellent Mistral sont écrits pour SortirIA ; seuls le texte indexé (projet 6) et l'injection des services (Chess Agent, projet 13) suivent un modèle existant.</p>
+<p class="section-intro">Chaque appel à un modèle a été réécrit pour SortirIA. Le RAG du projet 6 pouvait appeler OpenAI : cette branche a été retirée le 13/10/2026, puis tout l'ancien RAG le 15/10. Tous les fichiers qui appellent Mistral sont écrits pour SortirIA ; seuls le texte indexé (projet 6) et l'injection des services (Chess Agent, projet 13) suivent un modèle existant.</p>
 <table class="story-table params-table">
 <thead><tr><th>Fichier ou module</th><th>Origine</th><th>Statut</th><th>Ce qui a été adapté ou écrit</th></tr></thead>
 <tbody>
@@ -610,10 +610,10 @@
 <tr><td><code>src/event/event_ratings.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Modération des commentaires des visiteurs par Mistral Moderation.</td></tr>
 <tr><td><code>src/event/event_embedding.py</code></td><td>Écrit pour SortirIA, idée reprise de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/rag-openagenda">Assistant RAG OpenAgenda (projet 6)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Texte indexé (titre, catégorie, lieu, description), sur le modèle du « texte enrichi » du RAG.</td></tr>
 <tr><td><code>agent/services.py</code></td><td>Écrit pour SortirIA, sur le modèle de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/chess_agent">Chess Agent (projet 13)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Calcul des embeddings Mistral (<code>embed_with_mistral</code>) dans les services injectés au graphe.</td></tr>
-<tr><td><code>agent/search_learning.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Lecture par Mistral des mots cherchés sans réponse (faute, synonyme, sujet, ambiance).</td></tr>
+<tr><td><code>agent/search_learning.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Lecture par Mistral des mots cherchés introuvables (faute, synonyme, sujet, ambiance).</td></tr>
 <tr><td><code>app/search_query.py</code>, <code>app/search_answer.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Vecteur de la question (mistral-embed, <code>embed_question</code>) et rédaction de la réponse avec citations (<code>write_with_mistral</code>) ; découpés de <code>app/search_service.py</code> le 23/10/2026.</td></tr>
 <tr><td><code>scripts/eval_pertinence.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Juge de pertinence Mistral Large, calibré sur le jugement humain.</td></tr>
-<tr><td><code>scripts/check_mistral.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Écrit après des erreurs 429 : affiche le statut et les limites renvoyées par Mistral, jamais la clé.</td></tr>
+<tr><td><code>scripts/check_mistral.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Écrit après des erreurs 429 : affiche le statut et les limites renvoyées par Mistral, en masquant la clé.</td></tr>
 </tbody>
 </table>
 <p class="table-note">Sources : mentions « Provenance » des docstrings des fichiers cités ; <code>PROVENANCE.md</code> (« Tout Mistral », 13/10/2026).</p>
