@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from datetime import date
 from pathlib import Path
-from typing import Any
+from typing import Any, Self
 
 import pandas as pd
 import pytest
@@ -25,7 +25,7 @@ class FakeConnection:
     def cursor(self) -> FakeConnection:
         return self
 
-    def __enter__(self) -> FakeConnection:
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, *args: object) -> None:

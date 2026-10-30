@@ -310,6 +310,26 @@ def short_title(title: str) -> str:
     return title[:TITLE_CHARS].rsplit(" ", 1)[0] + "…"
 
 
+def where_and_when(card: Mapping[str, Any]) -> str:
+    """« (Sète, sam. 14 nov.) » : la commune et la date d'une carte, s'il y en a.
+
+    Parameters
+    ----------
+    card : Mapping[str, Any]
+        La carte (`city`, `date`).
+
+    Returns
+    -------
+    str
+        Le complément entre parenthèses, précédé d'une espace ; vide sinon.
+    """
+
+    date = str(card.get("date") or "").strip()
+    parts = [str(card.get("city") or "").strip(), date[:1].lower() + date[1:]]
+    parts = [part for part in parts if part]
+    return f" ({', '.join(parts)})" if parts else ""
+
+
 def name_citations(answer: str, cards: Sequence[Mapping[str, Any]]) -> str:
     """Complète une réponse qui cite des événements sans les nommer.
 
@@ -360,7 +380,11 @@ def name_citations(answer: str, cards: Sequence[Mapping[str, Any]]) -> str:
         text = SENTENCE_END.split(text, maxsplit=1)[0].rstrip(" :")
         text = text if text.endswith((".", "!", "?")) else text + "."
     cited = {int(match.group(1)) for match in matches}
-    names = ", ".join([f"{titles[ref]} [{ref}]" for ref in sorted(titles) if ref not in cited][:3])
+    # Lieu et date de chaque idée : ce sont souvent eux qui diffèrent de la demande
+    # (30/10/2026 : « pas d'atelier de poterie près de Thau », puis un atelier de
+    # poterie… à Saint-Paul-et-Valmalle, sans le dire).
+    where = {int(card["ref"]): where_and_when(card) for card in cards}
+    names = ", ".join([f"{titles[ref]} [{ref}]{where[ref]}" for ref in sorted(titles) if ref not in cited][:3])
     if not names:
         return answer
     if text.endswith(":"):

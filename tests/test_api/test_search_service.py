@@ -193,6 +193,12 @@ def test_answer_announcing_ideas_gives_them() -> None:
         "Je n'ai pas trouvé d'atelier de poterie. Voici des idées voisines\u00a0: la Fête de la soupe "
         "et le Marché de Noël de Sète.", [{"ref": 1, "title": "Atelier terre"}])
     assert answer == "Je n'ai pas trouvé d'atelier de poterie. Idées voisines\u00a0: Atelier terre [1]."
+    # Lieu et date ajoutés : c'est souvent ce qui diffère de la demande.
+    answer = search_answer.name_citations(
+        "Je n'ai pas trouvé d'atelier de poterie près de Thau.",
+        [{"ref": 1, "title": "Atelier de poterie", "city": "Saint-Paul-et-Valmalle", "date": "Sam. 14 nov."}])
+    assert answer == ("Je n'ai pas trouvé d'atelier de poterie près de Thau. Idées voisines\u00a0: "
+                      "Atelier de poterie [1] (Saint-Paul-et-Valmalle, sam. 14 nov.).")
     long_title = "SAISON DE CONCERTS D'ORGUE 2026-2027 À LA CATHÉDRALE SAINT-PIERRE DE MONTPELLIER"
     answer = search_answer.name_citations("Voici une idée : [1].", [{"ref": 1, "title": long_title}])
     assert answer.endswith("… [1].") and len(answer) < len(long_title) + 20

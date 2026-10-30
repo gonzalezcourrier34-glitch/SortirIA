@@ -159,7 +159,7 @@ def parse_cell_date(value: Any) -> date | None:
     text = text.split(" ")[0]   # « 2026-10-25 00:00:00 » (date Excel lue en texte)
     for pattern in ("%d/%m/%Y", "%d-%m-%Y", "%d.%m.%Y", "%Y-%m-%d", "%d/%m/%y", "%d-%m-%y"):
         try:
-            return datetime.strptime(text, pattern).date()  # noqa: DTZ007 (seul le jour compte)
+            return datetime.strptime(text, pattern).date()  # seul le jour compte
         except ValueError:
             continue
     return None

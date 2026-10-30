@@ -197,12 +197,12 @@ def parse_ical_datetime(params: Mapping[str, str], value: str) -> tuple[datetime
     value = value.strip()
     try:
         if params.get("VALUE", "").upper() == "DATE" or re.fullmatch(r"\d{8}", value):
-            day = datetime.strptime(value[:8], "%Y%m%d").date()  # noqa: DTZ007 (jour seul)
+            day = datetime.strptime(value[:8], "%Y%m%d").date()  # jour seul
             return datetime.combine(day, time.min, tzinfo=PARIS), False
         if value.endswith("Z"):
             moment = datetime.strptime(value[:-1], "%Y%m%dT%H%M%S").replace(tzinfo=UTC)
             return moment.astimezone(PARIS), True
-        moment = datetime.strptime(value[:15], "%Y%m%dT%H%M%S")  # noqa: DTZ007 (fuseau ajouté plus bas)
+        moment = datetime.strptime(value[:15], "%Y%m%dT%H%M%S")  # fuseau ajouté plus bas
     except ValueError:
         return None, False
     # Appliquer le fuseau TZID s'il est reconnu, sinon Paris

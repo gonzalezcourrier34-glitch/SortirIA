@@ -26,7 +26,7 @@ def test_headers_are_normalized(header, expected) -> None:
 
 
 @pytest.mark.parametrize("value", ["21/11/2026", "21-11-2026", "2026-11-21", "21/11/26", "2026-11-21 00:00:00",
-                                   datetime(2026, 11, 21, 0, 0), date(2026, 11, 21)])  # noqa: DTZ001
+                                   datetime(2026, 11, 21, 0, 0), date(2026, 11, 21)])
 def test_dates(value) -> None:
     assert mapper.parse_cell_date(value) == date(2026, 11, 21)
 

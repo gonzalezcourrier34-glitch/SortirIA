@@ -75,7 +75,7 @@ def test_excel_file_with_real_dates(partner_dir: Path) -> None:
     workbook = Workbook()
     sheet = workbook.active
     sheet.append(["Titre", "Date", "Heure début", "Lieu", "Ville", "Lien"])
-    sheet.append(["Soirée DJ", datetime(2026, 11, 28), "23:00",  # noqa: DTZ001 (Excel ne stocke pas de fuseau)
+    sheet.append(["Soirée DJ", datetime(2026, 11, 28), "23:00",  # Excel ne stocke pas de fuseau
                    "Club du Port", "Sète", "https://club.example"])
     workbook.save(partner_dir / "club_du_port.xlsx")
     items = module.read_partner_file(partner_dir / "club_du_port.xlsx", {"file": "club_du_port"})

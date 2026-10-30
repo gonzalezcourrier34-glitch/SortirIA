@@ -32,7 +32,7 @@ from src.utils.date_utils import (
 def test_normalize_datetime_adds_utc_to_naive_datetime() -> None:
     """Une datetime sans fuseau doit être considérée comme UTC."""
 
-    value = datetime(2026, 7, 27, 12, 30, 45)  # noqa: DTZ001  date naive voulue
+    value = datetime(2026, 7, 27, 12, 30, 45)
 
     result = normalize_datetime(value)
 
@@ -282,7 +282,7 @@ def test_parse_datetime_returns_none_for_missing_value(
 def test_parse_datetime_accepts_naive_datetime() -> None:
     """Une datetime naïve doit être normalisée en UTC."""
 
-    value = datetime(2026, 7, 27, 12, 30)  # noqa: DTZ001  date naive voulue
+    value = datetime(2026, 7, 27, 12, 30)
 
     assert parse_datetime(value) == datetime(
         2026,
