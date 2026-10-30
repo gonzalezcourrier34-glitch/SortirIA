@@ -34,6 +34,12 @@ on:
 permissions:
   contents: read
   packages: write
+# Un seul déploiement à la fois (30/10/2026) : deux pushes rapprochés lançaient
+# deux CD ; la seconde échouait (« ContainerAppOperationInProgress »), la
+# révision de la première étant encore en cours d'activation. La suivante attend.
+concurrency:
+  group: deploiement-production
+  cancel-in-progress: false
 
 
 # ------------------------------------------------------------
