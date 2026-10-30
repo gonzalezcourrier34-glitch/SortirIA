@@ -166,12 +166,42 @@ def search_stream(
             yield search_service.sse({"event": "error",
                                       "message": "La recherche n'a pas pu aboutir. Réessayez dans un instant."})
 
-    # 30/10/2026 : les étapes arrivaient toutes à la fin. Static Web Apps compressait
-    # le flux (« content-encoding: br ») et, pour cela, l'attendait en entier. « no-transform »
-    # interdit aux relais de modifier la réponse ; « identity » dit qu'elle n'est pas compressée.
+    # Le flux est bien diffusé par l'API, mais Static Web Apps le renvoie d'un bloc
+    # à la fin (mesuré le 30/10/2026, même sans compression). L'interface montre donc
+    # l'étape « comprendre » par `/recherche/comprendre`, sans attendre ce flux.
     return StreamingResponse(stream(), media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no",
                                       "Content-Encoding": "identity"})
+
+
+@router.post("/recherche/comprendre", dependencies=[Depends(rate_limit.limit_reads)])
+def understand_search(payload: SearchRequest) -> dict[str, str]:
+    """Ce que la question a permis de comprendre, aussitôt (30/10/2026).
+
+    Static Web Apps renvoie le flux de `/recherche/stream` en une seule fois, à
+    la fin : le visiteur regardait 2 à 5 s une fenêtre immobile. Cette route lit
+    la question avec les mêmes règles (`plan_search`), sans base ni Mistral, et
+    répond en quelques millisecondes ; l'interface l'appelle en même temps que
+    la recherche et affiche l'étape « comprendre » dès sa réponse.
+
+    Parameters
+    ----------
+    payload : SearchRequest
+        La même demande que pour la recherche.
+
+    Returns
+    -------
+    dict[str, str]
+        L'étape (`comprendre`) et son résumé (« ce week-end · Sète · concert »).
+    """
+
+    filters = SearchFilters(public=payload.public, zone=payload.zone,
+                            period=payload.period, free_only=payload.free_only)
+    question = " ".join(payload.question.split())[:500]
+    context = " ".join(payload.context.split())[:500]
+    plan, _ = search_service.plan_search(question, filters, search_service.SearchServices().now(),
+                                         context, payload.follow_up)
+    return {"step": search_service.STEP_UNDERSTAND, "message": plan.describe()}
 
 
 @router.get("/evenements/{event_id}", dependencies=[Depends(rate_limit.limit_reads)])

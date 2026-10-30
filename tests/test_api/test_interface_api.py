@@ -92,6 +92,15 @@ def test_search_stream(client: TestClient) -> None:
     assert response.headers["content-encoding"] == "identity"
 
 
+def test_understanding_is_given_at_once(client: TestClient) -> None:
+    """30/10/2026 : Static Web Apps renvoie le flux d'un bloc ; « comprendre » arrive à part."""
+
+    response = client.post("/api/v1/recherche/comprendre",
+                           json={"question": "un concert à Sète", "period": "weekend"})
+    assert response.status_code == 200
+    assert response.json() == {"step": "comprendre", "message": "ce week-end · Sète · concert"}
+
+
 def test_search_stream_passes_the_conversation_context(client: TestClient) -> None:
     events = events_of(client.post("/api/v1/recherche/stream",
                                    json={"question": "et pour les enfants ?", "context": "concert samedi"}).text)

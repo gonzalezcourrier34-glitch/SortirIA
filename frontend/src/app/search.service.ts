@@ -33,6 +33,8 @@ const API = '/api/v1';
 
 const SEARCH_STREAM_URL = `${API}/recherche/stream`;
 
+const UNDERSTAND_URL = `${API}/recherche/comprendre`;
+
 
 // # Service
 
@@ -149,6 +151,12 @@ export class SearchService {
         },
         signal: AbortSignal
     ): Promise<void> {
+        // Étape « comprendre » tout de suite (30/10/2026) : Static Web Apps renvoie
+        // le flux d'un bloc à la fin. Cet appel, sans base ni Mistral, répond en
+        // quelques millisecondes ; il n'écrit plus rien dès que le flux a parlé.
+        let streamStarted = false;
+        void this.understandFirst(request, subscriber, signal, () => streamStarted);
+
         try {
             const response = await fetch(
                 SEARCH_STREAM_URL,
@@ -199,6 +207,8 @@ export class SearchService {
                     break;
                 }
 
+                streamStarted = true;
+
                 const { chunks, rest } = splitSseBuffer(
                     buffer + result.value
                 );
@@ -225,6 +235,42 @@ export class SearchService {
             }
 
             subscriber.error(error);
+        }
+    }
+
+
+    private async understandFirst(
+        request: SearchRequest,
+        subscriber: { next: (event: SearchStreamEvent) => void },
+        signal: AbortSignal,
+        streamStarted: () => boolean
+    ): Promise<void> {
+        try {
+            const response = await fetch(UNDERSTAND_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(request),
+                signal
+            });
+
+            if (!response.ok || streamStarted()) {
+                return;
+            }
+
+            const body = await response.json() as { message?: string };
+
+            if (streamStarted()) {
+                return;
+            }
+
+            subscriber.next({
+                event: 'progress', step: 'comprendre', status: 'completed', message: body.message ?? ''
+            });
+            subscriber.next({
+                event: 'progress', step: 'rechercher', status: 'running', message: ''
+            });
+        } catch {
+            // Sans cette étape anticipée, la recherche s'affiche comme avant.
         }
     }
 }
