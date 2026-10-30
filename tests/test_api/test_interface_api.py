@@ -87,6 +87,9 @@ def test_search_stream(client: TestClient) -> None:
     assert [name for name, _ in events] == ["progress", "completed"]
     assert events[0][1]["message"] == "ce week-end · soirée · bassin de Thau"
     assert events[1][1]["result"]["answer"] == "Pour : concert"
+    # 30/10/2026 : sans ces en-têtes, Static Web Apps compressait le flux et l'envoyait en une fois.
+    assert "no-transform" in response.headers["cache-control"]
+    assert response.headers["content-encoding"] == "identity"
 
 
 def test_search_stream_passes_the_conversation_context(client: TestClient) -> None:

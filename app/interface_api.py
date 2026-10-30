@@ -166,8 +166,12 @@ def search_stream(
             yield search_service.sse({"event": "error",
                                       "message": "La recherche n'a pas pu aboutir. Réessayez dans un instant."})
 
+    # 30/10/2026 : les étapes arrivaient toutes à la fin. Static Web Apps compressait
+    # le flux (« content-encoding: br ») et, pour cela, l'attendait en entier. « no-transform »
+    # interdit aux relais de modifier la réponse ; « identity » dit qu'elle n'est pas compressée.
     return StreamingResponse(stream(), media_type="text/event-stream",
-                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+                             headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no",
+                                      "Content-Encoding": "identity"})
 
 
 @router.get("/evenements/{event_id}", dependencies=[Depends(rate_limit.limit_reads)])
