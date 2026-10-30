@@ -20,6 +20,7 @@ from app.search_cards import (
     event_date_label,
     other_dates,
     place_label,
+    readable_title,
     sibling_rows,
     to_card,
 )
@@ -215,6 +216,6 @@ def events_to_rate(connection: Any, event_ids: Sequence[str], session_id: str,
         return []
     rows = fetch_rows(connection, TO_RATE_SQL, {"event_ids": ids, "user_key": user_key(session_id),
                                                 "limit": limit})
-    return [{"event_id": str(row["event_id"]), "title": str(row["title"]),
+    return [{"event_id": str(row["event_id"]), "title": readable_title(row["title"], row.get("city")),
              "date": event_date_label(row), "place": place_label(row)}
             for row in rows]

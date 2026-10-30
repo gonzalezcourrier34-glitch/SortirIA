@@ -198,6 +198,23 @@ def test_answer_announcing_ideas_gives_them() -> None:
     assert answer.endswith("… [1].") and len(answer) < len(long_title) + 20
 
 
+@pytest.mark.parametrize(("title", "city", "expected"), [
+    ("LES PAS PERDUS — THÉÂTRE AMATEUR PAR LA TROUPE DE L'UTL34", "Frontignan",
+     "Les pas perdus — Théâtre amateur par la troupe de l'UTL34"),
+    ("EXPOSITION GUIMET+ MONTPELLIER / CHINE", "Montpellier", "Exposition guimet+ Montpellier / Chine"),
+    ("MÉDITERRANÉE BURLESQUE FESTIVAL", "Sète", "Méditerranée burlesque festival"),
+    ("SOIRÉE DJ AU PORT DE BOUZIGUES", "Bouzigues", "Soirée DJ au port de Bouzigues"),
+    ("MARCHÉ DE NOËL DE PIGNAN", "Pignan", "Marché de Noël de Pignan"),
+    ("L'HEURE DU CONTE : NOËL À SÈTE", "Sète", "L'heure du conte : Noël à Sète"),
+    ("Fête de la soupe", "Frontignan", "Fête de la soupe"),           # casse mixte : inchangé
+    ("Concert  NES - BASED MTP", "", "Concert NES - BASED MTP"),      # pas assez de capitales
+])
+def test_titles_in_capitals_become_readable(title: str, city: str, expected: str) -> None:
+    """30/10/2026 : « LES PAS PERDUS — THÉÂTRE AMATEUR… » dans les cartes et les réponses."""
+
+    assert search_cards.readable_title(title, city) == expected
+
+
 def test_summary_falls_back_to_description() -> None:
     long_text = "mot " * 200
     summary = search_cards.short_summary({"summary": "", "description": long_text})

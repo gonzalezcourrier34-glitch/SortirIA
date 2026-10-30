@@ -234,6 +234,71 @@ def short_summary(row: Mapping[str, Any]) -> str:
     return text[:SUMMARY_CHARS].rsplit(" ", 1)[0] + "…"
 
 
+# Titres en capitales (30/10/2026) : DATAtourisme et les agendas des communes
+# écrivent souvent « LES PAS PERDUS — THÉÂTRE AMATEUR », peu lisible dans une
+# carte et recopié tel quel par Mistral. Passés en minuscules, sauf les noms
+# propres connus, les sigles et le début de chaque partie du titre.
+UPPERCASE_SHARE = 0.8
+TITLE_WORD = re.compile(r"[^\W_][\w'’+]*")
+# Une partie de titre commence après « : », « — », « | », « / », « ( », « « »…
+TITLE_PART_START = re.compile(r"(?:^|[:\-–—|/(«\"!?.])\s*$")
+PROPER_WORDS = frozenset({
+    "montpellier", "sète", "sete", "thau", "frontignan", "mèze", "meze", "bouzigues", "marseillan",
+    "balaruc", "agde", "mauguio", "palavas", "pérols", "lattes", "castries", "pignan", "gigean",
+    "poussan", "vic", "carnon", "hérault", "occitanie", "méditerranée", "france", "noël",
+    "halloween", "toussaint", "pâques", "saint", "sainte"})
+VOWELS = set("aeiouyàâäéèêëîïôöùûü")
+
+
+def readable_title(title: Any, city: Any = "") -> str:
+    """Titre lisible : une phrase en minuscules si la source l'écrit en capitales.
+
+    Un titre déjà en casse mixte est rendu tel quel. Sinon, chaque mot passe en
+    minuscules, sauf : le premier mot de chaque partie du titre (après « : »,
+    « — », « / »…), les noms propres connus (`PROPER_WORDS` et la commune de
+    l'événement), et les sigles (un chiffre, ou 4 lettres au plus sans voyelle :
+    « DJ », « UTL34 »).
+
+    Parameters
+    ----------
+    title : Any
+        Le titre donné par la source.
+    city : Any
+        La commune de l'événement, dont les mots gardent leur majuscule.
+
+    Returns
+    -------
+    str
+        Le titre, espaces réduits.
+    """
+
+    title = " ".join(str(title or "").split())
+    letters = [char for char in title if char.isalpha()]
+    if len(letters) < 4 or sum(char.isupper() for char in letters) < UPPERCASE_SHARE * len(letters):
+        return title
+    proper = PROPER_WORDS | set(squash(city).replace("-", " ").split())
+    pieces, last = [], 0
+    for match in TITLE_WORD.finditer(title):
+        original = match.group(0)
+        word = original.lower()
+        # « L'UTL34 », « D’ART » : l'élision reste en minuscules, le mot suit la règle
+        cut = max(word.rfind("'"), word.rfind("’")) + 1
+        head, tail = word[:cut], word[cut:]
+        starts_part = bool(TITLE_PART_START.search(title[:match.start()]))
+        if any(char.isdigit() for char in original) or (len(tail) <= 4 and not set(tail) & VOWELS):
+            tail = tail.upper()
+        elif tail in proper or (starts_part and not head):
+            tail = tail[:1].upper() + tail[1:]
+        word = head + tail
+        if starts_part:
+            word = word[:1].upper() + word[1:]
+        pieces.append(title[last:match.start()])
+        pieces.append(word)
+        last = match.end()
+    pieces.append(title[last:])
+    return "".join(pieces)
+
+
 def squash(value: Any) -> str:
     """Minuscules, espaces réduits (même règle que OTHER_DATES_SQL).
 
@@ -481,7 +546,7 @@ def to_card(row: Mapping[str, Any], ref: int | None = None) -> dict[str, Any]:
     return {
         "ref": ref,
         "event_id": str(row["event_id"]),
-        "title": str(row["title"]),
+        "title": readable_title(row["title"], row.get("city")),
         "date": event_date_label(row),
         "start_at": row["start_at"].isoformat(),
         "end_at": row["end_at"].isoformat() if row.get("end_at") else None,
