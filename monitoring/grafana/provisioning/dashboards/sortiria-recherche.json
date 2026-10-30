@@ -54,7 +54,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT count(*) FROM sortiria.rag_requests WHERE $__timeFilter(asked_at)"
+          "rawSql": "SELECT count(*) FROM sortiria.rag_requests WHERE btrim(question) NOT LIKE '[t%' AND $__timeFilter(asked_at)"
         }
       ],
       "options": {
@@ -175,7 +175,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT percentile_cont(0.95) WITHIN GROUP (ORDER BY latency_ms) FROM sortiria.rag_requests WHERE NOT from_cache AND latency_ms IS NOT NULL AND $__timeFilter(asked_at)"
+          "rawSql": "SELECT percentile_cont(0.95) WITHIN GROUP (ORDER BY latency_ms) FROM sortiria.rag_requests WHERE btrim(question) NOT LIKE '[t%' AND NOT from_cache AND latency_ms IS NOT NULL AND $__timeFilter(asked_at)"
         }
       ],
       "options": {
@@ -240,7 +240,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT avg(COALESCE(cost_usd, 0)) FROM sortiria.rag_requests WHERE $__timeFilter(asked_at)"
+          "rawSql": "SELECT avg(COALESCE(cost_usd, 0)) FROM sortiria.rag_requests WHERE btrim(question) NOT LIKE '[t%' AND $__timeFilter(asked_at)"
         }
       ],
       "options": {
@@ -310,7 +310,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT date_trunc('day', asked_at) AS time,\n       count(*) FILTER (WHERE ((constraints -> 'recherche') ->> 'exact') = 'true') AS \"exactes\",\n       count(*) FILTER (WHERE jsonb_array_length(COALESCE((constraints -> 'recherche') -> 'elargi', '[]'::jsonb)) > 0) AS \"élargies\",\n       count(*) FILTER (WHERE ((constraints -> 'recherche') ->> 'exact') = 'false' AND jsonb_array_length(COALESCE((constraints -> 'recherche') -> 'elargi', '[]'::jsonb)) = 0\n                          AND COALESCE((constraints -> 'recherche') ->> 'sujet_introuvable', 'false') = 'false') AS \"idées voisines\",\n       count(*) FILTER (WHERE ((constraints -> 'recherche') ->> 'sujet_introuvable') = 'true' OR status = 'aucun_resultat') AS \"sujet introuvable\"\nFROM sortiria.rag_requests\nWHERE $__timeFilter(asked_at)\nGROUP BY 1 ORDER BY 1"
+          "rawSql": "SELECT date_trunc('day', asked_at) AS time,\n       count(*) FILTER (WHERE btrim(question) NOT LIKE '[t%' AND ((constraints -> 'recherche') ->> 'exact') = 'true') AS \"exactes\",\n       count(*) FILTER (WHERE jsonb_array_length(COALESCE((constraints -> 'recherche') -> 'elargi', '[]'::jsonb)) > 0) AS \"élargies\",\n       count(*) FILTER (WHERE ((constraints -> 'recherche') ->> 'exact') = 'false' AND jsonb_array_length(COALESCE((constraints -> 'recherche') -> 'elargi', '[]'::jsonb)) = 0\n                          AND COALESCE((constraints -> 'recherche') ->> 'sujet_introuvable', 'false') = 'false') AS \"idées voisines\",\n       count(*) FILTER (WHERE ((constraints -> 'recherche') ->> 'sujet_introuvable') = 'true' OR status = 'aucun_resultat') AS \"sujet introuvable\"\nFROM sortiria.rag_requests\nWHERE $__timeFilter(asked_at)\nGROUP BY 1 ORDER BY 1"
         }
       ],
       "options": {
@@ -426,7 +426,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT date_trunc('day', asked_at) AS time,\n       percentile_cont(0.5) WITHIN GROUP (ORDER BY latency_ms) AS \"médiane\",\n       percentile_cont(0.95) WITHIN GROUP (ORDER BY latency_ms) AS \"P95\"\nFROM sortiria.rag_requests\nWHERE NOT from_cache AND latency_ms IS NOT NULL AND $__timeFilter(asked_at)\nGROUP BY 1 ORDER BY 1"
+          "rawSql": "SELECT date_trunc('day', asked_at) AS time,\n       percentile_cont(0.5) WITHIN GROUP (ORDER BY latency_ms) AS \"médiane\",\n       percentile_cont(0.95) WITHIN GROUP (ORDER BY latency_ms) AS \"P95\"\nFROM sortiria.rag_requests\nWHERE btrim(question) NOT LIKE '[t%' AND NOT from_cache AND latency_ms IS NOT NULL AND $__timeFilter(asked_at)\nGROUP BY 1 ORDER BY 1"
         }
       ],
       "options": {
@@ -480,7 +480,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT date_trunc('day', asked_at) AS time,\n       avg(from_cache::INT) AS \"cache\",\n       avg(degraded::INT) AS \"dégradées\",\n       avg((status = 'erreur')::INT) AS \"erreurs\"\nFROM sortiria.rag_requests\nWHERE $__timeFilter(asked_at)\nGROUP BY 1 ORDER BY 1"
+          "rawSql": "SELECT date_trunc('day', asked_at) AS time,\n       avg(from_cache::INT) AS \"cache\",\n       avg(degraded::INT) AS \"dégradées\",\n       avg((status = 'erreur')::INT) AS \"erreurs\"\nFROM sortiria.rag_requests\nWHERE btrim(question) NOT LIKE '[t%' AND $__timeFilter(asked_at)\nGROUP BY 1 ORDER BY 1"
         }
       ],
       "options": {
@@ -534,7 +534,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT date_trunc('day', asked_at) AS time, sum(COALESCE(cost_usd, 0)) AS \"coût\"\nFROM sortiria.rag_requests\nWHERE $__timeFilter(asked_at)\nGROUP BY 1 ORDER BY 1"
+          "rawSql": "SELECT date_trunc('day', asked_at) AS time, sum(COALESCE(cost_usd, 0)) AS \"coût\"\nFROM sortiria.rag_requests\nWHERE btrim(question) NOT LIKE '[t%' AND $__timeFilter(asked_at)\nGROUP BY 1 ORDER BY 1"
         }
       ],
       "options": {
@@ -588,7 +588,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT date_trunc('hour', asked_at) AS time, count(*) AS \"questions\"\nFROM sortiria.rag_requests\nWHERE $__timeFilter(asked_at)\nGROUP BY 1 ORDER BY 1"
+          "rawSql": "SELECT date_trunc('hour', asked_at) AS time, count(*) AS \"questions\"\nFROM sortiria.rag_requests\nWHERE btrim(question) NOT LIKE '[t%' AND $__timeFilter(asked_at)\nGROUP BY 1 ORDER BY 1"
         }
       ],
       "options": {
@@ -655,7 +655,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT word AS \"mot\", count(*) AS \"fois\"\nFROM sortiria.rag_requests, jsonb_array_elements_text(COALESCE((constraints -> 'recherche') -> 'mots_inconnus', '[]'::jsonb)) AS word\nWHERE $__timeFilter(asked_at)\nGROUP BY word ORDER BY 2 DESC, 1 LIMIT 20"
+          "rawSql": "SELECT word AS \"mot\", count(*) AS \"fois\"\nFROM sortiria.rag_requests, jsonb_array_elements_text(COALESCE((constraints -> 'recherche') -> 'mots_inconnus', '[]'::jsonb)) AS word\nWHERE btrim(question) NOT LIKE '[t%' AND $__timeFilter(asked_at)\nGROUP BY word ORDER BY 2 DESC, 1 LIMIT 20"
         }
       ],
       "options": {
@@ -692,7 +692,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT question AS \"question\", count(*) AS \"fois\", max(asked_at) AS \"dernière fois\"\nFROM sortiria.rag_requests\nWHERE (status = 'aucun_resultat' OR ((constraints -> 'recherche') ->> 'exact') = 'false') AND $__timeFilter(asked_at)\nGROUP BY question ORDER BY 2 DESC, 3 DESC LIMIT 20"
+          "rawSql": "SELECT question AS \"question\", count(*) AS \"fois\", max(asked_at) AS \"dernière fois\"\nFROM sortiria.rag_requests\nWHERE btrim(question) NOT LIKE '[t%' AND (status = 'aucun_resultat' OR ((constraints -> 'recherche') ->> 'exact') = 'false') AND $__timeFilter(asked_at)\nGROUP BY question ORDER BY 2 DESC, 3 DESC LIMIT 20"
         }
       ],
       "options": {
@@ -729,7 +729,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT f.created_at AS \"quand\", r.question AS \"question\", f.comment AS \"ce qui manquait\", left(r.answer, 200) AS \"réponse\"\nFROM sortiria.feedback f JOIN sortiria.rag_requests r USING (request_id)\nWHERE f.rating = -1 AND f.event_id = '' AND $__timeFilter(f.created_at)\nORDER BY f.created_at DESC LIMIT 20"
+          "rawSql": "SELECT f.created_at AS \"quand\", r.question AS \"question\", f.comment AS \"ce qui manquait\", left(r.answer, 200) AS \"réponse\"\nFROM sortiria.feedback f JOIN sortiria.rag_requests r USING (request_id)\nWHERE btrim(r.question) NOT LIKE '[t%' AND f.rating = -1 AND f.event_id = '' AND $__timeFilter(f.created_at)\nORDER BY f.created_at DESC LIMIT 20"
         }
       ],
       "options": {

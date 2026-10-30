@@ -838,7 +838,11 @@ class QueryPlan:
         if self.practice:
             parts.append(PRACTICE_LABELS[self.practice] + " soi-même")
         elif self.categories:
-            parts.append(category_label(self.categories))
+            # « soirée électro » : public « soirée » et type « soirée » ; le libellé
+            # n'est écrit qu'une fois (« soirée · soirée » le 30/10/2026).
+            label = category_label(self.categories)
+            if label not in parts:
+                parts.append(label)
         return " · ".join(parts)
 
     def relaxed(self) -> QueryPlan:

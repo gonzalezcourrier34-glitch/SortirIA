@@ -130,8 +130,10 @@ def log_request(connection: Any, question: str, filters: SearchFilters, result: 
             "status": "ok" if result.events else "aucun_resultat",
             "error": "service Mistral indisponible" if result.degraded else "",
             "latency_ms": latency_ms,
-            "prompt_tokens": result.tokens.get("input"),
-            "completion_tokens": result.tokens.get("output"),
+            # Réponse du cache : aucun token consommé (30/10/2026 : ceux de la
+            # réponse d'origine étaient recopiés et gonflaient les totaux).
+            "prompt_tokens": None if from_cache else result.tokens.get("input"),
+            "completion_tokens": None if from_cache else result.tokens.get("output"),
             # Même grille de prix que l'agent (agent/watch.py) : l'embedding de la
             # question n'est pas compté (quelques dizaines de tokens).
             "cost_usd": request_cost(model, result.tokens) if model and result.tokens else None,

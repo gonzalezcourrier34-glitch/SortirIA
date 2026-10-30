@@ -230,6 +230,16 @@ def test_the_question_changes_the_checked_boxes() -> None:
 
 
 
+def test_evening_public_and_type_are_written_once() -> None:
+    """30/10/2026 : « soirée électro à Montpellier samedi » affichait « soirée · soirée »."""
+    from app.search_filters import SearchFilters
+    from app.search_service import plan_search
+
+    plan = plan_search("soirée électro à Montpellier samedi", SearchFilters(), NOW)[0]
+    assert plan.public == "soiree" and "soiree" in plan.categories
+    assert plan.describe().count("soirée") == 1
+
+
 def test_in_the_evening_is_a_time_not_the_evening_public() -> None:
     """17/10/2026 : « Plutôt en soirée ? » cochait le public « Soirée » (bars, fêtes)."""
     from app.search_filters import SearchFilters

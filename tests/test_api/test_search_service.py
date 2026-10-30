@@ -151,6 +151,42 @@ def test_suggestions_must_be_short_questions() -> None:
     assert suggestions == ["Plutôt en soirée\u00a0?"]                  # doublon retiré
 
 
+def test_prompt_example_adds_no_constraint() -> None:
+    """30/10/2026 : l'exemple « théâtre gratuit en famille » était recopié tel quel."""
+
+    assert "gratuit en famille" not in search_answer.WRITE_PROMPT
+    assert "n'ajoute jamais une contrainte" in search_answer.WRITE_PROMPT
+    assert "nomme chaque événement" in search_answer.WRITE_PROMPT
+
+
+def test_bare_citations_receive_their_title() -> None:
+    """30/10/2026 : « Voici quelques concerts à Frontignan : [1], [2], [3] et [4]. »"""
+
+    cards = [{"ref": n, "title": f"Concert {n}"} for n in range(1, 5)]
+    answer = search_answer.name_citations("Voici quelques concerts à Frontignan\u00a0: [1], [2], [3] et [4].", cards)
+    assert answer == ("Voici quelques concerts à Frontignan\u00a0: Concert 1 [1], Concert 2 [2], "
+                      "Concert 3 [3] et Concert 4 [4].")
+
+
+def test_named_citations_are_left_alone() -> None:
+    cards = [{"ref": 1, "title": "Fête de la soupe"}, {"ref": 2, "title": "Bal folk"}]
+    text = "Allez à la Fête de la soupe [1] ; sinon [2] propose un bal folk."
+    assert search_answer.name_citations(text, cards) == text
+
+
+def test_answer_announcing_ideas_gives_them() -> None:
+    """30/10/2026 : 11 réponses sur 80 finissaient par « Voici des idées voisines : »."""
+
+    cards = [{"ref": n, "title": t} for n, t in enumerate(["Bal folk", "Loto", "Expo photo", "Marché"], 1)]
+    answer = search_answer.name_citations("Je n'ai pas trouvé de brocante. Voici des idées voisines\u00a0:", cards)
+    assert answer == "Je n'ai pas trouvé de brocante. Voici des idées voisines\u00a0: Bal folk [1], Loto [2], Expo photo [3]."
+    answer = search_answer.name_citations("Je n'ai pas trouvé de musée gratuit dimanche.", cards[:1])
+    assert answer == "Je n'ai pas trouvé de musée gratuit dimanche. Idées voisines\u00a0: Bal folk [1]."
+    long_title = "SAISON DE CONCERTS D'ORGUE 2026-2027 À LA CATHÉDRALE SAINT-PIERRE DE MONTPELLIER"
+    answer = search_answer.name_citations("Voici une idée : [1].", [{"ref": 1, "title": long_title}])
+    assert answer.endswith("… [1].") and len(answer) < len(long_title) + 20
+
+
 def test_summary_falls_back_to_description() -> None:
     long_text = "mot " * 200
     summary = search_cards.short_summary({"summary": "", "description": long_text})

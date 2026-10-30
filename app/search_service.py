@@ -56,6 +56,7 @@ from app.query_understanding import (
 from app.search_answer import (
     default_suggestions,
     fallback_answer,
+    name_citations,
     order_cards,
     parse_answer,
     write_with_mistral,
@@ -505,6 +506,7 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
                                     widened=widened, asked=asked_plan.describe())
             raw, tokens, model = services.write(asked, plan, cards)
             answer, suggestions = parse_answer(raw, len(cards))
+            answer = name_citations(answer, cards)
         except Exception:  # Mistral absent ou réponse illisible : réponse simple
             # Tracer la cause (23/10/2026 : toutes les réponses étaient simplifiées, sans
             # aucune trace dans les journaux), puis répondre sans Mistral

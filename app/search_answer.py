@@ -24,7 +24,10 @@ from src.logger import get_logger
 logger = get_logger(__name__)
 
 # Version de la consigne : mots de la phrase ignorés (bilan du 19/10), « tableaux » = exposition.
-PROMPT_VERSION = "2026-10-19.1"
+# 30/10/2026 : l'exemple « théâtre gratuit en famille » était recopié tel quel
+# (« théâtre à Montpellier vendredi soir » → « pas de théâtre gratuit en
+# famille ») ; réponses qui annonçaient des idées sans en nommer aucune.
+PROMPT_VERSION = "2026-10-30.1"
 DEFAULT_SEARCH_MODEL = "mistral-small-latest"
 # Modèle de secours (23/10/2026) : ce matin-là, `mistral-small-latest` répondait
 # « 503 Service unavailable » à chaque appel ; le modèle de la collecte de nuit,
@@ -43,8 +46,13 @@ Règles :
 - cite chaque événement mentionné par son numéro entre crochets : [1], [2] ;
 - si aucun événement ne correspond vraiment, dis-le franchement ;
 - si la demande précise un type de sortie absent de la liste, commence par le
-  dire (« Je n'ai pas trouvé de théâtre gratuit en famille… »), puis présente
-  les autres événements comme des idées voisines ;
+  dire avec les mots de la demande, et seulement ceux-là, puis présente les
+  autres événements comme des idées voisines ;
+- n'ajoute jamais une contrainte que la demande ne contient pas (gratuit, en
+  famille, le soir…) : reprends seulement la ligne « Contraintes comprises » ;
+- nomme chaque événement que tu cites (son titre, en quelques mots), puis son
+  numéro : « la Fête de la soupe [2] », jamais « [1], [2] et [3] » seuls ; ne
+  termine jamais la réponse par « : » ;
 - respecte les contraintes comprises (date, lieu, public, gratuit) : ne
   présente pas un événement qui ne les respecte pas comme s'il y répondait ;
 - privilégie les événements qui répondent le mieux à la demande, pas forcément
@@ -62,6 +70,11 @@ Réponds uniquement en JSON : {"reponse": "...", "suggestions": ["...", "...", "
 
 
 CITATION = re.compile(r"\[(\d+)\]")
+# Une lettre (pas un chiffre ni une ponctuation) ; « et », « ou » ne nomment rien.
+LETTER = re.compile(r"[^\W\d_]")
+LINK_WORDS = re.compile(r"\b(?:et|ou)\b", re.IGNORECASE)
+CLAUSE_END = re.compile(r"[:;.!?]")
+TITLE_CHARS = 60
 
 
 def events_for_prompt(cards: Sequence[Mapping[str, Any]]) -> str:
@@ -267,6 +280,78 @@ def order_cards(cards: list[dict[str, Any]], answer: str) -> tuple[list[dict[str
         ordered.append(card)
     answer = CITATION.sub(lambda m: f"[{new_ref.get(int(m.group(1)), int(m.group(1)))}]", answer)
     return ordered, answer
+
+
+def short_title(title: str) -> str:
+    """Titre d'une carte, coupé à un mot entier au-delà de `TITLE_CHARS` signes.
+
+    Parameters
+    ----------
+    title : str
+        Le titre de la carte.
+
+    Returns
+    -------
+    str
+        Le titre, ou son début suivi de « … ».
+    """
+
+    title = " ".join(str(title).split())
+    if len(title) <= TITLE_CHARS:
+        return title
+    return title[:TITLE_CHARS].rsplit(" ", 1)[0] + "…"
+
+
+def name_citations(answer: str, cards: Sequence[Mapping[str, Any]]) -> str:
+    """Complète une réponse qui cite des événements sans les nommer.
+
+    Simulation du 30/10/2026 (100 questions) : 11 réponses sur 80 finissaient par
+    « Voici des idées voisines : » sans en citer aucune, et une se réduisait à
+    « Voici quelques concerts à Frontignan : [1], [2], [3] et [4]. ». Le texte
+    doit se lire seul : une citation « nue » (ni avant ni après elle, jusqu'à la
+    citation voisine ou le dernier « : », autre chose que « et », « ou » et de la ponctuation) reçoit
+    le titre de sa carte ; une réponse sans citation, ou qui finit par « : »,
+    reçoit les titres des premières cartes qu'elle ne cite pas encore.
+
+    Parameters
+    ----------
+    answer : str
+        La réponse lue par `parse_answer` (citations vérifiées).
+    cards : Sequence[Mapping[str, Any]]
+        Les cartes données à Mistral, numérotées par `ref`.
+
+    Returns
+    -------
+    str
+        La réponse, inchangée si chaque citation est déjà nommée.
+    """
+
+    titles = {int(card["ref"]): short_title(card["title"]) for card in cards}
+    matches = list(CITATION.finditer(answer))
+    # Citations nues : leur titre est ajouté devant
+    pieces, last = [], 0
+    for index, match in enumerate(matches):
+        before = answer[matches[index - 1].end() if index else 0:match.start()]
+        before = CLAUSE_END.split(before)[-1]             # seulement depuis le dernier « : » ou « . »
+        after = answer[match.end():matches[index + 1].start() if index + 1 < len(matches) else len(answer)]
+        bare = not any(LETTER.search(LINK_WORDS.sub("", text)) for text in (before, after))
+        ref = int(match.group(1))
+        pieces.append(answer[last:match.start()])
+        pieces.append(f"{titles[ref]} {match.group(0)}" if bare and ref in titles else match.group(0))
+        last = match.end()
+    pieces.append(answer[last:])
+    answer = "".join(pieces)
+    # Réponse sans citation, ou qui annonce une liste sans la donner
+    text = answer.rstrip()
+    if matches and not text.endswith(":"):
+        return answer
+    cited = {int(match.group(1)) for match in matches}
+    names = ", ".join([f"{titles[ref]} [{ref}]" for ref in sorted(titles) if ref not in cited][:3])
+    if not names:
+        return answer
+    if text.endswith(":"):
+        return f"{text} {names}."
+    return f"{text} Idées voisines\u00a0: {names}."
 
 
 def fallback_answer(cards: Sequence[Mapping[str, Any]],
