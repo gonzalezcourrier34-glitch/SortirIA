@@ -1075,7 +1075,8 @@ def test_card_counts_every_date_like_the_detail(db: Any) -> None:
         result = list(search_service.run_search(db, "un spectacle", SearchFilters(), services))[-1]["result"]
     finally:
         search_query.POOL = saved
-    card = next(card for card in result["events"] if card["title"] == "LA CRYPTE")
+    # Titre en capitales rendu lisible (readable_title, 30/10/2026).
+    card = next(card for card in result["events"] if card["title"] == "La crypte")
     assert card["event_id"] == "crypte1"                                  # la prochaine séance, pas la lointaine
     assert [d["event_id"] for d in card["other_dates"]] == ["crypte2", "crypte0"]
     detail = search_detail.event_detail(db, card["event_id"])
