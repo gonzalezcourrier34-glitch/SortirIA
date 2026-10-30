@@ -27,7 +27,11 @@ logger = get_logger(__name__)
 # 30/10/2026 : l'exemple « théâtre gratuit en famille » était recopié tel quel
 # (« théâtre à Montpellier vendredi soir » → « pas de théâtre gratuit en
 # famille ») ; réponses qui annonçaient des idées sans en nommer aucune.
-PROMPT_VERSION = "2026-10-30.1"
+# 30/10/2026, .2 : la version .1 citait en exemple « la Fête de la soupe [2] »,
+# recopié comme titre d'autres événements (8 réponses sur 100), et renvoyait à
+# « Contraintes comprises », recopié en fin de réponse (6 sur 100). Plus aucun
+# exemple de titre ni de nom de ligne dans les règles.
+PROMPT_VERSION = "2026-10-30.2"
 DEFAULT_SEARCH_MODEL = "mistral-small-latest"
 # Modèle de secours (23/10/2026) : ce matin-là, `mistral-small-latest` répondait
 # « 503 Service unavailable » à chaque appel ; le modèle de la collecte de nuit,
@@ -49,10 +53,10 @@ Règles :
   dire avec les mots de la demande, et seulement ceux-là, puis présente les
   autres événements comme des idées voisines ;
 - n'ajoute jamais une contrainte que la demande ne contient pas (gratuit, en
-  famille, le soir…) : reprends seulement la ligne « Contraintes comprises » ;
-- nomme chaque événement que tu cites (son titre, en quelques mots), puis son
-  numéro : « la Fête de la soupe [2] », jamais « [1], [2] et [3] » seuls ; ne
-  termine jamais la réponse par « : » ;
+  famille, le soir…) ;
+- nomme chaque événement que tu cites par son titre tel qu'il est écrit dans la
+  liste, suivi de son numéro ; jamais une suite de numéros seuls, jamais un
+  événement absent de la liste ; ne termine jamais la réponse par « : » ;
 - respecte les contraintes comprises (date, lieu, public, gratuit) : ne
   présente pas un événement qui ne les respecte pas comme s'il y répondait ;
 - privilégie les événements qui répondent le mieux à la demande, pas forcément
@@ -74,6 +78,9 @@ CITATION = re.compile(r"\[(\d+)\]")
 LETTER = re.compile(r"[^\W\d_]")
 LINK_WORDS = re.compile(r"\b(?:et|ou)\b", re.IGNORECASE)
 CLAUSE_END = re.compile(r"[:;.!?]")
+SENTENCE_END = re.compile(r"(?<=[.!?])\s+")
+# Nom de ligne de la demande recopié en fin de réponse (« … au Réservoir [1]. Contraintes comprises. »).
+LEAKED_LABEL = re.compile(r"\s*Contraintes comprises\s*[.:]?\s*$", re.IGNORECASE)
 TITLE_CHARS = 60
 
 
@@ -137,6 +144,7 @@ def parse_answer(raw: str, count: int) -> tuple[str, list[str]]:
     if not answer:
         raise ValueError("réponse vide")
     answer = CITATION.sub(lambda m: m.group(0) if 1 <= int(m.group(1)) <= count else "", answer)
+    answer = LEAKED_LABEL.sub("", answer)
     answer = french_spacing(re.sub(r"\s+([.,;:!?])", r"\1", re.sub(r" {2,}", " ", answer)).strip())
     suggestions = clean_suggestions(data.get("suggestions") or [])
     return answer, suggestions
@@ -345,6 +353,12 @@ def name_citations(answer: str, cards: Sequence[Mapping[str, Any]]) -> str:
     text = answer.rstrip()
     if matches and not text.endswith(":"):
         return answer
+    if not matches:
+        # Sans aucune citation, les noms cités ne viennent pas de la liste (30/10/2026 :
+        # « la Fête de la soupe et le Marché de Noël de Sète » pour un atelier de
+        # poterie) : seule la première phrase, le constat, est gardée.
+        text = SENTENCE_END.split(text, maxsplit=1)[0].rstrip(" :")
+        text = text if text.endswith((".", "!", "?")) else text + "."
     cited = {int(match.group(1)) for match in matches}
     names = ", ".join([f"{titles[ref]} [{ref}]" for ref in sorted(titles) if ref not in cited][:3])
     if not names:

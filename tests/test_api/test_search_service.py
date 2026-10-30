@@ -157,6 +157,12 @@ def test_prompt_example_adds_no_constraint() -> None:
     assert "gratuit en famille" not in search_answer.WRITE_PROMPT
     assert "n'ajoute jamais une contrainte" in search_answer.WRITE_PROMPT
     assert "nomme chaque événement" in search_answer.WRITE_PROMPT
+    # 30/10/2026, version .2 : un titre d'exemple ou un nom de ligne est recopié tel quel.
+    assert "Fête de la soupe" not in search_answer.WRITE_PROMPT
+    assert "Contraintes comprises" not in search_answer.WRITE_PROMPT
+    raw = json.dumps({"reponse": "Voici une idée : la soirée jeux [1]. Contraintes comprises.",
+                      "suggestions": []})
+    assert search_answer.parse_answer(raw, 1)[0] == "Voici une idée\u00a0: la soirée jeux [1]."
 
 
 def test_bare_citations_receive_their_title() -> None:
@@ -179,9 +185,14 @@ def test_answer_announcing_ideas_gives_them() -> None:
 
     cards = [{"ref": n, "title": t} for n, t in enumerate(["Bal folk", "Loto", "Expo photo", "Marché"], 1)]
     answer = search_answer.name_citations("Je n'ai pas trouvé de brocante. Voici des idées voisines\u00a0:", cards)
-    assert answer == "Je n'ai pas trouvé de brocante. Voici des idées voisines\u00a0: Bal folk [1], Loto [2], Expo photo [3]."
+    assert answer == "Je n'ai pas trouvé de brocante. Idées voisines\u00a0: Bal folk [1], Loto [2], Expo photo [3]."
     answer = search_answer.name_citations("Je n'ai pas trouvé de musée gratuit dimanche.", cards[:1])
     assert answer == "Je n'ai pas trouvé de musée gratuit dimanche. Idées voisines\u00a0: Bal folk [1]."
+    # Sans citation, les noms donnés ne viennent pas de la liste : seul le constat reste.
+    answer = search_answer.name_citations(
+        "Je n'ai pas trouvé d'atelier de poterie. Voici des idées voisines\u00a0: la Fête de la soupe "
+        "et le Marché de Noël de Sète.", [{"ref": 1, "title": "Atelier terre"}])
+    assert answer == "Je n'ai pas trouvé d'atelier de poterie. Idées voisines\u00a0: Atelier terre [1]."
     long_title = "SAISON DE CONCERTS D'ORGUE 2026-2027 À LA CATHÉDRALE SAINT-PIERRE DE MONTPELLIER"
     answer = search_answer.name_citations("Voici une idée : [1].", [{"ref": 1, "title": long_title}])
     assert answer.endswith("… [1].") and len(answer) < len(long_title) + 20

@@ -238,6 +238,8 @@ def test_evening_public_and_type_are_written_once() -> None:
     plan = plan_search("soirée électro à Montpellier samedi", SearchFilters(), NOW)[0]
     assert plan.public == "soiree" and "soiree" in plan.categories
     assert plan.describe().count("soirée") == 1
+    plan = plan_search("soirée jeux de société à Montpellier", SearchFilters(), NOW)[0]
+    assert plan.describe().count("soirée") == 1                   # « soirée ou jeux »
 
 
 def test_in_the_evening_is_a_time_not_the_evening_public() -> None:

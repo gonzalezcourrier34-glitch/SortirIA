@@ -841,6 +841,8 @@ class QueryPlan:
             # « soirée électro » : public « soirée » et type « soirée » ; le libellé
             # n'est écrit qu'une fois (« soirée · soirée » le 30/10/2026).
             label = category_label(self.categories)
+            if self.public == "soiree" and "soirée" in label and "soirée" in parts:
+                parts.remove("soirée")              # « soirée · soirée ou jeux » aussi
             if label not in parts:
                 parts.append(label)
         return " · ".join(parts)
