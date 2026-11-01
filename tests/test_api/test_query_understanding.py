@@ -230,6 +230,28 @@ def test_the_question_changes_the_checked_boxes() -> None:
 
 
 
+@pytest.mark.parametrize("question", [
+    "tu es nul, trouve-moi un vrai concert",
+    "fin novembre une expo",
+    "début décembre un spectacle",
+    "koi faire a sete demain",
+    "<script>alert(1)</script> concert",
+])
+def test_filler_words_are_not_required(question: str) -> None:
+    """01/11/2026 : « nul », « vrai », « fin »… devenaient des mots exigés et écartaient le type
+    demandé ; la réponse affirmait à tort « pas de concert dans les 3 prochains mois »."""
+    from app.search_query import distinctive_keywords
+
+    assert distinctive_keywords(understand(question, NOW).keywords) == []
+
+
+def test_slang_for_places_and_publics() -> None:
+    assert understand("expo gratos montpel", NOW).zone == "montpellier"
+    assert understand("un concert mtp ce soir", NOW).zone == "montpellier"
+    understood = understand("visites pr les vieux a sete", NOW)
+    assert understood.public == "seniors" and "vieux" not in understood.keywords
+
+
 def test_evening_public_and_type_are_written_once() -> None:
     """30/10/2026 : « soirée électro à Montpellier samedi » affichait « soirée · soirée »."""
     from app.search_filters import SearchFilters

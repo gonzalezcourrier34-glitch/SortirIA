@@ -273,6 +273,9 @@ CITY_ALIASES = {
 # « Montpellier » désigne en pratique la métropole : c'est une zone, pas une commune.
 ZONE_WORDS = {
     "montpellier": "montpellier", "metropole": "montpellier",
+    # Abréviations et fautes fréquentes (01/11/2026) : « expo gratos montpel », « mtp ».
+    "montpel": "montpellier", "montpelier": "montpellier", "monpellier": "montpellier",
+    "mtp": "montpellier", "mtpl": "montpellier",
     "thau": "thau", "etang": "thau", "bassin": "thau",
 }
 CITY_LABELS = {"sete": "Sète", "meze": "Mèze", "perols": "Pérols", "fabregues": "Fabrègues",
@@ -518,7 +521,7 @@ PUBLIC_WORDS = {
     "ados": ("ado", "ados", "adolescent", "adolescents", "adolescente", "adolescentes", "lyceen", "lyceens",
              "collegien", "collegiens", "jeunes"),
     "seniors": ("senior", "seniors", "retraite", "retraites", "aines", "personnes agees", "grand mere",
-                "grand pere", "grands parents"),
+                "grand pere", "grands parents", "les vieux", "personnes ainees"),
     "soiree": ("soiree", "soirees", "bar", "bars", "fiesta", "festif", "festive", "amoureux", "clubbing",
                "boite de nuit", "discotheque", "afterwork", "pub", "pubs"),
 }
@@ -584,7 +587,18 @@ proposition propositions savoir sais connaitre connais voire
 # prochaines expositions de peinture » (9 fois) cherchait aussi « sont » dans
 # les titres, et finissait en idées voisines ; « bonjour », « propositions »,
 # « voire » (pour « voir ») faisaient de même.
-STOPWORDS = frozenset(STOPWORD_TEXT.split())
+# 01/11/2026 (200 questions difficiles) : ces mots, trouvés dans quelques titres,
+# devenaient des mots exigés et écartaient le type demandé : « tu es nul, trouve-moi
+# un vrai concert » ne gardait qu'une pièce titrée « C'est vrai que… » et répondait
+# « pas de concert » ; « fin novembre une expo », « début décembre un spectacle »,
+# « koi faire », « pr les vieux » (Balaruc-le-Vieux) de même.
+FILLER_TEXT = """
+nul nulle nuls vrai vraie vrais vraies vraiment fin debut koi kwa pr pk pq ptit ptite ptits
+vieux vieille vieilles genial geniale top meilleur meilleure meilleurs meilleures
+"""
+STOPWORDS = frozenset(STOPWORD_TEXT.split()) | frozenset(FILLER_TEXT.split())
+HTML_SCRIPT = re.compile(r"<\s*(script|style)\b[^>]*>.*?<\s*/\s*\1\s*>", re.IGNORECASE | re.DOTALL)
+HTML_TAG = re.compile(r"<[^<>]{0,200}>")
 
 
 # Budget (15/10/2026) : « moins de 15 € », « 20 euros max », « pas cher ».
@@ -1015,6 +1029,10 @@ def understand(question: str, now: datetime) -> Understanding:
         Tout ce qui a été lu dans la question.
     """
 
+    # Balises HTML retirées avec leur contenu de script (01/11/2026) :
+    # « <script>alert(1)</script> concert » cherchait « script » et « alert ».
+    question = HTML_SCRIPT.sub(" ", str(question or ""))
+    question = HTML_TAG.sub(" ", question)
     # Ajouter les synonymes appris, puis simplifier le texte
     question = with_synonyms(question)
 

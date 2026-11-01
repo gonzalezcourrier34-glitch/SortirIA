@@ -79,6 +79,13 @@ LETTER = re.compile(r"[^\W\d_]")
 LINK_WORDS = re.compile(r"\b(?:et|ou)\b", re.IGNORECASE)
 CLAUSE_END = re.compile(r"[:;.!?]")
 SENTENCE_END = re.compile(r"(?<=[.!?])\s+")
+# Format des lignes données à Mistral (`events_for_prompt`) recopié dans la réponse
+# (01/11/2026, 200 questions difficiles) : « Les Nuits du Sud à Sète — Du 12 au 14
+# juillet · … ; concert ; offre partenaire ; Festival… », des événements absents des
+# cartes, ou des lignes brutes. Un tiret long suivi de deux « ; » de près (les dates
+# abrégées, « 3 déc. », ont un point), ou « offre partenaire ; », n'arrive pas dans
+# une réponse rédigée.
+RAW_EVENT_LINE = re.compile(r"—[^!?\n]{0,120}?;[^!?\n]{0,60}?;|offre partenaire\s*;", re.IGNORECASE)
 # Nom de ligne de la demande recopié en fin de réponse (« … au Réservoir [1]. Contraintes comprises. »).
 LEAKED_LABEL = re.compile(r"\s*Contraintes comprises\s*[.:]?\s*$", re.IGNORECASE)
 TITLE_CHARS = 60
@@ -145,6 +152,10 @@ def parse_answer(raw: str, count: int) -> tuple[str, list[str]]:
         raise ValueError("réponse vide")
     answer = CITATION.sub(lambda m: m.group(0) if 1 <= int(m.group(1)) <= count else "", answer)
     answer = LEAKED_LABEL.sub("", answer)
+    if RAW_EVENT_LINE.search(answer):
+        # Lignes de la consigne recopiées : rien ne garantit que ces événements soient
+        # dans les cartes. La réponse simple (`fallback_answer`) les remplace.
+        raise ValueError("réponse au format des lignes de la consigne")
     answer = french_spacing(re.sub(r"\s+([.,;:!?])", r"\1", re.sub(r" {2,}", " ", answer)).strip())
     suggestions = clean_suggestions(data.get("suggestions") or [])
     return answer, suggestions
