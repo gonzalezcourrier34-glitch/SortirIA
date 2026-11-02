@@ -324,7 +324,8 @@ def parse_enrichments(answer: str, expected_ids: Sequence[str]) -> tuple[dict[st
     return valid, len(expected_ids) - len(valid)
 
 
-def call_mistral_json(system_prompt: str, text: str, model: str) -> tuple[str, dict[str, int]]:
+def call_mistral_json(system_prompt: str, text: str, model: str,
+                      timeout: int | None = None) -> tuple[str, dict[str, int]]:
     """Appel Mistral en mode JSON. Renvoie (réponse, tokens consommés).
 
     Température 0 et format de réponse `json_object` imposé.
@@ -337,6 +338,9 @@ def call_mistral_json(system_prompt: str, text: str, model: str) -> tuple[str, d
         Message utilisateur : le texte du lot.
     model : str
         Nom du modèle Mistral.
+    timeout : int | None
+        Délai maximum en secondes, avec un seul nouvel essai ; None garde les
+        valeurs de la bibliothèque (120 s, 5 essais), suffisantes la nuit.
 
     Returns
     -------
@@ -347,7 +351,8 @@ def call_mistral_json(system_prompt: str, text: str, model: str) -> tuple[str, d
 
     from langchain_mistralai import ChatMistralAI
 
-    llm = ChatMistralAI(model=model, temperature=0).bind(response_format={"type": "json_object"})
+    limits = {"timeout": timeout, "max_retries": 1} if timeout else {}
+    llm = ChatMistralAI(model=model, temperature=0, **limits).bind(response_format={"type": "json_object"})
     message = llm.invoke([("system", system_prompt), ("human", text)])
     usage = getattr(message, "usage_metadata", None) or {}
     return str(message.content), {"input": int(usage.get("input_tokens", 0)),

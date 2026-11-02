@@ -281,7 +281,8 @@ def test_search_streams_the_four_steps_then_the_result() -> None:
     assert [card["ref"] for card in result["events"]] == [1, 2] and result["events"][0]["partner"] is True
     assert "offre partenaire" in search_answer.events_for_prompt(seen["cards"]).split("\n")[0]
     assert result["request_id"] == 7 and result["degraded"] is False
-    assert seen["question"] == "sortie en famille"
+    # Réponse exacte : Mistral est prévenu que les filtres sont respectés (02/11/2026)
+    assert seen["question"].splitlines()[0] == "sortie en famille" and "ne dis pas qu'il n'y a rien" in seen["question"]
     search = next(params for sql, params in connection.queries if "vector" in params)
     assert search["vector"] == "[0.1]"
     assert any("query_cache" in sql for sql, _ in connection.queries)      # cherchée puis gardée
@@ -766,8 +767,9 @@ def test_writer_falls_back_to_a_second_model(monkeypatch: pytest.MonkeyPatch) ->
 
     asked: list[str] = []
 
-    def call(system: str, text: str, model: str) -> tuple[str, dict[str, int]]:
+    def call(system: str, text: str, model: str, **options: Any) -> tuple[str, dict[str, int]]:
         asked.append(model)
+        assert options == {"timeout": search_answer.WRITE_TIMEOUT}      # rédaction : délai court
         if model == "mistral-small-latest":
             raise RuntimeError("503 Service unavailable")
         return '{"reponse": "ok"}', {"input": 10, "output": 2}
@@ -786,7 +788,7 @@ def test_writer_falls_back_to_a_second_model(monkeypatch: pytest.MonkeyPatch) ->
 def test_writer_raises_when_every_model_fails(monkeypatch: pytest.MonkeyPatch) -> None:
     from src.event import event_enrichment
 
-    def call(system: str, text: str, model: str) -> tuple[str, dict[str, int]]:
+    def call(system: str, text: str, model: str, **options: Any) -> tuple[str, dict[str, int]]:
         raise RuntimeError(f"503 {model}")
 
     monkeypatch.setattr(event_enrichment, "call_mistral_json", call)

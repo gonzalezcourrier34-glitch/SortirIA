@@ -235,6 +235,47 @@ def test_english_answers_are_refused() -> None:
         search_answer.check_facts("Here are some great options for your weekend in Sète: the market [1].", CARDS)
 
 
+def test_exact_answers_are_not_called_neighbouring_ideas() -> None:
+    """« et pour demain ? » répondait « pas d'événement demain » devant des cartes de demain."""
+    assert "ne dis pas qu'il n'y a rien" in search_answer.writer_question("et pour demain ?", (), 0,
+                                                                             filters_met=True)
+    answer = search_answer.name_citations("Le musée de Loupian est gratuit le dimanche.", CARDS[:1], exact=True)
+    assert "À découvrir" in answer and "Idées voisines" not in answer
+
+
+def test_bracketed_titles_and_copied_notes() -> None:
+    import json
+    raw = json.dumps({"reponse": "Le [Festival dernier cri] [1] ; le livre [complet] [2].", "suggestions": []})
+    assert search_answer.parse_answer(raw, 2)[0].startswith("Le Festival dernier cri [1]")
+    note = search_answer.writer_question("danse le 14", ("danse",), 1, widened=["pour « sam. 14 nov. »"],
+                                         asked="sam. 14 nov. · Montpellier · danse")
+    assert "(sam. 14 nov., Montpellier, danse)" in note and "·" not in note
+
+
+@pytest.mark.parametrize(("question", "described"), [
+    ("¿qué hacer en Montpellier este fin de semana?", "ce week-end · Montpellier et sa métropole"),
+    ("what to do in Sete tonight", "aujourd'hui (le soir) · Sète"),
+    ("un spectacle qui dure moins d'une heure pour les petits",
+     "les 3 prochains mois · famille · spectacle ou théâtre"),
+])
+def test_foreign_and_duration_words_are_not_required(question: str, described: str) -> None:
+    """« dure » trouvait « durable » (une conférence) ; « hacer », « semana » étaient exigés."""
+    plan = plan_search(question, SearchFilters(), NOW)[0]
+    assert plan.describe() == described and not [word for word in plan.keywords if word != "spectacle"]
+
+
+def test_a_title_with_an_exclamation_mark_is_not_cut() -> None:
+    """« … ou l'exposition » restait seul quand la suite, après le « ! » d'un titre, était retirée."""
+    cards = [{"ref": 1, "title": "Les Arceaux : toute une histoire !", "city": "Montpellier", "summary": ""}]
+    with pytest.raises(search_answer.RefusedAnswer):
+        search_answer.check_facts("Voici l'exposition Les Arceaux : toute une histoire ! [1] accessible en tram.",
+                                  cards)
+    assert search_answer.sentences("Voir Pop ! [1] puis rentrer. Fin.") == ["Voir Pop ! [1] puis rentrer.", "Fin."]
+    # Titre déjà écrit avant sa citation, espace insécable compris : pas répété
+    answer = "Idées : Les Arceaux : toute une histoire\u00a0! [1]"
+    assert search_answer.name_citations(answer, cards) == answer
+
+
 def test_a_title_ending_with_punctuation_is_not_named_twice() -> None:
     cards = [{"ref": 1, "title": "Folle de rage X rockstore - Le legendaire aftershow !"}]
     answer = "Voici un concert : Folle de rage X rockstore - Le legendaire aftershow ! [1]."

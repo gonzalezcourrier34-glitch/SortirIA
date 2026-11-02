@@ -734,11 +734,12 @@ def find_period(text: str, now: datetime) -> tuple[datetime, datetime, str] | No
     if has("apres demain"):
         day = today + timedelta(days=2)
         return (*day_bounds(day, now), day_label(day))
-    if has("demain"):
+    if has("demain", "tomorrow", "manana"):
         day = today + timedelta(days=1)
         return (*day_bounds(day, now), "demain")
     if has("aujourd hui", "ce jour", "ce soir", "cet apres midi", "cette apres midi", "cet aprem", "ce matin",
-           "ce midi", "cette nuit", "tout de suite", "maintenant", "tantot"):
+           "ce midi", "cette nuit", "tout de suite", "maintenant", "tantot", "today", "tonight", "hoy",
+           "esta noche"):
         return (*day_bounds(today, now), "aujourd'hui")
     # Week-ends et semaines
     if has("week end prochain", "weekend prochain"):
@@ -747,7 +748,7 @@ def find_period(text: str, now: datetime) -> tuple[datetime, datetime, str] | No
             saturday = today + timedelta(days=6)
         start = datetime.combine(saturday, datetime.min.time(), tzinfo=PARIS)
         return start, start + timedelta(days=2), "le week-end prochain"
-    if has("ce week end", "ce weekend", "week end", "weekend"):
+    if has("ce week end", "ce weekend", "week end", "weekend", "fin de semana", "this weekend"):
         saturday = today - timedelta(days=1) if today.weekday() == 6 else next_weekday(today, 5)
         start = datetime.combine(saturday, datetime.min.time(), tzinfo=PARIS)
         return max(start, now), start + timedelta(days=2), "ce week-end"
@@ -890,11 +891,18 @@ nul nulle nuls vrai vraie vrais vraies vraiment fin debut koi kwa pr pk pq ptit 
 vieux vieille vieilles genial geniale top meilleur meilleure meilleurs meilleures
 seulement uniquement juste trop vacances scolaires reveillon sylvestre nouvel premier premiere 1er
 dernier derniere deuxieme partir compter jusqu jusque quinzaine jours semaines pendant pdt durant
-sans meuf mec cherie cheri dispo disponible disponibles plz please pls tkt bcp
+sans meuf mec cherie cheri dure durer duree dispo disponible disponibles plz please pls tkt bcp
+"""
+# Mots d'une question en anglais ou en espagnol (02/11/2026 : « ¿qué hacer en
+# Montpellier este fin de semana? » exigeait « hacer », « este », « semana » et
+# répondait qu'il n'y avait rien à Montpellier).
+FOREIGN_TEXT = """
+what where things thing the this that there with and for today tonight tomorrow weekend
+hacer este esta estos semana hoy manana noche donde algo para con
 """
 # 02/11/2026 (200 questions difficiles) : « seulement gratuit ? », « juste le
 # gratuit », « avec ma meuf » cherchaient « seulement », « juste », « meuf ».
-STOPWORDS = frozenset(STOPWORD_TEXT.split()) | frozenset(FILLER_TEXT.split())
+STOPWORDS = frozenset(STOPWORD_TEXT.split()) | frozenset(FILLER_TEXT.split()) | frozenset(FOREIGN_TEXT.split())
 HTML_SCRIPT = re.compile(r"<\s*(script|style)\b[^>]*>.*?<\s*/\s*\1\s*>", re.IGNORECASE | re.DOTALL)
 HTML_TAG = re.compile(r"<[^<>]{0,200}>")
 
@@ -1543,7 +1551,7 @@ def understand(question: str, now: datetime) -> Understanding:
         free_only=free,
         # « marché nocturne » : le soir aussi (pas « nuit » : « boîte de nuit », « Nuit des musées »).
         evening=evening_phrase or any(f" {word} " in padded for word in (*EVENING_WORDS[:2], "nocturne",
-                                                                         "cette nuit")),
+                                                                         "cette nuit", "tonight", "esta noche")),
         moment=moment,
         # Pratique : le verbe est le sujet (les autres mots, « apprendre »,
         # « envie », n'en disent pas plus).

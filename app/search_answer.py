@@ -58,6 +58,10 @@ DEFAULT_SEARCH_MODEL = "mistral-small-latest"
 # lui, répondait. Si le modèle principal échoue, on essaie une fois celui-ci
 # avant de passer en réponse simplifiée. Vide ou égal au principal : pas de secours.
 DEFAULT_SEARCH_FALLBACK_MODEL = "mistral-medium-latest"
+# Délai de rédaction (02/11/2026) : une réponse a mis 126 s (« que faire à Lyon
+# demain »), le délai par défaut de la bibliothèque étant de 120 s. Au-delà de
+# 15 s, le modèle de secours répond ; une rédaction prend 2 s en médiane.
+WRITE_TIMEOUT = 15
 
 WRITE_PROMPT = """Tu es SortirIA, un assistant qui conseille des sorties autour de Montpellier
 et du bassin de Thau. On te donne la demande d'un utilisateur et une liste
@@ -111,6 +115,7 @@ SENTENCE_END = re.compile(r"(?<=[.!?])\s+")
 RAW_EVENT_LINE = re.compile(r"—[^!?\n]{0,120}?;[^!?\n]{0,60}?;|offre partenaire\s*;", re.IGNORECASE)
 # Nom de ligne de la demande recopié en fin de réponse (« … au Réservoir [1]. Contraintes comprises. »).
 LEAKED_LABEL = re.compile(r"\s*Contraintes comprises\s*[.:]?\s*$", re.IGNORECASE)
+BRACKETED_TITLE = re.compile(r"\[([^\[\]\d][^\[\]]*)\]\s*(?=\[\d+\])")
 TITLE_CHARS = 60
 
 
@@ -175,6 +180,8 @@ def parse_answer(raw: str, count: int) -> tuple[str, list[str]]:
         raise ValueError("réponse vide")
     answer = CITATION.sub(lambda m: m.group(0) if 1 <= int(m.group(1)) <= count else "", answer)
     answer = LEAKED_LABEL.sub("", answer)
+    # Titre mis entre crochets devant sa citation (02/11/2026 : « le [Festival dernier cri] [2] »)
+    answer = BRACKETED_TITLE.sub(r"\1 ", answer)
     if RAW_EVENT_LINE.search(answer):
         # Lignes de la consigne recopiées : rien ne garantit que ces événements soient
         # dans les cartes. La réponse simple (`fallback_answer`) les remplace.
@@ -364,7 +371,7 @@ def where_and_when(card: Mapping[str, Any]) -> str:
     return f" ({', '.join(parts)})" if parts else ""
 
 
-def name_citations(answer: str, cards: Sequence[Mapping[str, Any]]) -> str:
+def name_citations(answer: str, cards: Sequence[Mapping[str, Any]], exact: bool = False) -> str:
     """Complète une réponse qui cite des événements sans les nommer.
 
     Simulation du 30/10/2026 (100 questions) : 11 réponses sur 80 finissaient par
@@ -381,6 +388,9 @@ def name_citations(answer: str, cards: Sequence[Mapping[str, Any]]) -> str:
         La réponse lue par `parse_answer` (citations vérifiées).
     cards : Sequence[Mapping[str, Any]]
         Les cartes données à Mistral, numérotées par `ref`.
+    exact : bool
+        Vrai si les cartes répondent à la demande : les titres ajoutés sont
+        annoncés par « À découvrir », pas « Idées voisines » (02/11/2026). Faux par défaut.
 
     Returns
     -------
@@ -398,7 +408,8 @@ def name_citations(answer: str, cards: Sequence[Mapping[str, Any]]) -> str:
         after = answer[match.end():matches[index + 1].start() if index + 1 < len(matches) else len(answer)]
         ref = int(match.group(1))
         # Titre déjà écrit juste avant (un titre finissant par « ! » coupait la clause)
-        named = ref in titles and answer[:match.start()].rstrip().endswith(titles[ref].rstrip("…"))
+        named = ref in titles and " ".join(answer[:match.start()].split()).endswith(
+            " ".join(titles[ref].rstrip("…").split()))          # espaces insécables compris (« histoire ! »)
         bare = not named and not any(LETTER.search(LINK_WORDS.sub("", text)) for text in (before, after))
         pieces.append(answer[last:match.start()])
         pieces.append(f"{titles[ref]} {match.group(0)}" if bare and ref in titles else match.group(0))
@@ -425,7 +436,7 @@ def name_citations(answer: str, cards: Sequence[Mapping[str, Any]]) -> str:
         return answer
     if text.endswith(":"):
         return f"{text} {names}."
-    return f"{text} Idées voisines\u00a0: {names}."
+    return f"{text} {'À découvrir' if exact else 'Idées voisines'}\u00a0: {names}."
 
 
 # Faits que la liste ne donne pas (02/11/2026, 200 questions difficiles : 10
@@ -512,7 +523,7 @@ def check_facts(answer: str, cards: Sequence[Mapping[str, Any]], plan: QueryPlan
     public = getattr(plan, "public", None)
     public = "famille" if public == "enfant" else public
     kept, dropped_citations = [], False
-    for sentence in SENTENCE_END.split(answer.strip()):
+    for sentence in sentences(answer):
         refs = [int(ref) for ref in CITATION.findall(sentence) if int(ref) in by_ref]
         support = " ".join(by_ref[ref] for ref in refs) if refs else everything
         # Accès : jamais sans appui
@@ -558,6 +569,33 @@ def check_facts(answer: str, cards: Sequence[Mapping[str, Any]], plan: QueryPlan
     if not result or (dropped_citations and not CITATION.search(result)):
         raise RefusedAnswer("réponse sans appui dans les cartes")
     return result
+
+
+def sentences(answer: str) -> list[str]:
+    """Phrases de la réponse ; un « ! » ou un « ? » dans un titre ne coupe pas la phrase.
+
+    02/11/2026 : « … ou l'exposition » restait seul quand la suite, après le
+    « ! » d'un titre, était retirée. Un morceau qui commence par une minuscule,
+    un chiffre ou une citation continue la phrase précédente.
+
+    Parameters
+    ----------
+    answer : str
+        La réponse.
+
+    Returns
+    -------
+    list[str]
+        Les phrases, dans l'ordre.
+    """
+
+    found: list[str] = []
+    for piece in SENTENCE_END.split(answer.strip()):
+        if found and piece and (piece[0].islower() or piece[0].isdigit() or piece[0] in "[«(\"*"):
+            found[-1] = f"{found[-1]} {piece}"
+        else:
+            found.append(piece)
+    return found
 
 
 def without_phrase(sentence: str, pattern: str) -> str:
@@ -617,9 +655,9 @@ def fallback_answer(cards: Sequence[Mapping[str, Any]],
         return message, ["Sur 3 mois ?", "Partout ?"]
     names = ", ".join(f"{card['title']} [{card['ref']}]" for card in cards[:3])
     if not exact:
-        return (f"Je n'ai rien trouvé d'exact pour {filters.describe()}. "
+        return (f"Je n'ai rien trouvé d'exact pour {filters.describe().replace(' · ', ', ')}. "
                 f"Quelques idées voisines : {names}."), []
-    return f"Voici ce que j'ai trouvé pour {filters.describe()} : {names}.", []
+    return f"Voici ce que j'ai trouvé pour {filters.describe().replace(' · ', ', ')} : {names}.", []
 
 
 def default_suggestions(filters: QueryPlan | SearchFilters) -> list[str]:
@@ -682,7 +720,7 @@ def write_with_mistral(question: str, filters: QueryPlan | SearchFilters,
     models = writer_models()
     for number, model in enumerate(models, start=1):
         try:
-            raw, usage = call_mistral_json(WRITE_PROMPT, text, model)
+            raw, usage = call_mistral_json(WRITE_PROMPT, text, model, timeout=WRITE_TIMEOUT)
         except Exception:
             if number == len(models):
                 raise
@@ -710,7 +748,8 @@ def writer_models() -> list[str]:
 
 def writer_question(question: str, categories: Sequence[str], matching: int, *,
                     relaxed: str = "", context: str = "", missing_words: Sequence[str] = (),
-                    widened: Sequence[str] = (), asked: str = "", outside: Sequence[str] = ()) -> str:
+                    widened: Sequence[str] = (), asked: str = "", outside: Sequence[str] = (),
+                    filters_met: bool = False) -> str:
     """Demande transmise à Mistral, avec les précisions utiles.
 
     Relance d'une question précédente, type de sortie absent, mots absents,
@@ -736,6 +775,9 @@ def writer_question(question: str, categories: Sequence[str], matching: int, *,
         Résumé des contraintes demandées au départ.
     outside : Sequence[str]
         Lieux demandés hors de la zone couverte (« Agde »).
+    filters_met : bool
+        Vrai si les cartes respectent toutes les contraintes, sans rien de
+        relâché ni de manquant : Mistral ne doit pas dire qu'il n'y a rien.
 
     Returns
     -------
@@ -757,11 +799,20 @@ def writer_question(question: str, categories: Sequence[str], matching: int, *,
         notes.append(f"Aucun événement de la liste ne mentionne « {' '.join(missing_words)} » "
                      ": dis-le d'abord, puis présente les autres comme des idées voisines.")
     if relaxed:
-        notes.append(f"Rien ne correspond exactement à « {relaxed} » : la recherche a été "
+        notes.append(f"Rien ne correspond exactement à la demande ({relaxed.replace(' · ', ', ')}) : la recherche a été "
                      "élargie. Dis-le d'abord, puis présente ces idées voisines.")
     if widened:
-        notes.append(f"Rien sur ce sujet pour « {asked} ». Les événements de la liste parlent "
+        # Contraintes écrites en clair : la note était recopiée telle quelle (02/11/2026 :
+        # « Rien sur ce sujet pour « sam. 14 nov. · Montpellier · danse » »).
+        notes.append(f"Aucun événement sur ce sujet ne respecte toutes les contraintes demandées "
+                     f"({asked.replace(' · ', ', ')}). Les événements de la liste parlent "
                      f"bien du sujet, mais sans ces contraintes : {', '.join(widened)}. Dis-le "
                      "d'abord en une phrase, puis présente-les en précisant ce qui diffère (prix, "
                      "date, lieu, public).")
+    if filters_met and not notes:
+        # 02/11/2026 : « et pour demain ? » répondait « pas d'événement demain » devant
+        # des cartes de demain. Les filtres (date, lieu, public, gratuit) sont appliqués
+        # par la base : le dire à Mistral.
+        notes.append("Tous ces événements respectent la date, le lieu et le public demandés : "
+                     "ne dis pas qu'il n'y a rien à cette date ou à cet endroit.")
     return question + "".join(f"\n({note})" for note in notes)
