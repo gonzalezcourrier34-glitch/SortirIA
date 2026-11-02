@@ -268,7 +268,28 @@ THAU_CITIES = (
 CITY_ALIASES = {
     "castelnau": ("castelnau le lez",), "balaruc": ("balaruc le vieux", "balaruc les bains"),
     "villeneuve": ("villeneuve les maguelone",), "st jean de vedas": ("saint jean de vedas",),
-    "vic": ("vic la gardiole",), "palavas": (), "carnon": (),
+    "vic": ("vic la gardiole",),
+    # Communes proches rangées dans la zone par leurs coordonnées (02/11/2026 :
+    # « que faire à La Grande-Motte » n'était pas compris, et Mistral annonçait
+    # « À La Grande-Motte » des événements de Frontignan).
+    "palavas": ("palavas les flots",), "palavas les flots": ("palavas les flots",),
+    "carnon": ("mauguio", "carnon"), "mauguio": ("mauguio",),
+    "grande motte": ("la grande motte",), "la grande motte": ("la grande motte",),
+    "saint gely": ("saint gely du fesc",), "st gely": ("saint gely du fesc",),
+    "saint clement de riviere": ("saint clement de riviere",), "montarnaud": ("montarnaud",),
+    "saint mathieu de treviers": ("saint mathieu de treviers",), "teyran": ("teyran",),
+    "saint aunes": ("saint aunes",), "assas": ("assas",),
+}
+# Lieux hors de la zone couverte (02/11/2026) : compris, pour le dire franchement
+# au lieu de chercher le mot dans les titres (« Agde » trouvait « Agde » dans une
+# description de Sète).
+OUTSIDE_PLACES = {
+    "agde": "Agde", "cap d agde": "Le Cap d'Agde", "pezenas": "Pézenas", "beziers": "Béziers",
+    "nimes": "Nîmes", "lunel": "Lunel", "sommieres": "Sommières", "lodeve": "Lodève",
+    "clermont l herault": "Clermont-l'Hérault", "aigues mortes": "Aigues-Mortes", "le grau du roi": "Le Grau-du-Roi",
+    "grau du roi": "Le Grau-du-Roi", "narbonne": "Narbonne", "perpignan": "Perpignan", "avignon": "Avignon",
+    "arles": "Arles", "marseille": "Marseille", "toulouse": "Toulouse", "lyon": "Lyon", "paris": "Paris",
+    "bordeaux": "Bordeaux", "nice": "Nice", "carcassonne": "Carcassonne", "ales": "Alès",
 }
 # « Montpellier » désigne en pratique la métropole : c'est une zone, pas une commune.
 ZONE_WORDS = {
@@ -279,7 +300,10 @@ ZONE_WORDS = {
     "thau": "thau", "etang": "thau", "bassin": "thau",
 }
 CITY_LABELS = {"sete": "Sète", "meze": "Mèze", "perols": "Pérols", "fabregues": "Fabrègues",
-               "laverune": "Lavérune", "le cres": "Le Crès", "saint bres": "Saint-Brès"}
+               "laverune": "Lavérune", "le cres": "Le Crès", "saint bres": "Saint-Brès",
+               "la grande motte": "La Grande-Motte", "saint gely du fesc": "Saint-Gély-du-Fesc",
+               "saint clement de riviere": "Saint-Clément-de-Rivière",
+               "saint mathieu de treviers": "Saint-Mathieu-de-Tréviers", "saint aunes": "Saint-Aunès"}
 
 
 def city_label(city: str) -> str:
@@ -341,6 +365,26 @@ def find_places(text: str) -> tuple[tuple[str, ...], str | None]:
             zone = value
             break
     return tuple(cities), zone
+
+
+def find_outside(text: str) -> tuple[str, ...]:
+    """Lieux nommés hors de la zone couverte (« à Agde ») : leurs noms affichables.
+
+    Parameters
+    ----------
+    text : str
+        La question passée par `plain`.
+
+    Returns
+    -------
+    tuple[str, ...]
+        Les noms (« Agde »), sans doublon ; vide si aucun.
+    """
+
+    padded = f" {text} "
+    names = [name for word, name in OUTSIDE_PLACES.items() if f" {word} " in padded]
+    return tuple(dict.fromkeys(name for name in names
+                               if not any(name != other and name in other for other in names)))
 
 
 def zone_of_city(city: str) -> str:
@@ -421,11 +465,162 @@ def next_weekday(today: date, weekday: int, *, strictly_after: bool = False) -> 
     return today + timedelta(days=delta)
 
 
+# Vacances scolaires de la zone C (académie de Montpellier), du samedi au lundi de
+# reprise (exclu). Calendrier officiel 2026-2027 (service-public.gouv.fr, vérifié
+# le 02/11/2026) ; l'été finit à la rentrée, non publiée : 1er septembre.
+SCHOOL_HOLIDAYS = {
+    "toussaint": ((date(2026, 10, 17), date(2026, 11, 2)),),
+    "noel": ((date(2026, 12, 19), date(2027, 1, 4)),),
+    "hiver": ((date(2027, 2, 6), date(2027, 2, 22)),),
+    "printemps": ((date(2027, 4, 3), date(2027, 4, 19)),),
+    "ete": ((date(2027, 7, 3), date(2027, 9, 1)),),
+}
+HOLIDAY_LABELS = {"toussaint": "les vacances de la Toussaint", "noel": "les vacances de Noël",
+                  "hiver": "les vacances d'hiver", "printemps": "les vacances de printemps",
+                  "ete": "les vacances d'été"}
+# Les plus précises d'abord ; « vacances » seul : les prochaines.
+HOLIDAY_PHRASES = (
+    ("noel", ("vacances de noel", "vacances noel", "vacances de fin d annee", "pendant les fetes",
+              "fetes de fin d annee", "pendant noel")),
+    ("toussaint", ("vacances de la toussaint", "vacances de toussaint", "vacances toussaint", "toussaint")),
+    ("hiver", ("vacances d hiver", "vacances de fevrier", "vacances de ski")),
+    ("printemps", ("vacances de printemps", "vacances de paques", "vacances d avril")),
+    ("ete", ("vacances d ete", "grandes vacances", "vacances d juillet")),
+    ("", ("vacances scolaires", "pendant les vacances", "les vacances", "vacances")),
+)
+# Fêtes d'un jour ou deux : (mois, jour, nombre de jours), l'année qui vient.
+FEAST_PHRASES = (
+    ((12, 31, 1), "le réveillon du nouvel an", ("reveillon du nouvel an", "nouvel an", "saint sylvestre",
+                                                "reveillon du 31")),
+    ((1, 1, 1), "le jour de l'an", ("jour de l an",)),
+    ((12, 24, 2), "Noël", ("a noel", "le jour de noel", "le soir de noel", "reveillon de noel", "veille de noel",
+                          "pour noel", "reveillon")),
+)
+NUMBER_WORDS = {"un": 1, "une": 1, "deux": 2, "trois": 3, "quatre": 4, "cinq": 5, "six": 6, "sept": 7,
+                "huit": 8, "neuf": 9, "dix": 10, "quinze": 15, "1er": 1, "premier": 1}
+NUMBER = r"(\d{1,2}|1er|premier|un|une|deux|trois|quatre|cinq|six|sept|huit|neuf|dix|quinze)"
+MONTH_PATTERN = "|".join(MONTH_NAMES)
+DAY_PATTERN = (rf"(\d{{1,2}}|1er|premier)(?: ({MONTH_PATTERN}|\d{{1,2}}))?"
+               # pas un prix, un âge, une heure, une distance : « jusqu'à 20 € », « à partir de 6 ans »
+               r"(?! ?(?:euros?|eur|e|km|kilometres?|ans?|h|heures?|mois|jours?|personnes|places|min)\b)")
+# « ce we », « le we prochain » : abréviation de week-end (pas « we » seul, anglais).
+WEEKEND_SHORT = re.compile(r"\b(ce|le|du|un|bon|premier|dernier|prochain) (?:we|wk|weekend)\b|\bwe(?= prochain\b)")
+HOUR = re.compile(r"\b(?:(avant|apres|vers|a|des|entre)\s+)?(\d{1,2})\s?h(?:\s?(\d{2}))?\b")
+
+
+def number_value(word: str) -> int:
+    """« deux » -> 2, « 1er » -> 1, « 12 » -> 12."""
+    return NUMBER_WORDS.get(word, 0) or int(word)
+
+
+def school_holiday(key: str, now: datetime) -> tuple[datetime, datetime, str] | None:
+    """Prochaines vacances scolaires (zone C) du type demandé, ou les prochaines tout court.
+
+    Parameters
+    ----------
+    key : str
+        « noel », « hiver »… ; vide pour les prochaines vacances, quelles qu'elles soient.
+    now : datetime
+        L'heure actuelle : des vacances finies ne comptent plus.
+
+    Returns
+    -------
+    tuple[datetime, datetime, str] | None
+        Début (pas avant maintenant), fin exclue et libellé ; None si aucune n'est connue.
+    """
+
+    today = now.date()
+    for name, periods in sorted(SCHOOL_HOLIDAYS.items(), key=lambda item: item[1][0][0]):
+        if key and name != key:
+            continue
+        for first, back in periods:
+            if back > today:
+                start = datetime.combine(first, datetime.min.time(), tzinfo=PARIS)
+                return max(start, now), datetime.combine(back, datetime.min.time(), tzinfo=PARIS), \
+                    HOLIDAY_LABELS[name]
+    return None
+
+
+def resolve_day(number: str, month: str | None, today: date) -> date | None:
+    """Jour écrit « 14 », « 14 novembre » ou « 14 11 » : le prochain, l'an prochain s'il est passé.
+
+    Parameters
+    ----------
+    number : str
+        Le numéro du jour (« 14 », « 1er »).
+    month : str | None
+        Le mois en lettres ou en chiffres ; None pour ce mois-ci (le suivant si le jour est passé).
+    today : date
+        Aujourd'hui.
+
+    Returns
+    -------
+    date | None
+        Le jour, ou None s'il n'existe pas (« 31 novembre »).
+    """
+
+    day_number = number_value(number)
+    try:
+        if month is None:
+            day = date(today.year, today.month, day_number)
+            if day < today:
+                day = date(today.year + (today.month == 12), today.month % 12 + 1, day_number)
+            return day
+        month_number = MONTH_NAMES.index(month) + 1 if month in MONTH_NAMES else int(month)
+        day = date(today.year, month_number, day_number)
+        return day if day >= today - timedelta(days=1) else date(today.year + 1, month_number, day_number)
+    except ValueError:
+        return None
+
+
+def month_start(year: int, month: int) -> date:
+    """Premier jour d'un mois, en acceptant un mois au-delà de 12 (année suivante)."""
+    return date(year + (month - 1) // 12, (month - 1) % 12 + 1, 1)
+
+
+def weekend_of(day: date) -> date:
+    """Samedi du week-end d'un jour : le jour même un samedi, la veille un dimanche, sinon le suivant."""
+    if day.weekday() == 6:
+        return day - timedelta(days=1)
+    return next_weekday(day, 5)
+
+
+def find_hour(text: str) -> str | None:
+    """Moment de la journée d'après une heure écrite : « à 15h » -> « apres-midi ».
+
+    Parameters
+    ----------
+    text : str
+        La question passée par `plain`.
+
+    Returns
+    -------
+    str | None
+        « matin » (avant midi), « apres-midi » (avant 17 h), « soir », ou None.
+    """
+
+    match = HOUR.search(text)
+    # Sans « à », « vers », « après »… : une heure de la journée, pas une durée (« 1h30 de spectacle »)
+    if not match or int(match.group(2)) > 23 or (not match.group(1) and int(match.group(2)) < 8):
+        return None
+    hour = int(match.group(2)) - (match.group(1) == "avant")
+    if hour < 12:
+        return "matin"
+    return "apres-midi" if hour < EVENING_HOUR else "soir"
+
+
 def find_period(text: str, now: datetime) -> tuple[datetime, datetime, str] | None:
     """Période nommée dans la question : (début, fin exclue, libellé), ou None.
 
     `text` est déjà passé par `plain`. Les formes les plus précises sont
-    cherchées d'abord (« demain soir » avant « demain »).
+    cherchées d'abord (« le week-end du 14 » avant « ce week-end », « demain
+    soir » avant « demain »).
+
+    Formes ajoutées le 02/11/2026 (200 questions difficiles, 11 dates mal lues) :
+    « le week-end du 14 novembre », « le premier week-end de décembre », « la
+    semaine du 23 », « après le 20 », « avant le 10 », « du 5 au 8 », « début /
+    mi / fin novembre », « ce matin », « cette nuit », « dans 2 semaines »,
+    « d'ici samedi », les vacances scolaires, Noël, le nouvel an, l'an prochain.
 
     Parameters
     ----------
@@ -442,12 +637,99 @@ def find_period(text: str, now: datetime) -> tuple[datetime, datetime, str] | No
 
     now = now.astimezone(PARIS)
     today = now.date()
+    text = WEEKEND_SHORT.sub(lambda m: f"{m.group(1) or ''} week end".strip(), text)
     padded = f" {text} "
 
     def has(*words: str) -> bool:
         """Vrai si l'un des mots (ou expressions) figure dans la question."""
         return any(f" {word} " in padded for word in words)
 
+    def midnight(day: date) -> datetime:
+        """Minuit (heure de Paris) au début du jour."""
+        return datetime.combine(day, datetime.min.time(), tzinfo=PARIS)
+
+    def span(first: date, last_excluded: date, label: str) -> tuple[datetime, datetime, str]:
+        """Du premier jour (pas avant maintenant) au dernier exclu."""
+        return max(midnight(first), now), midnight(last_excluded), label
+
+    # Vacances scolaires et fêtes
+    for key, phrases in HOLIDAY_PHRASES:
+        if has(*phrases):
+            holiday = school_holiday(key, now)
+            if holiday:
+                return holiday
+            break
+    for (month, day_number, days), label, phrases in FEAST_PHRASES:
+        if has(*phrases):
+            day = date(today.year, month, day_number)
+            if day + timedelta(days=days) <= today:
+                day = date(today.year + 1, month, day_number)
+            return span(day, day + timedelta(days=days), label)
+    # Un jour précis autour duquel compter : week-end du, semaine du, après le, avant le, du … au
+    match = re.search(rf"\bweek end (?:du|de|le) {DAY_PATTERN}\b", text)
+    if match and (day := resolve_day(match.group(1), match.group(2), today)):
+        saturday = weekend_of(day)
+        return span(saturday, saturday + timedelta(days=2), f"le week-end du {day_label(saturday)}")
+    match = re.search(rf"\bsemaine (?:du|de|le) {DAY_PATTERN}\b", text)
+    if match and (day := resolve_day(match.group(1), match.group(2), today)):
+        monday = day - timedelta(days=day.weekday())
+        return span(monday, monday + timedelta(days=7), f"la semaine du {day_label(monday)}")
+    match = re.search(rf"\b(?:du|entre le) {DAY_PATTERN} (?:au|et le) {DAY_PATTERN}\b", text)
+    if match:
+        last = resolve_day(match.group(3), match.group(4), today)
+        first = resolve_day(match.group(1), match.group(2) or match.group(4), today) if last else None
+        if first and last and first <= last:
+            return span(first, last + timedelta(days=1), f"du {day_label(first)} au {day_label(last)}")
+    match = re.search(rf"\b(?:apres le|a partir du|des le|a compter du) {DAY_PATTERN}\b", text)
+    if match and (day := resolve_day(match.group(1), match.group(2), today)):
+        if match.group(0).startswith("apres"):
+            day += timedelta(days=1)
+        return span(day, day + timedelta(days=90), f"à partir du {day_label(day)}")
+    match = re.search(rf"\b(?:avant le|jusqu au|jusqu a) {DAY_PATTERN}\b", text)
+    if match and (day := resolve_day(match.group(1), match.group(2), today)):
+        last = day + timedelta(days=0 if match.group(0).startswith("avant") else 1)
+        if last > today:
+            return span(today, last, f"jusqu'au {day_label(last - timedelta(days=1))}")
+    # Premier, deuxième, dernier week-end d'un mois (ou de ce mois-ci)
+    match = re.search(rf"\b(premier|1er|deuxieme|2e|second|troisieme|3e|dernier) week end "
+                      rf"(?:de|d|du mois de|du mois d|du mois)(?: ({MONTH_PATTERN}))?\b", text)
+    if match:
+        month = MONTH_NAMES.index(match.group(2)) + 1 if match.group(2) else today.month
+        first = month_start(today.year + (month < today.month), month)
+        following = month_start(first.year, first.month + 1)
+        saturdays = [day for day in (first + timedelta(days=n) for n in range((following - first).days))
+                     if day.weekday() == 5]
+        rank = {"premier": 0, "1er": 0, "deuxieme": 1, "2e": 1, "second": 1, "troisieme": 2, "3e": 2}
+        saturday = saturdays[-1] if match.group(1) == "dernier" else saturdays[rank[match.group(1)]]
+        if saturday + timedelta(days=2) > today:
+            return span(saturday, saturday + timedelta(days=2), f"le week-end du {day_label(saturday)}")
+    # Dans N jours, N semaines, N mois ; d'ici N jours ; d'ici samedi
+    match = re.search(rf"\b(dans|d ici) {NUMBER} (jours?|semaines?|mois)\b", text) or \
+        re.search(r"\b(dans|d ici) (quinze|huit) (jours)\b", text)
+    if match:
+        count, unit = number_value(match.group(2)), match.group(3).rstrip("s")
+        if match.group(1) == "d ici" and unit != "moi":
+            days = count * (7 if unit == "semaine" else 1)
+            return span(today, today + timedelta(days=days + 1), f"d'ici {count} {match.group(3)}")
+        if unit == "moi":
+            first = month_start(today.year, today.month + count)
+            following = month_start(first.year, first.month + 1)
+            label = MONTH_NAMES[first.month - 1].replace("fevrier", "février").replace(
+                "aout", "août").replace("decembre", "décembre")
+            return span(first, following, f"en {label}")
+        target = today + timedelta(days=count * (7 if unit == "semaine" else 1))
+        if unit == "semaine" or count >= 7:
+            monday = target - timedelta(days=target.weekday())
+            return span(monday, monday + timedelta(days=7), f"la semaine du {day_label(monday)}")
+        return span(target, target + timedelta(days=1), day_label(target))
+    for index, name in enumerate(WEEKDAYS):
+        if has(f"d ici {name}", f"jusqu a {name}"):
+            day = next_weekday(today, index)
+            return span(today, day + timedelta(days=1), f"d'ici {day_label(day)}")
+    # L'an prochain : le début de l'année (la base couvre les 3 prochains mois)
+    if has("l an prochain", "l annee prochaine", f"en {today.year + 1}"):
+        first = date(today.year + 1, 1, 1)
+        return span(first, month_start(first.year, 4), f"début {first.year}")
     # Jours relatifs : après-demain, demain, aujourd'hui
     if has("apres demain"):
         day = today + timedelta(days=2)
@@ -455,7 +737,8 @@ def find_period(text: str, now: datetime) -> tuple[datetime, datetime, str] | No
     if has("demain"):
         day = today + timedelta(days=1)
         return (*day_bounds(day, now), "demain")
-    if has("aujourd hui", "ce jour", "ce soir", "cet apres midi", "tout de suite", "maintenant"):
+    if has("aujourd hui", "ce jour", "ce soir", "cet apres midi", "cette apres midi", "cet aprem", "ce matin",
+           "ce midi", "cette nuit", "tout de suite", "maintenant", "tantot"):
         return (*day_bounds(today, now), "aujourd'hui")
     # Week-ends et semaines
     if has("week end prochain", "weekend prochain"):
@@ -476,17 +759,11 @@ def find_period(text: str, now: datetime) -> tuple[datetime, datetime, str] | No
         monday = next_weekday(today, 0, strictly_after=True)
         return now, datetime.combine(monday, datetime.min.time(), tzinfo=PARIS), "cette semaine"
     # « le 24 octobre », « 24 octobre » ; « le 24/10 ».
-    match = re.search(r"\b(\d{1,2}) (" + "|".join(MONTH_NAMES) + r")\b", text)
+    match = re.search(r"\b(\d{1,2}|1er) (" + MONTH_PATTERN + r")\b", text)
     numeric = re.search(r"(?<![\d/])(\d{1,2}) (\d{1,2})(?![\d/])", text) if " le " in padded else None
     if match or numeric:
-        day_number = int((match or numeric).group(1))
-        month = MONTH_NAMES.index(match.group(2)) + 1 if match else int(numeric.group(2))
-        try:
-            day = date(today.year, month, day_number)
-            if day < today - timedelta(days=1):
-                day = date(today.year + 1, month, day_number)
-        except ValueError:
-            day = None
+        found = match or numeric
+        day = resolve_day(found.group(1), found.group(2), today)
         if day:
             return (*day_bounds(day, now), day_label(day))
     # Un jour de la semaine nommé (« samedi », « samedi prochain »)
@@ -494,14 +771,25 @@ def find_period(text: str, now: datetime) -> tuple[datetime, datetime, str] | No
         if has(name, name + "s"):
             day = next_weekday(today, index, strictly_after=has(f"{name} prochain"))
             return (*day_bounds(day, now), day_label(day))
-    # Un mois nommé (l'an prochain s'il est passé), puis « ce mois-ci »
+    # Un mois nommé (l'an prochain s'il est passé) : en entier, ou son début, milieu, fin
     for index, name in enumerate(MONTH_NAMES):
-        if has(f"en {name}", f"mois de {name}", f"debut {name}", f"fin {name}") or (
+        part = next((word for word in ("debut", "mi", "fin") if has(f"{word} {name}", f"{word} de {name}",
+                                                                    f"{word} d {name}")), None)
+        if part or has(f"en {name}", f"mois de {name}", f"mois d {name}") or (
                 name not in ("mars", "mai") and has(name)):
             year = today.year if index + 1 >= today.month else today.year + 1
-            start = datetime(year, index + 1, 1, tzinfo=PARIS)
-            end = datetime(year + (index == 11), (index + 1) % 12 + 1, 1, tzinfo=PARIS)
-            return max(start, now), end, f"en {name.replace('fevrier', 'février').replace('aout', 'août').replace('decembre', 'décembre')}"
+            first = date(year, index + 1, 1)
+            following = month_start(year, index + 2)
+            shown = name.replace("fevrier", "février").replace("aout", "août").replace("decembre", "décembre")
+            if part == "debut":
+                return span(first, first + timedelta(days=15), f"début {shown}")
+            if part == "mi":
+                return span(first + timedelta(days=9), first + timedelta(days=21), f"mi-{shown}")
+            if part == "fin":
+                if following <= today:
+                    continue
+                return span(first + timedelta(days=15), following, f"fin {shown}")
+            return span(first, following, f"en {shown}")
     if has("ce mois ci", "ce mois"):
         end = datetime(today.year + (today.month == 12), today.month % 12 + 1, 1, tzinfo=PARIS)
         return now, end, "ce mois-ci"
@@ -517,7 +805,11 @@ def find_period(text: str, now: datetime) -> tuple[datetime, datetime, str] | No
 PUBLIC_WORDS = {
     "famille": ("enfant", "enfants", "famille", "familles", "familial", "familiale", "gamin", "gamins",
                 "bebe", "bebes", "kids", "jeune public", "tout petits", "mon fils", "ma fille", "mes filles",
-                "mes fils", "petits enfants", "petite enfance"),
+                "mes fils", "petits enfants", "petite enfance",
+                # 02/11/2026 : « un truc sympa pr les gosses », « pour les petits »
+                "gosse", "gosses", "marmots", "minots", "mioches", "loulous", "bambins", "pitchouns",
+                "pour les petits", "avec les petits", "aux petits", "mes petits", "nos petits",
+                "les tout petits", "des tout petits", "petits loups"),
     "ados": ("ado", "ados", "adolescent", "adolescents", "adolescente", "adolescentes", "lyceen", "lyceens",
              "collegien", "collegiens", "jeunes"),
     "seniors": ("senior", "seniors", "retraite", "retraites", "aines", "personnes agees", "grand mere",
@@ -561,7 +853,8 @@ def find_moment(padded: str) -> str | None:
     return None
 
 
-FREE_WORDS = ("gratuit", "gratuite", "gratuits", "gratuites", "gratos", "sans payer", "entree libre")
+FREE_WORDS = ("gratuit", "gratuite", "gratuits", "gratuites", "gratos", "sans payer", "entree libre",
+              "pas payant", "pas payante", "pas payants", "pas payantes", "non payant", "non payante")
 
 # Mots qui n'aident pas la recherche par mots-clés (le reste est gardé).
 STOPWORD_TEXT = """
@@ -595,7 +888,12 @@ proposition propositions savoir sais connaitre connais voire
 FILLER_TEXT = """
 nul nulle nuls vrai vraie vrais vraies vraiment fin debut koi kwa pr pk pq ptit ptite ptits
 vieux vieille vieilles genial geniale top meilleur meilleure meilleurs meilleures
+seulement uniquement juste trop vacances scolaires reveillon sylvestre nouvel premier premiere 1er
+dernier derniere deuxieme partir compter jusqu jusque quinzaine jours semaines pendant pdt durant
+sans meuf mec cherie cheri dispo disponible disponibles plz please pls tkt bcp
 """
+# 02/11/2026 (200 questions difficiles) : « seulement gratuit ? », « juste le
+# gratuit », « avec ma meuf » cherchaient « seulement », « juste », « meuf ».
 STOPWORDS = frozenset(STOPWORD_TEXT.split()) | frozenset(FILLER_TEXT.split())
 HTML_SCRIPT = re.compile(r"<\s*(script|style)\b[^>]*>.*?<\s*/\s*\1\s*>", re.IGNORECASE | re.DOTALL)
 HTML_TAG = re.compile(r"<[^<>]{0,200}>")
@@ -622,7 +920,8 @@ WEATHER_CONSUMED = {"pleut", "pluie", "chaud", "interieur", "abri", "sec", "froi
 
 # Distance : « près de Sète », « autour de Mèze », « à moins de 10 km de Frontignan ».
 NEAR_RADIUS_KM = 10.0
-NEAR_PATTERN = re.compile(r"\b(?:pres de|autour de|a cote de|vers|non loin de|aux alentours de|proche de)\s+(?:l |la |le )?$")
+NEAR_PATTERN = re.compile(r"\b(?:pres de|autour de|a cote de|vers|non loin de|pas loin de|pas trop loin de"
+                          r"|aux alentours de|proche de)\s+(?:l |la |le )?$")
 RADIUS_PATTERN = re.compile(r"\b(?:a moins de|dans un rayon de|a)\s+(\d{1,2})\s*(?:km|kilometres?)\s+(?:de |d |autour de )?$")
 
 
@@ -724,6 +1023,114 @@ def find_public(text: str) -> str | None:
     return None
 
 
+# Négations (02/11/2026) : « tout sauf du théâtre » cherchait du théâtre, « un
+# concert mais pas de rock ni d'électro » proposait du rock, « mais pas à
+# Montpellier » ajoutait Montpellier. Le mot qui suit devient une exclusion et
+# disparaît du reste de la lecture.
+NEGATION = re.compile(r"\b(sauf|excepte|exceptes|hormis|a part|pas|sans|ni|evite|eviter)\b")
+NEGATED_ARTICLES = frozenset({"de", "d", "du", "des", "le", "la", "les", "l", "un", "une", "a", "au", "aux",
+                              "en", "dans", "sur", "pour", "trop", "forcement", "vraiment", "ce", "cette",
+                              "ces", "mon", "ma", "mes", "ton", "ta", "tes"})
+# « pas cher », « pas loin de Sète », « sans payer » : pas des exclusions.
+NOT_EXCLUDED = frozenset({
+    "cher", "chere", "chers", "cheres", "loin", "plus", "moins", "payer", "payant", "payante", "payants",
+    "payantes", "mal", "besoin", "encore", "tres", "si", "grand", "souci", "probleme", "voiture",
+    "reservation", "reserver", "inscription", "attendre", "attente", "frais", "bouger", "sortir", "aller",
+    "faire", "beaucoup", "envie", "possible", "important", "obligatoire", "presse", "pressee",
+    "pleuvoir", "pleut", "pluie", "mouiller", "sous", "plein", "budget", "argent", "voir", "rien",
+    "seulement", "que", "qu", "tout", "toujours", "jamais", "assez",
+})
+
+
+NEGATED_ZONES = {"bassin de thau": "thau", "etang de thau": "thau", "metropole de montpellier": "montpellier",
+                 "metropole montpellieraine": "montpellier"}
+
+
+def find_exclusions(text: str) -> tuple[str, dict[str, tuple[str, ...]]]:
+    """Exclusions écrites (« sauf », « pas de », « ni », « sans », « mais pas à »).
+
+    Parameters
+    ----------
+    text : str
+        La question passée par `plain`.
+
+    Returns
+    -------
+    tuple[str, dict[str, tuple[str, ...]]]
+        Le texte sans les exclusions (le reste de la question), et ce qui est
+        exclu : `categories` (« theatre »), `words` (« rock »), `cities`,
+        `zones`. Un genre du type demandé (« un concert mais pas de rock ») est
+        un mot exclu, pas une catégorie.
+    """
+
+    words = text.split()
+    removed: set[int] = set()
+    objects: list[tuple[str, tuple[str, ...]]] = []     # (sorte, valeurs)
+    negated = False
+    last_end, last_kind = -1, ""                         # « sauf à Sète et Mèze », « pas de rock et de jazz »
+    index = 0
+    while index < len(words):
+        word = words[index]
+        trigger = 2 if word == "a" and index + 1 < len(words) and words[index + 1] == "part" else 1
+        continued = word in ("et", "ou") and index == last_end
+        if not continued and (not NEGATION.fullmatch(" ".join(words[index:index + trigger]))
+                              or (word == "ni" and not negated)):
+            index += 1
+            continue
+        # L'objet : après les articles, une commune (plusieurs mots possibles) ou un mot
+        start = index + trigger
+        while start < len(words) and words[start] in NEGATED_ARTICLES:
+            start += 1
+        rest = " ".join(words[start:start + 5])
+        place = next((name for name in sorted((*MONTPELLIER_CITIES, *THAU_CITIES, *CITY_ALIASES, "montpellier",
+                                               *ZONE_WORDS, *NEGATED_ZONES), key=len, reverse=True)
+                      if f"{rest} ".startswith(f"{name} ")), None)
+        if place and continued and last_kind != "place":
+            index += 1
+            continue
+        if place:
+            count = len(place.split())
+            if place == "montpellier" and words[start - 1:start] != ["a"] and words[start - 1:start] != ["en"] \
+                    and words[start - 1:start] != ["dans"]:
+                objects.append(("zones", ("montpellier",)))
+            elif place in NEGATED_ZONES or (place in ZONE_WORDS and place != "montpellier"):
+                objects.append(("zones", (NEGATED_ZONES.get(place) or ZONE_WORDS[place],)))
+            else:
+                objects.append(("cities", CITY_ALIASES.get(place, (place,))))
+        elif start < len(words) and words[start] not in NOT_EXCLUDED and words[start] not in STOPWORDS \
+                and len(words[start]) > 2 and not words[start].isdigit() \
+                and words[start] not in set(WEEKDAYS) | set(MONTH_NAMES) | {"soir", "week", "matin", "nuit"} \
+                and not (continued and (last_kind != "word" or words[index + 1] not in {"de", "d", "du", "des"})):
+            count = 1
+            objects.append(("word", (words[start],)))
+        else:
+            index += trigger
+            continue
+        negated = True
+        removed.update(range(index, start + count))
+        index = last_end = start + count
+        last_kind = "word" if objects[-1][0] == "word" else "place"
+    positive = " ".join(word for position, word in enumerate(words) if position not in removed)
+    # Un type de sortie exclu, sauf s'il est celui demandé (« un concert mais pas de rock »)
+    wanted = set(wanted_categories(positive))
+    found: dict[str, list[str]] = {"categories": [], "words": [], "cities": [], "zones": []}
+    for kind, values in objects:
+        if kind != "word":
+            found[kind] += [value for value in values if value not in found[kind]]
+            continue
+        word = values[0]
+        types = QUESTION_CATEGORIES.get(word) or QUESTION_CATEGORIES.get(word.rstrip("sx"))
+        if types and types[0] not in wanted and word.rstrip("sx") not in PRECISE_SUBJECTS:
+            if types[0] not in found["categories"]:
+                found["categories"].append(types[0])
+        if word not in found["words"]:
+            found["words"].append(word)
+    return positive, {kind: tuple(values) for kind, values in found.items()}
+
+
+HOUR_WORD = re.compile(r"\d{1,2}h\d{0,2}|\d{1,2}(?:er|e|eme)")       # « 15h30 », « 1er », « 2e »
+
+
 def keywords_of(text: str, consumed: set[str]) -> tuple[str, ...]:
     """Mots porteurs de sens qui restent : pour la recherche plein texte.
 
@@ -744,7 +1151,7 @@ def keywords_of(text: str, consumed: set[str]) -> tuple[str, ...]:
     for word in text.split():
         # Mots de 2 lettres ignorés, sauf quelques sujets (« DJ », « BD »).
         if (len(word) < 3 and word not in SHORT_SUBJECTS) or word in STOPWORDS or word in consumed \
-                or word.isdigit():
+                or word.isdigit() or HOUR_WORD.fullmatch(word):
             continue
         if word not in words:
             words.append(word)
@@ -795,6 +1202,10 @@ class QueryPlan:
         « interieur » (s'il pleut) ou « exterieur » (plein air).
     near : tuple[str, float] | None
         Commune de repère et rayon en km (« près de Sète »).
+    excluded_categories, excluded_words, excluded_cities, excluded_zones : tuple[str, ...]
+        Ce que la question exclut (« sauf du théâtre », « mais pas à Montpellier »).
+    outside : tuple[str, ...]
+        Lieux nommés hors de la zone couverte.
     from_question : set[str]
         Contraintes lues dans la question (et non cochées), relâchables s'il n'y a
         aucun résultat.
@@ -817,6 +1228,12 @@ class QueryPlan:
     max_price: float | None = None           # « moins de 15 € » : gratuit ou prix minimum sous ce seuil
     setting: str | None = None               # « interieur » (s'il pleut) ou « exterieur » (plein air)
     near: tuple[str, float] | None = None    # (commune, rayon en km) : « près de Sète »
+    # Exclusions (02/11/2026) : « sauf du théâtre », « pas de rock », « mais pas à Montpellier »
+    excluded_categories: tuple[str, ...] = ()
+    excluded_words: tuple[str, ...] = ()
+    excluded_cities: tuple[str, ...] = ()
+    excluded_zones: tuple[str, ...] = ()
+    outside: tuple[str, ...] = ()           # lieux hors zone nommés (« Agde »), dits dans la réponse
     # Contraintes lues dans la question (et non cochées) : elles peuvent être
     # relâchées si elles ne laissent aucun résultat.
     from_question: set[str] = field(default_factory=set)
@@ -859,6 +1276,18 @@ class QueryPlan:
                 parts.remove("soirée")              # « soirée · soirée ou jeux » aussi
             if label not in parts:
                 parts.append(label)
+        # Ce qui est exclu, puis les lieux hors zone
+        excluded = [CATEGORY_LABELS.get(category, category) for category in self.excluded_categories]
+        excluded += [word for word in self.excluded_words
+                     if (QUESTION_CATEGORIES.get(word) or QUESTION_CATEGORIES.get(word.rstrip("sx"), ("",)))[0]
+                     not in self.excluded_categories]
+        excluded += [city_label(city) for city in self.excluded_cities]
+        excluded += [{"montpellier": "Montpellier et sa métropole", "thau": "bassin de Thau"}[zone]
+                     for zone in self.excluded_zones]
+        if excluded:
+            parts.append("sauf " + ", ".join(excluded))
+        if self.outside:
+            parts.append(", ".join(self.outside) + " (hors zone)")
         return " · ".join(parts)
 
     def relaxed(self) -> QueryPlan:
@@ -884,6 +1313,8 @@ class QueryPlan:
             evening=False, moment=None, period_from_question=self.period_from_question,
             categories=self.categories, keywords=self.keywords, from_question=set(),
             max_price=None, setting=None, near=None, practice=self.practice, watch=self.watch,
+            excluded_categories=self.excluded_categories, excluded_words=self.excluded_words,
+            excluded_cities=self.excluded_cities, excluded_zones=self.excluded_zones, outside=self.outside,
         )
 
 
@@ -921,6 +1352,12 @@ class Understanding:
         Pratique à faire soi-même (« chanter »), ou None.
     watch : bool
         Vrai si la question parle de regarder (« voir un spectacle »).
+    excluded_categories, excluded_words : tuple[str, ...]
+        Types de sortie et mots exclus (« sauf du théâtre », « pas de rock »).
+    excluded_cities, excluded_zones : tuple[str, ...]
+        Communes et zones exclues (« mais pas à Montpellier »).
+    outside : tuple[str, ...]
+        Lieux nommés hors de la zone couverte (« Agde »), à dire franchement.
     """
 
     period: tuple[datetime, datetime, str] | None = None
@@ -937,6 +1374,11 @@ class Understanding:
     near: tuple[str, float] | None = None
     practice: str | None = None
     watch: bool = False
+    excluded_categories: tuple[str, ...] = ()
+    excluded_words: tuple[str, ...] = ()
+    excluded_cities: tuple[str, ...] = ()
+    excluded_zones: tuple[str, ...] = ()
+    outside: tuple[str, ...] = ()
 
 
 # ----------------------------------------------------------------------------
@@ -1033,19 +1475,38 @@ def understand(question: str, now: datetime) -> Understanding:
     # « <script>alert(1)</script> concert » cherchait « script » et « alert ».
     question = HTML_SCRIPT.sub(" ", str(question or ""))
     question = HTML_TAG.sub(" ", question)
+    question = TEST_MARKER.sub("", question)
     # Ajouter les synonymes appris, puis simplifier le texte
     question = with_synonyms(question)
 
     text = plain(question.replace("€", " euros "))      # le signe disparaîtrait avec la ponctuation
+    free = any(f" {word} " in f" {text} " for word in FREE_WORDS)      # « pas payant » avant les négations
+    # Exclusions (« sauf du théâtre ») : lues puis retirées, le reste est la demande
+    text, excluded = find_exclusions(text)
     padded = f" {text} "
     # Où, et les mots de lieu et de date à ne pas chercher
     cities, zone = find_places(text)
+    outside = find_outside(text) if not cities else ()
     consumed = {word for city in cities for word in city.split()}
     consumed |= {word for word, _ in ZONE_WORDS.items() if f" {word} " in padded}
-    consumed |= set(WEEKDAYS) | set(MONTH_NAMES) | {"soir", "week", "end", "weekend", "semaine", "mois", "jour"}
+    consumed |= set(WEEKDAYS) | set(MONTH_NAMES) | {"soir", "week", "end", "weekend", "semaine", "mois", "jour",
+                                                     "we", "matin", "midi", "aprem", "tantot"}
+    consumed |= {word for place in OUTSIDE_PLACES for word in place.split() if f" {place} " in padded}
+    period = find_period(text, now)
+    if period:
+        # « vacances de Noël », « nouvel an » : la date, pas un sujet (« marché de Noël » en reste un)
+        consumed |= {"noel", "toussaint", "paques", "fetes", "hiver", "printemps", "ete", "an", "nuit"} \
+            if any(word in plain(period[2]) for word in ("vacances", "noel", "an", "reveillon")) \
+            or " cette nuit " in padded else set()
     # Le moment de la journée, puis le public
     evening_phrase = any(f" {phrase} " in padded for phrase in EVENING_PHRASES)
     moment = None if evening_phrase else find_moment(padded)
+    # Une heure écrite (« à 15h », « après 21h ») donne le moment (02/11/2026)
+    hour_moment = None if (evening_phrase or moment) else find_hour(text)
+    if hour_moment == "soir":
+        evening_phrase = True
+    elif hour_moment:
+        moment = hour_moment
     # « en soirée » est un moment, pas le public « Soirée » : retiré avant de chercher le public.
     public_text = padded
     for phrase in EVENING_PHRASES:
@@ -1056,9 +1517,10 @@ def understand(question: str, now: datetime) -> Understanding:
     if public:
         consumed |= {word for phrase in PUBLIC_WORDS[public] for word in phrase.split()}
     # Gratuit, type de sortie, pratique, budget, cadre et rayon
-    free = any(f" {word} " in padded for word in FREE_WORDS)
-    consumed |= {"gratuit", "gratuite", "gratuits", "gratuites", "gratos", "payer", "libre", "entree"}
-    categories = wanted_categories(question)
+    free = free or any(f" {word} " in padded for word in FREE_WORDS)
+    consumed |= {"gratuit", "gratuite", "gratuits", "gratuites", "gratos", "payer", "libre", "entree",
+                 "payant", "payante", "payants", "payantes"}
+    categories = wanted_categories(text)
     practice = find_practice(padded, categories)
     max_price = None if free else find_budget(text)
     if max_price is not None:
@@ -1067,18 +1529,21 @@ def understand(question: str, now: datetime) -> Understanding:
     setting = find_setting(text)
     if setting:
         consumed |= WEATHER_CONSUMED
+    if any(f" sans {word} " in padded for word in ("voiture", "vehicule", "permis")):
+        consumed |= {"voiture", "vehicule", "permis"}             # « sans voiture » : un moyen, pas un sujet
     near = find_near(text, cities)
     if near:
         consumed |= {"pres", "autour", "cote", "loin", "alentours", "proche", "rayon", "km", "kilometres"}
     # Assembler la compréhension ; les mots-clés sont ce qui reste
     return Understanding(
-        period=find_period(text, now),
+        period=period,
         public=public,
         zone=zone,
         cities=cities,
         free_only=free,
         # « marché nocturne » : le soir aussi (pas « nuit » : « boîte de nuit », « Nuit des musées »).
-        evening=evening_phrase or any(f" {word} " in padded for word in (*EVENING_WORDS[:2], "nocturne")),
+        evening=evening_phrase or any(f" {word} " in padded for word in (*EVENING_WORDS[:2], "nocturne",
+                                                                         "cette nuit")),
         moment=moment,
         # Pratique : le verbe est le sujet (les autres mots, « apprendre »,
         # « envie », n'en disent pas plus).
@@ -1095,6 +1560,11 @@ def understand(question: str, now: datetime) -> Understanding:
         near=near,
         practice=practice,
         watch=not practice and any(f" {word} " in padded for word in WATCH_WORDS),
+        excluded_categories=excluded["categories"],
+        excluded_words=excluded["words"],
+        excluded_cities=excluded["cities"],
+        excluded_zones=excluded["zones"],
+        outside=outside,
     )
 
 
@@ -1136,7 +1606,24 @@ def combine(previous: Understanding, current: Understanding) -> Understanding:
         (None if current.free_only else previous.max_price),
         setting=current.setting or previous.setting,
         near=current.near or (None if (current.cities or current.zone) else previous.near),
+        # Les exclusions s'ajoutent (« et sans théâtre ? »)
+        excluded_categories=tuple(dict.fromkeys((*previous.excluded_categories, *current.excluded_categories))),
+        excluded_words=tuple(dict.fromkeys((*previous.excluded_words, *current.excluded_words))),
+        excluded_cities=tuple(dict.fromkeys((*previous.excluded_cities, *current.excluded_cities))),
+        excluded_zones=tuple(dict.fromkeys((*previous.excluded_zones, *current.excluded_zones))),
+        outside=current.outside or (() if (current.cities or current.zone) else previous.outside),
     )
+
+
+# Relances (02/11/2026, 200 questions difficiles : 5 relances tapées sur 10
+# perdaient la demande précédente). Mots de liaison : toujours une relance ;
+# mots de précision : une relance s'ils ne nomment pas un nouveau sujet.
+FOLLOW_UP_STARTS = frozenset({"et", "plutot", "mais", "sinon", "aussi", "pareil", "meme", "ou", "encore",
+                              "seulement", "uniquement", "juste", "sauf", "hormis", "excepte"})
+REFINING_STARTS = frozenset({"pour", "avec", "sans", "a", "en", "dans", "sur", "plus", "moins", "pas", "vers",
+                             "pres", "autour", "apres", "avant", "s", "si"})
+# Marque des questions de test (« [t] … », exclues des statistiques) : ignorée pour comprendre.
+TEST_MARKER = re.compile(r"^\s*\[t\]\s*", re.IGNORECASE)
 
 
 def is_follow_up(question: str) -> bool:
@@ -1156,19 +1643,23 @@ def is_follow_up(question: str) -> bool:
         elle est courte (4 mots au plus) et ne nomme aucun sujet.
     """
 
-    text = plain(question)
+    text = plain(TEST_MARKER.sub("", str(question or "")))
     words = text.split()
     if not words:
         return False
-    if words[0] in {"et", "plutot", "mais", "sinon", "aussi", "pareil", "meme", "ou"}:
+    if words[0] in FOLLOW_UP_STARTS:
         return True
     # Une question courte qui nomme un nouveau sujet (« photo », « du jazz »,
     # « un concert ») est une nouvelle demande, pas une relance (15/10/2026) :
     # « photo » après « du cirque » cherchait cirque ET photo.
-    if len(words) > 4:
-        return False
     understood = understand(question, datetime.now(PARIS))
-    return not understood.categories and not understood.keywords
+    if understood.categories or understood.keywords:
+        return False
+    # Sans sujet, une question courte ne fait que préciser (« plutôt samedi »), et
+    # jusqu'à 8 mots si elle commence par une préposition (02/11/2026 : « à moins
+    # de 10 euros ? », « pour les petits ? ») ; « que faire ce week-end à Sète »
+    # reste une nouvelle demande.
+    return len(words) <= 4 or (len(words) <= 8 and words[0] in REFINING_STARTS)
 
 
 def merge_with_filters(understanding: Understanding, *, public: str | None, zone: str | None,
@@ -1255,4 +1746,7 @@ def merge_with_filters(understanding: Understanding, *, public: str | None, zone
         keywords=understanding.keywords, from_question=from_question,
         max_price=None if plan_free else understanding.max_price, setting=understanding.setting, near=near,
         practice=understanding.practice, watch=understanding.watch,
+        excluded_categories=understanding.excluded_categories, excluded_words=understanding.excluded_words,
+        excluded_cities=understanding.excluded_cities, excluded_zones=understanding.excluded_zones,
+        outside=understanding.outside,
     )

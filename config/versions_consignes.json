@@ -35,8 +35,8 @@
     "source": "src.event.document_mapper.EXTRACTION_PROMPT"
   },
   "sortiria-reponse": {
-    "version": "2026-10-30.2",
-    "empreinte": "48224e5dbbd64680",
+    "version": "2026-11-02.1",
+    "empreinte": "97c4d92c091b4ee6",
     "source": "app.search_answer.WRITE_PROMPT"
   }
 }

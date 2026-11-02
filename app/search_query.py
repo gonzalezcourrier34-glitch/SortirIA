@@ -26,6 +26,7 @@ from app.query_understanding import (
     QUESTION_CATEGORIES,
     QueryPlan,
     Understanding,
+    find_exclusions,
     main_categories,
     merge_with_filters,
     plain,
@@ -155,6 +156,61 @@ PARTICIPATION = f"{LEARN} | karaoke:* | (scene & ouverte) | bal | guinguette:* |
 # « Bal folk », « Soirée dansante », « Cours de salsa » ne sont pas des spectacles.
 # « dansant » a la même racine que « danse » (« dans ») : seulement après soirée, repas, thé.
 PRACTISED = f"{PARTICIPATION} | ((soiree | repas | the) & dansant) | baleti:* | milonga:*"
+
+
+# Exclusions (02/11/2026) : « tout sauf du théâtre », « pas de rock », « mais pas
+# à Montpellier ». Un type exclu : par la catégorie et par le titre ; un mot exclu
+# (un genre) : par le titre, le résumé et la catégorie de la source.
+EXCLUDED_TITLE = ("to_tsvector('french', translate(lower(concat_ws(' ', e.title, e.category)), "
+                  f"'{ACCENTS_FROM}', '{ACCENTS_TO}'))")
+EXCLUDED_TEXT = ("to_tsvector('french', translate(lower(concat_ws(' ', e.title, e.summary, e.category)), "
+                 f"'{ACCENTS_FROM}', '{ACCENTS_TO}'))")
+
+
+def exclusion_conditions(plan: QueryPlan, params: dict[str, Any]) -> list[str]:
+    """Conditions SQL qui écartent ce que la question exclut.
+
+    Parameters
+    ----------
+    plan : QueryPlan
+        Le plan de recherche (`excluded_categories`, `excluded_words`,
+        `excluded_cities`, `excluded_zones`).
+    params : dict[str, Any]
+        Les paramètres de la requête, complétés ici.
+
+    Returns
+    -------
+    list[str]
+        Les conditions à ajouter (aucune s'il n'y a rien d'exclu).
+    """
+
+    conditions = []
+    categories = list(getattr(plan, "excluded_categories", ()))
+    if categories:
+        params["excluded_categories"] = categories
+        conditions.append(f"{EVENT_CATEGORY} <> ALL (%(excluded_categories)s)")
+        # Le titre compte dans les types voisins seulement : une pièce rangée en
+        # « spectacle » est exclue, un concert « au Théâtre de la Mer » ne l'est pas.
+        title_words = type_query(categories)
+        related = list(dict.fromkeys(related for category in categories
+                                     for related in QUESTION_CATEGORIES.get(category, (category,))))
+        if title_words:
+            params["excluded_titles"], params["excluded_related"] = title_words, related
+            conditions.append(f"NOT ({EVENT_CATEGORY} = ANY (%(excluded_related)s) "
+                              f"AND {EXCLUDED_TITLE} @@ to_tsquery('french', %(excluded_titles)s))")
+    words = type_query([word for word in getattr(plan, "excluded_words", ())
+                        if (QUESTION_CATEGORIES.get(word) or QUESTION_CATEGORIES.get(word.rstrip("sx"), ("",)))[0]
+                        not in categories])
+    if words:
+        params["excluded_words"] = words
+        conditions.append(f"NOT ({EXCLUDED_TEXT} @@ to_tsquery('french', %(excluded_words)s))")
+    if getattr(plan, "excluded_cities", ()):
+        params["excluded_cities"] = list(plan.excluded_cities)
+        conditions.append("COALESCE(sortiria.normalize_city(e.city), '') <> ALL (%(excluded_cities)s)")
+    if getattr(plan, "excluded_zones", ()):
+        params["excluded_zones"] = [ZONES[zone] for zone in plan.excluded_zones]
+        conditions.append("sortiria.event_zone(e.latitude, e.longitude, e.city) <> ALL (%(excluded_zones)s)")
+    return conditions
 
 
 def lexical_query(keywords: Sequence[str]) -> str:
@@ -612,6 +668,7 @@ def build_search_query(plan: QueryPlan | SearchFilters, vector: str | None,
         conditions.append("e.partner_id IS NOT NULL")
     params: dict[str, Any] = {"start": plan.start, "end": plan.end, "limit": limit, "pool": POOL,
                               "categories": list(plan.categories)}
+    conditions += exclusion_conditions(plan, params)
     if plan.public == "enfant":
         conditions.append(CHILD_CONDITION)
     elif plan.public:
@@ -854,7 +911,8 @@ def partners_first(rows: list[dict[str, Any]], plan: QueryPlan, exact: bool,
         Les offres passées en tête, puis les autres séances.
     """
 
-    main = main_categories(question) if question else ()
+    # Le type visé, sans ce qui est exclu (« tout sauf du théâtre » ne vise pas le théâtre)
+    main = main_categories(find_exclusions(plain(question))[0]) if question else ()
     if not exact:
         # Idées voisines : une offre partenaire qui parle du sujet (mot ou type
         # demandé) reste dans les cartes, en tête ; les autres en sortent.
@@ -916,6 +974,7 @@ def build_partner_query(plan: QueryPlan, vector: str | None, exclude: Sequence[s
                   "e.start_at < %(end)s", "NOT (e.event_id = ANY (%(exclude)s))"]
     params: dict[str, Any] = {"start": plan.start, "end": plan.end, "exclude": list(exclude),
                               "limit": limit}
+    conditions += exclusion_conditions(plan, params)
     if keep_place and plan.near:
         conditions.append(NEAR_CONDITION)
         params["near_city"], params["radius"] = plan.near

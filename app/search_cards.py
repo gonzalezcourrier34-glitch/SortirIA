@@ -241,7 +241,8 @@ def short_summary(row: Mapping[str, Any]) -> str:
 UPPERCASE_SHARE = 0.8
 TITLE_WORD = re.compile(r"[^\W_][\w'’+]*")
 # Une partie de titre commence après « : », « — », « | », « / », « ( », « « »…
-TITLE_PART_START = re.compile(r"(?:^|[:\-–—|/(«\"!?.])\s*$")
+# Le trait d'union seul ne coupe pas (« RACONTE-MOI » -> « Raconte-moi ») ; « - » entre espaces, si.
+TITLE_PART_START = re.compile(r"(?:^|[:–—|/(«\"!?.]|\s-)\s*$")
 PROPER_WORDS = frozenset({
     "montpellier", "sète", "sete", "thau", "frontignan", "mèze", "meze", "bouzigues", "marseillan",
     "balaruc", "agde", "mauguio", "palavas", "pérols", "lattes", "castries", "pignan", "gigean",
@@ -250,14 +251,58 @@ PROPER_WORDS = frozenset({
 VOWELS = set("aeiouyàâäéèêëîïôöùûü")
 
 
-def readable_title(title: Any, city: Any = "") -> str:
+TITLE_PARTS = re.compile(r"(\s+[:—–|]\s+)")         # « RACONTE-MOI UNE HISTOIRE : 25 novembre »
+SAINT_BEFORE = re.compile(r"\b(?:saint|sainte|st|ste)-$", re.IGNORECASE)    # « SAINT-JEAN » -> « Saint-Jean »
+SENTENCE_START = re.compile(r"(?:^|[.!?:«\"(]\s*)$")
+
+
+def context_case(context: Any) -> dict[str, str]:
+    """Majuscules des noms propres et des sigles, lues dans le résumé d'un événement.
+
+    Un mot écrit avec une majuscule au milieu d'une phrase (« Kelemenis »), et
+    jamais en minuscules, est un nom propre ; un mot en capitales dans un texte
+    qui n'est pas lui-même en capitales (« LEGO ») est un sigle.
+
+    Parameters
+    ----------
+    context : Any
+        Le résumé et le début de la description.
+
+    Returns
+    -------
+    dict[str, str]
+        Forme en minuscules -> forme à garder (« kelemenis » -> « Kelemenis »).
+    """
+
+    text = " ".join(str(context or "").split())
+    letters = [char for char in text if char.isalpha()]
+    if not letters or sum(char.isupper() for char in letters) > 0.5 * len(letters):
+        return {}
+    found: dict[str, str] = {}
+    lowered: set[str] = set()
+    for match in TITLE_WORD.finditer(text):
+        word = re.split(r"['’]", match.group(0))[-1]           # « l'OL » -> « OL »
+        if len(word) < 2 or not word[0].isalpha() or (len(word) == 2 and not word.isupper()):
+            continue
+        key = word.lower()
+        if word.islower():
+            lowered.add(key)
+        elif (word.isupper() or (word[0].isupper() and word[1:].islower())) \
+                and not SENTENCE_START.search(text[:match.start()]):
+            found.setdefault(key, word)
+    return {key: word for key, word in found.items() if key not in lowered}
+
+
+def readable_title(title: Any, city: Any = "", context: Any = "") -> str:
     """Titre lisible : une phrase en minuscules si la source l'écrit en capitales.
 
-    Un titre déjà en casse mixte est rendu tel quel. Sinon, chaque mot passe en
-    minuscules, sauf : le premier mot de chaque partie du titre (après « : »,
-    « — », « / »…), les noms propres connus (`PROPER_WORDS` et la commune de
-    l'événement), et les sigles (un chiffre, ou 4 lettres au plus sans voyelle :
-    « DJ », « UTL34 »).
+    Un titre en casse mixte est rendu tel quel, sauf une partie en capitales
+    (« RACONTE-MOI UNE HISTOIRE : 25 novembre », 02/11/2026). Sinon, chaque mot
+    passe en minuscules, sauf : le premier mot de chaque partie du titre (après
+    « : », « — », « / »…), les noms propres connus (`PROPER_WORDS`, la commune
+    de l'événement, et ceux que le résumé écrit avec une majuscule :
+    « Michel Kelemenis »), et les sigles (un chiffre, ou 4 lettres au plus sans
+    voyelle : « DJ », « UTL34 » ; ou en capitales dans le résumé : « LEGO »).
 
     Parameters
     ----------
@@ -265,6 +310,8 @@ def readable_title(title: Any, city: Any = "") -> str:
         Le titre donné par la source.
     city : Any
         La commune de l'événement, dont les mots gardent leur majuscule.
+    context : Any
+        Le résumé ou la description, d'où sont repris les noms propres ; vide par défaut.
 
     Returns
     -------
@@ -273,9 +320,46 @@ def readable_title(title: Any, city: Any = "") -> str:
     """
 
     title = " ".join(str(title or "").split())
-    letters = [char for char in title if char.isalpha()]
-    if len(letters) < 4 or sum(char.isupper() for char in letters) < UPPERCASE_SHARE * len(letters):
-        return title
+    known = context_case(context)
+    if mostly_capitals(title, 4):
+        return sentence_case(title, city, known)
+    # Une partie en capitales seulement (deux mots au moins)
+    parts = TITLE_PARTS.split(title)
+    if len(parts) > 1:
+        title = "".join(sentence_case(part, city, known)
+                        if index % 2 == 0 and mostly_capitals(part, 6) and len(part.split()) >= 2 else part
+                        for index, part in enumerate(parts))
+    # Casse mixte : un nom propre écrit en minuscules (« Michel kelemenis ») reprend sa majuscule
+    if known:
+        title = TITLE_WORD.sub(lambda m: known.get(m.group(0), m.group(0)) if m.group(0).islower() else m.group(0),
+                               title)
+    return title
+
+
+def mostly_capitals(text: str, minimum: int) -> bool:
+    """Vrai si au moins `UPPERCASE_SHARE` des lettres (et `minimum` lettres) sont des capitales."""
+    letters = [char for char in text if char.isalpha()]
+    return len(letters) >= minimum and sum(char.isupper() for char in letters) >= UPPERCASE_SHARE * len(letters)
+
+
+def sentence_case(title: str, city: Any, known: Mapping[str, str]) -> str:
+    """Un titre en capitales mis en minuscules, sauf noms propres, sigles et débuts de partie.
+
+    Parameters
+    ----------
+    title : str
+        Le titre (ou une partie du titre) en capitales.
+    city : Any
+        La commune de l'événement.
+    known : Mapping[str, str]
+        Les noms propres et sigles lus dans le résumé (`context_case`).
+
+    Returns
+    -------
+    str
+        Le titre lisible.
+    """
+
     proper = PROPER_WORDS | set(squash(city).replace("-", " ").split())
     pieces, last = [], 0
     for match in TITLE_WORD.finditer(title):
@@ -287,7 +371,9 @@ def readable_title(title: Any, city: Any = "") -> str:
         starts_part = bool(TITLE_PART_START.search(title[:match.start()]))
         if any(char.isdigit() for char in original) or (len(tail) <= 4 and not set(tail) & VOWELS):
             tail = tail.upper()
-        elif tail in proper or (starts_part and not head):
+        elif tail in known:
+            tail = known[tail]
+        elif tail in proper or (starts_part and not head) or SAINT_BEFORE.search(title[:match.start()]):
             tail = tail[:1].upper() + tail[1:]
         word = head + tail
         if starts_part:
@@ -546,7 +632,8 @@ def to_card(row: Mapping[str, Any], ref: int | None = None) -> dict[str, Any]:
     return {
         "ref": ref,
         "event_id": str(row["event_id"]),
-        "title": readable_title(row["title"], row.get("city")),
+        "title": readable_title(row["title"], row.get("city"),
+                                f"{row.get('summary') or ''} {str(row.get('description') or '')[:1500]}"),
         "date": event_date_label(row),
         "start_at": row["start_at"].isoformat(),
         "end_at": row["end_at"].isoformat() if row.get("end_at") else None,

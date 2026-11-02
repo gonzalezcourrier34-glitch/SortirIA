@@ -76,11 +76,18 @@ def plan_summary(plan: QueryPlan) -> dict[str, Any]:
         et la liste des contraintes lues dans la question.
     """
 
-    return {"periode": [plan.start.isoformat(), plan.end.isoformat()], "public": plan.public,
-            "zone": plan.zone, "communes": list(plan.cities), "gratuit": plan.free_only,
-            "soir": plan.evening, "moment": plan.moment,
-            "categories": list(plan.categories), "mots_cles": list(plan.keywords),
-            "lus_dans_la_question": sorted(plan.from_question)}
+    summary = {"periode": [plan.start.isoformat(), plan.end.isoformat()], "public": plan.public,
+               "zone": plan.zone, "communes": list(plan.cities), "gratuit": plan.free_only,
+               "soir": plan.evening, "moment": plan.moment,
+               "categories": list(plan.categories), "mots_cles": list(plan.keywords),
+               "lus_dans_la_question": sorted(plan.from_question)}
+    # Exclusions et lieux hors zone (02/11/2026), seulement s'il y en a
+    excluded = [*plan.excluded_categories, *plan.excluded_words, *plan.excluded_cities, *plan.excluded_zones]
+    if excluded:
+        summary["exclus"] = list(dict.fromkeys(excluded))
+    if plan.outside:
+        summary["hors_zone"] = list(plan.outside)
+    return summary
 
 
 def log_request(connection: Any, question: str, filters: SearchFilters, result: SearchResult,

@@ -54,6 +54,8 @@ from app.query_understanding import (
     zone_of_city,
 )
 from app.search_answer import (
+    RefusedAnswer,
+    check_facts,
     default_suggestions,
     fallback_answer,
     name_citations,
@@ -503,10 +505,16 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
         try:
             asked = writer_question(question, plan.categories, matching, relaxed=relaxed,
                                     context=embed_text, missing_words=missing_words,
-                                    widened=widened, asked=asked_plan.describe())
+                                    widened=widened, asked=asked_plan.describe(), outside=plan.outside)
             raw, tokens, model = services.write(asked, plan, cards)
             answer, suggestions = parse_answer(raw, len(cards))
-            answer = name_citations(answer, cards)
+            # Faits sans appui dans les cartes retirés (02/11/2026), puis événements nommés
+            answer = name_citations(check_facts(answer, cards, plan, embed_text), cards)
+        except RefusedAnswer as refused:
+            # Mistral a répondu, mais le code refuse la réponse : la réponse simple,
+            # exacte, sans l'annoncer comme simplifiée (Mistral n'est pas en panne).
+            logger.info("Réponse de Mistral écartée (%s) : réponse simple.", refused)
+            answer, suggestions = fallback_answer(cards, plan, exact=exact)
         except Exception:  # Mistral absent ou réponse illisible : réponse simple
             # Tracer la cause (23/10/2026 : toutes les réponses étaient simplifiées, sans
             # aucune trace dans les journaux), puis répondre sans Mistral

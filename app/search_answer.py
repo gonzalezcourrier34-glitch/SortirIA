@@ -17,11 +17,28 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from app.query_understanding import QueryPlan, category_label, plain
+from app.query_understanding import (
+    CITY_ALIASES,
+    MONTPELLIER_CITIES,
+    OUTSIDE_PLACES,
+    THAU_CITIES,
+    QueryPlan,
+    category_label,
+    city_label,
+    plain,
+)
 from app.search_filters import SearchFilters
 from src.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+class RefusedAnswer(ValueError):
+    """Réponse de Mistral écartée par un contrôle du code (format, faits sans appui, langue).
+
+    La réponse simple (`fallback_answer`) la remplace, sans la marquer comme
+    simplifiée : Mistral a répondu, c'est le code qui a refusé.
+    """
 
 # Version de la consigne : mots de la phrase ignorés (bilan du 19/10), « tableaux » = exposition.
 # 30/10/2026 : l'exemple « théâtre gratuit en famille » était recopié tel quel
@@ -31,7 +48,10 @@ logger = get_logger(__name__)
 # recopié comme titre d'autres événements (8 réponses sur 100), et renvoyait à
 # « Contraintes comprises », recopié en fin de réponse (6 sur 100). Plus aucun
 # exemple de titre ni de nom de ligne dans les règles.
-PROMPT_VERSION = "2026-10-30.2"
+# 02/11/2026, version .1 : réponses en anglais à une question en anglais ;
+# accès (« accessible en transports en commun ») et public (« pour les ados »)
+# affirmés sans appui dans la liste. Le code vérifie aussi (`check_facts`).
+PROMPT_VERSION = "2026-11-02.1"
 DEFAULT_SEARCH_MODEL = "mistral-small-latest"
 # Modèle de secours (23/10/2026) : ce matin-là, `mistral-small-latest` répondait
 # « 503 Service unavailable » à chaque appel ; le modèle de la collecte de nuit,
@@ -44,8 +64,8 @@ et du bassin de Thau. On te donne la demande d'un utilisateur et une liste
 numérotée d'événements réels tirés de notre base.
 
 Règles :
-- réponds en français, en 2 à 4 phrases, sur un ton simple et chaleureux ;
-  vouvoie toujours l'utilisateur ;
+- réponds toujours en français, quelle que soit la langue de la demande, en
+  2 à 4 phrases, sur un ton simple et chaleureux ; vouvoie toujours l'utilisateur ;
 - ne parle QUE des événements de la liste ; n'invente ni lieu, ni date, ni prix ;
 - cite chaque événement mentionné par son numéro entre crochets : [1], [2] ;
 - si aucun événement ne correspond vraiment, dis-le franchement ;
@@ -54,6 +74,9 @@ Règles :
   autres événements comme des idées voisines ;
 - n'ajoute jamais une contrainte que la demande ne contient pas (gratuit, en
   famille, le soir…) ;
+- ne dis rien du public, de l'accès (transports, stationnement, accessibilité)
+  ni du lieu d'un événement que sa ligne ne dit pas ; si la demande en parle et
+  que la liste n'en dit rien, dis que tu n'as pas cette information ;
 - nomme chaque événement que tu cites par son titre tel qu'il est écrit dans la
   liste, suivi de son numéro ; jamais une suite de numéros seuls, jamais un
   événement absent de la liste ; ne termine jamais la réponse par « : » ;
@@ -155,7 +178,7 @@ def parse_answer(raw: str, count: int) -> tuple[str, list[str]]:
     if RAW_EVENT_LINE.search(answer):
         # Lignes de la consigne recopiées : rien ne garantit que ces événements soient
         # dans les cartes. La réponse simple (`fallback_answer`) les remplace.
-        raise ValueError("réponse au format des lignes de la consigne")
+        raise RefusedAnswer("réponse au format des lignes de la consigne")
     answer = french_spacing(re.sub(r"\s+([.,;:!?])", r"\1", re.sub(r" {2,}", " ", answer)).strip())
     suggestions = clean_suggestions(data.get("suggestions") or [])
     return answer, suggestions
@@ -373,8 +396,10 @@ def name_citations(answer: str, cards: Sequence[Mapping[str, Any]]) -> str:
         before = answer[matches[index - 1].end() if index else 0:match.start()]
         before = CLAUSE_END.split(before)[-1]             # seulement depuis le dernier « : » ou « . »
         after = answer[match.end():matches[index + 1].start() if index + 1 < len(matches) else len(answer)]
-        bare = not any(LETTER.search(LINK_WORDS.sub("", text)) for text in (before, after))
         ref = int(match.group(1))
+        # Titre déjà écrit juste avant (un titre finissant par « ! » coupait la clause)
+        named = ref in titles and answer[:match.start()].rstrip().endswith(titles[ref].rstrip("…"))
+        bare = not named and not any(LETTER.search(LINK_WORDS.sub("", text)) for text in (before, after))
         pieces.append(answer[last:match.start()])
         pieces.append(f"{titles[ref]} {match.group(0)}" if bare and ref in titles else match.group(0))
         last = match.end()
@@ -401,6 +426,165 @@ def name_citations(answer: str, cards: Sequence[Mapping[str, Any]]) -> str:
     if text.endswith(":"):
         return f"{text} {names}."
     return f"{text} Idées voisines\u00a0: {names}."
+
+
+# Faits que la liste ne donne pas (02/11/2026, 200 questions difficiles : 10
+# réponses inventaient un public, un accès, un lieu) : contrôlés dans le code,
+# la consigne seule ne suffisant pas. Une affirmation sans appui dans les cartes
+# qu'elle cite est retirée.
+ACCESS_CLAIM = re.compile(r"\b(?:accessibles?|accessibilit[ée]|transports? en commun|tram(?:way)?s?|bus|navettes?"
+                          r"|fauteuils? roulants?|PMR|mobilit[ée] r[ée]duite|parkings?|stationnement|se garer)\b",
+                          re.IGNORECASE)
+PUBLIC_CLAIMS = {
+    "famille": r"tout[- ]petits?|b[ée]b[ée]s?|enfants?|familles?|familial(?:e|es|aux)?|jeune public|gosses",
+    "ados": r"ados?|adolescent(?:e|s|es)?",
+    "seniors": r"seniors?|a[îi]n[ée]s|personnes [âa]g[ée]es",
+}
+PUBLIC_PHRASE = (r",?\s*(?:(?:sp[ée]cialement |sp[ée]cifiquement )?(?:con[çc]u(?:e|s|es)? |adapt[ée](?:e|s|es)? |"
+                 r"destin[ée](?:e|s|es)? |id[ée]a(?:l|le|ux|les) |parfait(?:e|s|es)? )?(?:pour|avec|aux|à|en)\s+"
+                 r"(?:[\w-]+\s+){{0,2}}?(?:les |des |vos |leurs |aux |vos |nos )?(?:{words})"
+                 r"(?:\s+et\s+(?:leurs |les |vos )?(?:familles?|parents|adultes))?)")
+ABSENCE = re.compile(r"\b(?:pas|aucun|aucune|rien|ni|sans|hors|ne|n['’]|non)\b", re.IGNORECASE)
+PLACE_NAMES = {plain(city_label(city)): city_label(city)
+               for city in (*MONTPELLIER_CITIES, *THAU_CITIES, *(t for targets in CITY_ALIASES.values() for t in targets))
+               if city}
+PLACE_NAMES.update({plain(name): name for name in OUTSIDE_PLACES.values()})
+# « autour de Sète », « à 10 km de Mèze », « entre Montpellier et Sète » : un repère,
+# pas le lieu de l'événement (texte passé par `plain`).
+NEAR_WORDS = re.compile(r"\b(?:autour|pres|proche|loin|alentours|environs|cote|depuis|vers|km|kilometres)"
+                        r"(?: de| d| du)?(?: la| le| l)?$|\bentre(?: \w+){1,3} et$")
+ENGLISH_WORDS = frozenset("the and you your here are some for this with is of to in great options you're "
+                          "event events weekend there can".split())
+FRENCH_WORDS = frozenset("le la les des vous de et est pour une un du au aux avec dans voici".split())
+
+
+def card_text(card: Mapping[str, Any]) -> str:
+    """Ce que Mistral sait d'une carte, sous forme simple (titre, lieu, public, résumé…)."""
+    parts = [card.get("title"), card.get("place"), card.get("city"), card.get("category"),
+             card.get("price"), card.get("summary"), " ".join(card.get("audiences") or [])]
+    return f" {plain(' '.join(str(part or '') for part in parts))} "
+
+
+def check_facts(answer: str, cards: Sequence[Mapping[str, Any]], plan: QueryPlan | SearchFilters | None = None,
+                request: str = "") -> str:
+    """Retire de la réponse ce que les cartes citées ne disent pas.
+
+    Contrôlé phrase par phrase (02/11/2026) :
+    - accès (« accessible », transports, fauteuil, stationnement) : la phrase est
+      retirée si aucune carte qu'elle cite (toutes, si elle n'en cite aucune) n'en parle ;
+    - public (enfants, ados, seniors) : s'il n'est ni demandé ni dans les cartes
+      citées, l'expression est retirée (« pour occuper vos ados »), sinon la phrase ;
+    - commune : une phrase affirmative qui nomme une commune absente des cartes
+      qu'elle cite (« À La Grande-Motte, … [1] » pour un événement de Frontignan)
+      est retirée, sauf « autour de », « près de » et Montpellier (la zone).
+
+    Parameters
+    ----------
+    answer : str
+        La réponse lue par `parse_answer`.
+    cards : Sequence[Mapping[str, Any]]
+        Les cartes données à Mistral.
+    plan : QueryPlan | SearchFilters | None
+        Les contraintes comprises (le public demandé) ; None si inconnues.
+    request : str
+        La demande du visiteur (question précédente comprise).
+
+    Returns
+    -------
+    str
+        La réponse sans les affirmations sans appui.
+
+    Raises
+    ------
+    RefusedAnswer
+        Si la réponse est en anglais, s'il ne reste rien, ou plus aucune citation
+        après avoir retiré une phrase qui en avait.
+    """
+
+    # Toujours en français (une question en anglais recevait une réponse en anglais)
+    words = re.findall(r"[a-zA-Z']+", answer.lower())
+    english = sum(word in ENGLISH_WORDS for word in words)
+    if english >= 4 and english > sum(word in FRENCH_WORDS for word in words):
+        raise RefusedAnswer("réponse en anglais")
+    by_ref = {int(card["ref"]): card_text(card) for card in cards}
+    everything = " ".join(by_ref.values())
+    asked = f" {plain(request)} "
+    public = getattr(plan, "public", None)
+    public = "famille" if public == "enfant" else public
+    kept, dropped_citations = [], False
+    for sentence in SENTENCE_END.split(answer.strip()):
+        refs = [int(ref) for ref in CITATION.findall(sentence) if int(ref) in by_ref]
+        support = " ".join(by_ref[ref] for ref in refs) if refs else everything
+        # Accès : jamais sans appui
+        claim = ACCESS_CLAIM.search(sentence)
+        if claim and f" {plain(claim.group(0))} " not in support and \
+                not (plain(claim.group(0)).startswith("accessib") and " accessib" in support):
+            dropped_citations = dropped_citations or bool(refs)
+            continue
+        # Public : demandé, ou dit par les cartes citées
+        for name, pattern in PUBLIC_CLAIMS.items():
+            words_re = re.compile(rf"\b(?:{pattern})\b", re.IGNORECASE)
+            if not words_re.search(sentence) or name == public or words_re.search(asked) \
+                    or words_re.search(support):
+                continue
+            shorter = without_phrase(sentence, PUBLIC_PHRASE.format(words=pattern))
+            while shorter != sentence:                          # « en famille … adaptée aux familles »
+                sentence, shorter = shorter, without_phrase(shorter, PUBLIC_PHRASE.format(words=pattern))
+            if words_re.search(sentence):
+                sentence = ""
+                break
+        if not sentence.strip():
+            dropped_citations = dropped_citations or bool(refs)
+            continue
+        # Commune nommée sans appui, dans une phrase qui affirme
+        if refs and not ABSENCE.search(sentence):
+            padded = f" {plain(sentence)} "
+            wrong = False
+            for key in PLACE_NAMES:
+                index = padded.find(f" {key} ")
+                # Une commune d'une des cartes (« à Montpellier ou Sète ») n'est pas inventée
+                if index < 0 or key == "montpellier" or f" {key} " in everything:
+                    continue
+                if NEAR_WORDS.search(padded[:index].rstrip()):
+                    continue
+                wrong = True
+                break
+            if wrong:
+                dropped_citations = True
+                continue
+        kept.append(re.sub(r"\s{2,}", " ", sentence).strip())
+    result = " ".join(part for part in kept if part)
+    # Plus rien, ou plus aucune citation après en avoir retiré : la réponse simple
+    if not result or (dropped_citations and not CITATION.search(result)):
+        raise RefusedAnswer("réponse sans appui dans les cartes")
+    return result
+
+
+def without_phrase(sentence: str, pattern: str) -> str:
+    """Retire une expression de la phrase, avec le « et » qui la relie au reste.
+
+    « gratuite et en famille » -> « gratuite » ; « des ateliers en famille et
+    gratuits » -> « des ateliers gratuits » ; « conçue pour les seniors et
+    entièrement gratuite » -> « entièrement gratuite ».
+
+    Parameters
+    ----------
+    sentence : str
+        La phrase.
+    pattern : str
+        L'expression à retirer (expression régulière).
+
+    Returns
+    -------
+    str
+        La phrase sans l'expression.
+    """
+
+    for form in (rf"\s+et{pattern}", rf"{pattern}\s+et(?=\s)", pattern):
+        changed = re.sub(form, "", sentence, flags=re.IGNORECASE)
+        if changed != sentence:
+            return re.sub(r" +([,.])", r"\1", re.sub(r" {2,}", " ", changed))
+    return sentence
 
 
 def fallback_answer(cards: Sequence[Mapping[str, Any]],
@@ -526,7 +710,7 @@ def writer_models() -> list[str]:
 
 def writer_question(question: str, categories: Sequence[str], matching: int, *,
                     relaxed: str = "", context: str = "", missing_words: Sequence[str] = (),
-                    widened: Sequence[str] = (), asked: str = "") -> str:
+                    widened: Sequence[str] = (), asked: str = "", outside: Sequence[str] = ()) -> str:
     """Demande transmise à Mistral, avec les précisions utiles.
 
     Relance d'une question précédente, type de sortie absent, mots absents,
@@ -550,6 +734,8 @@ def writer_question(question: str, categories: Sequence[str], matching: int, *,
         Contraintes relâchées pour trouver le sujet (`widen_for_subject`).
     asked : str
         Résumé des contraintes demandées au départ.
+    outside : Sequence[str]
+        Lieux demandés hors de la zone couverte (« Agde »).
 
     Returns
     -------
@@ -558,6 +744,10 @@ def writer_question(question: str, categories: Sequence[str], matching: int, *,
     """
 
     notes = []
+    if outside:
+        notes.append(f"{', '.join(outside)} est hors de la zone couverte (Montpellier, sa métropole et le "
+                     "bassin de Thau) : dis-le d'abord, puis présente ces événements comme des idées dans "
+                     "la zone couverte.")
     if context and context != question:
         notes.append(f"Relance de la question précédente ; demande complète : « {context} ».")
     if categories and not matching:
