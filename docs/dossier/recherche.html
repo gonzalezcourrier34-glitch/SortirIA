@@ -92,7 +92,7 @@
 <section class="section section-alt" id="s02">
 <div class="container">
 <p class="section-number">02</p>
-<h2>La pipeline en 4 étapes</h2>
+<h2>Le pipeline en 4 étapes</h2>
 <p class="section-intro">Le cœur est la fonction <code>run_search</code> de <code>app/search_service.py</code> : un générateur qui produit les étapes une à une, puis le résultat. Depuis le 23/10/2026, ce fichier garde uniquement l'enchaînement ; chaque usage a son module (requête SQL, cartes, rédaction, cache, journal). Chaque étape a son repli quand les choses tournent mal.</p>
 
 <figure class="story-figure"><svg class="story-svg" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 690" role="img" aria-label="Schéma de la recherche. Une question et les cases cochées passent par 4 étapes : comprendre par des règles en 1 milliseconde, rechercher en hybride sous filtres SQL (sens par pgvector, mots par plein texte, fusion des rangs), filtrer pour garder ce qui répond exactement (8 cartes au plus, 2 par lieu, partenaires en tête s'ils répondent), rédiger avec Mistral qui cite les cartes. Sous chaque étape, un repli : réponse déjà en cache, contraintes de la question relâchées sauf la date, sujet cherché en relâchant les contraintes une à une, réponse simple sans Mistral. En sortie : la réponse sourcée, les cartes, les relances et le journal rag_requests.">
@@ -217,7 +217,7 @@
 <text x="44" y="620" fill="#48c9b0" font-size="10.5" font-weight="700" letter-spacing="1.3">SORTIE · EVENT: COMPLETED</text>
 <text x="44" y="644" fill="#edf4f4" font-size="13">réponse sourcée · 8 cartes au plus (partenaires, puis citées, puis autres) · 3 relances · trace dans rag_requests</text>
 </g>
-</svg><figcaption>La pipeline de <code>run_search</code>. En trait plein, le chemin normal ; en pointillé, les replis. Temps moyens par étape : <code>docs/evaluation.md</code>, § 3 (16/10/2026).</figcaption></figure>
+</svg><figcaption>Le pipeline de <code>run_search</code>. En trait plein, le chemin normal ; en pointillé, les replis. Temps moyens par étape : <code>docs/evaluation.md</code>, § 3 (16/10/2026).</figcaption></figure>
 
 <div class="timeline">
 <div class="timeline-item"><span>01 • Comprendre · app/query_understanding.py</span><h3>Des règles plutôt qu'un modèle</h3>
@@ -425,7 +425,7 @@ Réponds uniquement en JSON : {"reponse": "...", "suggestions": ["...", "...", "
 <p class="table-note">Constantes au 23/10/2026 : <code>app/search_query.py</code> (candidats, fusion, partenaires, élargissement), <code>app/search_cards.py</code> (cartes, lieux), <code>app/search_answer.py</code> (version), <code>app/search_cache.py</code> (cache), <code>app/search_log.py</code> (pouces).</p>
 <div class="about-grid">
 <div class="large-text">Les synonymes se valident, un par un.</div>
-<div><p><code>config/synonymes.yaml</code> associe un mot tapé à un mot connu de la base (« zumba » : « fitness »). Le mot tapé est gardé, le mot connu est cherché en plus, et un synonyme compte comme une alternative, plutôt que comme un mot de plus à exiger.</p><p>Le fichier se remplit uniquement par les propositions du lundi, acceptées une à une. À ce jour, il est vide : il se remplira avec les vraies questions, à mesure qu'elles arrivent.</p></div>
+<div><p><code>config/synonymes.yaml</code> associe un mot tapé à un mot connu de la base (« zumba » : « fitness »). Le mot tapé est gardé, le mot connu est cherché en plus, et un synonyme compte comme une alternative, plutôt que comme un mot de plus à exiger.</p><p>Le fichier se remplit uniquement par les propositions du lundi, acceptées une à une. Au 02/11, il est encore vide : il se remplira avec les vraies questions, à mesure qu'elles arrivent.</p></div>
 </div>
 </div>
 </section>
@@ -466,7 +466,7 @@ Réponds uniquement en JSON : {"reponse": "...", "suggestions": ["...", "...", "
 <tr><td><code>app/search_cache.py</code>, <code>app/search_log.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Cache des réponses ; trace dans <code>rag_requests</code>, coût, pouces, santé de la base.</td></tr>
 <tr><td><code>app/query_understanding.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Contraintes lues par des règles et des synonymes validés, gratuitement : la première version comparait un seul vecteur.</td></tr>
 <tr><td><code>app/rate_limit.py</code></td><td>Écrit pour SortirIA</td><td><span class="experiment-status selected">Écrit</span></td><td>Limite par visiteur et plafond global de la recherche, réponse 429 avec <code>Retry-After</code>, pour borner le coût Mistral.</td></tr>
-<tr><td><code>src/event/event_embedding.py</code></td><td>Écrit pour SortirIA, idée reprise de <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/rag-openagenda">Assistant RAG OpenAgenda (projet 6)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Texte indexé sur le modèle du « texte enrichi » du RAG : titre, catégorie, lieu et description dans un seul texte.</td></tr>
+<tr><td><code>src/event/event_embedding.py</code></td><td>Écrit pour SortirIA, idée reprise de l'<a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/rag-openagenda">Assistant RAG OpenAgenda (projet 6)</a></td><td><span class="experiment-status selected">Écrit</span></td><td>Texte indexé sur le modèle du « texte enrichi » du RAG : titre, catégorie, lieu et description dans un seul texte.</td></tr>
 </tbody>
 </table>
 <p class="table-note">Sources : mentions « Provenance » des docstrings de <code>app/</code> et de <code>src/event/event_embedding.py</code> ; <code>PROVENANCE.md</code> (« Remplacer FAISS par pgvector », 14 et 15/10/2026).</p>

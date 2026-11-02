@@ -1,6 +1,6 @@
 # MVP et arbitrages
 
-*Mis à jour le 27/10/2026. Gel du code le 4/11/2026, soutenance le 6/11/2026.*
+*Mis à jour le 02/11/2026. Code figé le 2/11/2026 (gel prévu le 4/11), soutenance le 6/11/2026.*
 
 ## La promesse
 
@@ -33,7 +33,7 @@ Trois conditions la rendent tenable, et ce sont elles que le MVP doit prouver :
 | Réponse rédigée qui cite ses événements, sans en inventer | **Fait** | citations vérifiées, repli sans Mistral ([Fiabilité](fiabilite.md)) |
 | Interface web | **Fait** | https://www.sortiria-montpellier.fr |
 | Source et lien de chaque événement affichés | **Fait** | carte et détail |
-| Tests automatiques et CI | **Fait** | 3 877 tests, CI GitHub Actions, évaluation de la recherche rejouée à chaque push |
+| Tests automatiques et CI | **Fait** | 4 089 tests (2/11), CI GitHub Actions, évaluation de la recherche rejouée à chaque push |
 | Déploiement | **Fait** | Azure, déployé à chaque push sur `main` ([Déploiement](deploiement.md)) |
 | Mesure de la qualité et des coûts | **Fait** | [Évaluation](evaluation.md), [Coûts](couts.md) |
 

@@ -57,7 +57,7 @@
 <div class="report-meta">
 <span><strong>Auteur</strong> : Stéphane Gonzalez</span>
 <span><strong>Formation</strong> : Ingénieur IA, OpenClassrooms</span>
-<span><strong>Version</strong> : 28/10/2026</span>
+<span><strong>Version</strong> : 02/11/2026</span>
 <span><strong>Soutenance</strong> : 6/11/2026</span>
 <span><strong>Service</strong> : <a class="project-link" href="https://www.sortiria-montpellier.fr">www.sortiria-montpellier.fr</a></span>
 <span><strong>Code</strong> : <a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/SortirIA">github.com/gonzalezcourrier34-glitch/SortirIA</a></span>
@@ -78,7 +78,7 @@
 <div class="report-text">
 <p><strong>Le problème.</strong> À Montpellier et sur le bassin de Thau, les sorties sont publiées dans dix endroits différents. Pour trouver un concert samedi soir, il faut ouvrir plusieurs sites et tout croiser à la main.</p>
 <p><strong>Ce que j'ai construit.</strong> SortirIA est un assistant. On écrit sa demande en français, par exemple « un concert petit budget samedi soir ». Il répond avec de vrais événements, à venir, et donne la source de chacun. Chaque nuit, un agent met la base à jour tout seul.</p>
-<p><strong>Où j'en suis.</strong> Le service est en ligne depuis le 15/10/2026. Tous les critères que j'avais fixés avant de mesurer sont atteints. Il coûte environ 10 $ par mois.</p>
+<p><strong>Où j'en suis.</strong> Le service est en ligne depuis le 15/10/2026. Tous les critères que j'avais fixés avant de mesurer sont atteints. Il coûte environ 10 $ par mois la première année.</p>
 <p><strong>Ce que l'usage réel a montré.</strong> Du 17 au 26/10, des testeurs ont posé 93 questions. Le service a tenu : 95 % des réponses sont arrivées en moins de 6,2 secondes, chaque question a reçu des propositions, et le service a continué de répondre pendant une panne de Mistral. Près d'une question sur deux (47 %) a trouvé une réponse exacte. Les autres portaient souvent sur des lieux ouverts toute l'année (cinéma, restaurants, marchés) : une piste claire pour enrichir la base.</p>
 <p><strong>Ma recommandation.</strong> Continuer, avec une nouvelle priorité. Le moteur est fiable et mesuré ; le prochain levier, c'est la couverture. Avant de réentraîner un modèle sur mes données (fine-tuning) ou de chercher des partenaires payants, j'ajouterai une base de lieux, puis je mesurerai la satisfaction avec des visiteurs venus d'eux-mêmes.</p>
 </div>
@@ -316,12 +316,13 @@
 <tr><td>17-19/10/2026</td><td>Retours des testeurs, incidents corrigés, suivi de la dérive</td><td>✅</td></tr>
 <tr><td>17-26/10/2026</td><td>Usage réel avec des testeurs : 93 questions, 47 % de réponses exactes, usage arrêté après les tests</td><td>✅</td></tr>
 <tr><td>27/10/2026</td><td>Bilan d'usage, recommandation revue ; visiteurs distincts comptés à partir de maintenant</td><td>✅</td></tr>
-<tr><td>4/11/2026</td><td>Gel du code</td><td>à venir</td></tr>
+<tr><td>30/10 au 2/11/2026</td><td>800 recherches lancées en production, défauts trouvés et corrigés</td><td>✅</td></tr>
+<tr><td>2/11/2026</td><td>Gel du code (étiquette v1.0-soutenance), deux jours avant la date prévue du 4/11</td><td>✅</td></tr>
 <tr><td>6/11/2026</td><td>Soutenance</td><td>à venir</td></tr>
 </tbody>
 </table>
 <div class="report-text">
-<p>J'ai mis le service en ligne en trois jours. Depuis, j'ajoute uniquement ce que demandent les retours et les incidents (suivi de la dérive, modèle de secours) ; le reste du temps, je mesure, je fiabilise et je documente. C'est ce qui me laisse de la marge avant le gel du code.</p>
+<p>J'ai mis le service en ligne en trois jours. Depuis, j'ajoute uniquement ce que demandent les retours et les incidents (suivi de la dérive, modèle de secours) ; le reste du temps, je mesure, je fiabilise et je documente. C'est ce qui m'a permis de figer le code le 2/11, deux jours avant la date prévue.</p>
 <h3 class="report-h3">Les coûts</h3>
 <ul>
 <li>Environ <strong>10 $ par mois</strong> aujourd'hui : 9 $ pour l'interface, le reste est dans les offres gratuites d'Azure.</li>
@@ -335,7 +336,7 @@
 <thead><tr><th>Livrable</th><th>Où</th></tr></thead>
 <tbody>
 <tr><td>Le service en ligne</td><td><a class="project-link" href="https://www.sortiria-montpellier.fr">www.sortiria-montpellier.fr</a></td></tr>
-<tr><td>Le code, avec environ 3 880 tests</td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/SortirIA">github.com/gonzalezcourrier34-glitch/SortirIA</a></td></tr>
+<tr><td>Le code, avec environ 4 090 tests</td><td><a class="project-link" href="https://github.com/gonzalezcourrier34-glitch/SortirIA">github.com/gonzalezcourrier34-glitch/SortirIA</a></td></tr>
 <tr><td>La documentation technique</td><td><a class="project-link" href="https://gonzalezcourrier34-glitch.github.io/SortirIA/">gonzalezcourrier34-glitch.github.io/SortirIA</a></td></tr>
 <tr><td>Le dossier du projet (ce site)</td><td><a class="project-link" href="index.html">13 pages, dont les procédures et le suivi des incidents</a></td></tr>
 <tr><td>Les mesures, rejouables</td><td><code>benchmarks/</code>, MLflow, rapport de la CI</td></tr>
@@ -352,7 +353,7 @@
 <li><strong>À chaque version</strong> : les 8 consignes et la chaîne (modèles Mistral, versions des consignes, jeux d'évaluation) sont enregistrées dans les registres de MLflow, et la CI exige une nouvelle version pour toute consigne modifiée. Je sais quelle version a produit quelle réponse, et laquelle la précédait.</li>
 <li><strong>Dans Grafana</strong> : trois tableaux (collecte, recherche, modèles et coûts).</li>
 </ul>
-<p>Quand un incident arrive, je le note : ce que j'ai vu, la cause, la correction, et le test qui empêche qu'il revienne. Plus de vingt-cinq incidents sont tracés dans la page <a class="project-link" href="suivi.html">Suivi</a>.</p>
+<p>Quand un incident arrive, je le note : ce que j'ai vu, la cause, la correction, et le test qui empêche qu'il revienne. 31 incidents sont tracés dans la page <a class="project-link" href="suivi.html">Suivi</a>.</p>
 <h3 class="report-h3">Ce que je ferais différemment</h3>
 <ul>
 <li>Fixer mes jeux d'évaluation encore plus tôt.</li>

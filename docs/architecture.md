@@ -50,7 +50,7 @@ flowchart LR
 ```mermaid
 flowchart TB
     Dev[Poste de travail<br/>code, tests, PDF de Sète] -->|git push main| GH[GitHub]
-    GH --> CI[CI : Ruff, 3 877 tests,<br/>évaluation, documentation, image Docker]
+    GH --> CI[CI : Ruff, 4 089 tests,<br/>évaluation, documentation, image Docker]
     CI --> CD[CD : image sur GHCR,<br/>connexion Azure sans mot de passe]
     CD --> API[Container Apps<br/>sortiria-api]
     CD --> JOB[Container Apps Job<br/>sortiria-collecte, chaque nuit]

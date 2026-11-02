@@ -83,7 +83,7 @@
 <section class="section section-alt" id="s02">
 <div class="container">
 <p class="section-number">02</p>
-<h2>La pipeline : le graphe réel</h2>
+<h2>Le pipeline : le graphe réel</h2>
 <p class="section-intro">Le schéma reprend exactement <code>agent/graph.py</code> : sept nœuds, des transitions fixes et une seule transition conditionnelle, après l'extraction, qui peut boucler sur elle-même (réessai ciblé) ou sauter directement à la surveillance.</p>
 
 <figure class="story-figure"><svg class="story-svg" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 570" role="img" aria-label="Graphe LangGraph de la collecte nocturne. START mène à plan_sources, puis extract_sources. Après extract_sources, la fonction route_after_extraction choisit entre trois routes : retry revient sur extract_sources pour les sources en échec tant qu'il reste un essai ; prepare continue vers prepare, puis load_events, judge_quality, watch et write_report ; report saute directement à watch quand l'extraction reste vide après le dernier essai. write_report mène à END.">
@@ -341,7 +341,7 @@
 <article class="project-card">
 <div class="project-top"><span class="project-type">LOCAL</span></div>
 <h3>DAG Airflow</h3>
-<p><code>dags/sortiria_nightly_dag.py</code> : <code>0 2 * * *</code> en heure de Paris, une seule exécution à la fois, une heure au plus, un nouvel essai après 10 minutes. Le DAG se contente de déclencher <code>run_nightly_collection()</code> et faire échouer la tâche si la collecte a échoué : toute la logique est dans l'agent.</p>
+<p><code>dags/sortiria_nightly_dag.py</code> : <code>0 2 * * *</code> en heure de Paris, une seule exécution à la fois, une heure au plus, un nouvel essai après 10 minutes. Le DAG se contente de déclencher <code>run_nightly_collection()</code> et de faire échouer la tâche si la collecte a échoué : toute la logique est dans l'agent.</p>
 </article>
 <article class="project-card">
 <div class="project-top"><span class="project-type">À LA MAIN</span></div>
@@ -455,7 +455,7 @@ Bilan          status, alerts, run_id, errors</pre>
 <line x1="750" y1="170" x2="788" y2="170" stroke="#48c9b0" stroke-width="1.8" marker-end="url(#arr-agent-3c)"/>
 
 <rect x="790" y="110" width="250" height="120" rx="12" fill="#17232d" stroke="#2f9e8a" stroke-width="1.5"/>
-<text x="804" y="134" fill="#48c9b0" font-size="12" font-weight="700" letter-spacing="1">--ACCEPTER N</text>
+<text x="804" y="134" fill="#48c9b0" font-size="12" font-weight="700" letter-spacing="1">--accepter N</text>
 <text x="804" y="158" fill="#edf4f4" font-size="15" font-weight="700">apply_proposal()</text>
 <text x="804" y="181" fill="#98a8ad" font-size="12">modifie un seul fichier,</text>
 <text x="804" y="199" fill="#98a8ad" font-size="12">statut appliquee (ou acceptee</text>
@@ -505,7 +505,7 @@ Bilan          status, alerts, run_id, errors</pre>
 <tr><td>15/10/2026</td><td>Première découverte des agendas OpenAgenda.</td><td>5 nouveaux agendas proposés, 14 événements de plus dans la zone (102 au lieu de 88).</td></tr>
 </tbody>
 </table>
-<p class="table-note">Source : <code>agent/README.md</code>, <code>agent/README.md</code> (§ 7).</p>
+<p class="table-note">Source : <code>agent/README.md</code> (§ 7).</p>
 </div>
 </section>
 

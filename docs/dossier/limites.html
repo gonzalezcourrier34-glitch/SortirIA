@@ -38,7 +38,7 @@
 <div class="reflection-card"><h3>Couverture : des événements, les lieux ensuite</h3><p>Les sports <strong>datés</strong> sont trouvés (matchs du MHB et des Vipers, courses, randonnées). Les <strong>lieux</strong> ouverts toute l'année restent à couvrir : 0 % sur les sorties sportives (piscine, VTT), 37,5 % sur les loisirs en intérieur (billard, trampoline park), 57 % sur sport et nature. C'est une limite voulue : les agendas en parlent seulement lors d'un événement. La base de lieux est l'évolution prévue.</p></div>
 <div class="reflection-card"><h3>Sources : une autorisation écrite d'abord</h3><p>Le moteur d'agendas en ligne est prêt, en attente des autorisations. Demandes envoyées à Frontignan le 14/10 et à l'office de tourisme Archipel de Thau le 16/10, réponses attendues. Le PDF de Sète agglopôle, bloqué depuis les serveurs Azure, est coupé sur le serveur et lu depuis un poste : ses 434 événements restent en base, et cette source se met à jour à la main.</p></div>
 <div class="reflection-card"><h3>Des utilisateurs réels encore peu nombreux</h3><p>Les 50 questions et les 125 recherches courtes sont écrites à la main. Elles mesurent bien ce que je sais anticiper ; les tournures imprévues viennent des vrais visiteurs. Les testeurs (17 au 26/10) ont posé 93 questions : 47 % ont trouvé une réponse exacte, parce qu'ils cherchaient aussi des lieux (cinéma, restaurant, marché). Un seul avis : la satisfaction sera mesurée lors de la prochaine phase d'usage.</p></div>
-<div class="reflection-card"><h3>L'annotateur est l'auteur</h3><p>J'ai annoté moi-même la pertinence (97,8 %) : biais possible vers l'indulgence. Contre-mesures : protocole écrit avant la mesure, et un juge Mistral Large, indépendant du code, qui s'est montré plutôt plus sévère que moi. L'annotation a d'ailleurs trouvé de vrais défauts (offres partenaires en tête à tort).</p></div>
+<div class="reflection-card"><h3>L'annotateur est l'auteur</h3><p>J'ai annoté moi-même la pertinence (97,8 %) : biais possible vers l'indulgence. Contre-mesures : protocole écrit avant la mesure, et un juge Mistral Large, indépendant du code, dont les désaccords avec moi vont dans les deux sens. L'annotation a d'ailleurs trouvé de vrais défauts (offres partenaires en tête à tort).</p></div>
 <div class="reflection-card"><h3>Un juge calibré sur une grille</h3><p>Le juge v7 atteint 98,6 % d'accord (AC1 0,985) sur la grille qui a servi à le régler. Figé, il tombe à 91,9 % (AC1 0,889) sur 135 cartes nouvelles : au-dessus du seuil (85 %, AC1 0,6). L'écart rappelle l'intérêt de toujours vérifier sur une seconde grille. Ses désaccords sur les recherches d'un mot (« marché nocturne », « salon ») sont à surveiller.</p></div>
 <div class="reflection-card"><h3>Dépendance à Mistral</h3><p>Enrichissement, embeddings, rédaction, juge, lecture des PDF : tout passe par un seul fournisseur. Si Mistral tombe, la recherche continue par les mots seuls (tri par date), la réponse est simplifiée et signalée à l'écran ; la collecte continue, et les embeddings (la représentation du sens de chaque fiche) sont calculés la nuit suivante.</p></div>
 <div class="reflection-card"><h3>Un quota Mistral partagé</h3><p>Le site, la collecte et le juge de pertinence utilisent le même quota. Le juge est donc lancé à la main, en dehors des démonstrations ; la limite de débit (12 recherches par minute par visiteur, 1 000 par heure au total) borne le reste.</p></div>
@@ -58,18 +58,18 @@
 <div class="container">
 <p class="section-number">02</p>
 <h2>Les risques et leurs parades</h2>
-<p class="section-intro">Les risques identifiés pour le MVP, avec la parade déjà en place. Deux se sont réellement produits : le PDF bloqué sur Azure, et la couverture faible en soirée sur le bassin de Thau.</p>
+<p class="section-intro">Les risques identifiés pour le MVP, avec la parade déjà en place. Trois se sont réellement produits : le PDF bloqué sur Azure, la couverture faible en soirée sur le bassin de Thau, et la panne de Mistral du 23/10 (12 réponses simplifiées, aucune erreur).</p>
 <table class="story-table params-table">
 <thead><tr><th>Risque</th><th>Probabilité</th><th>Parade en place</th></tr></thead>
 <tbody>
 <tr><td>Une source change de format ou d'adresse</td><td>Forte</td><td>L'agent réessaie, garde les événements de la veille, diagnostique et propose la réparation (<code>agent/diagnosis.py</code>).</td></tr>
 <tr><td>Une source bloque les serveurs (cas réel : PDF de Sète agglopôle sur Azure)</td><td>Moyenne</td><td>Source coupée sur le serveur (<code>SOURCES_DESACTIVEES</code>), lue depuis un poste.</td></tr>
-<tr><td>Mistral indisponible ou en quota</td><td>Moyenne</td><td>Recherche par les mots seuls, réponse simplifiée rédigée par le code, signalée à l'écran.</td></tr>
+<tr><td>Mistral indisponible ou en quota</td><td>Moyenne</td><td>Modèle de secours (mistral-medium) pour la rédaction ; sinon réponse simplifiée rédigée par le code, signalée à l'écran ; sans vecteur, recherche par les mots seuls.</td></tr>
 <tr><td>Hallucination dans la réponse ou un résumé</td><td>Moyenne</td><td>Citations limitées aux événements fournis et vérifiées, résumés contrôlés, juge de qualité chaque nuit avec un autre modèle.</td></tr>
 <tr><td>Coût qui dérape (robot, abus)</td><td>Faible</td><td>Limite de débit par visiteur et plafond global : au plus 1 000 recherches par heure (<code>app/rate_limit.py</code>).</td></tr>
 <tr><td>Couverture faible (peu de sorties en soirée sur le bassin de Thau)</td><td>Réelle</td><td>Alerte de couverture chaque nuit ; PDF, partenaires, agendas proposés par l'agent.</td></tr>
 <tr><td>Les demandes ou les sources changent avec le temps (saison, nouveau public, source modifiée)</td><td>Moyenne</td><td>Rapport de dérive chaque nuit (PSI, 7 jours contre les 28 précédents), dans le mail du lundi, alerte si elle est forte ; rapport Evidently complet chaque mois ; jugé à partir de 30 questions par semaine.</td></tr>
-<tr><td>Manque de temps avant le gel</td><td>Moyenne</td><td>MVP en production dès le 15/10 ; jusqu'au 4/11 : mesure, fiabilisation, documentation.</td></tr>
+<tr><td>Manque de temps avant le gel</td><td>Moyenne</td><td>MVP en production dès le 15/10 ; jusqu'au gel du 2/11 : mesure, fiabilisation, documentation.</td></tr>
 </tbody>
 </table>
 <p class="table-note">D'après <code>docs/mvp.md</code>, section « Risques et parades » (16/10/2026).</p>
@@ -85,8 +85,8 @@
 <article class="project-card">
 <div class="project-top"><span class="project-type">PISTE 1 · LA PLUS ATTENDUE</span></div>
 <h3>Une base de lieux, à côté des événements</h3>
-<p>Une source de lieux : le <strong>Recensement des équipements sportifs</strong> du ministère des Sports (piscines, gymnases, murs d'escalade, skateparks), OpenStreetMap, les lieux publiés par DATAtourisme (à vérifier pour la zone). Une table <code>places</code> avec horaires d'ouverture, une recherche sur les deux bases, une carte « lieu ».</p>
-<p><strong>Pourquoi après :</strong> c'est un second produit dans le premier (source, schéma, recherche, interface, évaluation), à trois semaines du gel. Un bowling partenaire peut déjà publier ses soirées.</p>
+<p>Une source de lieux : le <strong>Recensement des équipements sportifs</strong> du ministère des Sports (piscines, gymnases, murs d'escalade, skateparks), OpenStreetMap, les lieux publiés par DATAtourisme (couverture de la zone à confirmer). Une table <code>places</code> avec horaires d'ouverture, une recherche sur les deux bases, une carte « lieu ».</p>
+<p><strong>Pourquoi après :</strong> c'est un second produit dans le premier (source, schéma, recherche, interface, évaluation), à quelques jours du gel. Un bowling partenaire peut déjà publier ses soirées.</p>
 </article>
 <article class="project-card">
 <div class="project-top"><span class="project-type">PISTE 2</span></div>

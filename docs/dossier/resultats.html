@@ -181,7 +181,7 @@
 <article class="project-card">
 <div class="project-top"><span class="project-type">CORRIGÉ LE 16/10</span></div>
 <h3>Partenaires : type et public exacts</h3>
-<p>Une offre partenaire passe en tête uniquement si son type précis et son public correspondent. Sur la seconde grille, les 3 cartes ont laissé leur place dans les 3 premières à deux vraies pièces pour « théâtre », un atelier théâtre ados pour « ados ».</p>
+<p>Une offre partenaire passe en tête uniquement si son type précis et son public correspondent. Sur la seconde grille, les 3 cartes ont laissé leur place dans les 3 premières à deux vraies pièces pour « théâtre » et à un atelier théâtre ados pour « ados ».</p>
 </article>
 <article class="project-card">
 <div class="project-top"><span class="project-type">HORS PERTINENCE</span></div>
@@ -405,7 +405,7 @@ uv run python -m scripts.mesure_cout_latence --n 1000 --oui</code></pre></div>
 <tr><td>Contraintes et compréhension</td><td><code>benchmarks/recherche/historique.csv</code> (une ligne par lancement) et un rapport JSON question par question ; MLflow, expérience <code>sortiria-evaluation-recherche</code>, quand le serveur répond</td></tr>
 <tr><td>Pertinence et juge</td><td><code>benchmarks/pertinence/</code> : grilles annotées, verdicts et raisons du juge (<code>…_juge.csv</code>), <code>historique.csv</code> du juge v1 au v7</td></tr>
 <tr><td>Temps de réponse et coût</td><td><code>benchmarks/cout_latence/</code> : rapport JSON (temps par étape, coût selon la part de questions répétées) et <code>historique.csv</code></td></tr>
-<tr><td>CI</td><td>rapports <code>eval_recherche.json</code>, <code>eval_pratique.json</code> et <code>eval_moments.json</code> attachés au job « Évaluation de la recherche » (seuils 95 %, 90 %, 90 %) ; environ 3 880 tests pytest sur un vrai PostgreSQL</td></tr>
+<tr><td>CI</td><td>rapports <code>eval_recherche.json</code>, <code>eval_pratique.json</code> et <code>eval_moments.json</code> attachés au job « Évaluation de la recherche » (seuils 95 %, 90 %, 90 %) ; environ 4 090 tests pytest sur un vrai PostgreSQL</td></tr>
 </tbody>
 </table>
 <p class="table-note">Source : <code>benchmarks/README.md</code>, docstrings de <code>scripts/eval_recherche.py</code>, <code>scripts/eval_pertinence.py</code>, <code>scripts/mesure_cout_latence.py</code>, <code>scripts/jeu_test_recherche.py</code>, et <code>.github/workflows/ci.yml</code>. Le juge (<code>--juge</code>) coûte environ 0,03 $ par passage ; il est lancé à la main, en dehors des démonstrations.</p>
@@ -419,7 +419,7 @@ uv run python -m scripts.mesure_cout_latence --n 1000 --oui</code></pre></div>
 <p class="section-intro">Ces chiffres sont solides pour ce qu'ils mesurent. Voici ce qui reste à mesurer, et comment.</p>
 <div class="reflection-grid">
 <div class="reflection-card"><h3>Des questions écrites à la main</h3><p>Les 50 questions et les 125 recherches courtes sont les miennes. Elles couvrent 8 familles ; la façon dont de vrais visiteurs écrivent viendra de l'usage réel.</p></div>
-<div class="reflection-card"><h3>L'annotateur est l'auteur</h3><p>Biais possible vers l'indulgence. Contre-mesure : un juge indépendant du code, plutôt plus sévère, des désaccords publiés, et une seconde grille sur des cartes nouvelles.</p></div>
+<div class="reflection-card"><h3>L'annotateur est l'auteur</h3><p>Biais possible vers l'indulgence. Contre-mesure : un juge indépendant du code, dont les désaccords vont dans les deux sens, des désaccords publiés, et une seconde grille sur des cartes nouvelles.</p></div>
 <div class="reflection-card"><h3>Un usage réel encore jeune</h3><p>Le pouce haut / bas et le tableau Grafana « Recherche » tournent depuis le 16/10. Les testeurs ont posé 93 questions (17 au 26/10) : 47 % de réponses exactes, un seul avis. La satisfaction réelle sera mesurée sur des questions réelles en nombre, lors de la prochaine phase d'usage. De même pour la dérive (depuis le 19/10) : elle est jugée à partir de 30 questions par semaine, pour éviter les fausses alertes.</p></div>
 <div class="reflection-card"><h3>Des temps majorés</h3><p>La latence est mesurée depuis un poste, avec l'aller-retour vers la base : un majorant de la production.</p></div>
 </div>

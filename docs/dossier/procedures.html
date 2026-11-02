@@ -72,7 +72,7 @@
 <tr><td>4. Services Docker</td><td><code>docker compose up -d</code> puis <code>docker compose ps</code></td><td><code>sortiria_db</code> (healthy), <code>sortiria_mlflow</code>, <code>sortiria_grafana</code>. L'API et l'interface démarrent avec leur profil (procédure 1.2).</td></tr>
 <tr><td>5. Schéma</td><td><code>uv run python -m scripts.init_db</code></td><td>« appliqué : 00_extensions.sql »… jusqu'à « 07_vocabulary.sql », la liste des tables et des vues, puis « Schéma complet. »</td></tr>
 <tr><td>6. Vérifier le schéma</td><td><code>uv run python -m scripts.init_db --verifier</code></td><td>13 tables, 6 vues, « Schéma complet. » ; la base reste intacte.</td></tr>
-<tr><td>7. Tests</td><td><code>uv run pytest</code></td><td>Tous les tests passent (environ 3 880 ; ceux qui demandent un vrai PostgreSQL sont ignorés tant que <code>SORTIRIA_TEST_DATABASE_URL</code> est vide), et de fausses clés suffisent : <code>tests/conftest.py</code> crée des secrets factices et le réseau est simulé.</td></tr>
+<tr><td>7. Tests</td><td><code>uv run pytest</code></td><td>Tous les tests passent (environ 4 090 ; ceux qui demandent un vrai PostgreSQL sont ignorés tant que <code>SORTIRIA_TEST_DATABASE_URL</code> est vide), et de fausses clés suffisent : <code>tests/conftest.py</code> crée des secrets factices et le réseau est simulé.</td></tr>
 </tbody>
 </table>
 <div class="experiment-analysis">
@@ -640,7 +640,7 @@ git commit -m "Jeu de test de la recherche réexporté : &lt;raison&gt;"</code><
 <thead><tr><th>Variante</th><th>Commande</th><th>Ce qu'on doit voir</th></tr></thead>
 <tbody>
 <tr><td>Standard</td><td><code>uv run python -m scripts.mesure_cout_latence</code></td><td>100 questions, cache coupé : temps par étape (comprendre, rechercher, filtrer, rédiger) et coût.</td></tr>
-<tr><td>Grand échantillon</td><td><code>uv run python -m scripts.mesure_cout_latence --n 1000 --oui</code></td><td>1 000 questions (environ 0,5 $) ; <code>--oui</code> confirme d'avance, sinon le script demande confirmation au-delà de 100.</td></tr>
+<tr><td>Grand échantillon</td><td><code>uv run python -m scripts.mesure_cout_latence --n 1000 --oui</code></td><td>1 000 questions (quelques dizaines de centimes de Mistral) ; <code>--oui</code> confirme d'avance, sinon le script demande confirmation au-delà de 100.</td></tr>
 <tr><td>Avec le cache</td><td><code>uv run python -m scripts.mesure_cout_latence --cache</code></td><td>Deux passages, le second servi par le cache, et le coût pour une part de questions répétées.</td></tr>
 <tr><td>Autre modèle</td><td><code>uv run python -m scripts.mesure_cout_latence --modele ministral-8b-latest</code></td><td>La même mesure avec un autre modèle de rédaction.</td></tr>
 <tr><td>Recherche seule</td><td><code>uv run python -m scripts.mesure_cout_latence --sans-redaction --note "recherche seule"</code></td><td>Le temps de la recherche seule.</td></tr>
