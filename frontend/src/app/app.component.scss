@@ -393,10 +393,12 @@ $pastille: 999px;
 // Historique replié (3/11/2026) : une ligne à cliquer, ouverte à la demande.
 .history {
     flex: 0 0 auto;
-    margin-bottom: 12px;
+    // Collée sous le bouton « Chercher » et juste au-dessus de la réponse :
+    // les marges négatives reprennent le haut de `.thread` et son `gap`.
+    margin: -8px 0 -12px;
 
     summary {
-        padding: 6px 4px;
+        padding: 2px 4px;
         font-size: 13px;
         font-weight: 600;
         color: var(--texte-leger);
