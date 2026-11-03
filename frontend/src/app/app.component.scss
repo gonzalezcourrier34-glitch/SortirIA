@@ -390,6 +390,24 @@ $pastille: 999px;
     cursor: pointer;
 }
 
+// Historique replié (3/11/2026) : une ligne à cliquer, ouverte à la demande.
+.history {
+    flex: 0 0 auto;
+    margin-bottom: 12px;
+
+    summary {
+        padding: 6px 4px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--texte-leger);
+        cursor: pointer;
+    }
+
+    &[open] summary {
+        margin-bottom: 8px;
+    }
+}
+
 // Échanges précédents : plus discrets que la réponse en cours.
 .past-exchange {
     display: flex;

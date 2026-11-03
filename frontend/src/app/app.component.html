@@ -123,33 +123,39 @@
                     <p class="error" role="alert">{{ message }}</p>
                 }
 
-                <!-- Échanges précédents de la conversation (17/10/2026). -->
-                @for (past of history(); track $index) {
-                    <div class="past-exchange">
-                        <div class="past-question">« {{ past.question }} »</div>
-                        <p class="past-answer">
-                            @for (part of past.parts; track $index) {
-                                @if (part.ref !== null && past.refs[part.ref]) {
-                                    <button type="button" class="citation"
-                                        [attr.aria-label]="'Voir l’événement ' + part.ref"
-                                        (click)="openEvent(past.refs[part.ref])">{{ part.text }}</button>
-                                } @else {
-                                    {{ part.text }}
-                                }
-                            }
-                        </p>
-                        @if (past.events.length) {
-                            <div class="past-events">
-                                @for (card of past.events; track card.event_id) {
-                                    <button type="button" class="past-event"
-                                        [class.card-on]="selectedId() === card.event_id"
-                                        (click)="openEvent(card.event_id)">
-                                        [{{ card.ref }}] {{ card.title }} <span class="small">· {{ card.date }}</span>
-                                    </button>
+                <!-- Échanges précédents de la conversation (17/10/2026), repliés derrière
+                     une ligne à cliquer (3/11/2026) : la réponse en cours reste visible. -->
+                @if (history().length) {
+                    <details class="history">
+                        <summary>Historique de la conversation ({{ history().length }} échange{{ history().length > 1 ? 's' : '' }})</summary>
+                        @for (past of history(); track $index) {
+                            <div class="past-exchange">
+                                <div class="past-question">« {{ past.question }} »</div>
+                                <p class="past-answer">
+                                    @for (part of past.parts; track $index) {
+                                        @if (part.ref !== null && past.refs[part.ref]) {
+                                            <button type="button" class="citation"
+                                                [attr.aria-label]="'Voir l’événement ' + part.ref"
+                                                (click)="openEvent(past.refs[part.ref])">{{ part.text }}</button>
+                                        } @else {
+                                            {{ part.text }}
+                                        }
+                                    }
+                                </p>
+                                @if (past.events.length) {
+                                    <div class="past-events">
+                                        @for (card of past.events; track card.event_id) {
+                                            <button type="button" class="past-event"
+                                                [class.card-on]="selectedId() === card.event_id"
+                                                (click)="openEvent(card.event_id)">
+                                                [{{ card.ref }}] {{ card.title }} <span class="small">· {{ card.date }}</span>
+                                            </button>
+                                        }
+                                    </div>
                                 }
                             </div>
                         }
-                    </div>
+                    </details>
                 }
 
                 @if (result(); as answer) {
