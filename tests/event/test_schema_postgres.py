@@ -527,6 +527,25 @@ def test_interface_detail_shows_published_venue_comments(db: Any) -> None:
     assert search_detail.event_detail(db, "hier")["can_rate"]       # passé hier : encore affiché, pour être noté
 
 
+def test_interface_detail_credits_the_producer_with_its_agreement_link(db: Any) -> None:
+    """3/11/2026 : l'Office de Tourisme Archipel de Thau est cité avec le lien de
+    son agenda, sur la fiche d'un événement à venir comme d'un événement passé
+    depuis moins de 7 jours (avant, cette fiche-là ne citait que « DATAtourisme »)."""
+    from app import search_detail
+
+    otat = "34 - Office de Tourisme Archipel de Thau"
+    _rated_event(db, "otat_demain", 1, source="datatourisme", source_credit=otat, source_updated_at="2026-10-30")
+    _rated_event(db, "otat_hier", -1, source="datatourisme", source_credit=otat, source_updated_at="2026-10-30")
+    for event_id in ("otat_demain", "otat_hier"):
+        detail = search_detail.event_detail(db, event_id)
+        assert detail["source_attribution"] == f"Source : DATAtourisme ({otat}), mise à jour le 30/10/2026"
+        assert detail["credit"] == "Office de Tourisme Archipel de Thau"
+        assert detail["credit_url"] == "https://www.archipel-thau.com/mon-sejour/agenda/"
+    # Sans crédit ni date : la mention reste celle de la source seule.
+    _rated_event(db, "sans_credit", -1)
+    assert search_detail.event_detail(db, "sans_credit")["source_attribution"] == "Source : OpenAgenda"
+
+
 def test_interface_detail_lists_other_dates_of_the_same_event(db: Any) -> None:
     from app import search_detail
 

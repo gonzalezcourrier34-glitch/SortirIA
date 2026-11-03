@@ -36,11 +36,18 @@ LEFT JOIN sortiria.partners AS p ON p.partner_id = e.partner_id
 WHERE e.event_id = %(event_id)s"""
 
 # Événement passé depuis moins de 7 jours : plus proposé, mais encore notable
-# (bouton « Donner mon avis », 15/10/2026). Mêmes colonnes que la vue.
+# (bouton « Donner mon avis », 15/10/2026). Mêmes colonnes que la vue, et la
+# même mention de source, producteur et date de mise à jour compris (3/11/2026 :
+# l'accord de l'Office de Tourisme Archipel de Thau demande qu'il soit cité).
 RECENT_DETAIL_SQL = f"""
 SELECT {EVENT_COLUMNS}
 FROM (
-    SELECT e.*, s.name AS source_name, s.attribution AS source_attribution,
+    SELECT e.*, s.name AS source_name,
+           s.attribution
+               || CASE WHEN e.source_credit <> '' THEN ' (' || e.source_credit || ')' ELSE '' END
+               || CASE WHEN e.source_updated_at IS NOT NULL
+                       THEN ', mise à jour le ' || to_char(e.source_updated_at, 'DD/MM/YYYY') ELSE '' END
+               AS source_attribution,
            vr.average_stars AS venue_rating, vr.ratings AS venue_rating_count
     FROM sortiria.events AS e
     JOIN sortiria.sources AS s ON s.source_id = e.source

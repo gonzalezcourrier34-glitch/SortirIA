@@ -57,7 +57,7 @@ Trois conditions la rendent tenable, et ce sont elles que le MVP doit prouver :
 | Fonction | Décision | Raison |
 | --- | --- | --- |
 | Extraction des contraintes par un petit modèle (Ministral) | **Abandonné** | les règles font 100 % sur le jeu de test, en 1 ms et sans coût ; un modèle se justifiera avec des questions réelles en nombre |
-| Scraping d'agendas en ligne | **Reporté** | moteur prêt, mais aucun site sans autorisation écrite (demandes envoyées à Frontignan le 14/10 et à l'office de tourisme Archipel de Thau le 16/10) |
+| Scraping d'agendas en ligne | **Reporté** | moteur prêt, mais aucun site sans autorisation écrite (demande envoyée à Frontignan le 14/10, sans réponse ; l'office de tourisme Archipel de Thau, sollicité le 16/10, a autorisé le 3/11 la réutilisation de son agenda reçu par DATAtourisme, cité avec un lien vers son agenda) |
 | Flux RSS d'agenda | **Reporté** | moteur prêt ; les flux testés sont vides ou interdits par leur `robots.txt` |
 | Lecture des pages HTML des lieux par un LLM | **Reporté** (après soutenance) | même principe que le PDF ; à faire quand une source l'exige |
 | Métriques Prometheus de l'API | **Reporté** | le journal `rag_requests` et Grafana couvrent le besoin |

@@ -15,9 +15,13 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping, Sequence
 from datetime import datetime, timedelta
+from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
-from app.query_understanding import CATEGORY_LABELS, QueryPlan
+import yaml
+
+from app.query_understanding import CATEGORY_LABELS, QueryPlan, plain
 from app.search_filters import PARIS, PUBLIC_LABELS
 from app.search_query import EVENT_COLUMNS, build_partner_query, fetch_rows
 
@@ -590,6 +594,101 @@ def category_display(row: Mapping[str, Any]) -> str:
 DEMO_HOSTS = ("example.org", "example.com", "example.net")
 
 
+# Accords écrits des producteurs (3/11/2026) : l'Office de Tourisme Archipel de
+# Thau autorise la réutilisation de son agenda reçu par DATAtourisme, s'il est
+# crédité par son nom avec un lien vers sa rubrique agenda.
+AGREEMENTS_FILE = Path(__file__).resolve().parent.parent / "config" / "accords_sources.yaml"
+# Numéro de département que DATAtourisme met devant le producteur (« 34 - »).
+PRODUCER_NUMBER = re.compile(r"^\s*\d{1,3}\s*-\s*")
+
+
+def credit_label(credit: str | None) -> str:
+    """Nom du producteur à citer, sans le numéro de département.
+
+    « 34 - Office de Tourisme Archipel de Thau » donne « Office de Tourisme
+    Archipel de Thau ».
+
+    Parameters
+    ----------
+    credit : str | None
+        Le crédit de la fiche (`events.source_credit`).
+
+    Returns
+    -------
+    str
+        Le nom à citer, ou "".
+    """
+
+    return PRODUCER_NUMBER.sub("", " ".join(str(credit or "").split()))
+
+
+@lru_cache(maxsize=4)
+def load_agreements(path: str = str(AGREEMENTS_FILE)) -> tuple[dict[str, str], ...]:
+    """Accords des producteurs lus dans `config/accords_sources.yaml`.
+
+    Un accord sans producteur, sans mention ou sans lien web est ignoré. Un
+    fichier absent ou illisible donne une liste vide : la recherche continue
+    avec la mention de source habituelle.
+
+    Parameters
+    ----------
+    path : str
+        Le fichier YAML (clé `accords`). Par défaut `config/accords_sources.yaml`.
+
+    Returns
+    -------
+    tuple[dict[str, str], ...]
+        Les accords valides : `producteur`, `mention`, `lien`.
+    """
+
+    try:
+        data = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        return ()
+    items = data.get("accords") if isinstance(data, dict) else None
+    agreements = []
+    for item in items if isinstance(items, list) else []:
+        if not isinstance(item, dict):
+            continue
+        producer = " ".join(str(item.get("producteur") or "").split())
+        mention = " ".join(str(item.get("mention") or "").split())
+        link = str(item.get("lien") or "").strip()
+        if producer and mention and link.startswith(("https://", "http://")):
+            agreements.append({"producteur": producer, "mention": mention, "lien": link})
+    return tuple(agreements)
+
+
+def credit_agreement(credit: str | None,
+                     agreements: Sequence[Mapping[str, str]] | None = None) -> Mapping[str, str] | None:
+    """Accord qui s'applique au producteur d'une fiche, s'il y en a un.
+
+    Le nom est comparé sans accents ni majuscules, et sans le numéro de
+    département : « 34 - OFFICE DE TOURISME ARCHIPEL DE THAU » trouve l'accord
+    de l'Office de Tourisme Archipel de Thau.
+
+    Parameters
+    ----------
+    credit : str | None
+        Le crédit de la fiche (`events.source_credit`).
+    agreements : Sequence[Mapping[str, str]] | None
+        Les accords ; par défaut ceux de `config/accords_sources.yaml`.
+
+    Returns
+    -------
+    Mapping[str, str] | None
+        L'accord (`producteur`, `mention`, `lien`), ou None.
+    """
+
+    name = plain(credit_label(credit))
+    if not name:
+        return None
+    for agreement in load_agreements() if agreements is None else agreements:
+        producer = plain(agreement["producteur"])
+        if producer and (name == producer or f" {producer} " in f" {name} "):
+            return agreement
+    return None
+
+
 def is_demo_link(url: str) -> bool:
     """Lien d'une offre de démonstration (partenaires fictifs : example.org).
 
@@ -629,6 +728,8 @@ def to_card(row: Mapping[str, Any], ref: int | None = None) -> dict[str, Any]:
 
     place = place_label(row)
     rating = row.get("venue_rating")
+    agreement = credit_agreement(row.get("source_credit"))
+    credit = agreement["mention"] if agreement else credit_label(row.get("source_credit"))
     return {
         "ref": ref,
         "event_id": str(row["event_id"]),
@@ -652,6 +753,10 @@ def to_card(row: Mapping[str, Any], ref: int | None = None) -> dict[str, Any]:
         "url": str(row.get("url") or ""),
         "source": str(row.get("source_name") or ""),
         "source_attribution": str(row.get("source_attribution") or ""),
+        # Producteur cité (« Office de Tourisme Archipel de Thau ») et, quand
+        # il a donné son accord écrit avec un lien à afficher, ce lien (3/11/2026).
+        "credit": credit,
+        "credit_url": agreement["lien"] if agreement else "",
         "partner": row.get("partner_id") is not None,
         # Passée en tête parce qu'elle répond au type et au public demandés.
         "partner_ahead": bool(row.get("partner_ahead")),

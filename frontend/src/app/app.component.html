@@ -268,7 +268,8 @@
                                         </div>
 
                                         <div class="card-bottom">
-                                            <span>{{ card.source }}</span>
+                                            <!-- Producteur crédité selon son accord écrit (3/11/2026). -->
+                                            <span>{{ card.credit_url ? card.source + ' · ' + card.credit : card.source }}</span>
                                         </div>
                                     </article>
                                 }
@@ -420,6 +421,12 @@
                         </div>
                         @if (event.source_attribution) {
                             <span class="small">{{ event.source_attribution }}</span>
+                        }
+                        @if (event.credit_url) {
+                            <!-- Lien demandé par l'accord du producteur (3/11/2026). -->
+                            <a [href]="event.credit_url" target="_blank" rel="noopener noreferrer" class="small">
+                                Voir l’agenda : {{ event.credit }}
+                            </a>
                         }
                         @if (event.demo) {
                             <!-- Partenaire fictif : pas de lien vers example.org. -->

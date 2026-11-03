@@ -1,0 +1,24 @@
+# Accords écrits des producteurs de données (3/11/2026).
+#
+# Un producteur qui autorise SortirIA à réutiliser ses événements peut poser
+# des conditions de citation. Chaque accord dit comment le créditer :
+#
+#   producteur : nom du producteur tel que la source le donne, sans le numéro
+#                de département que DATAtourisme met devant (« 34 - ») ;
+#   mention    : texte affiché sur la carte et sur la fiche de l'événement ;
+#   lien       : page vers laquelle renvoyer (affichée sur la fiche) ;
+#   accord     : date de l'accord écrit ;
+#   conditions : ce que l'accord demande, pour mémoire.
+#
+# Lu par app/search_cards.py (`credit_agreement`). Un fichier absent ou mal
+# écrit ne bloque jamais la recherche : la mention de source habituelle reste.
+
+accords:
+  - producteur: "Office de Tourisme Archipel de Thau"
+    mention: "Office de Tourisme Archipel de Thau"
+    lien: "https://www.archipel-thau.com/mon-sejour/agenda/"
+    accord: "2026-11-03"
+    conditions: >-
+      Réutilisation des données de son agenda reçues par DATAtourisme, à
+      condition de les créditer « Office de Tourisme Archipel de Thau » avec
+      un lien vers sa rubrique agenda (courriel du 3/11/2026).

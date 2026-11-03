@@ -46,7 +46,7 @@ EVENT_COLUMNS = """
     e.event_id, e.title, e.summary, e.description, e.category_norm, e.category,
     e.start_at, e.end_at, e.time_known, e.venue_name, e.city,
     e.price_text, e.price_min, e.is_free, e.audiences, e.age_min, e.age_max,
-    e.url, e.source_name, e.source_attribution, e.partner_id, e.is_sponsored,
+    e.url, e.source_name, e.source_attribution, e.source_credit, e.partner_id, e.is_sponsored,
     e.venue_rating, e.venue_rating_count, p.name AS partner_name,
     -- Rang du partenaire (17/10/2026) : 2 premium, 1 mis en avant, 0 sinon
     -- (une formule payante échue ne compte plus : is_sponsored est faux).

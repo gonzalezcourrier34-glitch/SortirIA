@@ -48,7 +48,10 @@ mais une partie de la lecture a échoué), `empty` ou `failed` ; l'agent en tire
 ses décisions (réessayer, garder les événements de la veille). Toutes les
 requêtes partent avec un `User-Agent` identifiable (`SortirIA/0.1`), et
 l'attribution de la source (`source_credit`, `source_updated_at`) est
-conservée jusqu'à l'affichage.
+conservée jusqu'à l'affichage. Quand un producteur a donné un accord écrit avec
+des conditions de citation, elles sont dans `config/accords_sources.yaml` :
+la carte et la fiche affichent alors la mention qu'il demande, et la fiche le
+lien vers son agenda (`app/search_cards.py`, `credit_agreement`).
 
 Limite assumée de la reprise : des comportements pensés pour la presse ont dû
 être corrigés ou désactivés (voir plus bas le dédoublonnage et la longueur
@@ -279,7 +282,14 @@ personnel. Demande envoyée le 16/10/2026 à `partenariats@archipel-thau.com` :
 un flux réservé aux partenaires, ou l'autorisation de lire la page de liste une
 fois par nuit (titre, date, lieu, prix, lien), ou la confirmation que ses
 événements passent déjà par DATAtourisme (sa saisie se fait dans le Tourinsoft
-de l'Hérault, qui alimente DATAtourisme). Hérault Tourisme, Tourisme Occitanie,
+de l'Hérault, qui alimente DATAtourisme). **Réponse reçue le 3/11/2026** :
+l'Office autorise la réutilisation des données de son agenda reçues par
+DATAtourisme, à condition de les créditer « Office de Tourisme Archipel de
+Thau » avec un lien vers sa rubrique agenda
+(`https://www.archipel-thau.com/mon-sejour/agenda/`). Fait le jour même
+(`config/accords_sources.yaml`) : la carte cite l'Office, la fiche ajoute le
+lien. L'accord porte sur les données de DATAtourisme : la lecture de son site
+reste désactivée. Hérault Tourisme, Tourisme Occitanie,
 Petit Futé et Envie de Thau ont été écartés le même jour : reproduction
 interdite et pas de flux, ou données déjà reçues par DATAtourisme.
 

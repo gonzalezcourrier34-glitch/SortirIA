@@ -743,6 +743,47 @@ def test_the_moment_of_the_day_filters_the_start_hour() -> None:
     assert "BETWEEN" not in sql_for("un concert")
 
 
+def test_producer_with_written_agreement_is_credited_with_its_link() -> None:
+    """3/11/2026 : l'Office de Tourisme Archipel de Thau autorise la réutilisation
+    de son agenda (reçu par DATAtourisme) s'il est cité avec un lien vers sa
+    rubrique agenda (config/accords_sources.yaml)."""
+    otat = "34 - Office de Tourisme Archipel de Thau"
+    card = search_cards.to_card(row(source_name="DATAtourisme", source_credit=otat,
+                                    source_attribution=f"Source : DATAtourisme ({otat})"))
+    assert card["credit"] == "Office de Tourisme Archipel de Thau"
+    assert card["credit_url"] == "https://www.archipel-thau.com/mon-sejour/agenda/"
+    # Écrit autrement par la source : même producteur.
+    shouted = search_cards.to_card(row(source_credit="34 - OFFICE DE TOURISME ARCHIPEL DE THAU"))
+    assert shouted["credit"] == "Office de Tourisme Archipel de Thau" and shouted["credit_url"]
+    # Sans accord : le producteur est cité sans son numéro, et sans lien.
+    other = search_cards.to_card(row(source_credit="34 - ADT34"))
+    assert (other["credit"], other["credit_url"]) == ("ADT34", "")
+    plain_card = search_cards.to_card(row())
+    assert (plain_card["credit"], plain_card["credit_url"]) == ("", "")
+
+
+def test_agreements_file_is_read_safely(tmp_path: Any) -> None:
+    """Un accord incomplet est ignoré ; un fichier absent ou cassé ne bloque pas la recherche."""
+    good = tmp_path / "accords.yaml"
+    good.write_text(
+        "accords:\n"
+        "  - producteur: \"Office Exemple\"\n    mention: \"Office Exemple\"\n    lien: \"https://exemple.fr/agenda\"\n"
+        "  - producteur: \"Sans lien\"\n    mention: \"Sans lien\"\n    lien: \"exemple.fr\"\n"
+        "  - \"pas un accord\"\n",
+        encoding="utf-8")
+    agreements = search_cards.load_agreements(str(good))
+    assert [item["producteur"] for item in agreements] == ["Office Exemple"]
+    assert search_cards.credit_agreement("13 - office exemple", agreements)["lien"] == "https://exemple.fr/agenda"
+    assert search_cards.credit_agreement("Office Exemplaire", agreements) is None
+    assert search_cards.credit_agreement("", agreements) is None
+    broken = tmp_path / "casse.yaml"
+    broken.write_text("accords: [\n", encoding="utf-8")
+    assert search_cards.load_agreements(str(broken)) == ()
+    assert search_cards.load_agreements(str(tmp_path / "absent.yaml")) == ()
+    assert search_cards.credit_label("  34 -  Office   de Thau ") == "Office de Thau"
+    assert search_cards.credit_label(None) == ""
+
+
 def test_demo_offers_are_marked() -> None:
     """18/10/2026 : partenaires fictifs annoncés comme démonstration, sans faux lien."""
     assert search_cards.to_card(row(url="https://example.org/bar"))["demo"] is True

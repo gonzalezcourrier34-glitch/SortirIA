@@ -48,6 +48,10 @@ export interface EventCard {
     url: string;
     source: string;
     source_attribution: string;
+    /** Producteur cité (« Office de Tourisme Archipel de Thau »), sans son numéro de département. */
+    credit?: string;
+    /** Lien demandé par un producteur qui a donné son accord écrit (3/11/2026), sinon vide. */
+    credit_url?: string;
     partner: boolean;
     partner_name: string;
     /** Offre de démonstration (partenaire fictif, lien example.org) : annoncée comme telle. */
