@@ -138,7 +138,7 @@
                                                 [attr.aria-label]="'Voir l’événement ' + part.ref"
                                                 (click)="openEvent(past.refs[part.ref])">{{ part.text }}</button>
                                         } @else {
-                                            {{ part.text }}
+                                            <span>{{ part.text }}</span>
                                         }
                                     }
                                 </p>
@@ -180,7 +180,7 @@
                                             [attr.aria-label]="'Voir l’événement ' + part.ref"
                                             (click)="selectRef(part.ref)">{{ part.text }}</button>
                                     } @else {
-                                        {{ part.text }}
+                                        <span>{{ part.text }}</span>
                                     }
                                 }
                             </p>

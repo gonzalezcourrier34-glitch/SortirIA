@@ -116,6 +116,9 @@ RAW_EVENT_LINE = re.compile(r"—[^!?\n]{0,120}?;[^!?\n]{0,60}?;|offre partenair
 # Nom de ligne de la demande recopié en fin de réponse (« … au Réservoir [1]. Contraintes comprises. »).
 LEAKED_LABEL = re.compile(r"\s*Contraintes comprises\s*[.:]?\s*$", re.IGNORECASE)
 BRACKETED_TITLE = re.compile(r"\[([^\[\]\d][^\[\]]*)\]\s*(?=\[\d+\])")
+# Mise en forme Markdown (03/11/2026 : « **Cyrana** [1] » affiché avec ses
+# astérisques) : l'interface montre du texte simple, le gras est retiré.
+MARKDOWN_EMPHASIS = re.compile(r"(\*\*|__)(?=\S)(.+?)(?<=\S)\1")
 TITLE_CHARS = 60
 
 
@@ -180,6 +183,7 @@ def parse_answer(raw: str, count: int) -> tuple[str, list[str]]:
         raise ValueError("réponse vide")
     answer = CITATION.sub(lambda m: m.group(0) if 1 <= int(m.group(1)) <= count else "", answer)
     answer = LEAKED_LABEL.sub("", answer)
+    answer = MARKDOWN_EMPHASIS.sub(r"\2", answer)
     # Titre mis entre crochets devant sa citation (02/11/2026 : « le [Festival dernier cri] [2] »)
     answer = BRACKETED_TITLE.sub(r"\1 ", answer)
     if RAW_EVENT_LINE.search(answer):

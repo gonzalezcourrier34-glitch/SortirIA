@@ -165,6 +165,16 @@ def test_prompt_example_adds_no_constraint() -> None:
     assert search_answer.parse_answer(raw, 1)[0] == "Voici une idée\u00a0: la soirée jeux [1]."
 
 
+def test_markdown_bold_is_removed_from_the_answer() -> None:
+    """03/11/2026 : « **Cyrana** [1] » s'affichait avec ses astérisques."""
+
+    raw = json.dumps({"reponse": "Voici un spectacle : **Cyrana** [1], à Sète. Et __Koa__ [2].",
+                      "suggestions": []})
+    assert search_answer.parse_answer(raw, 2)[0] == "Voici un spectacle\u00a0: Cyrana [1], à Sète. Et Koa [2]."
+    raw = json.dumps({"reponse": "Un prix de 2 * 3 € ou le titre **Jazz* [1].", "suggestions": []})
+    assert "2 * 3 €" in search_answer.parse_answer(raw, 1)[0]
+
+
 def test_answer_copying_the_prompt_lines_is_refused() -> None:
     """01/11/2026 : « Les Nuits du Sud à Sète — Du 12 au 14 juillet · … ; concert ; offre partenaire »,
     des événements absents des cartes, recopiés au format des lignes de la consigne."""
