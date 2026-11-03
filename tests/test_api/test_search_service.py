@@ -755,6 +755,10 @@ def test_producer_with_written_agreement_is_credited_with_its_link() -> None:
     # Écrit autrement par la source : même producteur.
     shouted = search_cards.to_card(row(source_credit="34 - OFFICE DE TOURISME ARCHIPEL DE THAU"))
     assert shouted["credit"] == "Office de Tourisme Archipel de Thau" and shouted["credit_url"]
+    # Autre écriture du même Office dans DATAtourisme (vue en production le 3/11).
+    old = search_cards.to_card(row(source_credit="OLD Hérault - OT ARCHIPEL DE THAU - SETE"))
+    assert old["credit"] == "Office de Tourisme Archipel de Thau"
+    assert old["credit_url"] == "https://www.archipel-thau.com/mon-sejour/agenda/"
     # Sans accord : le producteur est cité sans son numéro, et sans lien.
     other = search_cards.to_card(row(source_credit="34 - ADT34"))
     assert (other["credit"], other["credit_url"]) == ("ADT34", "")
@@ -768,13 +772,16 @@ def test_agreements_file_is_read_safely(tmp_path: Any) -> None:
     good.write_text(
         "accords:\n"
         "  - producteur: \"Office Exemple\"\n    mention: \"Office Exemple\"\n    lien: \"https://exemple.fr/agenda\"\n"
+        "    autres_noms: [\"OT Exemple\"]\n"
         "  - producteur: \"Sans lien\"\n    mention: \"Sans lien\"\n    lien: \"exemple.fr\"\n"
         "  - \"pas un accord\"\n",
         encoding="utf-8")
     agreements = search_cards.load_agreements(str(good))
     assert [item["producteur"] for item in agreements] == ["Office Exemple"]
     assert search_cards.credit_agreement("13 - office exemple", agreements)["lien"] == "https://exemple.fr/agenda"
+    assert search_cards.credit_agreement("Vieux - OT EXEMPLE - Ville", agreements)["mention"] == "Office Exemple"
     assert search_cards.credit_agreement("Office Exemplaire", agreements) is None
+    assert search_cards.credit_agreement("OT Exemplaire", agreements) is None
     assert search_cards.credit_agreement("", agreements) is None
     broken = tmp_path / "casse.yaml"
     broken.write_text("accords: [\n", encoding="utf-8")

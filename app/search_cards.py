@@ -623,7 +623,7 @@ def credit_label(credit: str | None) -> str:
 
 
 @lru_cache(maxsize=4)
-def load_agreements(path: str = str(AGREEMENTS_FILE)) -> tuple[dict[str, str], ...]:
+def load_agreements(path: str = str(AGREEMENTS_FILE)) -> tuple[dict[str, Any], ...]:
     """Accords des producteurs lus dans `config/accords_sources.yaml`.
 
     Un accord sans producteur, sans mention ou sans lien web est ignoré. Un
@@ -637,8 +637,9 @@ def load_agreements(path: str = str(AGREEMENTS_FILE)) -> tuple[dict[str, str], .
 
     Returns
     -------
-    tuple[dict[str, str], ...]
-        Les accords valides : `producteur`, `mention`, `lien`.
+    tuple[dict[str, Any], ...]
+        Les accords valides : `producteur`, `mention`, `lien`, et `noms` (le
+        producteur suivi de ses `autres_noms`).
     """
 
     try:
@@ -653,18 +654,21 @@ def load_agreements(path: str = str(AGREEMENTS_FILE)) -> tuple[dict[str, str], .
         producer = " ".join(str(item.get("producteur") or "").split())
         mention = " ".join(str(item.get("mention") or "").split())
         link = str(item.get("lien") or "").strip()
+        others = item.get("autres_noms") if isinstance(item.get("autres_noms"), list) else []
+        names = tuple(name for name in (producer, *(" ".join(str(other).split()) for other in others)) if name)
         if producer and mention and link.startswith(("https://", "http://")):
-            agreements.append({"producteur": producer, "mention": mention, "lien": link})
+            agreements.append({"producteur": producer, "mention": mention, "lien": link, "noms": names})
     return tuple(agreements)
 
 
 def credit_agreement(credit: str | None,
-                     agreements: Sequence[Mapping[str, str]] | None = None) -> Mapping[str, str] | None:
+                     agreements: Sequence[Mapping[str, Any]] | None = None) -> Mapping[str, Any] | None:
     """Accord qui s'applique au producteur d'une fiche, s'il y en a un.
 
     Le nom est comparé sans accents ni majuscules, et sans le numéro de
     département : « 34 - OFFICE DE TOURISME ARCHIPEL DE THAU » trouve l'accord
-    de l'Office de Tourisme Archipel de Thau.
+    de l'Office de Tourisme Archipel de Thau, comme son autre écriture
+    « OLD Hérault - OT ARCHIPEL DE THAU - SETE » (clé `autres_noms`).
 
     Parameters
     ----------
@@ -683,9 +687,11 @@ def credit_agreement(credit: str | None,
     if not name:
         return None
     for agreement in load_agreements() if agreements is None else agreements:
-        producer = plain(agreement["producteur"])
-        if producer and (name == producer or f" {producer} " in f" {name} "):
-            return agreement
+        # Le nom officiel, puis les autres écritures du même producteur (3/11/2026 :
+        # DATAtourisme écrit aussi « OLD Hérault - OT ARCHIPEL DE THAU - SETE »).
+        for producer in (plain(other) for other in agreement.get("noms") or (agreement["producteur"],)):
+            if producer and (name == producer or f" {producer} " in f" {name} "):
+                return agreement
     return None
 
 

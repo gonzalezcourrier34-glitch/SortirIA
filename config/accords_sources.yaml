@@ -5,6 +5,9 @@
 #
 #   producteur : nom du producteur tel que la source le donne, sans le numéro
 #                de département que DATAtourisme met devant (« 34 - ») ;
+#   autres_noms: autres noms du même producteur dans les sources (DATAtourisme
+#                l'écrit parfois autrement : « OLD Hérault - OT ARCHIPEL DE
+#                THAU - SETE ») ; un nom trouvé dans le crédit suffit ;
 #   mention    : texte affiché sur la carte et sur la fiche de l'événement ;
 #   lien       : page vers laquelle renvoyer (affichée sur la fiche) ;
 #   accord     : date de l'accord écrit ;
@@ -15,6 +18,8 @@
 
 accords:
   - producteur: "Office de Tourisme Archipel de Thau"
+    autres_noms:
+      - "OT Archipel de Thau"
     mention: "Office de Tourisme Archipel de Thau"
     lien: "https://www.archipel-thau.com/mon-sejour/agenda/"
     accord: "2026-11-03"
