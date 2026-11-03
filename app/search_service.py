@@ -510,7 +510,7 @@ def run_search(connection: Any, question: str, filters: SearchFilters,
             raw, tokens, model = services.write(asked, plan, cards)
             answer, suggestions = parse_answer(raw, len(cards))
             # Faits sans appui dans les cartes retirés (02/11/2026), puis événements nommés
-            answer = name_citations(check_facts(answer, cards, plan, embed_text), cards, exact=exact)
+            answer = name_citations(check_facts(answer, cards, plan, embed_text, now=now), cards, exact=exact)
         except RefusedAnswer as refused:
             # Mistral a répondu, mais le code refuse la réponse : la réponse simple,
             # exacte, sans l'annoncer comme simplifiée (Mistral n'est pas en panne).

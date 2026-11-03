@@ -15,16 +15,21 @@ import json
 import os
 import re
 from collections.abc import Mapping, Sequence
+from datetime import date, datetime, timedelta
 from typing import Any
 
 from app.query_understanding import (
     CITY_ALIASES,
     MONTPELLIER_CITIES,
     OUTSIDE_PLACES,
+    MONTH_PATTERN,
+    PARIS,
     THAU_CITIES,
+    WEEKDAYS,
     QueryPlan,
     category_label,
     city_label,
+    find_period,
     plain,
 )
 from app.search_filters import SearchFilters
@@ -468,6 +473,12 @@ PLACE_NAMES.update({plain(name): name for name in OUTSIDE_PLACES.values()})
 # pas le lieu de l'événement (texte passé par `plain`).
 NEAR_WORDS = re.compile(r"\b(?:autour|pres|proche|loin|alentours|environs|cote|depuis|vers|km|kilometres)"
                         r"(?: de| d| du)?(?: la| le| l)?$|\bentre(?: \w+){1,3} et$")
+# Jours que la réponse affirme (texte passé par `plain`) : « ce soir », « demain »,
+# « samedi », « samedi 14 novembre ». Une date seule (« le 9 décembre ») n'est pas
+# contrôlée : elle vient en général des autres dates de l'événement.
+DAY_CLAIM = re.compile(r"(?<= )(?:aujourd hui|ce soir|cet apres midi|ce matin|cette nuit"
+                       r"|demain(?: soir| matin| apres midi)?|ce week end|ce weekend"
+                       rf"|(?:{'|'.join(WEEKDAYS)})(?: \d{{1,2}}(?: (?:{MONTH_PATTERN}))?)?)(?= )")
 ENGLISH_WORDS = frozenset("the and you your here are some for this with is of to in great options you're "
                           "event events weekend there can".split())
 FRENCH_WORDS = frozenset("le la les des vous de et est pour une un du au aux avec dans voici".split())
@@ -480,8 +491,92 @@ def card_text(card: Mapping[str, Any]) -> str:
     return f" {plain(' '.join(str(part or '') for part in parts))} "
 
 
+def card_days(card: Mapping[str, Any]) -> tuple[date, date] | None:
+    """Premier et dernier jour (heure de Paris) d'une carte, ou None si on ne peut pas le dire.
+
+    Une carte qui a d'autres dates (« + 3 dates ») renvoie None : ses autres
+    séances ne sont connues que par leur libellé, on ne la contredit pas.
+
+    Parameters
+    ----------
+    card : Mapping[str, Any]
+        La carte (`start_at`, `end_at` au format ISO, `other_dates`).
+
+    Returns
+    -------
+    tuple[date, date] | None
+        Le premier et le dernier jour ; None si une date manque ou si la carte a d'autres dates.
+    """
+
+    if card.get("other_dates") or not card.get("start_at"):
+        return None
+    try:
+        days = []
+        for value in (card["start_at"], card.get("end_at") or card["start_at"]):
+            moment = value if isinstance(value, datetime) else datetime.fromisoformat(str(value))
+            days.append((moment.astimezone(PARIS) if moment.tzinfo else moment).date())
+    except (TypeError, ValueError):
+        return None
+    return days[0], max(days)
+
+
+def date_without_support(sentence: str, refs: Sequence[int], cards: Mapping[int, Mapping[str, Any]],
+                         now: datetime | None) -> bool:
+    """Vrai si la phrase date ses événements (« ce soir », « samedi ») à un jour où aucun n'a lieu.
+
+    03/11/2026 (240 questions en production) : « Archipol en concert en duo à
+    Sète ce soir [3] » pour un concert du sam. 5 déc. Seuls les jours relatifs
+    (« ce soir », « demain », « ce week-end ») et les jours de la semaine
+    (« samedi », « samedi 14 novembre ») sont contrôlés, lus avec les règles de la
+    question (`find_period`), hors des titres cités ; pour chaque jour nommé,
+    une carte citée qui a lieu ce jour-là suffit. Une phrase qui dit une absence
+    (« pas ce soir, mais… ») n'est pas contrôlée.
+
+    Parameters
+    ----------
+    sentence : str
+        La phrase de la réponse.
+    refs : Sequence[int]
+        Les numéros des cartes qu'elle cite.
+    cards : Mapping[int, Mapping[str, Any]]
+        Les cartes, par numéro.
+    now : datetime | None
+        L'heure de la recherche ; None : pas de contrôle.
+
+    Returns
+    -------
+    bool
+        Vrai si la phrase nomme un jour et qu'aucune carte citée n'a lieu ce jour-là.
+    """
+
+    if now is None or not refs or ABSENCE.search(sentence):
+        return False
+    text = f" {plain(sentence)} "
+    for ref in refs:                     # un titre (« Les mercredis des océans ») ne date rien
+        title = plain(str(cards[ref].get("title") or ""))
+        if title:
+            text = text.replace(f" {title} ", " ")
+    for claim in DAY_CLAIM.finditer(text):
+        found = find_period(claim.group(0), now)
+        if found is None:
+            continue
+        start, end, _ = found
+        first = (start.astimezone(PARIS) if start.tzinfo else start).date()
+        last_moment = end - timedelta(microseconds=1)
+        last = (last_moment.astimezone(PARIS) if last_moment.tzinfo else last_moment).date()
+        supported = False
+        for ref in refs:
+            days = card_days(cards[ref])
+            if days is None or (days[0] <= last and days[1] >= first):
+                supported = True
+                break
+        if not supported:
+            return True
+    return False
+
+
 def check_facts(answer: str, cards: Sequence[Mapping[str, Any]], plan: QueryPlan | SearchFilters | None = None,
-                request: str = "") -> str:
+                request: str = "", now: datetime | None = None) -> str:
     """Retire de la réponse ce que les cartes citées ne disent pas.
 
     Contrôlé phrase par phrase (02/11/2026) :
@@ -491,7 +586,9 @@ def check_facts(answer: str, cards: Sequence[Mapping[str, Any]], plan: QueryPlan
       citées, l'expression est retirée (« pour occuper vos ados »), sinon la phrase ;
     - commune : une phrase affirmative qui nomme une commune absente des cartes
       qu'elle cite (« À La Grande-Motte, … [1] » pour un événement de Frontignan)
-      est retirée, sauf « autour de », « près de » et Montpellier (la zone).
+      est retirée, sauf « autour de », « près de » et Montpellier (la zone) ;
+    - date (03/11/2026) : une phrase qui situe ses événements un jour où aucun
+      n'a lieu (« … à Sète ce soir [3] » pour le 5 décembre) est retirée.
 
     Parameters
     ----------
@@ -503,6 +600,9 @@ def check_facts(answer: str, cards: Sequence[Mapping[str, Any]], plan: QueryPlan
         Les contraintes comprises (le public demandé) ; None si inconnues.
     request : str
         La demande du visiteur (question précédente comprise).
+    now : datetime | None
+        L'heure de la recherche, pour lire « ce soir » ou « samedi » ; None (par
+        défaut) : les dates ne sont pas contrôlées.
 
     Returns
     -------
@@ -522,6 +622,7 @@ def check_facts(answer: str, cards: Sequence[Mapping[str, Any]], plan: QueryPlan
     if english >= 4 and english > sum(word in FRENCH_WORDS for word in words):
         raise RefusedAnswer("réponse en anglais")
     by_ref = {int(card["ref"]): card_text(card) for card in cards}
+    card_by_ref = {int(card["ref"]): card for card in cards}
     everything = " ".join(by_ref.values())
     asked = f" {plain(request)} "
     public = getattr(plan, "public", None)
@@ -550,6 +651,10 @@ def check_facts(answer: str, cards: Sequence[Mapping[str, Any]], plan: QueryPlan
                 break
         if not sentence.strip():
             dropped_citations = dropped_citations or bool(refs)
+            continue
+        # Jour nommé sans appui (« ce soir » pour un concert du 5 décembre)
+        if date_without_support(sentence, refs, card_by_ref, now):
+            dropped_citations = True
             continue
         # Commune nommée sans appui, dans une phrase qui affirme
         if refs and not ABSENCE.search(sentence):
