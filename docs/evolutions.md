@@ -1,7 +1,7 @@
 # Évolutions possibles
 
 Ce qui pourrait prolonger SortirIA après la soutenance. Rien de tout cela n'est
-dans le périmètre du MVP (code figé le 2/11/2026) : chaque piste dit ce
+dans le périmètre du MVP (code figé le 2/11/2026, avec une seule exception le 3/11 (`v1.0.1`) : citer l'Office de Tourisme Archipel de Thau avec un lien vers son agenda, comme son accord écrit le demande) : chaque piste dit ce
 qu'elle apporterait, ce qu'elle demande, et pourquoi elle attend.
 
 Les travaux déjà prévus pour le MVP (rejeu de l'évaluation en CI, mesure
