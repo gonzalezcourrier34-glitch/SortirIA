@@ -19,7 +19,7 @@ de chaque projet, est dans [Provenance du code](provenance.md).
 | 27/10/2026 | **Bilan de l'usage réel** (93 questions, 47 % de réponses exactes), visiteurs distincts comptés, **rapport Evidently mensuel** | ✅ |
 | 30/10-2/11/2026 | **800 recherches en production** (200 difficiles : 118 puis 140 réponses exactes après corrections) | ✅ |
 | 2/11/2026 | **Gel du code** (étiquette `v1.0-soutenance`, prévu le 4/11) | ✅ |
-| 3/11/2026 | **Retouches après le gel** (`v1.0.1` à `v1.0.3`) : l'Office de Tourisme Archipel de Thau autorise la réutilisation de son agenda s'il est cité avec un lien vers son agenda ; fait, testé et déployé le jour même. Puis deux corrections d'affichage : historique replié, mise en forme des réponses | ✅ |
+| 3/11/2026 | **Retouches après le gel** (`v1.0.1` à `v1.0.4`) : l'Office de Tourisme Archipel de Thau autorise la réutilisation de son agenda s'il est cité avec un lien vers son agenda ; fait, testé et déployé le jour même. Puis deux corrections d'affichage (historique replié, mise en forme des réponses) et, après 240 questions en production, un contrôle des jours affirmés par les réponses (« ce soir » pour un concert du 5 décembre) | ✅ |
 | 6/11/2026 | **Soutenance** | ⏳ |
 
 ## Les blocs
@@ -124,7 +124,7 @@ mesure, fiabilise ou explique.
 | 24-30/10 | Relecture du dossier et de la doc ; captures d'écran du site, de Grafana, du mail de bilan ; publication du dossier en ligne (facultatif) ; pitch et feuille de route PDF mis à jour (datés du 14/10) | dossier final |
 | 27/10-3/11 | Diapositives, scénario de démonstration, vidéo de secours, répétitions avec questions du jury ; décision sur les partenaires d'exemple (présentés comme fictifs) ; coûts Azure réels du mois relevés | support de soutenance |
 | 2/11 | Gel du code : dernier déploiement vert, étiquette git `v1.0-soutenance` (prévu le 4/11) | version figée |
-| 3/11 | Retouches : crédit et lien de l'Office de Tourisme Archipel de Thau, selon son accord écrit (`v1.0.1`) ; deux corrections d'affichage (`v1.0.2`, `v1.0.3`) | version présentée |
+| 3/11 | Retouches : crédit et lien de l'Office de Tourisme Archipel de Thau, selon son accord écrit (`v1.0.1`) ; deux corrections d'affichage (`v1.0.2`, `v1.0.3`) ; contrôle des dates dans les réponses (`v1.0.4`) | version présentée |
 
 ## Ce qui est volontairement hors du MVP
 
