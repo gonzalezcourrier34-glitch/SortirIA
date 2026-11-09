@@ -5,7 +5,7 @@ from __future__ import annotations
 import io
 import json
 import zipfile
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 import pytest
@@ -105,6 +105,15 @@ def test_agent_proposes_the_import_and_the_human_applies_it(tmp_path: Path, cach
     from agent.proposals import describe_action
     from agent.services import pending_partner_document
 
+    class Frozen(datetime):
+        """Horloge figée au 16/10/2026 : la séance du 6/11 reste « à venir » quel que soit le jour du test."""
+
+        @classmethod
+        def now(cls, tz=None):
+            return datetime(2026, 10, 16, 12, 0, tzinfo=tz)
+
+    monkeypatch.setattr(extractor, "datetime", Frozen)
+    monkeypatch.setattr(documents, "datetime", Frozen)
     path = make_docx(tmp_path / "bar.docx", ["Jeudi 6 novembre : soirée blind test, gratuit"])
     partner = {**extractor.partner_for_file(path, {}), "venue": "Bar", "city": "Sète", "website": "https://bar.fr"}
     assert pending_partner_document(path, partner) is None          # pas encore lu cette nuit
