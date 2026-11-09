@@ -135,6 +135,7 @@ api_sources:
       - "44228144"   # 2 (découverte du 2026-10-18)
       - "4243496"    # 3 (découverte du 2026-10-18)
       - "889555"     # 7 (découverte du 2026-10-18)
+      - "99503172"   # 3 (découverte du 2026-11-08)
       - "4934411"    # 8 (découverte du 2026-11-08)
     max_agendas: 50
     page_size: 100
